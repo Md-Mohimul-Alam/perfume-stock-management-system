@@ -8,9 +8,8 @@ const blendComponentSchema = mongoose.Schema({
 
 // Each product can be sold in different sizes
 const sizeVariantSchema = mongoose.Schema({
-  sizeMl: { type: Number, required: true }, // e.g., 6, 15, 30, 50, 100
+  sizeMl: { type: Number, required: true },
   bottle: { type: mongoose.Schema.Types.ObjectId, ref: 'Bottle', required: true },
-  // Material consumption (calculated from blend or fixed for roll-ons)
   oilMlUsed: { type: Number, required: true },
   ethanolMlUsed: { type: Number, default: 0 },
   fixativeMlUsed: { type: Number, default: 0 },
@@ -23,9 +22,7 @@ const productSchema = mongoose.Schema(
     name: { type: String, required: true },
     sku: { type: String, required: true, unique: true },
     type: { type: String, enum: ['roll-on', 'spray'], required: true },
-    // For roll-ons: which oil is used
     baseOil: { type: mongoose.Schema.Types.ObjectId, ref: 'RawMaterial' },
-    // For sprays: blend percentages (e.g., 50% oil, 45% ethanol, 5% fixative)
     blendComponents: [blendComponentSchema],
     sizes: [sizeVariantSchema],
     isActive: { type: Boolean, default: true },
@@ -33,9 +30,12 @@ const productSchema = mongoose.Schema(
   { timestamps: true }
 );
 
-// Pre-save hook to auto-calculate material consumption for each size based on blend
-productSchema.pre('save', async function (next) {
-  if (this.type === 'spray' && this.blendComponents.length > 0) {
+// ✅ FIXED pre‑save hook – no `next` parameter
+productSchema.pre('save', async function () {
+  // Skip if we have no sizes
+  if (!this.sizes || this.sizes.length === 0) return;
+
+  if (this.type === 'spray' && this.blendComponents && this.blendComponents.length > 0) {
     // Fetch material details to know their types
     const materialIds = this.blendComponents.map(c => c.material);
     const materials = await mongoose.model('RawMaterial').find({ _id: { $in: materialIds } });
@@ -46,6 +46,10 @@ productSchema.pre('save', async function (next) {
       let oilMl = 0, ethanolMl = 0, fixativeMl = 0;
       for (const comp of this.blendComponents) {
         const material = materialMap[comp.material.toString()];
+        // If material not found, skip or throw? We'll throw to avoid silent errors.
+        if (!material) {
+          throw new Error(`Material ${comp.material} not found for blend component`);
+        }
         const mlForThisComp = (size.sizeMl * comp.percentage) / 100;
         if (material.type === 'oil') oilMl += mlForThisComp;
         else if (material.type === 'ethanol') ethanolMl += mlForThisComp;
@@ -56,17 +60,23 @@ productSchema.pre('save', async function (next) {
       size.fixativeMlUsed = fixativeMl;
     }
   } else if (this.type === 'roll-on' && this.baseOil) {
-    // Roll-on: 100% oil
+    // Roll-on: 100% oil for each size
     for (const size of this.sizes) {
       size.oilMlUsed = size.sizeMl;
       size.ethanolMlUsed = 0;
       size.fixativeMlUsed = 0;
     }
+  } else {
+    // For spray without blend or roll-on without baseOil: set all to 0
+    for (const size of this.sizes) {
+      size.oilMlUsed = 0;
+      size.ethanolMlUsed = 0;
+      size.fixativeMlUsed = 0;
+    }
   }
-  next();
 });
 
-// Method to calculate making cost for a specific size (requires material and bottle costs)
+// Method to calculate making cost for a specific size
 productSchema.methods.calculateMakingCost = async function (sizeIndex) {
   const size = this.sizes[sizeIndex];
   const bottle = await mongoose.model('Bottle').findById(size.bottle);

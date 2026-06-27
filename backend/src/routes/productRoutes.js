@@ -6,6 +6,7 @@ const {
   updateProduct,
   calculateCost,
   deleteProduct,
+  bulkCreateProducts,
 } = require('../controllers/productController');
 const { protect } = require('../middlewares/authMiddleware');
 
@@ -18,5 +19,6 @@ router.route('/:id')
   .delete(protect, deleteProduct);
 
 router.post('/:id/calculate-cost', protect, calculateCost);
+router.post('/bulk', protect, bulkCreateProducts);   // 👈 new
 
 module.exports = router;

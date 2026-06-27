@@ -134,3 +134,139 @@ exports.updatePayment = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// =============================================
+// NEW: Bulk create sales from CSV/Excel
+// =============================================
+// @desc    Bulk create sales from CSV/Excel
+// @route   POST /api/sales/bulk
+exports.bulkCreateSales = async (req, res) => {
+  try {
+    const { sales } = req.body; // array of sale objects
+    if (!sales || !sales.length) {
+      return res.status(400).json({ message: 'No sales provided' });
+    }
+
+    const errors = [];
+    const created = [];
+
+    for (const saleData of sales) {
+      try {
+        // Validate required fields
+        const { invoiceNo, channel, items, saleDate, paymentStatus, notes } = saleData;
+        if (!invoiceNo || !channel || !items || !items.length) {
+          errors.push({ saleData, error: 'Missing required fields: invoiceNo, channel, items' });
+          continue;
+        }
+
+        // Check if invoice already exists
+        const existing = await Sale.findOne({ invoiceNo });
+        if (existing) {
+          errors.push({ saleData, error: `Invoice ${invoiceNo} already exists` });
+          continue;
+        }
+
+        // Prepare items with product lookups and stock deduction
+        const processedItems = [];
+        let totalAmount = 0;
+
+        for (const item of items) {
+          const { sku, sizeMl, quantity, unitPrice } = item;
+
+          // Find product by SKU and populate bottle info
+          const product = await Product.findOne({ sku }).populate('sizes.bottle');
+          if (!product) {
+            errors.push({ saleData, error: `Product SKU ${sku} not found` });
+            // Mark this sale as failed and skip
+            continue;
+          }
+
+          // Check if size exists in product
+          const sizeVariant = product.sizes.find(s => s.sizeMl === sizeMl);
+          if (!sizeVariant) {
+            errors.push({ saleData, error: `Size ${sizeMl}ml not available for SKU ${sku}` });
+            continue;
+          }
+
+          const itemTotal = quantity * unitPrice;
+          totalAmount += itemTotal;
+          processedItems.push({
+            product: product._id,
+            sizeMl,
+            quantity,
+            unitPrice,
+            totalPrice: itemTotal,
+            // Store extra info for stock deduction
+            productRef: product,
+            sizeVariant,
+          });
+        }
+
+        // If any item failed, skip this sale entirely
+        if (processedItems.length === 0) {
+          // We already pushed errors; just continue to next sale
+          continue;
+        }
+
+        // Create sale
+        const sale = await Sale.create({
+          invoiceNo,
+          channel,
+          items: processedItems.map(({ product, sizeMl, quantity, unitPrice, totalPrice }) => ({
+            product,
+            sizeMl,
+            quantity,
+            unitPrice,
+            totalPrice,
+          })),
+          totalAmount,
+          paymentStatus: paymentStatus || 'paid',
+          saleDate: saleDate ? new Date(saleDate) : new Date(),
+          notes: notes || '',
+        });
+
+        // Now deduct stock for each item
+        for (const item of processedItems) {
+          const { productRef, sizeVariant, quantity } = item;
+
+          // Deduct bottles
+          await deductBottle(sizeVariant.bottle, quantity, 'sale', sale);
+
+          // Deduct raw materials
+          if (productRef.type === 'roll-on') {
+            await deductRawMaterial(productRef.baseOil, sizeVariant.oilMlUsed * quantity, 'sale', sale);
+          } else {
+            for (const comp of productRef.blendComponents) {
+              const mlUsed = (sizeVariant.sizeMl * comp.percentage / 100) * quantity;
+              await deductRawMaterial(comp.material, mlUsed, 'sale', sale);
+            }
+          }
+        }
+
+        // Record cash transaction if paid
+        if (sale.paymentStatus === 'paid') {
+          await Transaction.create({
+            type: 'cash_in',
+            amount: totalAmount,
+            category: 'Sale',
+            reference: sale._id,
+            refModel: 'Sale',
+            description: `Sale ${invoiceNo} (${channel})`,
+          });
+        }
+
+        created.push(sale);
+      } catch (err) {
+        errors.push({ saleData, error: err.message });
+      }
+    }
+
+    res.status(201).json({
+      message: `Created ${created.length} sales, ${errors.length} errors`,
+      created,
+      errors,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

@@ -11,7 +11,7 @@ const bottlePurchaseSchema = mongoose.Schema({
 
 const bottleSchema = mongoose.Schema(
   {
-    sizeMl: { type: Number, required: true }, // e.g., 3.5, 6, 15, 30, 50, 100
+    sizeMl: { type: Number, required: true },
     type: { type: String, enum: ['roll-on', 'spray'], required: true },
     currentStock: { type: Number, default: 0, min: 0 },
     avgCostPerUnit: { type: Number, default: 0, min: 0 },
