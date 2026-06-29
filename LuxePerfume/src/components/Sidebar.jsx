@@ -10,7 +10,10 @@ const Sidebar = () => {
 
   return (
     <div className="w-64 bg-white shadow-md h-screen overflow-y-auto">
-      <div className="p-4 text-xl font-bold text-blue-600 border-b">LuxePerfume</div>
+      <div className="flex items-center justify-center h-18 bg-blue-100">
+          <img src="/logo.jpg" alt="LuxePerfume Logo" className="h-13 w-13" />
+          <span className="ml-2 text-lg font-bold text-blue-800">LuxePerfume</span>
+      </div>
       <nav className="mt-4 space-y-1 px-2">
         <NavLink
           to="/"

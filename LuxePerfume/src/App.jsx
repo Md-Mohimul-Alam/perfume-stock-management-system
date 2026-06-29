@@ -14,6 +14,9 @@ import SaleList from './pages/Sales/SaleList';
 import NewSale from './pages/Sales/NewSale';
 import ProductList from './pages/Products/ProductList';
 import NewProduct from './pages/Products/NewProduct';
+import ExpensePage from './pages/Expenses/Expenses';
+import NewPurchase from './pages/Purchases/NewPurchase';
+import PurchaseList from './pages/Purchases/PurchaseList';
 
 function App() {
   return (
@@ -40,8 +43,9 @@ function App() {
             <Route path="products/new" element={<NewProduct />} />
             <Route path="sales" element={<SaleList />} />          
             <Route path="sales/new" element={<NewSale />} />   
-            <Route path="purchases" element={<div>Purchases List</div>} />
-            <Route path="expenses" element={<div>Expenses Page</div>} />
+            <Route path="purchases" element={<PurchaseList />} />
+            <Route path="purchases/new" element={<NewPurchase />} />
+            <Route path="expenses" element={<ExpensePage />} />
             <Route path="investors" element={<div>Investors Page</div>} />
             <Route path="reports" element={<div>Reports Page</div>} />
           </Route>

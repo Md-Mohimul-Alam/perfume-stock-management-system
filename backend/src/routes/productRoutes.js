@@ -7,6 +7,8 @@ const {
   calculateCost,
   deleteProduct,
   bulkCreateProducts,
+  correctProductTypes,
+  fixProductTypesAndBottles,   // 👈 new
 } = require('../controllers/productController');
 const { protect } = require('../middlewares/authMiddleware');
 
@@ -19,6 +21,8 @@ router.route('/:id')
   .delete(protect, deleteProduct);
 
 router.post('/:id/calculate-cost', protect, calculateCost);
-router.post('/bulk', protect, bulkCreateProducts);   // 👈 new
+router.post('/bulk', protect, bulkCreateProducts);
+router.post('/correct-types', protect, correctProductTypes);
+router.post('/fix-product-types', protect, fixProductTypesAndBottles);   // 👈 new
 
 module.exports = router;

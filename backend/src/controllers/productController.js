@@ -22,7 +22,6 @@ exports.createProduct = async (req, res) => {
   try {
     const { name, sku, type, baseOil, blendComponents, sizes } = req.body;
 
-    // Validate that sizes have bottle references
     for (const size of sizes) {
       const bottleExists = await Bottle.findById(size.bottle);
       if (!bottleExists) throw new Error(`Bottle ${size.bottle} not found`);
@@ -37,7 +36,6 @@ exports.createProduct = async (req, res) => {
       sizes,
     });
 
-    // Calculate initial making costs
     for (let i = 0; i < product.sizes.length; i++) {
       await product.calculateMakingCost(i);
     }
@@ -66,7 +64,6 @@ exports.updateProduct = async (req, res) => {
     if (isActive !== undefined) product.isActive = isActive;
 
     await product.save();
-    // Recalculate making costs
     for (let i = 0; i < product.sizes.length; i++) {
       await product.calculateMakingCost(i);
     }
@@ -113,6 +110,9 @@ exports.deleteProduct = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// @desc    Bulk create products from CSV/Excel
+// @route   POST /api/products/bulk
 // @desc    Bulk create products from CSV/Excel
 // @route   POST /api/products/bulk
 exports.bulkCreateProducts = async (req, res) => {
@@ -125,19 +125,13 @@ exports.bulkCreateProducts = async (req, res) => {
     const errors = [];
     const created = [];
 
-    const Bottle = require('../models/Bottle');
-    const Product = require('../models/Product');
-
-    // Helper: parse size string like "3.5ml Role" -> { sizeMl: 3.5, bottleType: 'roll-on' }
     const parseSizeString = (sizeStr) => {
       if (!sizeStr) return null;
       const trimmed = sizeStr.trim();
-      // Extract numeric part (e.g., "3.5ml" -> 3.5)
       const numMatch = trimmed.match(/^([\d.]+)\s*ml/i);
       if (!numMatch) return null;
       const sizeMl = parseFloat(numMatch[1]);
-      // Determine bottle type
-      let bottleType = 'spray'; // default
+      let bottleType = 'spray';
       const lower = trimmed.toLowerCase();
       if (lower.includes('role') || lower.includes('roll')) {
         bottleType = 'roll-on';
@@ -151,12 +145,11 @@ exports.bulkCreateProducts = async (req, res) => {
       try {
         let { name, sku, sellingPrice, bottleType, sizeMl, sizeString } = item;
 
-        // If sizeString is provided, parse it
+        // Parse size string
         if (sizeString) {
           const parsed = parseSizeString(sizeString);
           if (parsed) {
             sizeMl = parsed.sizeMl;
-            // Only override bottleType if not explicitly provided
             if (!bottleType) {
               bottleType = parsed.bottleType;
             }
@@ -166,28 +159,35 @@ exports.bulkCreateProducts = async (req, res) => {
           }
         }
 
-        // Fallback: if sizeMl is still undefined or bottleType missing
+        // Validate size and type
         if (sizeMl === undefined || sizeMl === null || isNaN(sizeMl)) {
           errors.push({ item, error: 'Missing or invalid sizeMl' });
           continue;
         }
         if (!bottleType) {
-          bottleType = 'spray'; // default
+          bottleType = 'spray';
         }
         bottleType = bottleType.toLowerCase().trim();
         if (!['spray', 'roll-on'].includes(bottleType)) {
           bottleType = 'spray';
         }
 
+        // Validate required fields
         if (!name || !sku || sellingPrice === undefined || sellingPrice === null || isNaN(sellingPrice)) {
           errors.push({ item, error: 'Missing required fields: name, sku, sellingPrice' });
+          continue;
+        }
+
+        // Find the bottle for this size/type
+        const bottle = await Bottle.findOne({ sizeMl: parseFloat(sizeMl), type: bottleType });
+        if (!bottle) {
+          errors.push({ item, error: `Bottle ${sizeMl}ml (${bottleType}) not found. Please create it first.` });
           continue;
         }
 
         // Find or create product
         let product = await Product.findOne({ sku });
         if (!product) {
-          // Set product type based on the bottle type of this size
           product = new Product({
             name,
             sku,
@@ -196,40 +196,30 @@ exports.bulkCreateProducts = async (req, res) => {
             blendComponents: [],
             baseOil: null,
           });
-        } else {
-          // If product exists but type is different? We'll keep existing type.
-          // We'll also update name if changed?
-          if (product.name !== name) {
-            // Optionally update name, but we'll keep the first name.
-          }
         }
 
-        // Check if size variant already exists
-        const sizeExists = product.sizes.some(s => s.sizeMl === parseFloat(sizeMl));
+        // ✅ Check for duplicate variant (by sizeMl AND bottle type)
+        const sizeExists = product.sizes.some(s => 
+          s.sizeMl === parseFloat(sizeMl) && 
+          s.bottle && s.bottle.toString() === bottle._id.toString()
+        );
         if (sizeExists) {
-          errors.push({ item, error: `Size ${sizeMl} already exists for SKU ${sku}` });
+          errors.push({ item, error: `Size ${sizeMl}ml (${bottleType}) already exists for SKU ${sku}` });
           continue;
         }
 
-        // Find bottle reference
-        const bottle = await Bottle.findOne({ sizeMl: parseFloat(sizeMl), type: bottleType });
-        if (!bottle) {
-          errors.push({ item, error: `Bottle ${sizeMl}ml (${bottleType}) not found. Please create it first.` });
-          continue;
-        }
-
-        // Add size variant
+        // Add the new size variant
         product.sizes.push({
           sizeMl: parseFloat(sizeMl),
           bottle: bottle._id,
-          oilMlUsed: 0, // will be calculated later
+          oilMlUsed: 0,
           ethanolMlUsed: 0,
           fixativeMlUsed: 0,
           makingCost: 0,
           sellingPrice: parseFloat(sellingPrice),
         });
 
-        // Save product
+        // Save the product
         await product.save();
         created.push(product);
       } catch (err) {
@@ -241,6 +231,166 @@ exports.bulkCreateProducts = async (req, res) => {
       message: `Created/Updated ${created.length} products, ${errors.length} errors`,
       created,
       errors,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// =============================================
+// CORRECT PRODUCT TYPES (existing)
+// =============================================
+// @desc    Correct product types based on bottle types
+// @route   POST /api/products/correct-types
+exports.correctProductTypes = async (req, res) => {
+  try {
+    const products = await Product.find({}).populate('sizes.bottle');
+    let updated = 0;
+
+    for (const product of products) {
+      if (!product.sizes || product.sizes.length === 0) continue;
+
+      const hasSpray = product.sizes.some(s => s.bottle && s.bottle.type === 'spray');
+      const hasRollOn = product.sizes.some(s => s.bottle && s.bottle.type === 'roll-on');
+
+      let newType = null;
+      if (hasSpray && !hasRollOn) newType = 'spray';
+      else if (!hasSpray && hasRollOn) newType = 'roll-on';
+      else if (hasSpray && hasRollOn) newType = 'spray'; // mixed – choose spray
+
+      if (newType && product.type !== newType) {
+        product.type = newType;
+        await product.save();
+        updated++;
+      }
+    }
+
+    res.json({ message: `Updated ${updated} products`, updated });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// =============================================
+// NEW: FIX PRODUCT TYPES AND BOTTLE REFERENCES
+// =============================================
+// @desc    Fix product types and bottle references (one‑time correction)
+// @route   POST /api/products/fix-product-types
+exports.fixProductTypesAndBottles = async (req, res) => {
+  try {
+    const products = await Product.find({});
+    let updatedProducts = 0;
+    let updatedSizes = 0;
+
+    // Get all spray and roll‑on bottles
+    const sprayBottles = await Bottle.find({ type: 'spray' });
+    const rollOnBottles = await Bottle.find({ type: 'roll-on' });
+
+    // Create maps: sizeMl -> bottle _id
+    const sprayMap = {};
+    sprayBottles.forEach(b => { sprayMap[b.sizeMl] = b._id; });
+    const rollOnMap = {};
+    rollOnBottles.forEach(b => { rollOnMap[b.sizeMl] = b._id; });
+
+    // Sizes that are typically sprays (adjust as needed)
+    const spraySizes = [6, 15, 30, 50, 100];
+    const rollOnSizes = [3, 3.5]; // 3, 3.5 are always roll‑on
+
+    for (const product of products) {
+      if (!product.sizes || product.sizes.length === 0) continue;
+
+      let hasSpray = false;
+      let hasRollOn = false;
+      let changed = false;
+
+      for (let i = 0; i < product.sizes.length; i++) {
+        const size = product.sizes[i];
+        const sizeMl = size.sizeMl;
+
+        // If bottle is already set, check its type
+        if (size.bottle) {
+          const bottle = await Bottle.findById(size.bottle);
+          if (bottle) {
+            if (bottle.type === 'spray') hasSpray = true;
+            else if (bottle.type === 'roll-on') hasRollOn = true;
+            continue;
+          }
+        }
+
+        // If bottle is missing or invalid, try to assign the correct bottle
+        let newBottleId = null;
+        let isSpray = false;
+
+        // Determine type based on sizeMl and product context
+        if (rollOnSizes.includes(sizeMl)) {
+          isSpray = false;
+        } else if (spraySizes.includes(sizeMl)) {
+          // For 6, 15, 30, 50, 100: check if the product has any other size that is definitely spray
+          // We'll check if the product has a 50ml or 100ml size (spray) – if yes, treat all medium as spray
+          const hasLargeSize = product.sizes.some(s => [50, 100].includes(s.sizeMl));
+          isSpray = hasLargeSize;
+          // If the product already has a spray bottle somewhere, we'll also treat as spray
+          if (!isSpray) {
+            const hasSprayBottle = product.sizes.some(s => s.bottle && s.bottle.type === 'spray');
+            if (hasSprayBottle) isSpray = true;
+          }
+        } else {
+          // fallback – treat as roll-on
+          isSpray = false;
+        }
+
+        // Find the correct bottle
+        if (isSpray && sprayMap[sizeMl]) {
+          newBottleId = sprayMap[sizeMl];
+          hasSpray = true;
+        } else if (!isSpray && rollOnMap[sizeMl]) {
+          newBottleId = rollOnMap[sizeMl];
+          hasRollOn = true;
+        }
+
+        if (newBottleId && (!size.bottle || size.bottle.toString() !== newBottleId.toString())) {
+          product.sizes[i].bottle = newBottleId;
+          changed = true;
+          updatedSizes++;
+        }
+      }
+
+      // Re‑evaluate hasSpray / hasRollOn after assignments
+      // (We already set them, but we need to double‑check)
+      if (!hasSpray && !hasRollOn) {
+        // Re‑scan to be sure
+        for (const size of product.sizes) {
+          if (size.bottle) {
+            const bottle = await Bottle.findById(size.bottle);
+            if (bottle) {
+              if (bottle.type === 'spray') hasSpray = true;
+              else if (bottle.type === 'roll-on') hasRollOn = true;
+            }
+          }
+        }
+      }
+
+      // Determine product type
+      let newType = null;
+      if (hasSpray && !hasRollOn) newType = 'spray';
+      else if (!hasSpray && hasRollOn) newType = 'roll-on';
+      else if (hasSpray && hasRollOn) newType = 'spray'; // mixed – choose spray
+
+      if (newType && product.type !== newType) {
+        product.type = newType;
+        changed = true;
+      }
+
+      if (changed) {
+        await product.save();
+        updatedProducts++;
+      }
+    }
+
+    res.json({
+      message: `Updated ${updatedProducts} products and ${updatedSizes} size variants`,
+      updatedProducts,
+      updatedSizes,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

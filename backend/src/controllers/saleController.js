@@ -84,7 +84,7 @@ exports.getSales = async (req, res) => {
       if (endDate) filter.saleDate.$lte = new Date(endDate);
     }
     const sales = await Sale.find(filter)
-      .populate('items.product', 'name sku')
+      .populate('items.product', 'name sku type')   // ✅ includes type
       .sort('-saleDate');
     res.json(sales);
   } catch (error) {
@@ -97,7 +97,7 @@ exports.getSales = async (req, res) => {
 exports.getSaleById = async (req, res) => {
   try {
     const sale = await Sale.findById(req.params.id)
-      .populate('items.product', 'name sku');
+      .populate('items.product', 'name sku type'); // ✅ includes type
     if (!sale) return res.status(404).json({ message: 'Sale not found' });
     res.json(sale);
   } catch (error) {
@@ -136,7 +136,7 @@ exports.updatePayment = async (req, res) => {
 };
 
 // =============================================
-// NEW: Bulk create sales from CSV/Excel
+// Bulk create sales from CSV/Excel
 // =============================================
 // @desc    Bulk create sales from CSV/Excel
 // @route   POST /api/sales/bulk
@@ -177,7 +177,6 @@ exports.bulkCreateSales = async (req, res) => {
           const product = await Product.findOne({ sku }).populate('sizes.bottle');
           if (!product) {
             errors.push({ saleData, error: `Product SKU ${sku} not found` });
-            // Mark this sale as failed and skip
             continue;
           }
 
@@ -196,7 +195,6 @@ exports.bulkCreateSales = async (req, res) => {
             quantity,
             unitPrice,
             totalPrice: itemTotal,
-            // Store extra info for stock deduction
             productRef: product,
             sizeVariant,
           });
@@ -204,7 +202,6 @@ exports.bulkCreateSales = async (req, res) => {
 
         // If any item failed, skip this sale entirely
         if (processedItems.length === 0) {
-          // We already pushed errors; just continue to next sale
           continue;
         }
 

@@ -93,8 +93,16 @@ exports.createPurchase = async (req, res) => {
 // @route   GET /api/purchases
 exports.getPurchases = async (req, res) => {
   try {
-    const purchases = await Purchase.find()
-      .populate('items.item', 'name sku sizeMl type')
+    const { supplier, startDate, endDate } = req.query;
+    const filter = {};
+    if (supplier) filter.supplier = supplier;
+    if (startDate || endDate) {
+      filter.purchaseDate = {};
+      if (startDate) filter.purchaseDate.$gte = new Date(startDate);
+      if (endDate) filter.purchaseDate.$lte = new Date(endDate);
+    }
+    const purchases = await Purchase.find(filter)
+      .populate('items.item', 'name sku sizeMl type') // Important!
       .sort('-purchaseDate');
     res.json(purchases);
   } catch (error) {
@@ -110,6 +118,100 @@ exports.getPurchaseById = async (req, res) => {
       .populate('items.item', 'name sku sizeMl type');
     if (!purchase) return res.status(404).json({ message: 'Purchase not found' });
     res.json(purchase);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Bulk create purchases from sheet
+// @route   POST /api/purchases/bulk
+exports.bulkCreatePurchases = async (req, res) => {
+  try {
+    const { purchases } = req.body;
+    if (!purchases || !purchases.length) {
+      return res.status(400).json({ message: 'No purchases provided' });
+    }
+
+    const created = [];
+    const errors = [];
+
+    for (const purchaseData of purchases) {
+      try {
+        // Validate required fields
+        if (!purchaseData.invoiceNo || !purchaseData.items || !purchaseData.items.length) {
+          errors.push({ 
+            purchaseData, 
+            error: 'Missing invoiceNo or items' 
+          });
+          continue;
+        }
+
+        // Check for duplicate invoice
+        const existing = await Purchase.findOne({ invoiceNo: purchaseData.invoiceNo });
+        if (existing) {
+          errors.push({ 
+            purchaseData, 
+            error: `Invoice ${purchaseData.invoiceNo} already exists` 
+          });
+          continue;
+        }
+
+        // Validate each item
+        let totalAmount = 0;
+        const validItems = [];
+
+        for (const itemData of purchaseData.items) {
+          const { itemType, item: itemId, quantity, costPerUnit } = itemData;
+
+          // Validate required fields
+          if (!itemType || !itemId || !quantity || quantity <= 0 || !costPerUnit || costPerUnit <= 0) {
+            throw new Error(`Invalid item data: ${JSON.stringify(itemData)}`);
+          }
+
+          // Verify the referenced item exists
+          const Model = itemType === 'RawMaterial' ? RawMaterial : Bottle;
+          const exists = await Model.findById(itemId);
+          if (!exists) {
+            throw new Error(`Item ${itemId} not found in ${itemType} collection`);
+          }
+
+          const itemTotal = quantity * costPerUnit;
+          totalAmount += itemTotal;
+
+          validItems.push({
+            itemType,
+            item: itemId,
+            quantity,
+            costPerUnit,
+            totalCost: itemTotal,
+          });
+        }
+
+        // Create purchase
+        const purchase = new Purchase({
+          invoiceNo: purchaseData.invoiceNo,
+          supplier: purchaseData.supplier || '',
+          purchaseDate: purchaseData.purchaseDate || new Date(),
+          notes: purchaseData.notes || '',
+          items: validItems,
+          totalAmount,
+        });
+
+        await purchase.save();
+        created.push(purchase);
+      } catch (err) {
+        errors.push({ 
+          purchaseData, 
+          error: err.message 
+        });
+      }
+    }
+
+    res.status(201).json({
+      message: `Created ${created.length} purchases, ${errors.length} errors`,
+      created,
+      errors,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

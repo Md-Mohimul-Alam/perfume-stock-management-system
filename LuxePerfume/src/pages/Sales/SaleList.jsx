@@ -9,6 +9,7 @@ const SalesList = () => {
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState({ channel: '', paymentStatus: '' });
+  const [typeFilter, setTypeFilter] = useState('');
   const [search, setSearch] = useState('');
 
   // Upload state
@@ -30,6 +31,9 @@ const SalesList = () => {
     setLoading(true);
     try {
       const { data } = await API.get('/sales');
+      // 🔍 Debug: check if type is present
+      console.log('Sales data (first sale):', data[0]);
+      console.log('First sale items:', data[0]?.items);
       setSales(data);
     } catch (error) {
       toast.error('Failed to load sales');
@@ -57,6 +61,20 @@ const SalesList = () => {
         s.channel.toLowerCase().includes(search.toLowerCase())
       );
     }
+    // Type filter – map UI values to DB values
+    if (typeFilter) {
+      const mappedType = typeFilter === 'oil' ? 'roll-on' : 'spray';
+      console.log(`Filtering by type: ${typeFilter} -> mapped to DB: ${mappedType}`);
+      filtered = filtered.filter(s => {
+        const hasType = s.items.some(item => item.product?.type === mappedType);
+        if (!hasType) {
+          // 🔍 Debug: log which sale doesn't have the type
+          console.log('Sale excluded:', s.invoiceNo, 'items types:', s.items.map(i => i.product?.type));
+        }
+        return hasType;
+      });
+    }
+    console.log(`Filtered sales count: ${filtered.length}`);
     return filtered;
   };
 
@@ -64,6 +82,7 @@ const SalesList = () => {
 
   const channelOptions = ['Fair1', 'Fair2', 'Fair3', 'Fair4', 'Fair5', 'August', 'September', 'October', 'November', 'December', 'Online', 'Other'];
   const paymentStatusOptions = ['paid', 'due'];
+  const typeOptions = ['oil', 'perfume'];
 
   // ---------- Upload ----------
   const handleFileChange = (e) => {
@@ -277,8 +296,19 @@ const SalesList = () => {
             {paymentStatusOptions.map(ps => <option key={ps} value={ps}>{ps.charAt(0).toUpperCase() + ps.slice(1)}</option>)}
           </select>
         </div>
+        <div className="min-w-[150px]">
+          <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-secondary outline-none bg-white"
+          >
+            <option value="">All</option>
+            {typeOptions.map(t => <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>)}
+          </select>
+        </div>
         <button
-          onClick={() => { setFilter({ channel: '', paymentStatus: '' }); setSearch(''); }}
+          onClick={() => { setFilter({ channel: '', paymentStatus: '' }); setSearch(''); setTypeFilter(''); }}
           className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
         >
           Clear
@@ -494,23 +524,29 @@ const SalesList = () => {
                       <tr>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Size</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Qty</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Unit Price</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
-                      {selectedSale.items.map((item, idx) => (
-                        <tr key={idx}>
-                          <td className="px-4 py-3">{item.product?.name || 'Unknown'}</td>
-                          <td className="px-4 py-3">{item.sizeMl} ml</td>
-                          <td className="px-4 py-3">{item.quantity}</td>
-                          <td className="px-4 py-3">৳{item.unitPrice.toFixed(2)}</td>
-                          <td className="px-4 py-3 font-semibold">৳{item.totalPrice.toFixed(2)}</td>
-                        </tr>
-                      ))}
+                      {selectedSale.items.map((item, idx) => {
+                        const productType = item.product?.type || 'N/A';
+                        const typeLabel = productType === 'roll-on' ? 'oil' : (productType === 'spray' ? 'perfume' : 'N/A');
+                        return (
+                          <tr key={idx}>
+                            <td className="px-4 py-3">{item.product?.name || 'Unknown'}</td>
+                            <td className="px-4 py-3">{item.sizeMl} ml</td>
+                            <td className="px-4 py-3">{typeLabel}</td>
+                            <td className="px-4 py-3">{item.quantity}</td>
+                            <td className="px-4 py-3">৳{item.unitPrice.toFixed(2)}</td>
+                            <td className="px-4 py-3 font-semibold">৳{item.totalPrice.toFixed(2)}</td>
+                          </tr>
+                        );
+                      })}
                       <tr className="font-bold bg-gray-50">
-                        <td colSpan="4" className="px-4 py-3 text-right">Grand Total</td>
+                        <td colSpan="5" className="px-4 py-3 text-right">Grand Total</td>
                         <td className="px-4 py-3">৳{selectedSale.totalAmount.toFixed(2)}</td>
                       </tr>
                     </tbody>
