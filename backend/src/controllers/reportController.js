@@ -96,3 +96,27 @@ exports.getInvestorProfitReport = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+// @desc    Get available cash (net profit)
+// @route   GET /api/reports/available-cash
+exports.getAvailableCash = async (req, res) => {
+  try {
+    // Fetch all data – same as Dashboard
+    const allSales = await Sale.find();
+    const allExpenses = await Expense.find();
+    const allPurchases = await Purchase.find();
+
+    // Calculate totals
+    const totalRevenue = allSales.reduce((sum, s) => sum + (s.totalAmount || 0), 0);
+    const totalExpenses = allExpenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+    const totalPurchases = allPurchases.reduce((sum, p) => sum + (p.totalAmount || 0), 0);
+
+    // Fixed deductions (hardcoded in Dashboard)
+    const deductions = 10600 + 246 + 127;
+
+    const netProfit = totalRevenue - totalExpenses - totalPurchases - deductions;
+
+    res.json({ availableCash: netProfit });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

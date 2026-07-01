@@ -10,13 +10,14 @@ import Dashboard from './pages/Dashboard';
 import Materials from './pages/Inventory/Materials';
 import Bottles from './pages/Inventory/Bottles';
 import Batches from './pages/Production/Batches';
-import SaleList from './pages/Sales/SaleList';   
+import SaleList from './pages/Sales/SaleList';
 import NewSale from './pages/Sales/NewSale';
 import ProductList from './pages/Products/ProductList';
 import NewProduct from './pages/Products/NewProduct';
 import ExpensePage from './pages/Expenses/Expenses';
 import NewPurchase from './pages/Purchases/NewPurchase';
 import PurchaseList from './pages/Purchases/PurchaseList';
+import Investors from './pages/Investors/Investors'; // ✅ Correct import
 
 function App() {
   return (
@@ -26,8 +27,6 @@ function App() {
         <Routes>
           {/* Public routes */}
           <Route path="/login" element={<Login />} />
-
-          {/* Public registration */}
           <Route path="/register" element={<Register />} />
 
           {/* Admin-only routes */}
@@ -41,12 +40,12 @@ function App() {
             <Route path="production/batches" element={<Batches />} />
             <Route path="products" element={<ProductList />} />
             <Route path="products/new" element={<NewProduct />} />
-            <Route path="sales" element={<SaleList />} />          
-            <Route path="sales/new" element={<NewSale />} />   
+            <Route path="sales" element={<SaleList />} />
+            <Route path="sales/new" element={<NewSale />} />
             <Route path="purchases" element={<PurchaseList />} />
             <Route path="purchases/new" element={<NewPurchase />} />
             <Route path="expenses" element={<ExpensePage />} />
-            <Route path="investors" element={<div>Investors Page</div>} />
+            <Route path="investors" element={<Investors />} /> {/* ✅ Use component */}
             <Route path="reports" element={<div>Reports Page</div>} />
           </Route>
         </Routes>

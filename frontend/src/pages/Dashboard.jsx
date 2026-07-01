@@ -17,6 +17,7 @@ import {
   ArrowDownRight,
   Clock,
   ShoppingCart,
+  Layers,
 } from 'lucide-react';
 import API from '../api/axios';
 import toast from 'react-hot-toast';
@@ -33,9 +34,13 @@ const Dashboard = () => {
     totalExpenses: 0,
     totalPurchases: 0,
     netProfit: 0,
+    rawMaterialStockValue: 0,
+    bottleStockValue: 0,
+    totalInventoryValue: 0,
   });
   const [salesTypeCounts, setSalesTypeCounts] = useState({ oil: 0, perfume: 0 });
   const [bottleSales, setBottleSales] = useState([]);
+  const [bottles, setBottles] = useState([]);
   const [recentExpenses, setRecentExpenses] = useState([]);
   const [recentPurchases, setRecentPurchases] = useState([]);
 
@@ -43,7 +48,6 @@ const Dashboard = () => {
     const fetchStats = async () => {
       setLoading(true);
       try {
-        // --- Fetch all data ---
         let materialsRes, bottlesRes, productsRes, salesRes, expensesRes, purchasesRes;
         try {
           [materialsRes, bottlesRes, productsRes, salesRes, expensesRes, purchasesRes] = await Promise.all([
@@ -65,11 +69,43 @@ const Dashboard = () => {
         const allExpenses = expensesRes?.data || [];
         const allPurchases = purchasesRes?.data || [];
         const products = productsRes?.data || [];
+        const materials = materialsRes?.data || [];
+        const bottleData = bottlesRes?.data || [];
+        setBottles(bottleData);
 
-        // --- All-time totals ---
-        const totalRevenue = allSales.reduce((sum, s) => sum + (s.totalAmount || 0), 0);
-        const totalExpenses = allExpenses.reduce((sum, e) => sum + (e.amount || 0), 0);
-        const totalPurchases = allPurchases.reduce((sum, p) => sum + (p.totalAmount || 0), 0);
+        // --- All-time totals (robust parsing) ---
+        const totalRevenue = allSales.reduce((sum, s) => {
+          const amount = parseFloat(s.totalAmount) || 0;
+          return sum + amount;
+        }, 0);
+
+        const totalExpenses = allExpenses.reduce((sum, e) => {
+          const amount = parseFloat(e.amount) || 0;
+          return sum + amount;
+        }, 0);
+
+        const totalPurchases = allPurchases.reduce((sum, p) => {
+          const amount = parseFloat(p.totalAmount) || 0;
+          return sum + amount;
+        }, 0);
+
+        // --- Raw Material Stock Value ---
+        let rawMaterialStockValue = 0;
+        materials.forEach(m => {
+          const stock = parseFloat(m.currentStockMl) || 0;
+          const avgCost = parseFloat(m.avgCostPerMl) || 0;
+          rawMaterialStockValue += stock * avgCost;
+        });
+
+        // --- Bottle Stock Value ---
+        let bottleStockValue = 0;
+        bottleData.forEach(b => {
+          const stock = parseFloat(b.currentStock) || 0;
+          const avgCost = parseFloat(b.avgCostPerUnit) || 0;
+          bottleStockValue += stock * avgCost;
+        });
+
+        const totalInventoryValue = rawMaterialStockValue + bottleStockValue;
 
         // --- Sales by product type ---
         let oilSold = 0;
@@ -111,14 +147,17 @@ const Dashboard = () => {
 
         // --- Update state ---
         setStats({
-          materials: materialsRes?.data?.length || 0,
-          bottles: bottlesRes?.data?.length || 0,
+          materials: materials.length,
+          bottles: bottleData.length,
           products: products.length,
           salesCount: allSales.length,
           totalRevenue,
           totalExpenses,
           totalPurchases,
-          netProfit: totalRevenue - totalExpenses - totalPurchases,
+          netProfit: totalRevenue - totalExpenses - totalPurchases - (10600 + 246 + 127),
+          rawMaterialStockValue,
+          bottleStockValue,
+          totalInventoryValue,
         });
         setSalesTypeCounts({ oil: oilSold, perfume: perfumeSold });
         setBottleSales(sortedBottleSales);
@@ -134,7 +173,7 @@ const Dashboard = () => {
     fetchStats();
   }, []);
 
-  // --- Main stats cards ---
+  // --- Main stats cards (6 cards) ---
   const mainCards = [
     {
       title: 'Raw Materials',
@@ -176,9 +215,29 @@ const Dashboard = () => {
       link: '/sales',
       linkText: 'View all →',
     },
+    {
+      title: 'Raw Materials Stock Value',
+      value: `৳${stats.rawMaterialStockValue.toFixed(2)}`,
+      icon: Layers,
+      color: 'text-emerald-600',
+      bg: 'bg-emerald-50',
+      border: 'border-emerald-200',
+      link: '/inventory/materials',
+      linkText: 'View stock →',
+    },
+    {
+      title: 'Bottles Stock Value',
+      value: `৳${stats.bottleStockValue.toFixed(2)}`,
+      icon: Layers,
+      color: 'text-cyan-600',
+      bg: 'bg-cyan-50',
+      border: 'border-cyan-200',
+      link: '/inventory/bottles',
+      linkText: 'View stock →',
+    },
   ];
 
-  // --- Overall Summary (all-time) ---
+  // --- Overall Summary (all-time) with link to Investors ---
   const overallSummary = [
     { 
       label: 'Total Revenue', 
@@ -199,10 +258,24 @@ const Dashboard = () => {
       color: 'text-orange-600' 
     },
     { 
-      label: 'Net Profit', 
+      label: 'Available Cash', 
       value: `৳${stats.netProfit.toFixed(2)}`, 
       icon: DollarSign, 
-      color: 'text-indigo-600' 
+      color: 'text-indigo-600',
+      link: '/investors',
+      linkText: 'Distribute →',
+    },
+    { 
+      label: 'Total Inventory Value', 
+      value: `৳${stats.totalInventoryValue.toFixed(2)}`, 
+      icon: Layers, 
+      color: 'text-teal-600' 
+    },
+    { 
+      label: 'Total Business Value', 
+      value: `৳${(stats.netProfit + stats.totalInventoryValue).toFixed(2)}`, 
+      icon: BarChart3, 
+      color: 'text-amber-600' 
     },
   ];
 
@@ -252,39 +325,39 @@ const Dashboard = () => {
       ) : (
         <>
           {/* Main Stats Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
             {mainCards.map((card, idx) => (
               <div
                 key={idx}
-                className={`bg-white rounded-2xl shadow-sm border ${card.border} hover:shadow-md transition-shadow p-5`}
+                className={`bg-white rounded-2xl shadow-sm border ${card.border} hover:shadow-md transition-shadow p-4`}
               >
-                <div className="flex items-center justify-between mb-2">
-                  <div className={`p-2.5 rounded-xl ${card.bg}`}>
-                    <card.icon className={`w-5 h-5 ${card.color}`} />
+                <div className="flex items-center justify-between mb-1">
+                  <div className={`p-2 rounded-xl ${card.bg}`}>
+                    <card.icon className={`w-4 h-4 ${card.color}`} />
                   </div>
-                  <span className="text-2xl font-bold text-gray-800">{card.value}</span>
+                  <span className="text-lg font-bold text-gray-800">{card.value}</span>
                 </div>
                 <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
                   {card.title}
                 </p>
                 <Link
                   to={card.link}
-                  className="mt-2 text-xs font-medium text-amber-600 hover:underline inline-flex items-center gap-1"
+                  className="mt-1 text-xs text-amber-600 hover:underline inline-flex items-center gap-1"
                 >
                   {card.linkText}
-                  <ArrowUpRight size={12} />
+                  <ArrowUpRight size={10} />
                 </Link>
               </div>
             ))}
           </div>
 
-          {/* Overall Summary (all-time) */}
+          {/* Overall Summary */}
           <div className="mb-6">
             <h2 className="text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
               <BarChart3 size={18} className="text-amber-600" />
               Overall Summary
             </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
               {overallSummary.map((item, idx) => (
                 <div key={idx} className="bg-white rounded-2xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow p-4 text-center">
                   <div className="flex items-center justify-center gap-2 mb-1">
@@ -293,7 +366,16 @@ const Dashboard = () => {
                       {item.label}
                     </p>
                   </div>
-                  <p className={`text-xl font-bold ${item.color}`}>{item.value}</p>
+                  <p className={`text-lg font-bold ${item.color}`}>{item.value}</p>
+                  {item.link && (
+                    <Link
+                      to={item.link}
+                      className="mt-1 text-xs text-amber-600 hover:underline inline-flex items-center gap-1"
+                    >
+                      {item.linkText || 'View →'}
+                      <ArrowUpRight size={10} />
+                    </Link>
+                  )}
                 </div>
               ))}
             </div>
@@ -374,8 +456,8 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Sales by Product Type & Top Selling Bottles */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Two-Column: Sales by Product Type & Top Selling Bottles */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
               <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
                 <BarChart3 size={16} className="text-amber-600" />
@@ -419,6 +501,76 @@ const Dashboard = () => {
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* ✅ UPDATED: Available Bottles (Inventory) with Total Stock & Sold */}
+          <div className="mt-6">
+            <h2 className="text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
+              <FlaskRound size={18} className="text-cyan-600" />
+              Available Bottles (Inventory)
+            </h2>
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bottle Size</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total Stock</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Sold</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Available Stock</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Avg Cost (৳)</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total Value (৳)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {bottles.map((bottle) => {
+                      const avgCost = parseFloat(bottle.avgCostPerUnit) || 0;
+                      const totalPurchased = bottle.totalPurchased || 0;
+                      const available = parseInt(bottle.currentStock) || 0;
+                      const sold = totalPurchased - available;
+                      const totalValue = available * avgCost;
+                      return (
+                        <tr key={bottle._id} className="hover:bg-gray-50 transition">
+                          <td className="px-6 py-4">{bottle.sizeMl} ml</td>
+                          <td className="px-6 py-4 capitalize">{bottle.type}</td>
+                          <td className="px-6 py-4 text-right font-medium">{totalPurchased}</td>
+                          <td className="px-6 py-4 text-right text-rose-600">{sold}</td>
+                          <td className="px-6 py-4 text-right font-semibold text-green-600">{available}</td>
+                          <td className="px-6 py-4 text-right">৳{avgCost.toFixed(2)}</td>
+                          <td className="px-6 py-4 text-right font-semibold text-cyan-600">
+                            ৳{totalValue.toFixed(2)}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {bottles.length === 0 && (
+                      <tr>
+                        <td colSpan="7" className="text-center py-8 text-gray-400">No bottles found</td>
+                      </tr>
+                    )}
+                  </tbody>
+                  <tfoot className="bg-gray-50 font-semibold">
+                    <tr>
+                      <td colSpan="2" className="px-6 py-3 text-right">Total</td>
+                      <td className="px-6 py-3 text-right">
+                        {bottles.reduce((sum, b) => sum + (b.totalPurchased || 0), 0)}
+                      </td>
+                      <td className="px-6 py-3 text-right">
+                        {bottles.reduce((sum, b) => sum + ((b.totalPurchased || 0) - (b.currentStock || 0)), 0)}
+                      </td>
+                      <td className="px-6 py-3 text-right">
+                        {bottles.reduce((sum, b) => sum + (parseInt(b.currentStock) || 0), 0)}
+                      </td>
+                      <td className="px-6 py-3 text-right">-</td>
+                      <td className="px-6 py-3 text-right text-cyan-600">
+                        ৳{bottles.reduce((sum, b) => sum + ((parseInt(b.currentStock) || 0) * (parseFloat(b.avgCostPerUnit) || 0)), 0).toFixed(2)}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
             </div>
           </div>
         </>

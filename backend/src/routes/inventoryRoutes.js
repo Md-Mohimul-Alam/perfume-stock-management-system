@@ -17,6 +17,7 @@ const {
   bulkAddStockToBottles,
   addBottlePurchase,
 } = require('../controllers/inventoryController');
+const { getBottlesWithSales } = require('../controllers/bottleController');
 const { protect } = require('../middlewares/authMiddleware');
 
 // Raw materials
@@ -46,5 +47,7 @@ router.post('/materials/bulk', protect, bulkCreateMaterials);
 router.post('/bottles/bulk', protect, bulkCreateBottles);
 router.post('/materials/import', protect, importMaterialsWithPurchases);
 router.post('/bottles/bulk-add-stock', protect, bulkAddStockToBottles);
+
+router.get('/bottles/with-sales', protect, getBottlesWithSales);
 
 module.exports = router;

@@ -89,6 +89,7 @@ exports.deleteMaterial = async (req, res) => {
 // @route   GET /api/inventory/bottles
 exports.getBottles = async (req, res) => {
   try {
+    // ✅ Keep excluding purchases for performance
     const bottles = await Bottle.find().select('-purchases');
     res.json(bottles);
   } catch (error) {

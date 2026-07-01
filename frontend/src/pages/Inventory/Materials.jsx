@@ -286,7 +286,7 @@ const Materials = () => {
         </div>
       )}
 
-      {/* ---------- Add Modal ---------- */}
+      {/* ---------- Add Modal (unchanged) ---------- */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
@@ -343,7 +343,7 @@ const Materials = () => {
         </div>
       )}
 
-      {/* ---------- Edit Modal ---------- */}
+      {/* ---------- Updated Edit Modal ---------- */}
       {showEditModal && editingMaterial && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
@@ -355,6 +355,7 @@ const Materials = () => {
             </button>
             <h2 className="text-2xl font-bold mb-4">Edit Material</h2>
             <form onSubmit={handleEditSubmit} className="space-y-4">
+              {/* Editable fields */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
                 <input
@@ -387,6 +388,31 @@ const Materials = () => {
                   <option value="fixative">Fixative</option>
                 </select>
               </div>
+
+              {/* Read-only fields – show current stock, cost, total */}
+              <div className="border-t pt-4 mt-2">
+                <p className="text-sm text-gray-500 mb-2">Inventory Details (read‑only)</p>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <span className="text-gray-500">Stock (ml)</span>
+                    <p className="font-semibold">{editingMaterial.currentStockMl || 0}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Per ml Cost (৳)</span>
+                    <p className="font-semibold">{(editingMaterial.avgCostPerMl || 0).toFixed(2)}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-gray-500">Total Price (৳)</span>
+                    <p className="font-semibold text-blue-600">
+                      {((editingMaterial.currentStockMl || 0) * (editingMaterial.avgCostPerMl || 0)).toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-400 mt-2">
+                  * Stock and cost are updated via purchases and usage.
+                </p>
+              </div>
+
               {editError && <p className="text-red-500 text-sm">{editError}</p>}
               <button
                 type="submit"
@@ -400,7 +426,7 @@ const Materials = () => {
         </div>
       )}
 
-      {/* ---------- Delete Confirmation ---------- */}
+      {/* ---------- Delete Confirmation (unchanged) ---------- */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
@@ -426,7 +452,7 @@ const Materials = () => {
         </div>
       )}
 
-      {/* ---------- Upload Modal ---------- */}
+      {/* ---------- Upload Modal (unchanged) ---------- */}
       {showUploadModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 relative">

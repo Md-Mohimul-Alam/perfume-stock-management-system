@@ -5,6 +5,7 @@ const {
   createInvestor,
   addContribution,
   getShares,
+  deleteInvestor,
 } = require('../controllers/investorController');
 const { protect } = require('../middlewares/authMiddleware');
 
@@ -14,5 +15,6 @@ router.route('/')
 
 router.post('/:id/contribute', protect, addContribution);
 router.get('/shares', protect, getShares);
+router.delete('/:id', protect, deleteInvestor);
 
 module.exports = router;

@@ -50,21 +50,23 @@ const Bottles = () => {
 
   // ---------- Fetch ----------
   useEffect(() => {
-    fetchBottles();
+    fetchBottlesWithSales();
   }, []);
 
-  const fetchBottles = async () => {
+  const fetchBottlesWithSales = async () => {
     setLoading(true);
     try {
-      const { data } = await API.get('/inventory/bottles');
+      const { data } = await API.get('/inventory/bottles/with-sales');
       const formatted = data.map(b => ({
         ...b,
         currentStock: Number(b.currentStock) || 0,
         avgCostPerUnit: Number(b.avgCostPerUnit) || 0,
+        totalPurchased: Number(b.totalPurchased) || 0,
+        sold: Number(b.sold) || 0,
       }));
       setBottles(formatted);
     } catch (error) {
-      console.error('Failed to fetch bottles', error);
+      console.error('Failed to fetch bottles with sales', error);
     } finally {
       setLoading(false);
     }
@@ -83,7 +85,7 @@ const Bottles = () => {
         avgCostPerUnit: Number(newBottle.avgCostPerUnit) || 0,
       });
       setShowAddModal(false);
-      fetchBottles();
+      fetchBottlesWithSales();
       setNewBottle({ sizeMl: '', type: 'spray', currentStock: 0, avgCostPerUnit: 0 });
     } catch (err) {
       setModalError(err.response?.data?.message || 'Failed to create bottle');
@@ -98,6 +100,8 @@ const Bottles = () => {
       ...bottle,
       currentStock: Number(bottle.currentStock) || 0,
       avgCostPerUnit: Number(bottle.avgCostPerUnit) || 0,
+      totalPurchased: Number(bottle.totalPurchased) || 0,
+      sold: Number(bottle.sold) || 0,
     });
     setEditError('');
     setShowEditModal(true);
@@ -116,7 +120,7 @@ const Bottles = () => {
         avgCostPerUnit: Number(editingBottle.avgCostPerUnit) || 0,
       });
       setShowEditModal(false);
-      fetchBottles();
+      fetchBottlesWithSales();
     } catch (err) {
       setEditError(err.response?.data?.message || 'Update failed');
     } finally {
@@ -135,7 +139,7 @@ const Bottles = () => {
     try {
       await API.delete(`/inventory/bottles/${deletingId}`);
       setShowDeleteConfirm(false);
-      fetchBottles();
+      fetchBottlesWithSales();
     } catch (err) {
       alert(err.response?.data?.message || 'Delete failed');
     } finally {
@@ -173,7 +177,7 @@ const Bottles = () => {
         invoiceNo: invoiceNo.trim() || undefined,
       });
       setShowPurchaseModal(false);
-      fetchBottles();
+      fetchBottlesWithSales();
     } catch (err) {
       setPurchaseError(err.response?.data?.message || 'Purchase failed');
     } finally {
@@ -181,7 +185,7 @@ const Bottles = () => {
     }
   };
 
-  // ---------- Bulk Upload (UPDATED) ----------
+  // ---------- Bulk Upload ----------
   const handleFileChange = (e) => {
     const selected = e.target.files[0];
     if (selected) setFile(selected);
@@ -201,7 +205,6 @@ const Bottles = () => {
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
         const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
 
-        // Helper to find a column by possible names
         const findColumn = (obj, possibleNames) => {
           const keys = Object.keys(obj);
           for (const name of possibleNames) {
@@ -235,27 +238,23 @@ const Bottles = () => {
             const sizeMatch = sizeRaw.match(/([\d.]+)/);
             const sizeMl = sizeMatch ? parseFloat(sizeMatch[1]) : NaN;
 
-            // Determine type
             let type = 'spray';
             if (typeCol) {
               const typeRaw = String(row[typeCol]).toLowerCase().trim();
               if (typeRaw.includes('roll') || typeRaw.includes('role')) type = 'roll-on';
               else if (typeRaw.includes('spray')) type = 'spray';
             } else {
-              // infer from size string
               const lower = sizeRaw.toLowerCase();
               if (lower.includes('role') || lower.includes('roll')) type = 'roll-on';
               else if (lower.includes('spray')) type = 'spray';
             }
 
-            // Stock
             let currentStock = 0;
             if (stockCol) {
               const val = parseFloat(row[stockCol]);
               if (!isNaN(val) && val >= 0) currentStock = val;
             }
 
-            // Per Unit Cost
             let avgCostPerUnit = 0;
             if (costCol) {
               const val = parseFloat(row[costCol]);
@@ -277,7 +276,7 @@ const Bottles = () => {
 
         const response = await API.post('/inventory/bottles/bulk', { items });
         setUploadResult({ success: true, data: response.data });
-        fetchBottles();
+        fetchBottlesWithSales();
         setFile(null);
         setTimeout(() => setShowUploadModal(false), 3000);
       };
@@ -324,24 +323,31 @@ const Bottles = () => {
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Size (ml)</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Per Unit Cost (৳)</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Price (৳)</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total Stock</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Sold</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Available Stock</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Per Unit Cost (৳)</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total Value (৳)</th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {bottles.map((b) => {
-                const unitCost = Number(b.avgCostPerUnit) || 0;
-                const stock = Number(b.currentStock) || 0;
-                const totalPrice = stock * unitCost;
+                const totalPurchased = b.totalPurchased || 0;
+                const sold = b.sold || 0;
+                const available = Math.max(0, totalPurchased - sold);
+                const unitCost = b.avgCostPerUnit || 0;
+                const totalValue = available * unitCost;
+
                 return (
-                  <tr key={b._id}>
+                  <tr key={b._id} className="hover:bg-gray-50 transition">
                     <td className="px-6 py-4">{b.sizeMl}</td>
                     <td className="px-6 py-4 capitalize">{b.type}</td>
-                    <td className="px-6 py-4">{stock}</td>
-                    <td className="px-6 py-4">{unitCost.toFixed(2)}</td>
-                    <td className="px-6 py-4">{totalPrice.toFixed(2)}</td>
+                    <td className="px-6 py-4 text-right font-medium">{totalPurchased}</td>
+                    <td className="px-6 py-4 text-right text-rose-600">{sold}</td>
+                    <td className="px-6 py-4 text-right font-semibold text-green-600">{available}</td>
+                    <td className="px-6 py-4 text-right">৳{unitCost.toFixed(2)}</td>
+                    <td className="px-6 py-4 text-right font-semibold text-cyan-600">৳{totalValue.toFixed(2)}</td>
                     <td className="px-6 py-4 text-center">
                       <button
                         onClick={() => handlePurchaseClick(b)}
@@ -370,10 +376,32 @@ const Bottles = () => {
               })}
               {bottles.length === 0 && (
                 <tr>
-                  <td colSpan="6" className="text-center py-8 text-gray-500">No bottles found</td>
+                  <td colSpan="8" className="text-center py-8 text-gray-500">No bottles found</td>
                 </tr>
               )}
             </tbody>
+            <tfoot className="bg-gray-50 font-semibold">
+              <tr>
+                <td colSpan="2" className="px-6 py-3 text-right">Total</td>
+                <td className="px-6 py-3 text-right">
+                  {bottles.reduce((sum, b) => sum + (b.totalPurchased || 0), 0)}
+                </td>
+                <td className="px-6 py-3 text-right text-rose-600">
+                  {bottles.reduce((sum, b) => sum + (b.sold || 0), 0)}
+                </td>
+                <td className="px-6 py-3 text-right text-green-600">
+                  {bottles.reduce((sum, b) => sum + Math.max(0, (b.totalPurchased || 0) - (b.sold || 0)), 0)}
+                </td>
+                <td className="px-6 py-3 text-right">-</td>
+                <td className="px-6 py-3 text-right text-cyan-600">
+                  ৳{bottles.reduce((sum, b) => {
+                    const avail = Math.max(0, (b.totalPurchased || 0) - (b.sold || 0));
+                    return sum + (avail * (b.avgCostPerUnit || 0));
+                  }, 0).toFixed(2)}
+                </td>
+                <td className="px-6 py-3" />
+              </tr>
+            </tfoot>
           </table>
         </div>
       )}
@@ -447,7 +475,7 @@ const Bottles = () => {
         </div>
       )}
 
-      {/* ---------- Edit Modal ---------- */}
+      {/* ---------- Edit Modal (ENHANCED) ---------- */}
       {showEditModal && editingBottle && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
@@ -459,6 +487,7 @@ const Bottles = () => {
             </button>
             <h2 className="text-2xl font-bold mb-4">Edit Bottle</h2>
             <form onSubmit={handleEditSubmit} className="space-y-4">
+              {/* Editable fields */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Size (ml)</label>
                 <input
@@ -482,7 +511,7 @@ const Bottles = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Stock</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Current Stock (Inventory)</label>
                 <input
                   type="number"
                   step="1"
@@ -503,6 +532,28 @@ const Bottles = () => {
                   className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none"
                 />
               </div>
+
+              {/* Read-only summary of stock & sales */}
+              <div className="border-t pt-4 mt-2">
+                <p className="text-sm text-gray-500 mb-2">Stock & Sales Summary (read‑only)</p>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <span className="text-gray-500">Total Stock</span>
+                    <p className="font-semibold">{editingBottle.totalPurchased || 0}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Sold</span>
+                    <p className="font-semibold text-rose-600">{editingBottle.sold || 0}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-gray-500">Available Stock</span>
+                    <p className="font-semibold text-green-600">
+                      {Math.max(0, (editingBottle.totalPurchased || 0) - (editingBottle.sold || 0))}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               {editError && <p className="text-red-500 text-sm">{editError}</p>}
               <button
                 type="submit"

@@ -76,11 +76,25 @@ exports.getShares = async (req, res) => {
     const investors = await Investor.find();
     const totalNet = investors.reduce((sum, inv) => sum + inv.netContribution, 0);
     const shares = investors.map(inv => ({
+      _id: inv._id,
       name: inv.name,
       netContribution: inv.netContribution,
       sharePercentage: totalNet > 0 ? (inv.netContribution / totalNet) * 100 : 0,
     }));
     res.json(shares);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// ✅ ADD THIS MISSING FUNCTION
+// @desc    Delete/close an investor
+// @route   DELETE /api/investors/:id
+exports.deleteInvestor = async (req, res) => {
+  try {
+    const investor = await Investor.findByIdAndDelete(req.params.id);
+    if (!investor) return res.status(404).json({ message: 'Investor not found' });
+    res.json({ message: 'Investor removed' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
