@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import API from '../api/axios';
 import toast from 'react-hot-toast';
-import { User, Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
-import logo from "../../public/logo.jpg";  // adjust path if needed
+import { User, Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
+import logo from "../../public/logo.jpg";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -18,6 +18,14 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState('');
+
+  // OTP states
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpError, setOtpError] = useState('');
+  const [otpSuccess, setOtpSuccess] = useState(false);
+  const [registrationEmail, setRegistrationEmail] = useState('');
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -45,15 +53,25 @@ const Register = () => {
     if (!validateForm()) return;
 
     setLoading(true);
+    setError('');
     try {
-      await API.post('/auth/register', {
+      const response = await API.post('/auth/register', {
         name: formData.name,
         email: formData.email,
         password: formData.password,
         role: formData.role,
       });
-      toast.success('User registered successfully');
-      navigate('/login'); // adjust to your user list route
+
+      // Store email for OTP verification
+      setRegistrationEmail(formData.email);
+      
+      // Show OTP modal
+      setShowOtpModal(true);
+      setOtp('');
+      setOtpError('');
+      setOtpSuccess(false);
+      
+      toast.success(response.data.message || 'Registration successful! Check your email for OTP.');
     } catch (error) {
       const msg = error.response?.data?.message || 'Registration failed';
       toast.error(msg);
@@ -61,6 +79,38 @@ const Register = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    if (!otp.trim()) {
+      setOtpError('Please enter the OTP.');
+      return;
+    }
+    setOtpLoading(true);
+    setOtpError('');
+    try {
+      await API.post('/auth/verify-registration', {
+        email: registrationEmail,
+        otp: otp.trim(),
+      });
+      setOtpSuccess(true);
+      toast.success('Email verified successfully!');
+      setTimeout(() => {
+        setShowOtpModal(false);
+        navigate('/login');
+      }, 1500);
+    } catch (err) {
+      setOtpLoading(false);
+      const msg = err.response?.data?.message || 'Invalid OTP. Please try again.';
+      setOtpError(msg);
+    }
+  };
+
+  const closeOtpModal = () => {
+    setShowOtpModal(false);
+    setOtp('');
+    setOtpError('');
   };
 
   return (
@@ -75,6 +125,7 @@ const Register = () => {
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold font-serif text-brand-dark">Create User</h2>
           <p className="text-brand-muted mt-2">Add a new staff or admin</p>
+          <p className="text-xs text-gray-400 mt-1">Admin limit: max 2 admins</p>
         </div>
 
         {/* Form */}
@@ -208,6 +259,92 @@ const Register = () => {
           </Link>
         </div>
       </div>
+
+      {/* ============================================
+          OTP Verification Modal
+          ============================================ */}
+      {showOtpModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
+            <button
+              onClick={closeOtpModal}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+              aria-label="Close modal"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mx-auto mb-4">
+                <Mail className="w-8 h-8" />
+              </div>
+              <h3 className="text-2xl font-bold">Verify Your Email</h3>
+              <p className="text-gray-500 mt-2">
+                We've sent a 6‑digit OTP to <br />
+                <span className="font-medium text-gray-700">{registrationEmail}</span>
+              </p>
+              <p className="text-xs text-gray-400 mt-1">Please check your inbox (and spam folder).</p>
+            </div>
+
+            <form onSubmit={handleVerifyOtp} className="space-y-5">
+              <div>
+                <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-1">
+                  Enter OTP
+                </label>
+                <input
+                  id="otp"
+                  type="text"
+                  placeholder="123456"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                  disabled={otpLoading || otpSuccess}
+                  className="w-full px-4 py-3 text-center text-2xl tracking-widest border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-400"
+                  maxLength={6}
+                  required
+                  autoFocus
+                />
+                {otpError && (
+                  <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" />
+                    {otpError}
+                  </p>
+                )}
+                {otpSuccess && (
+                  <p className="text-green-500 text-sm mt-1 flex items-center gap-1">
+                    <CheckCircle className="w-4 h-4" />
+                    Verified! Redirecting to login...
+                  </p>
+                )}
+              </div>
+
+              <button
+                type="submit"
+                disabled={otpLoading || otpSuccess}
+                className="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+              >
+                {otpLoading ? 'Verifying...' : 'Verify OTP'}
+              </button>
+
+              <p className="text-center text-sm text-gray-500">
+                Didn't receive it?{' '}
+                <button
+                  type="button"
+                  onClick={() => {
+                    // Resend OTP – re-trigger registration (or create a dedicated resend endpoint)
+                    toast('Resending OTP... Please try registering again.');
+                    setShowOtpModal(false);
+                  }}
+                  className="text-blue-600 hover:underline"
+                >
+                  Resend
+                </button>
+              </p>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

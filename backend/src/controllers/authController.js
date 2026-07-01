@@ -1,14 +1,13 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
-const { sendVerificationEmail, sendOtpEmail } = require('../utils/email');
+const { sendOtpEmail } = require('../utils/email');
 const { saveOtp, getOtp, deleteOtp } = require('../utils/otpStore');
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRE });
 };
 
-// ---------- REGISTER ----------
+// ---------- REGISTER (sends OTP) ----------
 exports.register = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
@@ -25,20 +24,26 @@ exports.register = async (req, res) => {
       return res.status(400).json({ message: 'Email already registered' });
     }
 
+    // ✅ Admin limit: only 2 admins allowed
+    if (role === 'admin') {
+      const adminCount = await User.countDocuments({ role: 'admin' });
+      if (adminCount >= 2) {
+        return res.status(400).json({ message: 'Admin limit reached (max 2 admins)' });
+      }
+    }
+
     // Create user (unverified)
     const user = await User.create({ name, email, password, role });
 
-    // Generate verification token
-    const verificationToken = crypto.randomBytes(32).toString('hex');
-    user.verificationToken = verificationToken;
-    user.verificationTokenExpires = Date.now() + 3600000; // 1 hour
-    await user.save();
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    saveOtp(email, otp); // store in memory with 5 min expiry
 
-    // Send verification email
-    await sendVerificationEmail(email, verificationToken);
+    // Send OTP via email
+    await sendOtpEmail(email, otp); // reuse the same function (subject: "Your Login OTP" – we can change it or keep)
 
     res.status(201).json({
-      message: 'User created. A verification link has been sent to your email.',
+      message: 'User created. An OTP has been sent to your email for verification.',
     });
   } catch (error) {
     console.error('Register error:', error);
@@ -46,28 +51,34 @@ exports.register = async (req, res) => {
   }
 };
 
-// ---------- VERIFY EMAIL ----------
-exports.verifyEmail = async (req, res) => {
+// ---------- VERIFY REGISTRATION OTP ----------
+exports.verifyRegistrationOtp = async (req, res) => {
   try {
-    const { token } = req.params;
-    const user = await User.findOne({
-      verificationToken: token,
-      verificationTokenExpires: { $gt: Date.now() },
-    });
-
-    if (!user) {
-      return res.status(400).json({ message: 'Invalid or expired verification token' });
+    const { email, otp } = req.body;
+    if (!email || !otp) {
+      return res.status(400).json({ message: 'Email and OTP are required' });
     }
 
+    const storedOtp = getOtp(email);
+    if (!storedOtp || storedOtp !== otp) {
+      return res.status(400).json({ message: 'Invalid or expired OTP' });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Activate user
     user.isVerified = true;
-    user.verificationToken = undefined;
-    user.verificationTokenExpires = undefined;
     await user.save();
 
-    // For API clients, return JSON. For a browser redirect, you can send HTML.
+    // Remove OTP
+    deleteOtp(email);
+
     res.json({ message: 'Email verified successfully. You can now log in.' });
   } catch (error) {
-    console.error('Verify email error:', error);
+    console.error('Verify registration OTP error:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -83,7 +94,7 @@ exports.login = async (req, res) => {
     }
 
     if (!user.isVerified) {
-      return res.status(403).json({ message: 'Please verify your email first' });
+      return res.status(403).json({ message: 'Please verify your email first (check your OTP).' });
     }
 
     // Generate 6-digit OTP
