@@ -1,20 +1,30 @@
 const nodemailer = require('nodemailer');
 const dns = require('dns');
 
-// ✅ Force IPv4 using custom DNS lookup
+// -------------------------------------------------------------
+// ✅ Transporter with IPv4 forcing, extended timeouts & logging
+// -------------------------------------------------------------
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
   port: 587,
-  secure: false, // TLS – port 587
+  secure: false, // TLS – use port 587
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
-  connectionTimeout: 10000,
-  socketTimeout: 10000,
-  // Override DNS lookup to force IPv4 only
+  family: 4, // force IPv4 at socket level
+  connectionTimeout: 30000, // 30 seconds
+  socketTimeout: 30000,
+  // Override DNS lookup to force IPv4 and log the resolved address
   lookup: (hostname, options, callback) => {
-    dns.lookup(hostname, { family: 4 }, callback);
+    dns.lookup(hostname, { family: 4 }, (err, address, family) => {
+      if (err) {
+        console.error('❌ DNS lookup error:', err);
+        return callback(err);
+      }
+      console.log(`✅ Resolved ${hostname} → ${address} (IPv4)`);
+      callback(null, address, family);
+    });
   },
 });
 
@@ -22,7 +32,7 @@ const transporter = nodemailer.createTransport({
 // OTP email for login & registration
 // =============================================
 exports.sendOtpEmail = async (to, otp) => {
-  console.log(`📧 Sending OTP to ${to} with OTP: ${otp}`);
+  console.log(`📧 Attempting to send OTP to ${to} with OTP: ${otp}`);
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to,
@@ -37,12 +47,17 @@ exports.sendOtpEmail = async (to, otp) => {
       </div>
     `,
   };
+
   try {
-    await transporter.sendMail(mailOptions);
-    console.log('✅ OTP email sent successfully');
+    const info = await transporter.sendMail(mailOptions);
+    console.log('✅ OTP email sent successfully:', info.response);
   } catch (error) {
-    console.error('❌ Nodemailer error:', error);
-    throw new Error('Failed to send OTP email');
+    console.error('❌ Nodemailer error (full):', error);
+    // Log additional details if available
+    if (error.responseCode) console.error('Response code:', error.responseCode);
+    if (error.response) console.error('SMTP response:', error.response);
+    if (error.code) console.error('Error code:', error.code);
+    throw new Error(`Failed to send OTP email: ${error.message}`);
   }
 };
 
@@ -66,11 +81,15 @@ exports.sendVerificationEmail = async (to, token) => {
       </div>
     `,
   };
+
   try {
-    await transporter.sendMail(mailOptions);
-    console.log('✅ Verification email sent');
+    const info = await transporter.sendMail(mailOptions);
+    console.log('✅ Verification email sent:', info.response);
   } catch (error) {
     console.error('❌ Verification email error:', error);
-    throw new Error('Failed to send verification email');
+    if (error.responseCode) console.error('Response code:', error.responseCode);
+    if (error.response) console.error('SMTP response:', error.response);
+    if (error.code) console.error('Error code:', error.code);
+    throw new Error(`Failed to send verification email: ${error.message}`);
   }
 };
