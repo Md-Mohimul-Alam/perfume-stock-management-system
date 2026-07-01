@@ -14,7 +14,7 @@ const Navbar = ({ toggleSidebar }) => {
   return (
     <header className="bg-white shadow-sm px-4 sm:px-6 py-3 flex justify-between items-center sticky top-0 z-30">
       <div className="flex items-center gap-3">
-        {/* Hamburger button – visible only on small screens */}
+        {/* Hamburger – only visible on mobile */}
         <button
           onClick={toggleSidebar}
           className="p-1.5 rounded hover:bg-gray-100 lg:hidden"

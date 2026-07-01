@@ -24,7 +24,7 @@ const Sidebar = ({ closeDrawer, isDrawer = false }) => {
         {isDrawer && (
           <button
             onClick={closeDrawer}
-            className="p-1 rounded hover:bg-gray-100 lg:hidden"
+            className="p-1 rounded hover:bg-gray-100"
             aria-label="Close sidebar"
           >
             <X size={24} />

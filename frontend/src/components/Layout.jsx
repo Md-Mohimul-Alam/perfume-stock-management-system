@@ -11,7 +11,7 @@ const Layout = () => {
 
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* Sidebar – hidden on mobile, shown on large screens */}
+      {/* Desktop sidebar – always visible on large screens */}
       <div className="hidden lg:block lg:w-64 lg:shrink-0">
         <Sidebar />
       </div>
@@ -33,7 +33,7 @@ const Layout = () => {
         <Sidebar closeDrawer={closeSidebar} isDrawer />
       </div>
 
-      {/* Main content area */}
+      {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
         <Navbar toggleSidebar={toggleSidebar} />
         <main className="flex-1 overflow-y-auto p-4 sm:p-6">
