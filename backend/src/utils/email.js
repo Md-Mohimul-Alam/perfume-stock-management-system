@@ -1,11 +1,17 @@
 const nodemailer = require('nodemailer');
 
+// ------------------- Create transporter with IPv4 forced -------------------
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+  // ✅ Force IPv4 to avoid ENETUNREACH issues on Render
+  family: 4,
+  // Timeouts to prevent hanging
+  connectionTimeout: 10000, // 10 seconds
+  socketTimeout: 10000,
 });
 
 // Registration verification email
@@ -25,7 +31,12 @@ exports.sendVerificationEmail = async (to, token) => {
       </div>
     `,
   };
-  await transporter.sendMail(mailOptions);
+  try {
+    await transporter.sendMail(mailOptions);
+  } catch (error) {
+    console.error('Verification email error:', error);
+    throw new Error('Failed to send verification email');
+  }
 };
 
 // OTP email for login
@@ -44,5 +55,10 @@ exports.sendOtpEmail = async (to, otp) => {
       </div>
     `,
   };
-  await transporter.sendMail(mailOptions);
+  try {
+    await transporter.sendMail(mailOptions);
+  } catch (error) {
+    console.error('OTP email error:', error);
+    throw new Error('Failed to send OTP email');
+  }
 };
