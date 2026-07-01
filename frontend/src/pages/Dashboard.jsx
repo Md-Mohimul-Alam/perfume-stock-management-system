@@ -14,10 +14,8 @@ import {
   Wallet,
   Calendar,
   ArrowUpRight,
-  ArrowDownRight,
-  Clock,
-  ShoppingCart,
   Layers,
+  ShoppingCart,
 } from 'lucide-react';
 import API from '../api/axios';
 import toast from 'react-hot-toast';
@@ -48,46 +46,36 @@ const Dashboard = () => {
     const fetchStats = async () => {
       setLoading(true);
       try {
-        let materialsRes, bottlesRes, productsRes, salesRes, expensesRes, purchasesRes;
-        try {
-          [materialsRes, bottlesRes, productsRes, salesRes, expensesRes, purchasesRes] = await Promise.all([
-            API.get('/inventory/materials'),
-            API.get('/inventory/bottles'),
-            API.get('/products'),
-            API.get('/sales'),
-            API.get('/expenses'),
-            API.get('/purchases'),
-          ]);
-        } catch (apiError) {
-          toast.error('Failed to load dashboard data. Please refresh.');
-          console.error('API Error:', apiError);
-          setLoading(false);
-          return;
-        }
+        // ✅ Use the same endpoint as Bottles page
+        const [
+          materialsRes,
+          bottlesWithSalesRes,
+          productsRes,
+          salesRes,
+          expensesRes,
+          purchasesRes,
+        ] = await Promise.all([
+          API.get('/inventory/materials'),
+          API.get('/inventory/bottles/with-sales'), // <-- changed
+          API.get('/products'),
+          API.get('/sales'),
+          API.get('/expenses'),
+          API.get('/purchases'),
+        ]);
 
         const allSales = salesRes?.data || [];
         const allExpenses = expensesRes?.data || [];
         const allPurchases = purchasesRes?.data || [];
         const products = productsRes?.data || [];
         const materials = materialsRes?.data || [];
-        const bottleData = bottlesRes?.data || [];
+        const bottleData = bottlesWithSalesRes?.data || [];
+
         setBottles(bottleData);
 
-        // --- All-time totals (robust parsing) ---
-        const totalRevenue = allSales.reduce((sum, s) => {
-          const amount = parseFloat(s.totalAmount) || 0;
-          return sum + amount;
-        }, 0);
-
-        const totalExpenses = allExpenses.reduce((sum, e) => {
-          const amount = parseFloat(e.amount) || 0;
-          return sum + amount;
-        }, 0);
-
-        const totalPurchases = allPurchases.reduce((sum, p) => {
-          const amount = parseFloat(p.totalAmount) || 0;
-          return sum + amount;
-        }, 0);
+        // --- All-time totals ---
+        const totalRevenue = allSales.reduce((sum, s) => sum + (parseFloat(s.totalAmount) || 0), 0);
+        const totalExpenses = allExpenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+        const totalPurchases = allPurchases.reduce((sum, p) => sum + (parseFloat(p.totalAmount) || 0), 0);
 
         // --- Raw Material Stock Value ---
         let rawMaterialStockValue = 0;
@@ -97,7 +85,7 @@ const Dashboard = () => {
           rawMaterialStockValue += stock * avgCost;
         });
 
-        // --- Bottle Stock Value ---
+        // --- Bottle Stock Value (using currentStock) ---
         let bottleStockValue = 0;
         bottleData.forEach(b => {
           const stock = parseFloat(b.currentStock) || 0;
@@ -216,7 +204,7 @@ const Dashboard = () => {
       linkText: 'View all →',
     },
     {
-      title: 'Raw Materials Stock Value',
+      title: 'Raw Mat. Stock Value',
       value: `৳${stats.rawMaterialStockValue.toFixed(2)}`,
       icon: Layers,
       color: 'text-emerald-600',
@@ -237,7 +225,7 @@ const Dashboard = () => {
     },
   ];
 
-  // --- Overall Summary (all-time) with link to Investors ---
+  // --- Overall Summary (all-time) ---
   const overallSummary = [
     { 
       label: 'Total Revenue', 
@@ -280,14 +268,14 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between mb-8">
+      <div className="flex flex-wrap items-center justify-between mb-6 sm:mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
             Welcome back, <span className="text-amber-600">{user?.name || 'Admin'}</span>
           </h1>
-          <p className="text-gray-500 text-sm mt-1 flex items-center gap-2">
+          <p className="text-gray-500 text-xs sm:text-sm mt-1 flex items-center gap-2">
             <Calendar size={16} />
             {new Date().toLocaleDateString('en-US', { 
               weekday: 'long', 
@@ -297,17 +285,17 @@ const Dashboard = () => {
             })}
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <Link
             to="/sales/new"
-            className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition shadow-amber-500/30 flex items-center gap-2"
+            className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-4 sm:px-5 py-2 rounded-lg shadow-md hover:shadow-lg transition shadow-amber-500/30 flex items-center gap-2 text-sm sm:text-base"
           >
             <TrendingUp size={18} />
             New Sale
           </Link>
           <Link
             to="/expenses"
-            className="bg-gradient-to-r from-rose-500 to-rose-600 text-white px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition shadow-rose-500/30 flex items-center gap-2"
+            className="bg-gradient-to-r from-rose-500 to-rose-600 text-white px-4 sm:px-5 py-2 rounded-lg shadow-md hover:shadow-lg transition shadow-rose-500/30 flex items-center gap-2 text-sm sm:text-base"
           >
             <Wallet size={18} />
             Add Expense
@@ -324,25 +312,25 @@ const Dashboard = () => {
         </div>
       ) : (
         <>
-          {/* Main Stats Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+          {/* Main Stats Cards - responsive grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-6">
             {mainCards.map((card, idx) => (
               <div
                 key={idx}
-                className={`bg-white rounded-2xl shadow-sm border ${card.border} hover:shadow-md transition-shadow p-4`}
+                className={`bg-white rounded-2xl shadow-sm border ${card.border} hover:shadow-md transition-shadow p-3 sm:p-4`}
               >
                 <div className="flex items-center justify-between mb-1">
-                  <div className={`p-2 rounded-xl ${card.bg}`}>
-                    <card.icon className={`w-4 h-4 ${card.color}`} />
+                  <div className={`p-1.5 sm:p-2 rounded-xl ${card.bg}`}>
+                    <card.icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${card.color}`} />
                   </div>
-                  <span className="text-lg font-bold text-gray-800">{card.value}</span>
+                  <span className="text-base sm:text-lg font-bold text-gray-800">{card.value}</span>
                 </div>
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <p className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                   {card.title}
                 </p>
                 <Link
                   to={card.link}
-                  className="mt-1 text-xs text-amber-600 hover:underline inline-flex items-center gap-1"
+                  className="mt-1 text-[10px] sm:text-xs text-amber-600 hover:underline inline-flex items-center gap-1"
                 >
                   {card.linkText}
                   <ArrowUpRight size={10} />
@@ -351,26 +339,26 @@ const Dashboard = () => {
             ))}
           </div>
 
-          {/* Overall Summary */}
+          {/* Overall Summary - responsive grid */}
           <div className="mb-6">
-            <h2 className="text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
+            <h2 className="text-base sm:text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
               <BarChart3 size={18} className="text-amber-600" />
               Overall Summary
             </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
               {overallSummary.map((item, idx) => (
-                <div key={idx} className="bg-white rounded-2xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow p-4 text-center">
-                  <div className="flex items-center justify-center gap-2 mb-1">
-                    <item.icon className={`w-4 h-4 ${item.color}`} />
-                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">
+                <div key={idx} className="bg-white rounded-2xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow p-3 sm:p-4 text-center">
+                  <div className="flex items-center justify-center gap-1.5 sm:gap-2 mb-1">
+                    <item.icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${item.color}`} />
+                    <p className="text-[10px] sm:text-xs text-gray-500 font-medium uppercase tracking-wider">
                       {item.label}
                     </p>
                   </div>
-                  <p className={`text-lg font-bold ${item.color}`}>{item.value}</p>
+                  <p className={`text-base sm:text-lg font-bold ${item.color}`}>{item.value}</p>
                   {item.link && (
                     <Link
                       to={item.link}
-                      className="mt-1 text-xs text-amber-600 hover:underline inline-flex items-center gap-1"
+                      className="mt-1 text-[10px] sm:text-xs text-amber-600 hover:underline inline-flex items-center gap-1"
                     >
                       {item.linkText || 'View →'}
                       <ArrowUpRight size={10} />
@@ -381,10 +369,10 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Two-Column: Recent Expenses & Recent Purchases */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          {/* Two-Column: Recent Expenses & Purchases - responsive */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
             {/* Recent Expenses */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-5">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                   <Wallet size={16} className="text-rose-600" />
@@ -400,19 +388,19 @@ const Dashboard = () => {
                 <div className="space-y-2">
                   {recentExpenses.map((exp) => (
                     <div key={exp._id} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg transition">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-rose-50 flex items-center justify-center">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-8 h-8 rounded-full bg-rose-50 flex items-center justify-center flex-shrink-0">
                           <DollarSign size={14} className="text-rose-600" />
                         </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-700">{exp.category}</p>
-                          <p className="text-xs text-gray-400">
+                        <div className="truncate">
+                          <p className="text-sm font-medium text-gray-700 truncate">{exp.category}</p>
+                          <p className="text-xs text-gray-400 truncate">
                             {new Date(exp.date).toLocaleDateString()}
                             {exp.description && ` • ${exp.description}`}
                           </p>
                         </div>
                       </div>
-                      <span className="text-sm font-semibold text-rose-600">৳{exp.amount?.toFixed(2) || '0.00'}</span>
+                      <span className="text-sm font-semibold text-rose-600 whitespace-nowrap ml-2">৳{exp.amount?.toFixed(2) || '0.00'}</span>
                     </div>
                   ))}
                 </div>
@@ -420,7 +408,7 @@ const Dashboard = () => {
             </div>
 
             {/* Recent Purchases */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-5">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                   <ShoppingCart size={16} className="text-orange-600" />
@@ -436,19 +424,19 @@ const Dashboard = () => {
                 <div className="space-y-2">
                   {recentPurchases.map((purchase) => (
                     <div key={purchase._id} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg transition">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center flex-shrink-0">
                           <ShoppingCart size={14} className="text-orange-600" />
                         </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-700">{purchase.invoiceNo}</p>
-                          <p className="text-xs text-gray-400">
+                        <div className="truncate">
+                          <p className="text-sm font-medium text-gray-700 truncate">{purchase.invoiceNo}</p>
+                          <p className="text-xs text-gray-400 truncate">
                             {new Date(purchase.purchaseDate).toLocaleDateString()}
                             {purchase.supplier && ` • ${purchase.supplier}`}
                           </p>
                         </div>
                       </div>
-                      <span className="text-sm font-semibold text-orange-600">৳{purchase.totalAmount?.toFixed(2) || '0.00'}</span>
+                      <span className="text-sm font-semibold text-orange-600 whitespace-nowrap ml-2">৳{purchase.totalAmount?.toFixed(2) || '0.00'}</span>
                     </div>
                   ))}
                 </div>
@@ -457,8 +445,8 @@ const Dashboard = () => {
           </div>
 
           {/* Two-Column: Sales by Product Type & Top Selling Bottles */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-5">
               <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
                 <BarChart3 size={16} className="text-amber-600" />
                 Sales by Product Type (All Time)
@@ -477,7 +465,7 @@ const Dashboard = () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-5">
               <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
                 <FlaskRound size={16} className="text-amber-600" />
                 Top Selling Bottles (All Time)
@@ -488,9 +476,9 @@ const Dashboard = () => {
                 <div className="space-y-2">
                   {bottleSales.slice(0, 5).map((item) => (
                     <div key={`${item.size}-${item.type}`} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg transition">
-                      <div>
-                        <p className="text-sm font-medium text-gray-700">{item.size} ml</p>
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-gray-700">{item.size} ml</span>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
                           item.type === 'roll-on' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
                         }`}>
                           {item.type === 'roll-on' ? 'Oil' : 'Perfume'}
@@ -504,9 +492,9 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* ✅ UPDATED: Available Bottles (Inventory) with Total Stock & Sold */}
+          {/* ✅ UPDATED: Available Bottles (Inventory) using with-sales data */}
           <div className="mt-6">
-            <h2 className="text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
+            <h2 className="text-base sm:text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
               <FlaskRound size={18} className="text-cyan-600" />
               Available Bottles (Inventory)
             </h2>
@@ -515,33 +503,31 @@ const Dashboard = () => {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bottle Size</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total Stock</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Sold</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Available Stock</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Avg Cost (৳)</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total Value (৳)</th>
+                      <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">Bottle</th>
+                      <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                      <th className="px-3 sm:px-6 py-2 sm:py-3 text-right text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                      <th className="px-3 sm:px-6 py-2 sm:py-3 text-right text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">Sold</th>
+                      <th className="px-3 sm:px-6 py-2 sm:py-3 text-right text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">Available</th>
+                      <th className="px-3 sm:px-6 py-2 sm:py-3 text-right text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">Avg Cost</th>
+                      <th className="px-3 sm:px-6 py-2 sm:py-3 text-right text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">Total Value</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
                     {bottles.map((bottle) => {
-                      const avgCost = parseFloat(bottle.avgCostPerUnit) || 0;
                       const totalPurchased = bottle.totalPurchased || 0;
-                      const available = parseInt(bottle.currentStock) || 0;
-                      const sold = totalPurchased - available;
+                      const sold = bottle.sold || 0;
+                      const available = Math.max(0, totalPurchased - sold);
+                      const avgCost = parseFloat(bottle.avgCostPerUnit) || 0;
                       const totalValue = available * avgCost;
                       return (
                         <tr key={bottle._id} className="hover:bg-gray-50 transition">
-                          <td className="px-6 py-4">{bottle.sizeMl} ml</td>
-                          <td className="px-6 py-4 capitalize">{bottle.type}</td>
-                          <td className="px-6 py-4 text-right font-medium">{totalPurchased}</td>
-                          <td className="px-6 py-4 text-right text-rose-600">{sold}</td>
-                          <td className="px-6 py-4 text-right font-semibold text-green-600">{available}</td>
-                          <td className="px-6 py-4 text-right">৳{avgCost.toFixed(2)}</td>
-                          <td className="px-6 py-4 text-right font-semibold text-cyan-600">
-                            ৳{totalValue.toFixed(2)}
-                          </td>
+                          <td className="px-3 sm:px-6 py-3 sm:py-4 text-sm">{bottle.sizeMl} ml</td>
+                          <td className="px-3 sm:px-6 py-3 sm:py-4 capitalize text-sm">{bottle.type}</td>
+                          <td className="px-3 sm:px-6 py-3 sm:py-4 text-right font-medium text-sm">{totalPurchased}</td>
+                          <td className="px-3 sm:px-6 py-3 sm:py-4 text-right text-rose-600 text-sm">{sold}</td>
+                          <td className="px-3 sm:px-6 py-3 sm:py-4 text-right font-semibold text-green-600 text-sm">{available}</td>
+                          <td className="px-3 sm:px-6 py-3 sm:py-4 text-right text-sm">৳{avgCost.toFixed(2)}</td>
+                          <td className="px-3 sm:px-6 py-3 sm:py-4 text-right font-semibold text-cyan-600 text-sm">৳{totalValue.toFixed(2)}</td>
                         </tr>
                       );
                     })}
@@ -553,19 +539,19 @@ const Dashboard = () => {
                   </tbody>
                   <tfoot className="bg-gray-50 font-semibold">
                     <tr>
-                      <td colSpan="2" className="px-6 py-3 text-right">Total</td>
-                      <td className="px-6 py-3 text-right">
+                      <td colSpan="2" className="px-3 sm:px-6 py-3 text-right text-sm">Total</td>
+                      <td className="px-3 sm:px-6 py-3 text-right text-sm">
                         {bottles.reduce((sum, b) => sum + (b.totalPurchased || 0), 0)}
                       </td>
-                      <td className="px-6 py-3 text-right">
-                        {bottles.reduce((sum, b) => sum + ((b.totalPurchased || 0) - (b.currentStock || 0)), 0)}
+                      <td className="px-3 sm:px-6 py-3 text-right text-sm">
+                        {bottles.reduce((sum, b) => sum + (b.sold || 0), 0)}
                       </td>
-                      <td className="px-6 py-3 text-right">
-                        {bottles.reduce((sum, b) => sum + (parseInt(b.currentStock) || 0), 0)}
+                      <td className="px-3 sm:px-6 py-3 text-right text-sm">
+                        {bottles.reduce((sum, b) => sum + Math.max(0, (b.totalPurchased || 0) - (b.sold || 0)), 0)}
                       </td>
-                      <td className="px-6 py-3 text-right">-</td>
-                      <td className="px-6 py-3 text-right text-cyan-600">
-                        ৳{bottles.reduce((sum, b) => sum + ((parseInt(b.currentStock) || 0) * (parseFloat(b.avgCostPerUnit) || 0)), 0).toFixed(2)}
+                      <td className="px-3 sm:px-6 py-3 text-right text-sm">-</td>
+                      <td className="px-3 sm:px-6 py-3 text-right text-cyan-600 text-sm">
+                        ৳{bottles.reduce((sum, b) => sum + (Math.max(0, (b.totalPurchased || 0) - (b.sold || 0)) * (parseFloat(b.avgCostPerUnit) || 0)), 0).toFixed(2)}
                       </td>
                     </tr>
                   </tfoot>
