@@ -8,12 +8,13 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM_EMAIL = 'Luxe Perfume <onboarding@resend.dev>';
 
 // =============================================
-// Registration verification email
+// Registration verification email (token-based) – kept for backward compatibility
 // =============================================
 exports.sendVerificationEmail = async (to, token) => {
   const link = `${process.env.BASE_URL}/api/auth/verify/${token}`;
+  console.log(`📧 Attempting to send verification email to ${to}`);
   try {
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from: FROM_EMAIL,
       to,
       subject: 'Verify Your Luxe Perfume Account',
@@ -27,24 +28,26 @@ exports.sendVerificationEmail = async (to, token) => {
         </div>
       `,
     });
+    console.log('✅ Verification email sent successfully:', result);
   } catch (error) {
-    console.error('Verification email error:', error);
+    console.error('❌ Verification email error:', error);
     throw new Error('Failed to send verification email');
   }
 };
 
 // =============================================
-// OTP email for login
+// OTP email for login & registration
 // =============================================
 exports.sendOtpEmail = async (to, otp) => {
+  console.log(`📧 Attempting to send OTP to ${to} with OTP: ${otp}`);
   try {
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from: FROM_EMAIL,
       to,
-      subject: 'Your Login OTP for Luxe Perfume',
+      subject: 'Your OTP for Luxe Perfume',
       html: `
         <div style="font-family: sans-serif; max-width: 500px;">
-          <h2 style="color: #b8860b;">Login OTP</h2>
+          <h2 style="color: #b8860b;">OTP Code</h2>
           <p>Your one‑time password is:</p>
           <h1 style="color: #b8860b; font-size: 36px;">${otp}</h1>
           <p>This OTP is valid for <strong>5 minutes</strong>.</p>
@@ -52,8 +55,15 @@ exports.sendOtpEmail = async (to, otp) => {
         </div>
       `,
     });
+    console.log('✅ OTP email sent successfully:', result);
+    return result;
   } catch (error) {
-    console.error('OTP email error:', error);
-    throw new Error('Failed to send OTP email');
+    console.error('❌ OTP email error (full):', error);
+    // Log additional details if available
+    if (error.response) {
+      console.error('Resend API response:', error.response);
+    }
+    // Throw a clear error message for the caller
+    throw new Error(`Failed to send OTP email: ${error.message}`);
   }
 };
