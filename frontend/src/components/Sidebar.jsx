@@ -1,8 +1,13 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { X } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 
-const Sidebar = ({ closeDrawer, isDrawer = false }) => {
+const Sidebar = ({ 
+  closeDrawer, 
+  isDrawer = false, 
+  collapsed = false, 
+  onToggleCollapse 
+}) => {
   const { user } = useAuth();
 
   const linkClass =
@@ -13,14 +18,24 @@ const Sidebar = ({ closeDrawer, isDrawer = false }) => {
     if (isDrawer && closeDrawer) closeDrawer();
   };
 
+  // When collapsed, hide the text and reduce padding
+  const linkTextClass = collapsed ? 'hidden' : 'ml-3';
+  const iconClass = 'flex-shrink-0';
+
   return (
-    <div className="h-full flex flex-col bg-white">
-      {/* Logo & close button (only in drawer) */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-        <div className="flex items-center">
+    <div className="h-full flex flex-col bg-white transition-all duration-300">
+      {/* Logo & close button (drawer only) */}
+      <div className={`flex items-center ${isDrawer ? 'justify-between' : 'justify-center'} px-4 py-3 border-b border-gray-200`}>
+        {!collapsed || isDrawer ? (
+          <div className="flex items-center">
+            <img src="/logo.jpg" alt="LuxePerfume Logo" className="h-10 w-10" />
+            {!collapsed && !isDrawer && (
+              <span className="ml-2 text-lg font-bold text-blue-800">LuxePerfume</span>
+            )}
+          </div>
+        ) : (
           <img src="/logo.jpg" alt="LuxePerfume Logo" className="h-10 w-10" />
-          <span className="ml-2 text-lg font-bold text-blue-800">LuxePerfume</span>
-        </div>
+        )}
         {isDrawer && (
           <button
             onClick={closeDrawer}
@@ -39,8 +54,8 @@ const Sidebar = ({ closeDrawer, isDrawer = false }) => {
           end
           onClick={handleLinkClick}
         >
-          <span className="mr-3">📊</span>
-          Dashboard
+          <span className={iconClass}>📊</span>
+          <span className={linkTextClass}>Dashboard</span>
         </NavLink>
 
         <NavLink
@@ -48,8 +63,8 @@ const Sidebar = ({ closeDrawer, isDrawer = false }) => {
           className={({ isActive }) => `${linkClass} ${isActive ? activeClass : ''}`}
           onClick={handleLinkClick}
         >
-          <span className="mr-3">🧴</span>
-          Raw Materials
+          <span className={iconClass}>🧴</span>
+          <span className={linkTextClass}>Raw Materials</span>
         </NavLink>
 
         <NavLink
@@ -57,17 +72,17 @@ const Sidebar = ({ closeDrawer, isDrawer = false }) => {
           className={({ isActive }) => `${linkClass} ${isActive ? activeClass : ''}`}
           onClick={handleLinkClick}
         >
-          <span className="mr-3">🧪</span>
-          Bottles
+          <span className={iconClass}>🧪</span>
+          <span className={linkTextClass}>Bottles</span>
         </NavLink>
 
         <NavLink
           to="/production/batches"
-          className={({ isActive }) => `${linkClass} ${isActive ? activeClass : ''} ml-6 text-sm`}
+          className={({ isActive }) => `${linkClass} ${isActive ? activeClass : ''} ${!collapsed ? 'ml-6' : ''} text-sm`}
           onClick={handleLinkClick}
         >
-          <span className="mr-3">📋</span>
-          Batches
+          <span className={iconClass}>📋</span>
+          <span className={linkTextClass}>Batches</span>
         </NavLink>
 
         <NavLink
@@ -75,17 +90,17 @@ const Sidebar = ({ closeDrawer, isDrawer = false }) => {
           className={({ isActive }) => `${linkClass} ${isActive ? activeClass : ''}`}
           onClick={handleLinkClick}
         >
-          <span className="mr-3">✨</span>
-          Products
+          <span className={iconClass}>✨</span>
+          <span className={linkTextClass}>Products</span>
         </NavLink>
 
         <NavLink
           to="/products/new"
-          className={({ isActive }) => `${linkClass} ${isActive ? activeClass : ''} ml-6 text-sm`}
+          className={({ isActive }) => `${linkClass} ${isActive ? activeClass : ''} ${!collapsed ? 'ml-6' : ''} text-sm`}
           onClick={handleLinkClick}
         >
-          <span className="mr-3">➕</span>
-          New Product
+          <span className={iconClass}>➕</span>
+          <span className={linkTextClass}>New Product</span>
         </NavLink>
 
         <NavLink
@@ -93,17 +108,17 @@ const Sidebar = ({ closeDrawer, isDrawer = false }) => {
           className={({ isActive }) => `${linkClass} ${isActive ? activeClass : ''}`}
           onClick={handleLinkClick}
         >
-          <span className="mr-3">💰</span>
-          Sales
+          <span className={iconClass}>💰</span>
+          <span className={linkTextClass}>Sales</span>
         </NavLink>
 
         <NavLink
           to="/sales/new"
-          className={({ isActive }) => `${linkClass} ${isActive ? activeClass : ''} ml-6 text-sm`}
+          className={({ isActive }) => `${linkClass} ${isActive ? activeClass : ''} ${!collapsed ? 'ml-6' : ''} text-sm`}
           onClick={handleLinkClick}
         >
-          <span className="mr-3">➕</span>
-          New Sale
+          <span className={iconClass}>➕</span>
+          <span className={linkTextClass}>New Sale</span>
         </NavLink>
 
         <NavLink
@@ -111,8 +126,8 @@ const Sidebar = ({ closeDrawer, isDrawer = false }) => {
           className={({ isActive }) => `${linkClass} ${isActive ? activeClass : ''}`}
           onClick={handleLinkClick}
         >
-          <span className="mr-3">📦</span>
-          Purchases
+          <span className={iconClass}>📦</span>
+          <span className={linkTextClass}>Purchases</span>
         </NavLink>
 
         <NavLink
@@ -120,8 +135,8 @@ const Sidebar = ({ closeDrawer, isDrawer = false }) => {
           className={({ isActive }) => `${linkClass} ${isActive ? activeClass : ''}`}
           onClick={handleLinkClick}
         >
-          <span className="mr-3">🧾</span>
-          Expenses
+          <span className={iconClass}>🧾</span>
+          <span className={linkTextClass}>Expenses</span>
         </NavLink>
 
         <NavLink
@@ -129,8 +144,8 @@ const Sidebar = ({ closeDrawer, isDrawer = false }) => {
           className={({ isActive }) => `${linkClass} ${isActive ? activeClass : ''}`}
           onClick={handleLinkClick}
         >
-          <span className="mr-3">👥</span>
-          Investors
+          <span className={iconClass}>👥</span>
+          <span className={linkTextClass}>Investors</span>
         </NavLink>
 
         <NavLink
@@ -138,8 +153,8 @@ const Sidebar = ({ closeDrawer, isDrawer = false }) => {
           className={({ isActive }) => `${linkClass} ${isActive ? activeClass : ''}`}
           onClick={handleLinkClick}
         >
-          <span className="mr-3">📈</span>
-          Reports
+          <span className={iconClass}>📈</span>
+          <span className={linkTextClass}>Reports</span>
         </NavLink>
 
         {user?.role === 'admin' && (
@@ -148,11 +163,24 @@ const Sidebar = ({ closeDrawer, isDrawer = false }) => {
             className={({ isActive }) => `${linkClass} ${isActive ? activeClass : ''}`}
             onClick={handleLinkClick}
           >
-            <span className="mr-3">👤</span>
-            Register User
+            <span className={iconClass}>👤</span>
+            <span className={linkTextClass}>Register User</span>
           </NavLink>
         )}
       </nav>
+
+      {/* Toggle button – only visible on desktop (not in drawer) */}
+      {!isDrawer && onToggleCollapse && (
+        <div className="border-t border-gray-200 p-2">
+          <button
+            onClick={onToggleCollapse}
+            className="w-full flex items-center justify-center py-2 text-gray-500 hover:bg-gray-100 rounded transition"
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+          </button>
+        </div>
+      )}
     </div>
   );
 };

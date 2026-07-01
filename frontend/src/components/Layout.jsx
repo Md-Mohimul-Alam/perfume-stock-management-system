@@ -5,15 +5,21 @@ import Sidebar from './Sidebar';
 
 const Layout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
   const closeSidebar = () => setSidebarOpen(false);
+  const toggleSidebarCollapse = () => setSidebarCollapsed(!sidebarCollapsed);
 
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* Desktop sidebar – always visible on large screens */}
-      <div className="hidden lg:block lg:w-64 lg:shrink-0">
-        <Sidebar />
+      {/* Desktop sidebar – hidden on mobile, with collapse state */}
+      <div
+        className={`hidden lg:block lg:shrink-0 transition-all duration-300 ${
+          sidebarCollapsed ? 'w-16' : 'w-64'
+        }`}
+      >
+        <Sidebar collapsed={sidebarCollapsed} onToggleCollapse={toggleSidebarCollapse} />
       </div>
 
       {/* Mobile drawer overlay */}
