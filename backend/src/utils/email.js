@@ -1,16 +1,16 @@
 const nodemailer = require('nodemailer');
 
-// ------------------- Create transporter with IPv4 forced -------------------
+// Create transporter with explicit Gmail SMTP settings and IPv4
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 587,                 // 587 for TLS (recommended)
+  secure: false,             // true for 465, false for other ports
   auth: {
     user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    pass: process.env.EMAIL_PASS, // ⚠️ No spaces! e.g., "szalybxkvcpvogxj"
   },
-  // ✅ Force IPv4 to avoid ENETUNREACH issues on Render
-  family: 4,
-  // Timeouts to prevent hanging
-  connectionTimeout: 10000, // 10 seconds
+  family: 4,                 // ✅ Force IPv4 (fixes ENETUNREACH)
+  connectionTimeout: 10000,  // 10 seconds
   socketTimeout: 10000,
 });
 
