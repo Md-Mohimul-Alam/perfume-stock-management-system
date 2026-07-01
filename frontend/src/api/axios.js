@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Get the API base URL from environment variable, with a production fallback
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://perfume-stock-management-system.onrender.com';
+const API_BASE_URL = (import.meta.env.VITE_API_URL || 'https://perfume-stock-management-system.onrender.com') + '/api';
 
 // Log the base URL in development to verify it's set correctly
 if (import.meta.env.MODE === 'development') {
