@@ -12,7 +12,8 @@ const app = express();
 // ------------------- CORS (proper) -------------------
 const allowedOrigins = [
   'http://localhost:5173',
-  'https://perfume-stock-management-system-545.vercel.app'
+  'https://perfume-stock-management-system-545.vercel.app',
+  'https://perfume-stock-management-system-545r-3cde9xag1.vercel.app'
 ];
 
 app.use(cors({
