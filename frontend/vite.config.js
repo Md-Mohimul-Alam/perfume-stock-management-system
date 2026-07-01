@@ -4,12 +4,19 @@ import react from '@vitejs/plugin-react'
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
 
+  // Ensure the API URL is set (throw a warning in production if missing)
+  const apiUrl = env.VITE_API_URL || (mode === 'development' ? 'http://localhost:5001' : undefined)
+  if (mode === 'production' && !apiUrl) {
+    console.warn('⚠️ VITE_API_URL is not set in production! API calls will fail.')
+  }
+
   return {
     plugins: [react()],
     server: {
-      proxy: mode === 'development' ? {
+      // Only proxy in development
+      proxy: mode === 'development' && apiUrl ? {
         '/api': {
-          target: env.VITE_API_URL || 'http://localhost:5001',
+          target: apiUrl,
           changeOrigin: true,
         }
       } : undefined,
@@ -17,11 +24,8 @@ export default defineConfig(({ mode }) => {
     build: {
       rollupOptions: {
         output: {
-          // ✅ manualChunks must be a function
           manualChunks(id) {
-            // Split vendor libraries into separate chunks for better caching
             if (id.includes('node_modules')) {
-              // React ecosystem
               if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
                 return 'vendor-react'
               }
@@ -33,7 +37,8 @@ export default defineConfig(({ mode }) => {
       chunkSizeWarningLimit: 1000,
     },
     define: {
-      'import.meta.env.VITE_API_URL': JSON.stringify(env.VITE_API_URL || ''),
+      // This makes VITE_API_URL available as import.meta.env.VITE_API_URL
+      'import.meta.env.VITE_API_URL': JSON.stringify(apiUrl || ''),
     },
   }
 })
