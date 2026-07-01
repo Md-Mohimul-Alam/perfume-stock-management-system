@@ -1,20 +1,26 @@
 const nodemailer = require('nodemailer');
+const dns = require('dns');
 
-// Create transporter with explicit Gmail SMTP settings and IPv4
+// Create transporter with IPv4-forced DNS lookup
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
-  port: 587,                 // 587 for TLS (recommended)
-  secure: false,             // true for 465, false for other ports
+  port: 587,                 // Use 587 for TLS
+  secure: false,             // false for port 587
   auth: {
     user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS, // ⚠️ No spaces! e.g., "szalybxkvcpvogxj"
+    pass: process.env.EMAIL_PASS, // ⚠️ MUST be without spaces!
   },
-  family: 4,                 // ✅ Force IPv4 (fixes ENETUNREACH)
-  connectionTimeout: 10000,  // 10 seconds
+  connectionTimeout: 10000,
   socketTimeout: 10000,
+  // ✅ Override DNS lookup to force IPv4 only
+  lookup: (hostname, options, callback) => {
+    dns.lookup(hostname, { family: 4 }, callback);
+  },
 });
 
+// =============================================
 // Registration verification email
+// =============================================
 exports.sendVerificationEmail = async (to, token) => {
   const link = `${process.env.BASE_URL}/api/auth/verify/${token}`;
   const mailOptions = {
@@ -39,7 +45,9 @@ exports.sendVerificationEmail = async (to, token) => {
   }
 };
 
+// =============================================
 // OTP email for login
+// =============================================
 exports.sendOtpEmail = async (to, otp) => {
   const mailOptions = {
     from: process.env.EMAIL_USER,
