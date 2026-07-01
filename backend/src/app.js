@@ -9,24 +9,40 @@ connectDB();
 
 const app = express();
 
-// ✅ CORS configuration
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'http://localhost:5173','https://perfume-stock-management-system-545.vercel.app',);
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  
-  if (req.method === 'OPTIONS') {
-    console.log('OPTIONS request received');
-    return res.sendStatus(200);
-  }
-  next();
-});
+// ------------------- CORS (proper) -------------------
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://perfume-stock-management-system-545.vercel.app'
+];
 
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 app.use(express.json());
 
-// Routes
+// ------------------- Routes -------------------
+// Root route – welcome message
+app.get('/', (req, res) => {
+  res.json({ message: 'Luxe Perfume API is running' });
+});
+
+// Health check
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/inventory', require('./routes/inventoryRoutes'));
 app.use('/api/purchases', require('./routes/purchaseRoutes'));
@@ -37,6 +53,7 @@ app.use('/api/expenses', require('./routes/expenseRoutes'));
 app.use('/api/investors', require('./routes/investorRoutes'));
 app.use('/api/reports', require('./routes/reportRoutes'));
 
+// ------------------- Error handling -------------------
 app.use(notFound);
 app.use(errorHandler);
 
