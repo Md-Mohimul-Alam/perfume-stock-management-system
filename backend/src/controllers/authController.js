@@ -24,7 +24,7 @@ exports.register = async (req, res) => {
       return res.status(400).json({ message: 'Email already registered' });
     }
 
-    // ✅ Admin limit: only 2 admins allowed
+    // Admin limit: only 2 admins allowed
     if (role === 'admin') {
       const adminCount = await User.countDocuments({ role: 'admin' });
       if (adminCount >= 2) {
@@ -35,12 +35,12 @@ exports.register = async (req, res) => {
     // Create user (unverified)
     const user = await User.create({ name, email, password, role });
 
-    // Generate 6-digit OTP
+    // Generate 6‑digit OTP and store in database
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    saveOtp(email, otp); // store in memory with 5 min expiry
+    await saveOtp(email, otp); // ✅ added 'await'
 
     // Send OTP via email
-    await sendOtpEmail(email, otp); // reuse the same function (subject: "Your Login OTP" – we can change it or keep)
+    await sendOtpEmail(email, otp);
 
     res.status(201).json({
       message: 'User created. An OTP has been sent to your email for verification.',
@@ -59,7 +59,7 @@ exports.verifyRegistrationOtp = async (req, res) => {
       return res.status(400).json({ message: 'Email and OTP are required' });
     }
 
-    const storedOtp = getOtp(email);
+    const storedOtp = await getOtp(email); // ✅ added 'await'
     if (!storedOtp || storedOtp !== otp) {
       return res.status(400).json({ message: 'Invalid or expired OTP' });
     }
@@ -73,8 +73,8 @@ exports.verifyRegistrationOtp = async (req, res) => {
     user.isVerified = true;
     await user.save();
 
-    // Remove OTP
-    deleteOtp(email);
+    // Remove OTP from database
+    await deleteOtp(email); // ✅ added 'await'
 
     res.json({ message: 'Email verified successfully. You can now log in.' });
   } catch (error) {
@@ -97,9 +97,9 @@ exports.login = async (req, res) => {
       return res.status(403).json({ message: 'Please verify your email first (check your OTP).' });
     }
 
-    // Generate 6-digit OTP
+    // Generate 6‑digit OTP and store
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    saveOtp(email, otp);
+    await saveOtp(email, otp); // ✅ added 'await'
 
     await sendOtpEmail(email, otp);
 
@@ -118,7 +118,7 @@ exports.verifyOtp = async (req, res) => {
       return res.status(400).json({ message: 'Email and OTP are required' });
     }
 
-    const storedOtp = getOtp(email);
+    const storedOtp = await getOtp(email); // ✅ added 'await'
     if (!storedOtp || storedOtp !== otp) {
       return res.status(400).json({ message: 'Invalid or expired OTP' });
     }
@@ -128,7 +128,7 @@ exports.verifyOtp = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    deleteOtp(email);
+    await deleteOtp(email); // ✅ added 'await'
 
     res.json({
       _id: user._id,

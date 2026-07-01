@@ -1,19 +1,30 @@
-const otpStore = new Map();
+const Otp = require('../models/Otp');
 
-exports.saveOtp = (email, otp, expiresInMs = 5 * 60 * 1000) => {
-  otpStore.set(email, { otp, expires: Date.now() + expiresInMs });
+exports.saveOtp = async (email, otp, expiresInMs = 5 * 60 * 1000) => {
+  // Delete any existing OTP for this email
+  await Otp.deleteMany({ email });
+  
+  // Save new OTP
+  await Otp.create({
+    email,
+    otp,
+    expiresAt: new Date(Date.now() + expiresInMs),
+  });
 };
 
-exports.getOtp = (email) => {
-  const record = otpStore.get(email);
+exports.getOtp = async (email) => {
+  const record = await Otp.findOne({ email });
   if (!record) return null;
-  if (Date.now() > record.expires) {
-    otpStore.delete(email);
+  
+  // Safety check: if expired (though MongoDB will auto‑delete)
+  if (Date.now() > record.expiresAt.getTime()) {
+    await Otp.deleteOne({ email });
     return null;
   }
+  
   return record.otp;
 };
 
-exports.deleteOtp = (email) => {
-  otpStore.delete(email);
+exports.deleteOtp = async (email) => {
+  await Otp.deleteMany({ email });
 };
