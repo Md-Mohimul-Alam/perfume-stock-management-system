@@ -18,7 +18,6 @@ const Sidebar = ({
     if (isDrawer && closeDrawer) closeDrawer();
   };
 
-  // When collapsed, hide the text and reduce padding
   const linkTextClass = collapsed ? 'hidden' : 'ml-3';
   const iconClass = 'flex-shrink-0';
 

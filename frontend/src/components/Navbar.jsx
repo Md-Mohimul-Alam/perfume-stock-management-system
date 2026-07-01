@@ -2,7 +2,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Menu, LogOut } from 'lucide-react';
 
-const Navbar = ({ toggleSidebar }) => {
+const Navbar = ({ onToggle }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -14,10 +14,10 @@ const Navbar = ({ toggleSidebar }) => {
   return (
     <header className="bg-white shadow-sm px-4 sm:px-6 py-3 flex justify-between items-center sticky top-0 z-30">
       <div className="flex items-center gap-3">
-        {/* Hamburger – only visible on mobile */}
+        {/* Hamburger – visible on all screen sizes */}
         <button
-          onClick={toggleSidebar}
-          className="p-1.5 rounded hover:bg-gray-100 lg:hidden"
+          onClick={onToggle}
+          className="p-1.5 rounded hover:bg-gray-100"
           aria-label="Toggle sidebar"
         >
           <Menu size={24} />
