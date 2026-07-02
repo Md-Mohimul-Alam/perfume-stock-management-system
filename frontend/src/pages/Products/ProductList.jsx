@@ -3,10 +3,43 @@ import { Link, useNavigate } from 'react-router-dom';
 import API from '../../api/axios';
 import {
   Plus, Search, Eye, Edit, Trash2,
-  X, CheckCircle, AlertCircle, Upload
+  X, CheckCircle, AlertCircle, Upload, Save, Loader2
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import toast from 'react-hot-toast';
+
+// ---------- Helper to format size for display (used in edit modal) ----------
+const formatSize = (sizeMl, bottleType) => {
+  if (!sizeMl && !bottleType) return '';
+  if (sizeMl && bottleType) return `${sizeMl}ml ${bottleType}`;
+  if (sizeMl) return `${sizeMl}ml`;
+  return bottleType || '';
+};
+
+// ---------- Helper to parse size string (reused from upload) ----------
+const parseSize = (sizeStr) => {
+  if (!sizeStr) return null;
+  const trimmed = String(sizeStr).trim();
+  const match = trimmed.match(/^([\d.]+)\s*ml\s*(.+)$/i);
+  if (match) {
+    const sizeMl = parseFloat(match[1]);
+    let type = match[2].toLowerCase().trim();
+    if (type.includes('role') || type.includes('roll')) type = 'roll-on';
+    else if (type.includes('spray')) type = 'spray';
+    else type = 'spray';
+    return { sizeMl, type };
+  }
+  const altMatch = trimmed.match(/^([\d.]+)\s*ml\s*(.+)$/i);
+  if (altMatch) {
+    const sizeMl = parseFloat(altMatch[1]);
+    let type = altMatch[2].toLowerCase().trim();
+    if (type.includes('role') || type.includes('roll')) type = 'roll-on';
+    else if (type.includes('spray')) type = 'spray';
+    else type = 'spray';
+    return { sizeMl, type };
+  }
+  return null;
+};
 
 const ProductList = () => {
   const navigate = useNavigate();
@@ -18,7 +51,23 @@ const ProductList = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
 
-  // Bulk upload state
+  // ---------- Edit Modal State ----------
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [productToEdit, setProductToEdit] = useState(null);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    sku: '',
+    size: '',
+    sellingPrice: '',
+    description: '',
+    intensity: 'medium',
+    bestFor: '',
+    notes: '',
+    isBestseller: false,
+  });
+  const [editLoading, setEditLoading] = useState(false);
+
+  // ---------- Bulk Upload State ----------
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploadFile, setUploadFile] = useState(null);
   const [uploading, setUploading] = useState(false);
@@ -41,6 +90,7 @@ const ProductList = () => {
     }
   };
 
+  // ---------- Delete Handlers ----------
   const handleDelete = async () => {
     if (!productToDelete) return;
     try {
@@ -53,6 +103,77 @@ const ProductList = () => {
     }
   };
 
+  // ---------- Edit Modal Handlers ----------
+  const openEditModal = (product) => {
+    setProductToEdit(product);
+    setEditForm({
+      name: product.name || '',
+      sku: product.sku || '',
+      size: formatSize(product.sizeMl, product.bottleType),
+      sellingPrice: product.sellingPrice || '',
+      description: product.description || '',
+      intensity: product.intensity || 'medium',
+      bestFor: (product.bestFor || []).join(', '),
+      notes: (product.notes || []).join(', '),
+      isBestseller: product.isBestseller || false,
+    });
+    setShowEditModal(true);
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setEditForm((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    if (!productToEdit) return;
+
+    setEditLoading(true);
+    try {
+      // Parse size
+      const sizeInfo = parseSize(editForm.size);
+      if (!sizeInfo) {
+        toast.error('Invalid size format. Use e.g. "3.5ml Roll-on" or "6ml Spray"');
+        setEditLoading(false);
+        return;
+      }
+
+      const payload = {
+        name: editForm.name.trim(),
+        sku: editForm.sku.trim(),
+        sizeMl: sizeInfo.sizeMl,
+        bottleType: sizeInfo.type,
+        sellingPrice: parseFloat(editForm.sellingPrice),
+        description: editForm.description.trim(),
+        intensity: editForm.intensity,
+        bestFor: editForm.bestFor.split(',').map(s => s.trim()).filter(Boolean),
+        notes: editForm.notes.split(',').map(s => s.trim()).filter(Boolean),
+        isBestseller: editForm.isBestseller,
+      };
+
+      // Validate
+      if (!payload.name || !payload.sku || isNaN(payload.sellingPrice) || payload.sellingPrice < 0) {
+        toast.error('Name, SKU, and valid price are required');
+        setEditLoading(false);
+        return;
+      }
+
+      await API.put(`/products/${productToEdit._id}`, payload);
+      toast.success('Product updated successfully!');
+      setShowEditModal(false);
+      setProductToEdit(null);
+      fetchProducts();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Update failed');
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
   // ---------- Bulk Upload Handlers ----------
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -61,33 +182,6 @@ const ProductList = () => {
       setUploadFile(file);
       setUploadResult(null);
     }
-  };
-
-  const parseSize = (sizeStr) => {
-    if (!sizeStr) return null;
-    const trimmed = String(sizeStr).trim();
-    // Try to match "3.5ml Roll-on" or "3ml Spray" etc.
-    const match = trimmed.match(/^([\d.]+)\s*ml\s*(.+)$/i);
-    if (match) {
-      const sizeMl = parseFloat(match[1]);
-      let type = match[2].toLowerCase().trim();
-      if (type.includes('role') || type.includes('roll')) type = 'roll-on';
-      else if (type.includes('spray')) type = 'spray';
-      else type = 'spray';
-      return { sizeMl, type };
-    }
-    // Try alternate format: "3ml Role" (common typo)
-    const altMatch = trimmed.match(/^([\d.]+)\s*ml\s*(.+)$/i);
-    if (altMatch) {
-      const sizeMl = parseFloat(altMatch[1]);
-      let type = altMatch[2].toLowerCase().trim();
-      if (type.includes('role') || type.includes('roll')) type = 'roll-on';
-      else if (type.includes('spray')) type = 'spray';
-      else type = 'spray';
-      return { sizeMl, type };
-    }
-    console.warn('⚠️ Could not parse size:', sizeStr);
-    return null;
   };
 
   const handleUploadSubmit = async (e) => {
@@ -121,7 +215,6 @@ const ProductList = () => {
           const columns = Object.keys(firstRow);
           console.log('📋 Columns found:', columns);
 
-          // Column mapping – case insensitive
           const findCol = (possibleNames) => {
             for (const name of possibleNames) {
               const found = columns.find(
@@ -144,7 +237,6 @@ const ProductList = () => {
 
           console.log('🔍 Column mapping:', { nameCol, skuCol, sizeCol, priceCol });
 
-          // Validate required
           if (!nameCol || !skuCol || !sizeCol || !priceCol) {
             setUploadResult({
               success: false,
@@ -170,8 +262,7 @@ const ProductList = () => {
                 continue;
               }
 
-              // Convert bestFor and notes – handle comma-separated strings
-              const bestForRaw = descCol ? String(row[bestForCol] || '').trim() : '';
+              const bestForRaw = bestForCol ? String(row[bestForCol] || '').trim() : '';
               const notesRaw = notesCol ? String(row[notesCol] || '').trim() : '';
 
               const item = {
@@ -187,7 +278,6 @@ const ProductList = () => {
                 isBestseller: bestsellerCol ? String(row[bestsellerCol] || '').toLowerCase().trim() === 'true' : false,
               };
 
-              // Validate intensity
               if (!['light', 'medium', 'strong', 'fresh'].includes(item.intensity)) {
                 item.intensity = 'medium';
               }
@@ -220,7 +310,6 @@ const ProductList = () => {
           fetchProducts();
           setUploadFile(null);
 
-          // Close modal after 3 seconds on success
           setTimeout(() => {
             setShowUploadModal(false);
             setUploadResult(null);
@@ -252,6 +341,7 @@ const ProductList = () => {
     }
   };
 
+  // ---------- Filtering ----------
   const filteredProducts = products.filter(p => {
     const matchesSearch =
       p.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -261,6 +351,7 @@ const ProductList = () => {
     return matchesSearch && matchesType && matchesIntensity;
   });
 
+  // ---------- Render ----------
   return (
     <div className="p-6 max-w-7xl mx-auto">
       {/* Header */}
@@ -272,7 +363,6 @@ const ProductList = () => {
         <div className="flex gap-3">
           <button
             onClick={() => {
-              console.log('📤 Opening upload modal');
               setShowUploadModal(true);
               setUploadResult(null);
               setUploadFile(null);
@@ -375,7 +465,7 @@ const ProductList = () => {
                   <tr key={p._id} className="hover:bg-gray-50 transition">
                     <td className="px-6 py-4 font-medium text-gray-800">{p.name}</td>
                     <td className="px-6 py-4 text-gray-600">{p.sku}</td>
-                    <td className="px-6 py-4 capitalize">{p.type}</td>
+                    <td className="px-6 py-4 capitalize">{p.bottleType || p.type || '-'}</td>
                     <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">{p.description || '-'}</td>
                     <td className="px-6 py-4 capitalize">{p.intensity || 'medium'}</td>
                     <td className="px-6 py-4 text-sm">{p.bestFor?.join(', ') || 'all'}</td>
@@ -390,7 +480,7 @@ const ProductList = () => {
                     <td className="px-6 py-4 text-center">
                       <div className="flex justify-center gap-2">
                         <button
-                          onClick={() => navigate(`/products/edit/${p._id}`)}
+                          onClick={() => openEditModal(p)}
                           className="text-blue-600 hover:text-blue-800"
                           title="Edit"
                         >
@@ -416,7 +506,7 @@ const ProductList = () => {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
+      {/* ---------- DELETE CONFIRMATION MODAL ---------- */}
       {showDeleteModal && productToDelete && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
@@ -444,7 +534,188 @@ const ProductList = () => {
         </div>
       )}
 
-      {/* ---------- Bulk Upload Modal (FIXED) ---------- */}
+      {/* ---------- EDIT MODAL (FULLY WORKING) ---------- */}
+      {showEditModal && productToEdit && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 relative">
+            <button
+              onClick={() => {
+                setShowEditModal(false);
+                setProductToEdit(null);
+              }}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+            >
+              <X size={24} />
+            </button>
+
+            <h2 className="text-2xl font-bold mb-1">Edit Product</h2>
+            <p className="text-gray-500 text-sm mb-4">
+              Update details for <span className="font-medium">{productToEdit.name}</span>
+            </p>
+
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Name */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Product Name *</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={editForm.name}
+                    onChange={handleEditChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                    required
+                  />
+                </div>
+
+                {/* SKU */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">SKU *</label>
+                  <input
+                    type="text"
+                    name="sku"
+                    value={editForm.sku}
+                    onChange={handleEditChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                    required
+                  />
+                </div>
+
+                {/* Size */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Size *</label>
+                  <input
+                    type="text"
+                    name="size"
+                    value={editForm.size}
+                    onChange={handleEditChange}
+                    placeholder="e.g. 3.5ml Roll-on"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                    required
+                  />
+                  <p className="text-xs text-gray-400 mt-1">Format: "3.5ml Spray" or "6ml Roll-on"</p>
+                </div>
+
+                {/* Price */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Selling Price *</label>
+                  <input
+                    type="number"
+                    name="sellingPrice"
+                    value={editForm.sellingPrice}
+                    onChange={handleEditChange}
+                    step="0.01"
+                    min="0"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                    required
+                  />
+                </div>
+
+                {/* Intensity */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Intensity</label>
+                  <select
+                    name="intensity"
+                    value={editForm.intensity}
+                    onChange={handleEditChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none bg-white"
+                  >
+                    <option value="light">Light</option>
+                    <option value="medium">Medium</option>
+                    <option value="strong">Strong</option>
+                    <option value="fresh">Fresh</option>
+                  </select>
+                </div>
+
+                {/* Bestseller (checkbox) */}
+                <div className="flex items-end">
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name="isBestseller"
+                      checked={editForm.isBestseller}
+                      onChange={handleEditChange}
+                      className="w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
+                    />
+                    Mark as Bestseller
+                  </label>
+                </div>
+
+                {/* Description (full width) */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <textarea
+                    name="description"
+                    value={editForm.description}
+                    onChange={handleEditChange}
+                    rows="2"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                  />
+                </div>
+
+                {/* Best For */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Best For</label>
+                  <input
+                    type="text"
+                    name="bestFor"
+                    value={editForm.bestFor}
+                    onChange={handleEditChange}
+                    placeholder="e.g. Women, Men, Unisex"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">Comma-separated values</p>
+                </div>
+
+                {/* Notes */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                  <input
+                    type="text"
+                    name="notes"
+                    value={editForm.notes}
+                    onChange={handleEditChange}
+                    placeholder="e.g. Floral, Woody, Fresh"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">Comma-separated values</p>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="submit"
+                  disabled={editLoading}
+                  className="flex-1 bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {editLoading ? (
+                    <>
+                      <Loader2 size={18} className="animate-spin" /> Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save size={18} /> Update Product
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setProductToEdit(null);
+                  }}
+                  className="px-6 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ---------- BULK UPLOAD MODAL ---------- */}
       {showUploadModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 relative">
