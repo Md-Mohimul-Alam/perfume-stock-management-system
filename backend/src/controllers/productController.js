@@ -159,11 +159,21 @@ exports.bulkCreateProducts = async (req, res) => {
       return { sizeMl, bottleType };
     };
 
+    // Helper to convert a value to an array (handles string or array)
+    const toArray = (value) => {
+      if (!value) return [];
+      if (Array.isArray(value)) return value;
+      if (typeof value === 'string') {
+        return value.split(',').map(s => s.trim()).filter(Boolean);
+      }
+      return [String(value)];
+    };
+
     for (const item of items) {
       try {
         let { name, sku, sellingPrice, bottleType, sizeMl, sizeString } = item;
 
-        // Parse size string
+        // Parse size string if provided
         if (sizeString) {
           const parsed = parseSizeString(sizeString);
           if (parsed) {
@@ -206,6 +216,15 @@ exports.bulkCreateProducts = async (req, res) => {
         // Find or create product
         let product = await Product.findOne({ sku });
         if (!product) {
+          // Convert bestFor and notes to arrays (handles both string and array input)
+          const bestFor = toArray(item.bestFor);
+          const notes = toArray(item.notes);
+          // Validate intensity
+          let intensity = (item.intensity || 'medium').toLowerCase();
+          if (!['light', 'medium', 'strong', 'fresh'].includes(intensity)) {
+            intensity = 'medium';
+          }
+
           product = new Product({
             name,
             sku,
@@ -213,12 +232,11 @@ exports.bulkCreateProducts = async (req, res) => {
             isActive: true,
             blendComponents: [],
             baseOil: null,
-            // new fields (optional, can be set via extra columns if needed)
             description: item.description || '',
-            intensity: item.intensity || 'medium',
-            bestFor: item.bestFor ? item.bestFor.split(',').map(s => s.trim()) : ['all'],
-            notes: item.notes ? item.notes.split(',').map(s => s.trim()) : [],
-            isBestseller: item.isBestseller || false,
+            intensity,
+            bestFor: bestFor.length ? bestFor : ['all'],
+            notes,
+            isBestseller: !!item.isBestseller,
             images: [],
           });
         }
@@ -244,7 +262,7 @@ exports.bulkCreateProducts = async (req, res) => {
           sellingPrice: parseFloat(sellingPrice),
         });
 
-        // Save the product
+        // Save the product (this triggers pre-save hook to calculate costs)
         await product.save();
         created.push(product);
       } catch (err) {
@@ -261,7 +279,6 @@ exports.bulkCreateProducts = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
 // =============================================
 // CORRECT PRODUCT TYPES (existing)
 // =============================================
