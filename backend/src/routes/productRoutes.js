@@ -15,16 +15,16 @@ const { protect, admin } = require('../middlewares/authMiddleware'); // ensure a
 
 // All routes are protected (require auth)
 router.route('/')
-  .get(protect, getProducts)
+  .get( getProducts)
   .post(protect, createProduct);
 
 router.route('/:id')
   .put(protect, updateProduct)
   .delete(protect, deleteProduct);
 
-router.post('/:id/calculate-cost', protect, calculateCost);
+router.post('/:id/calculate-cost', calculateCost);
 router.post('/bulk', protect, bulkCreateProducts);
-router.post('/correct-types', protect, correctProductTypes);
+router.post('/correct-types', correctProductTypes);
 router.post('/fix-product-types', protect, fixProductTypesAndBottles);
 
 // 👇 New endpoint – can be triggered manually (only admin)
