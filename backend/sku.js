@@ -33,25 +33,20 @@ mongoose.connect(MONGO_URI)
 function parseFile(filePath) {
   let rows = [];
   
-  // Check extension
   const ext = path.extname(filePath).toLowerCase();
   
   if (ext === '.xlsx' || ext === '.xls') {
-    // Excel file
     console.log('📖 Reading Excel file...');
     const workbook = XLSX.readFile(filePath);
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
     console.log('✅ Excel parsed successfully');
   } else {
-    // CSV file
     console.log('📖 Reading CSV file...');
     const content = fs.readFileSync(filePath, 'utf-8');
-    // Remove BOM
     if (content.charCodeAt(0) === 0xFEFF) {
       content = content.substring(1);
     }
-    // Parse CSV
     const lines = content.split('\n').filter(line => line.trim() !== '');
     if (lines.length === 0) {
       console.error('❌ File is empty');
@@ -80,10 +75,8 @@ async function updateProducts() {
       process.exit(0);
     }
 
-    // Log first row to see columns
     console.log('📋 First row sample:', Object.keys(rows[0]));
 
-    // Find SKU column (case-insensitive)
     const allKeys = Object.keys(rows[0]);
     const skuKey = allKeys.find(k => /^sku$|^product sku$|^sku code$/i.test(k.trim()));
     if (!skuKey) {
@@ -92,7 +85,6 @@ async function updateProducts() {
     }
     console.log(`🔍 Using SKU column: "${skuKey}"`);
 
-    // Find other columns
     const descKey = allKeys.find(k => /description|desc/i.test(k.trim()));
     const intensityKey = allKeys.find(k => /intensity|strength/i.test(k.trim()));
     const bestForKey = allKeys.find(k => /best for|bestfor|occasion/i.test(k.trim()));
@@ -110,17 +102,20 @@ async function updateProducts() {
         continue;
       }
 
-      // Prepare update object
       const updateData = {};
       if (descKey && row[descKey]) updateData.description = String(row[descKey]).trim();
+
+      // ------------------- FIXED INTENSITY -------------------
       if (intensityKey && row[intensityKey]) {
         const intensity = String(row[intensityKey]).trim().toLowerCase();
-        if (['light', 'medium', 'strong', 'fresh'].includes(intensity)) {
+        if (['light', 'medium', 'strong'].includes(intensity)) {
           updateData.intensity = intensity;
         } else {
+          // 'fresh' and other invalid values become 'medium'
           updateData.intensity = 'medium';
         }
       }
+
       if (bestForKey && row[bestForKey]) {
         const bestFor = String(row[bestForKey]).split(',').map(s => s.trim()).filter(Boolean);
         if (bestFor.length) updateData.bestFor = bestFor;
@@ -138,7 +133,6 @@ async function updateProducts() {
         continue;
       }
 
-      // Find product by SKU
       const product = await Product.findOne({ sku: sku });
       if (!product) {
         notFound++;

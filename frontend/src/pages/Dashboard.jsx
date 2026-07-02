@@ -16,6 +16,7 @@ import {
   ArrowUpRight,
   Layers,
   ShoppingCart,
+  Award,
 } from 'lucide-react';
 import API from '../api/axios';
 import toast from 'react-hot-toast';
@@ -37,7 +38,7 @@ const Dashboard = () => {
     totalInventoryValue: 0,
   });
   const [salesTypeCounts, setSalesTypeCounts] = useState({ oil: 0, perfume: 0 });
-  const [bottleSales, setBottleSales] = useState([]);
+  const [topProducts, setTopProducts] = useState([]); // 👈 new
   const [bottles, setBottles] = useState([]);
   const [recentExpenses, setRecentExpenses] = useState([]);
   const [recentPurchases, setRecentPurchases] = useState([]);
@@ -46,7 +47,6 @@ const Dashboard = () => {
     const fetchStats = async () => {
       setLoading(true);
       try {
-        // ✅ Use the same endpoint as Bottles page
         const [
           materialsRes,
           bottlesWithSalesRes,
@@ -56,7 +56,7 @@ const Dashboard = () => {
           purchasesRes,
         ] = await Promise.all([
           API.get('/inventory/materials'),
-          API.get('/inventory/bottles/with-sales'), // <-- changed
+          API.get('/inventory/bottles/with-sales'),
           API.get('/products'),
           API.get('/sales'),
           API.get('/expenses'),
@@ -85,7 +85,7 @@ const Dashboard = () => {
           rawMaterialStockValue += stock * avgCost;
         });
 
-        // --- Bottle Stock Value (using currentStock) ---
+        // --- Bottle Stock Value ---
         let bottleStockValue = 0;
         bottleData.forEach(b => {
           const stock = parseFloat(b.currentStock) || 0;
@@ -98,7 +98,7 @@ const Dashboard = () => {
         // --- Sales by product type ---
         let oilSold = 0;
         let perfumeSold = 0;
-        const salesByBottle = {};
+        const productSalesMap = {}; // 👈 for top products
 
         for (const sale of allSales) {
           if (!sale.items || !sale.items.length) continue;
@@ -108,21 +108,27 @@ const Dashboard = () => {
             if (product.type === 'roll-on') oilSold += (item.quantity || 0);
             else if (product.type === 'spray') perfumeSold += (item.quantity || 0);
 
-            const key = `${item.sizeMl}-${product.type}`;
-            if (!salesByBottle[key]) {
-              salesByBottle[key] = { 
-                size: item.sizeMl, 
-                type: product.type, 
-                totalSold: 0 
+            // Aggregate by product ID for top products
+            const productId = product._id;
+            if (!productSalesMap[productId]) {
+              productSalesMap[productId] = {
+                productId,
+                totalSold: 0,
+                totalRevenue: 0,
+                productName: product.name,
+                sku: product.sku,
               };
             }
-            salesByBottle[key].totalSold += (item.quantity || 0);
+            productSalesMap[productId].totalSold += (item.quantity || 0);
+            productSalesMap[productId].totalRevenue += (item.quantity || 0) * (item.unitPrice || 0);
           }
         }
 
-        const sortedBottleSales = Object.values(salesByBottle)
+        // Sort and take top 5 products
+        const sortedProducts = Object.values(productSalesMap)
           .sort((a, b) => b.totalSold - a.totalSold)
-          .slice(0, 10);
+          .slice(0, 5);
+        setTopProducts(sortedProducts);
 
         // --- Recent expenses & purchases (last 5) ---
         const recentExp = [...allExpenses]
@@ -148,7 +154,6 @@ const Dashboard = () => {
           totalInventoryValue,
         });
         setSalesTypeCounts({ oil: oilSold, perfume: perfumeSold });
-        setBottleSales(sortedBottleSales);
         setRecentExpenses(recentExp);
         setRecentPurchases(recentPur);
       } catch (error) {
@@ -225,7 +230,7 @@ const Dashboard = () => {
     },
   ];
 
-  // --- Overall Summary (all-time) ---
+  // --- Overall Summary ---
   const overallSummary = [
     { 
       label: 'Total Revenue', 
@@ -312,7 +317,7 @@ const Dashboard = () => {
         </div>
       ) : (
         <>
-          {/* Main Stats Cards - responsive grid */}
+          {/* Main Stats Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-6">
             {mainCards.map((card, idx) => (
               <div
@@ -339,7 +344,7 @@ const Dashboard = () => {
             ))}
           </div>
 
-          {/* Overall Summary - responsive grid */}
+          {/* Overall Summary */}
           <div className="mb-6">
             <h2 className="text-base sm:text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
               <BarChart3 size={18} className="text-amber-600" />
@@ -369,7 +374,7 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Two-Column: Recent Expenses & Purchases - responsive */}
+          {/* Two-Column: Recent Expenses & Recent Purchases */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
             {/* Recent Expenses */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-5">
@@ -444,8 +449,9 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Two-Column: Sales by Product Type & Top Selling Bottles */}
+          {/* Two-Column: Sales by Product Type & Top Selling Products (NEW) */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
+            {/* Sales by Product Type */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-5">
               <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
                 <BarChart3 size={16} className="text-amber-600" />
@@ -465,26 +471,31 @@ const Dashboard = () => {
               </div>
             </div>
 
+            {/* Top Selling Products (NEW) */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-5">
               <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
-                <FlaskRound size={16} className="text-amber-600" />
-                Top Selling Bottles (All Time)
+                <Award size={16} className="text-amber-600" />
+                Top Selling Products
               </h3>
-              {bottleSales.length === 0 ? (
+              {topProducts.length === 0 ? (
                 <p className="text-gray-400 text-sm text-center py-4">No sales data yet</p>
               ) : (
                 <div className="space-y-2">
-                  {bottleSales.slice(0, 5).map((item) => (
-                    <div key={`${item.size}-${item.type}`} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg transition">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-gray-700">{item.size} ml</span>
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
-                          item.type === 'roll-on' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
-                        }`}>
-                          {item.type === 'roll-on' ? 'Oil' : 'Perfume'}
-                        </span>
+                  {topProducts.map((item, index) => (
+                    <div key={item.productId} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg transition">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-bold">
+                          {index + 1}
+                        </div>
+                        <div className="truncate">
+                          <p className="text-sm font-medium text-gray-700 truncate">{item.productName}</p>
+                          <p className="text-xs text-gray-400 truncate">SKU: {item.sku}</p>
+                        </div>
                       </div>
-                      <span className="text-sm font-semibold text-amber-600">{item.totalSold} units</span>
+                      <div className="text-right flex-shrink-0 ml-2">
+                        <p className="text-sm font-semibold text-amber-600">{item.totalSold} units</p>
+                        <p className="text-xs text-gray-500">৳{item.totalRevenue.toFixed(2)}</p>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -492,7 +503,7 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* ✅ UPDATED: Available Bottles (Inventory) using with-sales data */}
+          {/* Available Bottles (Inventory) – unchanged */}
           <div className="mt-6">
             <h2 className="text-base sm:text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
               <FlaskRound size={18} className="text-cyan-600" />
