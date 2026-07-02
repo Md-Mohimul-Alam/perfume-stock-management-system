@@ -16,11 +16,14 @@ exports.getProducts = async (req, res) => {
   }
 };
 
-// @desc    Create a product
+// @desc    Create a product (with new fields)
 // @route   POST /api/products
 exports.createProduct = async (req, res) => {
   try {
-    const { name, sku, type, baseOil, blendComponents, sizes } = req.body;
+    const {
+      name, sku, type, baseOil, blendComponents, sizes,
+      description, intensity, bestFor, notes, isBestseller, images
+    } = req.body;
 
     for (const size of sizes) {
       const bottleExists = await Bottle.findById(size.bottle);
@@ -34,6 +37,12 @@ exports.createProduct = async (req, res) => {
       baseOil,
       blendComponents,
       sizes,
+      description: description || '',
+      intensity: intensity || 'medium',
+      bestFor: bestFor || ['all'],
+      notes: notes || [],
+      isBestseller: isBestseller || false,
+      images: images || [],
     });
 
     for (let i = 0; i < product.sizes.length; i++) {
@@ -47,14 +56,18 @@ exports.createProduct = async (req, res) => {
   }
 };
 
-// @desc    Update product
+// @desc    Update product (with new fields)
 // @route   PUT /api/products/:id
 exports.updateProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ message: 'Product not found' });
 
-    const { name, sku, type, baseOil, blendComponents, sizes, isActive } = req.body;
+    const {
+      name, sku, type, baseOil, blendComponents, sizes, isActive,
+      description, intensity, bestFor, notes, isBestseller, images
+    } = req.body;
+
     if (name) product.name = name;
     if (sku) product.sku = sku;
     if (type) product.type = type;
@@ -62,8 +75,15 @@ exports.updateProduct = async (req, res) => {
     if (blendComponents) product.blendComponents = blendComponents;
     if (sizes) product.sizes = sizes;
     if (isActive !== undefined) product.isActive = isActive;
+    if (description !== undefined) product.description = description;
+    if (intensity) product.intensity = intensity;
+    if (bestFor) product.bestFor = bestFor;
+    if (notes) product.notes = notes;
+    if (isBestseller !== undefined) product.isBestseller = isBestseller;
+    if (images) product.images = images;
 
     await product.save();
+
     for (let i = 0; i < product.sizes.length; i++) {
       await product.calculateMakingCost(i);
     }
@@ -111,8 +131,6 @@ exports.deleteProduct = async (req, res) => {
   }
 };
 
-// @desc    Bulk create products from CSV/Excel
-// @route   POST /api/products/bulk
 // @desc    Bulk create products from CSV/Excel
 // @route   POST /api/products/bulk
 exports.bulkCreateProducts = async (req, res) => {
@@ -195,12 +213,19 @@ exports.bulkCreateProducts = async (req, res) => {
             isActive: true,
             blendComponents: [],
             baseOil: null,
+            // new fields (optional, can be set via extra columns if needed)
+            description: item.description || '',
+            intensity: item.intensity || 'medium',
+            bestFor: item.bestFor ? item.bestFor.split(',').map(s => s.trim()) : ['all'],
+            notes: item.notes ? item.notes.split(',').map(s => s.trim()) : [],
+            isBestseller: item.isBestseller || false,
+            images: [],
           });
         }
 
-        // ✅ Check for duplicate variant (by sizeMl AND bottle type)
-        const sizeExists = product.sizes.some(s => 
-          s.sizeMl === parseFloat(sizeMl) && 
+        // Check for duplicate variant (by sizeMl AND bottle type)
+        const sizeExists = product.sizes.some(s =>
+          s.sizeMl === parseFloat(sizeMl) &&
           s.bottle && s.bottle.toString() === bottle._id.toString()
         );
         if (sizeExists) {
@@ -356,9 +381,7 @@ exports.fixProductTypesAndBottles = async (req, res) => {
       }
 
       // Re‑evaluate hasSpray / hasRollOn after assignments
-      // (We already set them, but we need to double‑check)
       if (!hasSpray && !hasRollOn) {
-        // Re‑scan to be sure
         for (const size of product.sizes) {
           if (size.bottle) {
             const bottle = await Bottle.findById(size.bottle);

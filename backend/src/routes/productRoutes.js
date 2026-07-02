@@ -8,21 +8,23 @@ const {
   deleteProduct,
   bulkCreateProducts,
   correctProductTypes,
-  fixProductTypesAndBottles,   // 👈 new
+  fixProductTypesAndBottles,
 } = require('../controllers/productController');
 const { protect } = require('../middlewares/authMiddleware');
 
+// All product routes are protected (require authentication)
 router.route('/')
-  .get(protect, getProducts)
-  .post(protect, createProduct);
+  .get(protect, getProducts)          // Get all active products
+  .post(protect, createProduct);      // Create a new product
 
 router.route('/:id')
-  .put(protect, updateProduct)
-  .delete(protect, deleteProduct);
+  .put(protect, updateProduct)        // Update a product (full update)
+  .delete(protect, deleteProduct);    // Deactivate a product (soft delete)
 
-router.post('/:id/calculate-cost', protect, calculateCost);
-router.post('/bulk', protect, bulkCreateProducts);
-router.post('/correct-types', protect, correctProductTypes);
-router.post('/fix-product-types', protect, fixProductTypesAndBottles);   // 👈 new
+// Custom endpoints
+router.post('/:id/calculate-cost', protect, calculateCost);      // Recalculate making cost for a specific size
+router.post('/bulk', protect, bulkCreateProducts);               // Bulk import products from CSV/Excel
+router.post('/correct-types', protect, correctProductTypes);     // One‑time correction of product types
+router.post('/fix-product-types', protect, fixProductTypesAndBottles); // Fix bottle references and types
 
 module.exports = router;

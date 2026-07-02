@@ -10,11 +10,16 @@ const NewProduct = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  // Product fields
+  // Product fields – INCLUDING NEW ONES
   const [product, setProduct] = useState({
     name: '',
     sku: '',
-    type: 'spray', // 'spray' or 'roll-on'
+    type: 'spray',
+    description: '',
+    intensity: 'medium',
+    bestFor: [],
+    notes: [],
+    isBestseller: false,
   });
 
   // Size variant fields
@@ -99,11 +104,16 @@ const NewProduct = () => {
     setSubmitting(true);
     setError('');
     try {
-      // Prepare payload for backend – needs product details and sizes with bottle IDs
+      // Prepare payload with all fields
       const payload = {
         name: product.name,
         sku: product.sku,
         type: product.type,
+        description: product.description,
+        intensity: product.intensity,
+        bestFor: product.bestFor,
+        notes: product.notes,
+        isBestseller: product.isBestseller,
         sizes: sizes.map(s => ({
           sizeMl: s.sizeMl,
           bottle: s.bottleId,
@@ -113,7 +123,6 @@ const NewProduct = () => {
           makingCost: 0,
           sellingPrice: s.sellingPrice,
         })),
-        // For roll-ons, we could set baseOil later; for now we keep empty
         baseOil: null,
         blendComponents: [],
       };
@@ -186,7 +195,71 @@ const NewProduct = () => {
             </div>
           </div>
 
-          {/* Add Size Variant */}
+          {/* Additional Fields */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <textarea
+                name="description"
+                value={product.description}
+                onChange={handleProductChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-secondary outline-none"
+                rows="2"
+                placeholder="Short product description"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Intensity</label>
+              <select
+                name="intensity"
+                value={product.intensity}
+                onChange={handleProductChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-secondary outline-none bg-white"
+              >
+                <option value="light">Light</option>
+                <option value="medium">Medium</option>
+                <option value="strong">Strong</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Best For (comma separated)</label>
+              <input
+                type="text"
+                value={product.bestFor.join(', ')}
+                onChange={(e) => {
+                  const val = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
+                  setProduct({ ...product, bestFor: val });
+                }}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-secondary outline-none"
+                placeholder="e.g. daytime, evening, special"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Scent Notes (comma separated)</label>
+              <input
+                type="text"
+                value={product.notes.join(', ')}
+                onChange={(e) => {
+                  const val = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
+                  setProduct({ ...product, notes: val });
+                }}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-secondary outline-none"
+                placeholder="e.g. floral, woody, citrus"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                name="isBestseller"
+                checked={product.isBestseller}
+                onChange={(e) => setProduct({ ...product, isBestseller: e.target.checked })}
+                className="w-4 h-4 text-brand-primary focus:ring-brand-primary"
+              />
+              <label className="text-sm font-medium text-gray-700">Mark as Bestseller</label>
+            </div>
+          </div>
+
+          {/* Add Size Variant (unchanged) */}
           <div className="border-t border-gray-200 pt-6">
             <h3 className="text-lg font-semibold mb-4">Add Size Variant</h3>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
@@ -243,7 +316,7 @@ const NewProduct = () => {
             </p>
           </div>
 
-          {/* Sizes Table */}
+          {/* Sizes Table (unchanged) */}
           {sizes.length > 0 && (
             <div className="border-t border-gray-200 pt-6">
               <h3 className="text-lg font-semibold mb-4">Size Variants ({sizes.length})</h3>
