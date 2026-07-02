@@ -13,7 +13,7 @@ const app = express();
 const allowedOrigins = [
   'http://localhost:5173',
   'https://perfume-stock-management-system-545.vercel.app',
-  'https://luxeperfume.netlify.app/'
+  'https://luxeperfume.netlify.app'
 ];
 
 app.use(cors({
