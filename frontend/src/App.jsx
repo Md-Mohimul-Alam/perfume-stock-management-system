@@ -47,7 +47,7 @@ function App() {
             <Route path="purchases/new" element={<NewPurchase />} />
             <Route path="expenses" element={<ExpensePage />} />
             <Route path="investors" element={<Investors />} /> 
-            <Route path="reports" element={<Reports /} />
+            <Route path="reports" element={<Reports />} />
           </Route>
         </Routes>
       </AuthProvider>

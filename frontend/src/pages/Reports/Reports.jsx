@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import API from '../api/axios';
+import API from '../../api/axios';
 import toast from 'react-hot-toast';
 import {
   BarChart3,
