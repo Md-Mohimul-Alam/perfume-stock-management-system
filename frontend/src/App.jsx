@@ -17,7 +17,8 @@ import NewProduct from './pages/Products/NewProduct';
 import ExpensePage from './pages/Expenses/Expenses';
 import NewPurchase from './pages/Purchases/NewPurchase';
 import PurchaseList from './pages/Purchases/PurchaseList';
-import Investors from './pages/Investors/Investors'; // ✅ Correct import
+import Investors from './pages/Investors/Investors';
+import Reports from './pages/Reports/Reports';
 
 function App() {
   return (
@@ -45,8 +46,8 @@ function App() {
             <Route path="purchases" element={<PurchaseList />} />
             <Route path="purchases/new" element={<NewPurchase />} />
             <Route path="expenses" element={<ExpensePage />} />
-            <Route path="investors" element={<Investors />} /> {/* ✅ Use component */}
-            <Route path="reports" element={<div>Reports Page</div>} />
+            <Route path="investors" element={<Investors />} /> 
+            <Route path="reports" element={<Reports /} />
           </Route>
         </Routes>
       </AuthProvider>
