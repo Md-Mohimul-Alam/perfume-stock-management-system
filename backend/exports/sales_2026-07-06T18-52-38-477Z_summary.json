@@ -1,0 +1,25 @@
+{
+  "totalSales": 510,
+  "totalRevenue": 103375,
+  "totalItems": 510,
+  "totalPaid": 510,
+  "totalDue": 0,
+  "channels": {
+    "Other": 2,
+    "December": 103,
+    "Online": 11,
+    "November": 23,
+    "October": 37,
+    "September": 56,
+    "August": 29,
+    "Fair5": 9,
+    "Fair4": 53,
+    "Fair3": 108,
+    "Fair2": 55,
+    "Fair1": 24
+  },
+  "dateRange": {
+    "from": "2026-06-27",
+    "to": "2026-07-06"
+  }
+}
