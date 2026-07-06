@@ -7,11 +7,27 @@ const { generateInvoiceNo } = require('../utils/generateInvoice');
 
 // @desc    Create a sale (auto-deduct stock)
 // @route   POST /api/sales
+// @desc    Create a sale (auto-deduct stock) – with sequential invoice numbers
+// @route   POST /api/sales
 exports.createSale = async (req, res) => {
   try {
     const { channel, items, saleDate, paymentStatus, notes } = req.body;
     let totalAmount = 0;
 
+    // ---------- Get next invoice number ----------
+    const lastSale = await Sale.findOne().sort({ createdAt: -1 });
+    let nextNumber = 1;
+    if (lastSale && lastSale.invoiceNo) {
+      // Extract numeric part after the last dash (e.g., "INV-0001" → 1)
+      const match = lastSale.invoiceNo.match(/(\d+)$/);
+      if (match) {
+        nextNumber = parseInt(match[1]) + 1;
+      }
+    }
+    // Format invoice number with leading zeros (e.g., INV-0001, INV-0010, INV-0100)
+    const invoiceNo = `INV-${String(nextNumber).padStart(4, '0')}`;
+
+    // ---------- Process items ----------
     for (const item of items) {
       const product = await Product.findById(item.product).populate('sizes.bottle');
       if (!product) throw new Error(`Product ${item.product} not found`);
@@ -43,11 +59,11 @@ exports.createSale = async (req, res) => {
         }
       }
 
-      // Deduct bottles (always attempt)
+      // Deduct bottles
       await deductBottle(sizeVariant.bottle, item.quantity, 'sale', null);
     }
 
-    const invoiceNo = generateInvoiceNo('INV');
+    // ---------- Create sale ----------
     const sale = await Sale.create({
       invoiceNo,
       channel,
@@ -58,11 +74,13 @@ exports.createSale = async (req, res) => {
       notes,
     });
 
+    // Link inventory logs
     await InventoryLog.updateMany(
       { reference: null, reason: 'sale' },
       { reference: sale._id, refModel: 'Sale' }
     );
 
+    // Record cash transaction if paid
     if (paymentStatus === 'paid') {
       await Transaction.create({
         type: 'cash_in',
