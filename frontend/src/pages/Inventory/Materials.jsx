@@ -1,12 +1,18 @@
 import { useEffect, useState } from 'react';
 import API from '../../api/axios';
-import { Plus, Upload, X, CheckCircle, AlertCircle, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Upload, X, CheckCircle, AlertCircle, Pencil, Trash2, Droplet, FlaskRound, Package } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 const Materials = () => {
   // ---------- State ----------
   const [materials, setMaterials] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [oilSummary, setOilSummary] = useState({
+    usedOilRollOn: 0,
+    usedOilSpray: 0,
+    totalOilStock: 0,
+    availableOil: 0,
+  });
 
   // Add modal
   const [showAddModal, setShowAddModal] = useState(false);
@@ -33,16 +39,57 @@ const Materials = () => {
 
   // ---------- Fetch ----------
   useEffect(() => {
-    fetchMaterials();
+    fetchMaterialsAndSummary();
   }, []);
 
-  const fetchMaterials = async () => {
+  const fetchMaterialsAndSummary = async () => {
     setLoading(true);
     try {
-      const { data } = await API.get('/inventory/materials');
-      setMaterials(data);
+      // Fetch materials and sales in parallel
+      const [materialsRes, salesRes] = await Promise.all([
+        API.get('/inventory/materials'),
+        API.get('/sales'),
+      ]);
+
+      const materialsData = materialsRes.data;
+      setMaterials(materialsData);
+
+      // Compute oil summary from sales data
+      const sales = salesRes.data || [];
+      let usedOilRollOn = 0;
+      let usedOilSpray = 0;
+
+      for (const sale of sales) {
+        if (!sale.items) continue;
+        for (const item of sale.items) {
+          const product = item.product;
+          if (!product) continue;
+          const sizeMl = item.sizeMl || 0;
+          const qty = item.quantity || 0;
+          if (product.type === 'roll-on') {
+            usedOilRollOn += sizeMl * qty;
+          } else if (product.type === 'spray') {
+            // 55% of bottle size is oil
+            usedOilSpray += sizeMl * 0.55 * qty;
+          }
+        }
+      }
+
+      // Compute total oil stock
+      const oilMaterials = materialsData.filter(m => m.type === 'oil');
+      const totalOilStock = oilMaterials.reduce((sum, m) => sum + (m.currentStockMl || 0), 0);
+
+      const availableOil = totalOilStock - (usedOilRollOn + usedOilSpray);
+
+      setOilSummary({
+        usedOilRollOn,
+        usedOilSpray,
+        totalOilStock,
+        availableOil,
+      });
+
     } catch (error) {
-      console.error('Failed to fetch materials', error);
+      console.error('Failed to fetch data', error);
     } finally {
       setLoading(false);
     }
@@ -56,7 +103,7 @@ const Materials = () => {
     try {
       await API.post('/inventory/materials', newMaterial);
       setShowAddModal(false);
-      fetchMaterials();
+      fetchMaterialsAndSummary();
       setNewMaterial({ name: '', sku: '', type: 'oil' });
     } catch (err) {
       setModalError(err.response?.data?.message || 'Failed to create material');
@@ -84,7 +131,7 @@ const Materials = () => {
         type: editingMaterial.type,
       });
       setShowEditModal(false);
-      fetchMaterials();
+      fetchMaterialsAndSummary();
     } catch (err) {
       setEditError(err.response?.data?.message || 'Update failed');
     } finally {
@@ -103,7 +150,7 @@ const Materials = () => {
     try {
       await API.delete(`/inventory/materials/${deletingId}`);
       setShowDeleteConfirm(false);
-      fetchMaterials();
+      fetchMaterialsAndSummary();
     } catch (err) {
       alert(err.response?.data?.message || 'Delete failed');
     } finally {
@@ -191,7 +238,7 @@ const Materials = () => {
 
         const response = await API.post('/inventory/materials/import', { items });
         setUploadResult({ success: true, data: response.data });
-        fetchMaterials();
+        fetchMaterialsAndSummary();
         setFile(null);
         setTimeout(() => setShowUploadModal(false), 3000);
       };
@@ -225,6 +272,36 @@ const Materials = () => {
           >
             <Upload size={18} /> Upload Sheet
           </button>
+        </div>
+      </div>
+
+      {/* ---- Oil Summary Cards (NEW) ---- */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-amber-200 p-4">
+          <p className="text-xs text-gray-500 uppercase tracking-wider flex items-center gap-1">
+            <Droplet size={14} className="text-amber-600" /> Oil Used (Roll-on)
+          </p>
+          <p className="text-2xl font-bold text-amber-700">{oilSummary.usedOilRollOn.toFixed(0)} ml</p>
+        </div>
+        <div className="bg-white rounded-2xl shadow-sm border border-blue-200 p-4">
+          <p className="text-xs text-gray-500 uppercase tracking-wider flex items-center gap-1">
+            <FlaskRound size={14} className="text-blue-600" /> Oil Used (Spray)
+          </p>
+          <p className="text-2xl font-bold text-blue-700">{oilSummary.usedOilSpray.toFixed(0)} ml</p>
+        </div>
+        <div className="bg-white rounded-2xl shadow-sm border border-green-200 p-4">
+          <p className="text-xs text-gray-500 uppercase tracking-wider flex items-center gap-1">
+            <Package size={14} className="text-green-600" /> Total Oil Stock
+          </p>
+          <p className="text-2xl font-bold text-green-700">{oilSummary.totalOilStock.toFixed(0)} ml</p>
+        </div>
+        <div className="bg-white rounded-2xl shadow-sm border border-purple-200 p-4">
+          <p className="text-xs text-gray-500 uppercase tracking-wider flex items-center gap-1">
+            <Droplet size={14} className="text-purple-600" /> Available Oil
+          </p>
+          <p className={`text-2xl font-bold ${oilSummary.availableOil < 0 ? 'text-red-600' : 'text-purple-700'}`}>
+            {oilSummary.availableOil.toFixed(0)} ml
+          </p>
         </div>
       </div>
 
@@ -286,7 +363,7 @@ const Materials = () => {
         </div>
       )}
 
-      {/* ---------- Add Modal (unchanged) ---------- */}
+      {/* ---------- Add Modal ---------- */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
@@ -343,7 +420,7 @@ const Materials = () => {
         </div>
       )}
 
-      {/* ---------- Updated Edit Modal ---------- */}
+      {/* ---------- Edit Modal ---------- */}
       {showEditModal && editingMaterial && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
@@ -389,7 +466,7 @@ const Materials = () => {
                 </select>
               </div>
 
-              {/* Read-only fields – show current stock, cost, total */}
+              {/* Read-only fields */}
               <div className="border-t pt-4 mt-2">
                 <p className="text-sm text-gray-500 mb-2">Inventory Details (read‑only)</p>
                 <div className="grid grid-cols-2 gap-2 text-sm">
@@ -426,7 +503,7 @@ const Materials = () => {
         </div>
       )}
 
-      {/* ---------- Delete Confirmation (unchanged) ---------- */}
+      {/* ---------- Delete Confirmation ---------- */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
@@ -452,7 +529,7 @@ const Materials = () => {
         </div>
       )}
 
-      {/* ---------- Upload Modal (unchanged) ---------- */}
+      {/* ---------- Upload Modal ---------- */}
       {showUploadModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 relative">
