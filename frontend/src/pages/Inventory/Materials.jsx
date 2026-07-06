@@ -56,7 +56,7 @@ const Materials = () => {
       const sales = salesRes.data || [];
       const products = productsRes.data || [];
 
-      // Build a map of productId -> product data (with populated materials)
+      // Build a map of productId -> full product data
       const productMap = {};
       products.forEach(p => {
         productMap[p._id] = p;
@@ -68,15 +68,18 @@ const Materials = () => {
       for (const sale of sales) {
         if (!sale.items) continue;
         for (const item of sale.items) {
-          const product = productMap[item.product];
+          // ✅ Fix: get product ID correctly (populated product is an object)
+          const productId = item.product?._id || item.product;
+          if (!productId) continue;
+          const product = productMap[productId];
           if (!product) continue;
+
           const sizeMl = item.sizeMl || 0;
           const qty = item.quantity || 0;
 
-          // Determine which materials this product uses and how much
           if (product.type === 'roll-on') {
             // Roll‑on uses baseOil (full sizeMl)
-            const oilId = product.baseOil;
+            const oilId = product.baseOil?._id || product.baseOil;
             if (oilId) {
               const used = sizeMl * qty;
               usageMap[oilId] = (usageMap[oilId] || 0) + used;
@@ -85,7 +88,7 @@ const Materials = () => {
             // Spray uses blendComponents with percentages
             if (product.blendComponents && product.blendComponents.length) {
               for (const comp of product.blendComponents) {
-                const matId = comp.material;
+                const matId = comp.material?._id || comp.material;
                 if (!matId) continue;
                 const percentage = comp.percentage || 0;
                 const used = (sizeMl * (percentage / 100)) * qty;
@@ -108,13 +111,15 @@ const Materials = () => {
       });
       setMaterials(updatedMaterials);
 
-      // Compute overall summary (already done, but we can reuse the same loop)
+      // Compute overall summary (unchanged)
       let usedRollOn = 0;
       let usedSpray = 0;
       for (const sale of sales) {
         if (!sale.items) continue;
         for (const item of sale.items) {
-          const product = productMap[item.product];
+          const productId = item.product?._id || item.product;
+          if (!productId) continue;
+          const product = productMap[productId];
           if (!product) continue;
           const sizeMl = item.sizeMl || 0;
           const qty = item.quantity || 0;
@@ -322,7 +327,7 @@ const Materials = () => {
         </div>
       </div>
 
-      {/* ---- Oil Summary Cards (overall) ---- */}
+      {/* ---- Oil Summary Cards ---- */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-white rounded-2xl shadow-sm border border-amber-200 p-4">
           <p className="text-xs text-gray-500 uppercase tracking-wider flex items-center gap-1">
@@ -352,7 +357,7 @@ const Materials = () => {
         </div>
       </div>
 
-      {/* Table with new columns: Used Oil and Available Oil */}
+      {/* Table with new columns */}
       {loading ? (
         <p>Loading...</p>
       ) : (
@@ -366,7 +371,6 @@ const Materials = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock (ml)</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Per ml Cost (৳)</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Price (৳)</th>
-                {/* NEW COLUMNS */}
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Used Oil (ml)</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Available Oil (ml)</th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Actions</th>
@@ -420,8 +424,6 @@ const Materials = () => {
       )}
 
       {/* ---------- Modals (unchanged) ---------- */}
-      {/* ... keep Add, Edit, Delete, Upload modals exactly as before ... */}
-      {/* I'll include them for completeness, but you can reuse your existing modals */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
