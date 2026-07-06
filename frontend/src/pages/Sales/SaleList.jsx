@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import API from '../../api/axios';
-import { Plus, Eye, Search, Upload, X, CheckCircle, AlertCircle } from 'lucide-react';
+import { Plus, Eye, Search, Upload, X, CheckCircle, AlertCircle, Trash2 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import toast from 'react-hot-toast';
 
@@ -23,6 +23,11 @@ const SalesList = () => {
   const [selectedSale, setSelectedSale] = useState(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
 
+  // Delete state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [saleToDelete, setSaleToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+
   useEffect(() => {
     fetchSales();
   }, []);
@@ -31,9 +36,6 @@ const SalesList = () => {
     setLoading(true);
     try {
       const { data } = await API.get('/sales');
-      // 🔍 Debug: check if type is present
-      console.log('Sales data (first sale):', data[0]);
-      console.log('First sale items:', data[0]?.items);
       setSales(data);
     } catch (error) {
       toast.error('Failed to load sales');
@@ -56,25 +58,17 @@ const SalesList = () => {
       filtered = filtered.filter(s => s.paymentStatus === filter.paymentStatus);
     }
     if (search) {
-      filtered = filtered.filter(s => 
+      filtered = filtered.filter(s =>
         s.invoiceNo.toLowerCase().includes(search.toLowerCase()) ||
         s.channel.toLowerCase().includes(search.toLowerCase())
       );
     }
-    // Type filter – map UI values to DB values
     if (typeFilter) {
       const mappedType = typeFilter === 'oil' ? 'roll-on' : 'spray';
-      console.log(`Filtering by type: ${typeFilter} -> mapped to DB: ${mappedType}`);
-      filtered = filtered.filter(s => {
-        const hasType = s.items.some(item => item.product?.type === mappedType);
-        if (!hasType) {
-          // 🔍 Debug: log which sale doesn't have the type
-          console.log('Sale excluded:', s.invoiceNo, 'items types:', s.items.map(i => i.product?.type));
-        }
-        return hasType;
-      });
+      filtered = filtered.filter(s =>
+        s.items.some(item => item.product?.type === mappedType)
+      );
     }
-    console.log(`Filtered sales count: ${filtered.length}`);
     return filtered;
   };
 
@@ -235,6 +229,28 @@ const SalesList = () => {
     }
   };
 
+  // ---------- Delete ----------
+  const handleDeleteClick = (sale) => {
+    setSaleToDelete(sale);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!saleToDelete) return;
+    setDeleting(true);
+    try {
+      await API.delete(`/sales/${saleToDelete._id}`);
+      toast.success('Sale deleted successfully');
+      setShowDeleteModal(false);
+      setSaleToDelete(null);
+      fetchSales();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to delete sale');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   // ---------- Render ----------
   return (
     <div>
@@ -346,13 +362,22 @@ const SalesList = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-center">
-                    <button
-                      onClick={() => handleViewDetails(s._id)}
-                      className="text-blue-600 hover:text-blue-800"
-                      title="View Details"
-                    >
-                      <Eye size={18} />
-                    </button>
+                    <div className="flex justify-center gap-2">
+                      <button
+                        onClick={() => handleViewDetails(s._id)}
+                        className="text-blue-600 hover:text-blue-800"
+                        title="View Details"
+                      >
+                        <Eye size={18} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteClick(s)}
+                        className="text-red-600 hover:text-red-800"
+                        title="Delete"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -363,6 +388,35 @@ const SalesList = () => {
               )}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* ---------- Delete Confirmation Modal ---------- */}
+      {showDeleteModal && saleToDelete && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <h2 className="text-xl font-bold mb-2">Delete Sale</h2>
+            <p className="text-gray-600 mb-4">
+              Are you sure you want to delete sale <strong>{saleToDelete.invoiceNo}</strong>?
+              <br />
+              <span className="text-sm text-gray-500">This will also remove all associated inventory logs and transactions.</span>
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={handleDeleteConfirm}
+                disabled={deleting}
+                className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 disabled:opacity-50"
+              >
+                {deleting ? 'Deleting...' : 'Delete'}
+              </button>
+              <button
+                onClick={() => { setShowDeleteModal(false); setSaleToDelete(null); }}
+                className="flex-1 border border-gray-300 py-2 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

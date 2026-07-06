@@ -277,3 +277,20 @@ exports.bulkCreateSales = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+// @desc    Delete a sale (permanently)
+// @route   DELETE /api/sales/:id
+exports.deleteSale = async (req, res) => {
+  try {
+    const sale = await Sale.findById(req.params.id);
+    if (!sale) return res.status(404).json({ message: 'Sale not found' });
+
+    // Optionally remove linked logs/transactions
+    await InventoryLog.deleteMany({ reference: sale._id, refModel: 'Sale' });
+    await Transaction.deleteMany({ reference: sale._id, refModel: 'Sale' });
+    await sale.deleteOne();
+
+    res.json({ message: 'Sale deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
