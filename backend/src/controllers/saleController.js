@@ -21,17 +21,29 @@ exports.createSale = async (req, res) => {
 
       totalAmount += item.quantity * item.unitPrice;
 
-      // Deduct raw materials
+      // ---------- Safe raw material deduction ----------
       if (product.type === 'roll-on') {
-        await deductRawMaterial(product.baseOil, sizeVariant.oilMlUsed * item.quantity, 'sale', null);
+        if (product.baseOil) {
+          await deductRawMaterial(product.baseOil, sizeVariant.oilMlUsed * item.quantity, 'sale', null);
+        } else {
+          console.warn(`⚠️ No baseOil for ${product.name} (SKU: ${product.sku}) – skipping raw material deduction.`);
+        }
       } else {
-        for (const comp of product.blendComponents) {
-          const mlUsed = (sizeVariant.sizeMl * comp.percentage / 100) * item.quantity;
-          await deductRawMaterial(comp.material, mlUsed, 'sale', null);
+        if (product.blendComponents && product.blendComponents.length > 0) {
+          for (const comp of product.blendComponents) {
+            if (comp.material) {
+              const mlUsed = (sizeVariant.sizeMl * comp.percentage / 100) * item.quantity;
+              await deductRawMaterial(comp.material, mlUsed, 'sale', null);
+            } else {
+              console.warn(`⚠️ Missing material in blend for ${product.name} – skipping.`);
+            }
+          }
+        } else {
+          console.warn(`⚠️ No blendComponents for ${product.name} (SKU: ${product.sku}) – skipping raw material deduction.`);
         }
       }
 
-      // Deduct bottles
+      // Deduct bottles (always attempt)
       await deductBottle(sizeVariant.bottle, item.quantity, 'sale', null);
     }
 
@@ -46,13 +58,11 @@ exports.createSale = async (req, res) => {
       notes,
     });
 
-    // Link inventory logs
     await InventoryLog.updateMany(
       { reference: null, reason: 'sale' },
       { reference: sale._id, refModel: 'Sale' }
     );
 
-    // Record cash transaction if paid
     if (paymentStatus === 'paid') {
       await Transaction.create({
         type: 'cash_in',
