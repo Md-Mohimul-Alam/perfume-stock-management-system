@@ -45,45 +45,94 @@ const Materials = () => {
   const fetchMaterialsAndSummary = async () => {
     setLoading(true);
     try {
-      // Fetch materials and sales in parallel
-      const [materialsRes, salesRes] = await Promise.all([
+      // Fetch materials, sales, and products in parallel
+      const [materialsRes, salesRes, productsRes] = await Promise.all([
         API.get('/inventory/materials'),
         API.get('/sales'),
+        API.get('/products'), // fetch all products with their material references
       ]);
 
       const materialsData = materialsRes.data;
-      setMaterials(materialsData);
-
-      // Compute oil summary from sales data
       const sales = salesRes.data || [];
-      let usedOilRollOn = 0;
-      let usedOilSpray = 0;
+      const products = productsRes.data || [];
+
+      // Build a map of productId -> product data (with populated materials)
+      const productMap = {};
+      products.forEach(p => {
+        productMap[p._id] = p;
+      });
+
+      // Compute usage per material
+      const usageMap = {}; // materialId -> total used (ml)
 
       for (const sale of sales) {
         if (!sale.items) continue;
         for (const item of sale.items) {
-          const product = item.product;
+          const product = productMap[item.product];
           if (!product) continue;
           const sizeMl = item.sizeMl || 0;
           const qty = item.quantity || 0;
+
+          // Determine which materials this product uses and how much
           if (product.type === 'roll-on') {
-            usedOilRollOn += sizeMl * qty;
+            // Roll‑on uses baseOil (full sizeMl)
+            const oilId = product.baseOil;
+            if (oilId) {
+              const used = sizeMl * qty;
+              usageMap[oilId] = (usageMap[oilId] || 0) + used;
+            }
           } else if (product.type === 'spray') {
-            // 55% of bottle size is oil
-            usedOilSpray += sizeMl * 0.55 * qty;
+            // Spray uses blendComponents with percentages
+            if (product.blendComponents && product.blendComponents.length) {
+              for (const comp of product.blendComponents) {
+                const matId = comp.material;
+                if (!matId) continue;
+                const percentage = comp.percentage || 0;
+                const used = (sizeMl * (percentage / 100)) * qty;
+                usageMap[matId] = (usageMap[matId] || 0) + used;
+              }
+            }
           }
         }
       }
 
-      // Compute total oil stock
+      // Now update each material with its used amount
+      const updatedMaterials = materialsData.map(m => {
+        const used = usageMap[m._id] || 0;
+        const stock = m.currentStockMl || 0;
+        return {
+          ...m,
+          usedOil: used,
+          availableOil: stock - used,
+        };
+      });
+      setMaterials(updatedMaterials);
+
+      // Compute overall summary (already done, but we can reuse the same loop)
+      let usedRollOn = 0;
+      let usedSpray = 0;
+      for (const sale of sales) {
+        if (!sale.items) continue;
+        for (const item of sale.items) {
+          const product = productMap[item.product];
+          if (!product) continue;
+          const sizeMl = item.sizeMl || 0;
+          const qty = item.quantity || 0;
+          if (product.type === 'roll-on') {
+            usedRollOn += sizeMl * qty;
+          } else if (product.type === 'spray') {
+            // Assuming oil content is 55% of total for spray (adjust as needed)
+            usedSpray += sizeMl * 0.55 * qty;
+          }
+        }
+      }
       const oilMaterials = materialsData.filter(m => m.type === 'oil');
       const totalOilStock = oilMaterials.reduce((sum, m) => sum + (m.currentStockMl || 0), 0);
-
-      const availableOil = totalOilStock - (usedOilRollOn + usedOilSpray);
+      const availableOil = totalOilStock - (usedRollOn + usedSpray);
 
       setOilSummary({
-        usedOilRollOn,
-        usedOilSpray,
+        usedOilRollOn: usedRollOn,
+        usedOilSpray: usedSpray,
         totalOilStock,
         availableOil,
       });
@@ -95,7 +144,7 @@ const Materials = () => {
     }
   };
 
-  // ---------- Single Add ----------
+  // ---------- CRUD functions (unchanged) ----------
   const handleAddSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -112,7 +161,6 @@ const Materials = () => {
     }
   };
 
-  // ---------- Edit ----------
   const handleEditClick = (material) => {
     setEditingMaterial({ ...material });
     setEditError('');
@@ -139,7 +187,6 @@ const Materials = () => {
     }
   };
 
-  // ---------- Delete ----------
   const handleDeleteClick = (id, name) => {
     setDeletingId(id);
     setDeletingName(name);
@@ -275,7 +322,7 @@ const Materials = () => {
         </div>
       </div>
 
-      {/* ---- Oil Summary Cards (NEW) ---- */}
+      {/* ---- Oil Summary Cards (overall) ---- */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-white rounded-2xl shadow-sm border border-amber-200 p-4">
           <p className="text-xs text-gray-500 uppercase tracking-wider flex items-center gap-1">
@@ -305,7 +352,7 @@ const Materials = () => {
         </div>
       </div>
 
-      {/* Table */}
+      {/* Table with new columns: Used Oil and Available Oil */}
       {loading ? (
         <p>Loading...</p>
       ) : (
@@ -319,6 +366,9 @@ const Materials = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock (ml)</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Per ml Cost (৳)</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Price (৳)</th>
+                {/* NEW COLUMNS */}
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Used Oil (ml)</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Available Oil (ml)</th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Actions</th>
               </tr>
             </thead>
@@ -326,6 +376,8 @@ const Materials = () => {
               {materials.map((m) => {
                 const perMlCost = m.avgCostPerMl || 0;
                 const totalPrice = (m.currentStockMl || 0) * perMlCost;
+                const used = m.usedOil || 0;
+                const available = m.availableOil || 0;
                 return (
                   <tr key={m._id}>
                     <td className="px-6 py-4">{m.name}</td>
@@ -334,6 +386,10 @@ const Materials = () => {
                     <td className="px-6 py-4">{m.currentStockMl}</td>
                     <td className="px-6 py-4">{perMlCost.toFixed(2)}</td>
                     <td className="px-6 py-4">{totalPrice.toFixed(2)}</td>
+                    <td className="px-6 py-4 text-amber-600">{used.toFixed(0)}</td>
+                    <td className={`px-6 py-4 font-semibold ${available < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      {available.toFixed(0)}
+                    </td>
                     <td className="px-6 py-4 text-center">
                       <button
                         onClick={() => handleEditClick(m)}
@@ -355,7 +411,7 @@ const Materials = () => {
               })}
               {materials.length === 0 && (
                 <tr>
-                  <td colSpan="7" className="text-center py-8 text-gray-500">No materials found</td>
+                  <td colSpan="9" className="text-center py-8 text-gray-500">No materials found</td>
                 </tr>
               )}
             </tbody>
@@ -363,7 +419,9 @@ const Materials = () => {
         </div>
       )}
 
-      {/* ---------- Add Modal ---------- */}
+      {/* ---------- Modals (unchanged) ---------- */}
+      {/* ... keep Add, Edit, Delete, Upload modals exactly as before ... */}
+      {/* I'll include them for completeness, but you can reuse your existing modals */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
@@ -420,7 +478,6 @@ const Materials = () => {
         </div>
       )}
 
-      {/* ---------- Edit Modal ---------- */}
       {showEditModal && editingMaterial && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
@@ -432,7 +489,6 @@ const Materials = () => {
             </button>
             <h2 className="text-2xl font-bold mb-4">Edit Material</h2>
             <form onSubmit={handleEditSubmit} className="space-y-4">
-              {/* Editable fields */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
                 <input
@@ -465,8 +521,6 @@ const Materials = () => {
                   <option value="fixative">Fixative</option>
                 </select>
               </div>
-
-              {/* Read-only fields */}
               <div className="border-t pt-4 mt-2">
                 <p className="text-sm text-gray-500 mb-2">Inventory Details (read‑only)</p>
                 <div className="grid grid-cols-2 gap-2 text-sm">
@@ -485,11 +539,8 @@ const Materials = () => {
                     </p>
                   </div>
                 </div>
-                <p className="text-xs text-gray-400 mt-2">
-                  * Stock and cost are updated via purchases and usage.
-                </p>
+                <p className="text-xs text-gray-400 mt-2">* Stock and cost are updated via purchases and usage.</p>
               </div>
-
               {editError && <p className="text-red-500 text-sm">{editError}</p>}
               <button
                 type="submit"
@@ -503,7 +554,6 @@ const Materials = () => {
         </div>
       )}
 
-      {/* ---------- Delete Confirmation ---------- */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
@@ -529,7 +579,6 @@ const Materials = () => {
         </div>
       )}
 
-      {/* ---------- Upload Modal ---------- */}
       {showUploadModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 relative">
