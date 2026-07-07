@@ -3,8 +3,8 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const connectDB = require('./config/db');
 const { notFound, errorHandler } = require('./middlewares/errorMiddleware');
-const path = require('path'); // Added for serving static files
-const fs = require('fs'); // Added to check/create uploads folder
+const path = require('path');
+const fs = require('fs');
 
 dotenv.config();
 connectDB();
@@ -20,7 +20,6 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl)
     if (!origin) return callback(null, true);
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
@@ -35,13 +34,16 @@ app.use(cors({
 
 app.use(express.json());
 
-// ------------------- Serve uploaded files -------------------
-// Ensure uploads directory exists
+// 👇 👇 👇 INSERT THIS BLOCK HERE 👇 👇 👇
+// 🔧 Create uploads directory if it doesn't exist
 const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
+  console.log('✅ Uploads directory created');
 }
+// Serve uploaded files statically
 app.use('/uploads', express.static(uploadDir));
+// 👆 👆 👆 END OF INSERTED BLOCK 👆 👆 👆
 
 // ------------------- Routes -------------------
 // Root route – welcome message
@@ -64,7 +66,7 @@ app.use('/api/expenses', require('./routes/expenseRoutes'));
 app.use('/api/investors', require('./routes/investorRoutes'));
 app.use('/api/reports', require('./routes/reportRoutes'));
 
-// Upload routes (must be after static file serving but before error handlers)
+// Upload routes (after static file serving)
 app.use('/api/upload', require('./routes/uploadRoutes'));
 
 // ------------------- Error handling -------------------
