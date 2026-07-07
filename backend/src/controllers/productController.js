@@ -86,42 +86,39 @@ exports.updateProduct = async (req, res) => {
     if (isBestseller !== undefined) product.isBestseller = isBestseller;
     if (images) product.images = images;
 
-    // --- Handle sizes with robust bottle handling ---
+    // --- Handle sizes: skip any size with missing or invalid bottle ---
     if (sizes) {
       const updatedSizes = [];
 
       for (const newSize of sizes) {
-        // If bottle is missing or empty, try to keep the existing one
         let bottleId = newSize.bottle;
 
-        // If bottleId is empty or invalid, look for an existing size with the same sizeMl
+        // If bottleId is empty or invalid, try to find existing by sizeMl
         if (!bottleId || bottleId === '' || bottleId === 'undefined') {
           const existingSize = product.sizes.find(s => s.sizeMl === newSize.sizeMl);
           if (existingSize && existingSize.bottle) {
             bottleId = existingSize.bottle;
           } else {
-            // No existing bottle and no new bottle – skip this size or throw error
-            // Option 1: Skip adding this size (remove it)
+            // No bottle and no existing – skip this size
+            console.warn(`Skipping size ${newSize.sizeMl}ml – no bottle found`);
             continue;
-            // Option 2: Throw a clear error
-            // throw new Error(`No bottle specified for size ${newSize.sizeMl}ml`);
           }
         }
 
-        // Validate that the bottle actually exists (if we have an ID)
+        // Validate the bottle exists
         if (bottleId) {
           const bottleExists = await Bottle.findById(bottleId);
           if (!bottleExists) {
-            throw new Error(`Bottle with ID ${bottleId} not found for size ${newSize.sizeMl}ml`);
+            console.warn(`Bottle ${bottleId} not found – skipping size ${newSize.sizeMl}ml`);
+            continue; // skip this size entirely
           }
         } else {
-          // If we still have no bottle, skip this size
-          continue;
+          continue; // skip if still no bottle
         }
 
-        // Build the size object with the correct bottle ID
+        // Build the size object
         updatedSizes.push({
-          _id: newSize._id, // keep existing _id if present (for update)
+          _id: newSize._id, // keep if exists (for update)
           sizeMl: newSize.sizeMl,
           bottle: bottleId,
           sellingPrice: newSize.sellingPrice || 0,
@@ -139,7 +136,7 @@ exports.updateProduct = async (req, res) => {
 
     await product.save();
 
-    // Recalculate costs for all sizes
+    // Recalculate costs for all remaining sizes
     for (let i = 0; i < product.sizes.length; i++) {
       await product.calculateMakingCost(i);
     }
@@ -150,7 +147,6 @@ exports.updateProduct = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
 // =============================================
 // POST /api/products/:id/calculate-cost
 // =============================================
