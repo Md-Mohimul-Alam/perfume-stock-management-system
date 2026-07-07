@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const Bottle = require('./src/models/Bottle');
+const Bottle = require('../src/models/Bottle');
 require('dotenv').config();
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://mohimreza1234_db_user:0yEyB17V2u0fCQGB@cluster0.vk0e7ts.mongodb.net/LuxePerfume?retryWrites=true&w=majority&appName=Cluster0';

@@ -2,7 +2,7 @@
 const mongoose = require('mongoose');
 require('dotenv').config();
 
-const Product = require('./src/models/Product'); // adjust path if needed
+const Product = require('../src/models/Product'); // adjust path if needed
 
 async function listSkus() {
   await mongoose.connect(process.env.MONGO_URI);

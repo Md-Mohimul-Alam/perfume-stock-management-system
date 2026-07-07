@@ -6,8 +6,8 @@ require('dotenv').config();
 
 // ---------- IMPORT ALL MODELS (to register them) ----------
 // This ensures Mongoose knows about the Product model before populating.
-const Sale = require('./src/models/Sale');
-const Product = require('./src/models/Product'); // <-- Fix: register Product model
+const Sale = require('../src/models/Sale');
+const Product = require('../src/models/Product'); // <-- Fix: register Product model
 
 const MONGO_URI = process.env.MONGO_URI;
 if (!MONGO_URI) {

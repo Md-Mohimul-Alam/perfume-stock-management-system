@@ -11,7 +11,7 @@ connectDB();
 
 const app = express();
 
-// ------------------- CORS (proper) -------------------
+// ------------------- CORS -------------------
 const allowedOrigins = [
   'http://localhost:5173',
   'https://perfume-stock-management-system-545.vercel.app',
@@ -34,24 +34,19 @@ app.use(cors({
 
 app.use(express.json());
 
-// 👇 👇 👇 INSERT THIS BLOCK HERE 👇 👇 👇
-// 🔧 Create uploads directory if it doesn't exist
+// ------------------- Upload directory and static serving -------------------
 const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
   console.log('✅ Uploads directory created');
 }
-// Serve uploaded files statically
 app.use('/uploads', express.static(uploadDir));
-// 👆 👆 👆 END OF INSERTED BLOCK 👆 👆 👆
 
 // ------------------- Routes -------------------
-// Root route – welcome message
 app.get('/', (req, res) => {
   res.json({ message: 'Luxe Perfume API is running' });
 });
 
-// Health check
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
@@ -65,9 +60,7 @@ app.use('/api/sales', require('./routes/saleRoutes'));
 app.use('/api/expenses', require('./routes/expenseRoutes'));
 app.use('/api/investors', require('./routes/investorRoutes'));
 app.use('/api/reports', require('./routes/reportRoutes'));
-
-// Upload routes (after static file serving)
-app.use('/api/upload', require('./routes/uploadRoutes'));
+app.use('/api/upload', require('./routes/uploadRoutes'));   // ✅ added
 
 // ------------------- Error handling -------------------
 app.use(notFound);

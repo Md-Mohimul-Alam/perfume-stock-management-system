@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const XLSX = require('xlsx');
 require('dotenv').config();
-const Product = require('./src/models/Product');
+const Product = require('../src/models/Product');
 
 const MONGO_URI = process.env.MONGO_URI;
 if (!MONGO_URI) {

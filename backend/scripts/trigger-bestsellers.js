@@ -3,7 +3,7 @@
 
 const mongoose = require('mongoose');
 require('dotenv').config();
-const { updateBestsellers } = require('./src/services/productService');
+const { updateBestsellers } = require('../src/services/productService');
 
 const MONGO_URI = process.env.MONGO_URI;
 if (!MONGO_URI) {

@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 require('dotenv').config();
-const Sale = require('./src/models/Sale');
+const Sale = require('../src/models/Sale');
 
 const MONGO_URI = process.env.MONGO_URI;
 if (!MONGO_URI) {

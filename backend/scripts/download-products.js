@@ -5,8 +5,8 @@ const path = require('path');
 require('dotenv').config();
 
 // ---------- IMPORT MODELS ----------
-const Product = require('./src/models/Product');
-const RawMaterial = require('./src/models/RawMaterial'); // optional for populating names
+const Product = require('../src/models/Product');
+const RawMaterial = require('../src/models/RawMaterial'); // optional for populating names
 
 const MONGO_URI = process.env.MONGO_URI;
 if (!MONGO_URI) {

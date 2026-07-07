@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
-const Product = require('./src/models/Product');
+const Product = require('../src/models/Product');
 
 const MONGO_URI = process.env.MONGO_URI;
 if (!MONGO_URI) {

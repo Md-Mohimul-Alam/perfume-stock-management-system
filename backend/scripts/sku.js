@@ -6,7 +6,7 @@ const path = require('path');
 const XLSX = require('xlsx');
 require('dotenv').config();
 
-const Product = require('./src/models/Product');
+const Product = require('../src/models/Product');
 // If you have a Bottle model, you can import it to map bottleType to ObjectId
 // const Bottle = require('./src/models/Bottle');
 
