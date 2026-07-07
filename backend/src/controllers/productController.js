@@ -433,3 +433,20 @@ exports.triggerBestsellerUpdate = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+// =============================================
+// GET /api/products/:id
+// =============================================
+exports.getProductById = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id)
+      .populate('baseOil', 'name sku')
+      .populate('blendComponents.material', 'name sku type')
+      .populate('sizes.bottle', 'sizeMl type');
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+    res.json(product);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const {
   getProducts,
+  getProductById,           // <-- add this import
   createProduct,
   updateProduct,
   calculateCost,
@@ -18,6 +19,7 @@ router.route('/')
   .post(protect, createProduct);
 
 router.route('/:id')
+  .get(getProductById)      // <-- add this route
   .put(protect, updateProduct)
   .delete(protect, deleteProduct);
 
