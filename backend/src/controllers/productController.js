@@ -62,9 +62,6 @@ exports.createProduct = async (req, res) => {
 // =============================================
 // PUT /api/products/:id
 // =============================================
-// =============================================
-// PUT /api/products/:id
-// =============================================
 exports.updateProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
@@ -88,31 +85,51 @@ exports.updateProduct = async (req, res) => {
     if (isBestseller !== undefined) product.isBestseller = isBestseller;
     if (images) product.images = images;
 
-    // --- Handle sizes carefully: preserve existing bottle IDs if not provided ---
+    // --- Handle sizes properly ---
     if (sizes) {
-      const updatedSizes = sizes.map((newSize, index) => {
+      const updatedSizes = [];
+
+      for (const newSize of sizes) {
         // If bottle is missing or empty, try to keep the existing one
-        if (!newSize.bottle) {
-          // Find the existing size by _id (if it exists)
+        let bottleId = newSize.bottle;
+
+        if (!bottleId || bottleId === '') {
+          // Find the existing size by matching sizeMl (since _id might not match)
           const existingSize = product.sizes.find(s =>
-            s._id && s._id.toString() === newSize._id
+            s.sizeMl === newSize.sizeMl
           );
           if (existingSize) {
             // Use the existing bottle ID
-            return { ...newSize, bottle: existingSize.bottle };
+            bottleId = existingSize.bottle;
+          } else {
+            // This is a new size without a bottle – skip it or throw error
+            // Option 1: Skip adding this size
+            continue;
+            // Option 2: Throw error
+            // throw new Error(`Bottle not specified for size ${newSize.sizeMl}ml`);
           }
-          // If it's a new size (no _id) and bottle is empty, we can't create it
-          // So we skip it (or you could throw an error)
-          // For safety, we'll keep it as-is and let the validator fail if required
-          // But better to skip or set a default if you have a fallback
         }
-        return newSize;
-      });
+
+        // Validate that the bottle actually exists
+        if (bottleId) {
+          const bottleExists = await Bottle.findById(bottleId);
+          if (!bottleExists) {
+            throw new Error(`Bottle ${bottleId} not found for size ${newSize.sizeMl}ml`);
+          }
+        }
+
+        updatedSizes.push({
+          ...newSize,
+          bottle: bottleId,
+        });
+      }
+
       product.sizes = updatedSizes;
     }
 
     await product.save();
 
+    // Recalculate costs for all sizes
     for (let i = 0; i < product.sizes.length; i++) {
       await product.calculateMakingCost(i);
     }
