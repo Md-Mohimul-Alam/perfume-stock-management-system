@@ -1,70 +1,46 @@
 const mongoose = require('mongoose');
+const fs = require('fs');
+const path = require('path');
 require('dotenv').config();
 const Product = require('./src/models/Product');
 
 const MONGO_URI = process.env.MONGO_URI;
 if (!MONGO_URI) {
-  console.error('❌ MONGO_URI not set in .env');
+  console.error('❌ MONGO_URI not set');
   process.exit(1);
 }
 
-async function inspectProducts() {
+async function generateMapping() {
   await mongoose.connect(MONGO_URI);
-  console.log('✅ Connected to MongoDB');
+  console.log('✅ Connected');
 
-  // Fetch a few products (limit 5) to examine structure
-  const products = await Product.find({}).limit(5).lean(); // lean() returns plain JS objects
+  const products = await Product.find({ isActive: true }).select('name sku sizes');
+  const rows = [];
 
-  if (products.length === 0) {
-    console.log('⚠️ No products found.');
-    await mongoose.disconnect();
-    return;
-  }
-
-  console.log(`\n📦 Found ${products.length} sample products:\n`);
-
-  products.forEach((p, idx) => {
-    console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
-    console.log(`📌 Product #${idx + 1}: ${p.name} (SKU: ${p.sku})`);
-    console.log(`   Type: ${p.type}`);
-    console.log(`   Active: ${p.isActive}`);
-
-    // Check top-level images field
-    const hasTopImages = p.images && Array.isArray(p.images) && p.images.length > 0;
-    console.log(`   Top-level images: ${hasTopImages ? p.images.join(', ') : '❌ none'}`);
-
-    // Inspect sizes
-    const sizes = p.sizes || [];
-    console.log(`   Sizes: ${sizes.length} variants`);
-
-    sizes.forEach((s, i) => {
-      const sizeInfo = [
-        `sizeMl: ${s.sizeMl}`,
-        `sellingPrice: ${s.sellingPrice}`,
-      ];
-      // Check if image field exists on this size
-      const hasSizeImage = s.image !== undefined && s.image !== null && s.image !== '';
-      if (hasSizeImage) {
-        sizeInfo.push(`image: ${s.image}`);
-      } else {
-        sizeInfo.push('image: ❌ missing or empty');
-      }
-      // Also show any other custom fields you might have
-      if (s.bottleType) sizeInfo.push(`bottleType: ${s.bottleType}`);
-      if (s.oilMlUsed !== undefined) sizeInfo.push(`oilMlUsed: ${s.oilMlUsed}`);
-      console.log(`      ${i + 1}. ${sizeInfo.join(', ')}`);
+  products.forEach(p => {
+    (p.sizes || []).forEach(size => {
+      rows.push({
+        sku: p.sku,
+        sizeMl: size.sizeMl,
+        productName: p.name,
+        imageFile: '', // <-- you fill this column
+      });
     });
-
-    // If no sizes, mention it
-    if (sizes.length === 0) {
-      console.log('      (no size variants)');
-    }
-
-    console.log('');
   });
+
+  // Write CSV
+  const csv = ['sku,sizeMl,productName,imageFile'];
+  rows.forEach(r => {
+    // Escape commas in product name
+    const safeName = r.productName.includes(',') ? `"${r.productName}"` : r.productName;
+    csv.push(`${r.sku},${r.sizeMl},${safeName},${r.imageFile}`);
+  });
+  const filePath = path.join(__dirname, 'image-mapping.csv');
+  fs.writeFileSync(filePath, csv.join('\n'));
+  console.log(`✅ Mapping CSV created: ${filePath} (${rows.length} rows)`);
 
   await mongoose.disconnect();
   console.log('🔌 Disconnected');
 }
 
-inspectProducts().catch(console.error);
+generateMapping().catch(console.error);

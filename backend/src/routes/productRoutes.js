@@ -9,13 +9,12 @@ const {
   bulkCreateProducts,
   correctProductTypes,
   fixProductTypesAndBottles,
-  triggerBestsellerUpdate,           // 👈 new
+  triggerBestsellerUpdate,
 } = require('../controllers/productController');
-const { protect, admin } = require('../middlewares/authMiddleware'); // ensure admin middleware exists
+const { protect, admin } = require('../middlewares/authMiddleware');
 
-// All routes are protected (require auth)
 router.route('/')
-  .get( getProducts)
+  .get(getProducts)
   .post(protect, createProduct);
 
 router.route('/:id')
@@ -26,8 +25,6 @@ router.post('/:id/calculate-cost', calculateCost);
 router.post('/bulk', protect, bulkCreateProducts);
 router.post('/correct-types', correctProductTypes);
 router.post('/fix-product-types', protect, fixProductTypesAndBottles);
-
-// 👇 New endpoint – can be triggered manually (only admin)
 router.post('/update-bestsellers', protect, admin, triggerBestsellerUpdate);
 
 module.exports = router;

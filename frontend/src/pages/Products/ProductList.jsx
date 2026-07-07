@@ -8,7 +8,7 @@ import {
 import * as XLSX from 'xlsx';
 import toast from 'react-hot-toast';
 
-// ---------- Helper to format size for display (used in edit modal) ----------
+// ---------- Helper to format size for display ----------
 const formatSize = (sizeMl, bottleType) => {
   if (!sizeMl && !bottleType) return '';
   if (sizeMl && bottleType) return `${sizeMl}ml ${bottleType}`;
@@ -16,7 +16,7 @@ const formatSize = (sizeMl, bottleType) => {
   return bottleType || '';
 };
 
-// ---------- Helper to parse size string (reused from upload) ----------
+// ---------- Helper to parse size string ----------
 const parseSize = (sizeStr) => {
   if (!sizeStr) return null;
   const trimmed = String(sizeStr).trim();
@@ -24,15 +24,6 @@ const parseSize = (sizeStr) => {
   if (match) {
     const sizeMl = parseFloat(match[1]);
     let type = match[2].toLowerCase().trim();
-    if (type.includes('role') || type.includes('roll')) type = 'roll-on';
-    else if (type.includes('spray')) type = 'spray';
-    else type = 'spray';
-    return { sizeMl, type };
-  }
-  const altMatch = trimmed.match(/^([\d.]+)\s*ml\s*(.+)$/i);
-  if (altMatch) {
-    const sizeMl = parseFloat(altMatch[1]);
-    let type = altMatch[2].toLowerCase().trim();
     if (type.includes('role') || type.includes('roll')) type = 'roll-on';
     else if (type.includes('spray')) type = 'spray';
     else type = 'spray';
@@ -57,15 +48,15 @@ const ProductList = () => {
   const [editForm, setEditForm] = useState({
     name: '',
     sku: '',
-    size: '',
-    sellingPrice: '',
     description: '',
     intensity: 'medium',
     bestFor: '',
     notes: '',
     isBestseller: false,
+    sizes: [], // array of { sizeMl, sellingPrice, image, bottleId, _id }
   });
   const [editLoading, setEditLoading] = useState(false);
+  const [fetchingProduct, setFetchingProduct] = useState(false);
 
   // ---------- Bulk Upload State ----------
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -104,20 +95,34 @@ const ProductList = () => {
   };
 
   // ---------- Edit Modal Handlers ----------
-  const openEditModal = (product) => {
-    setProductToEdit(product);
-    setEditForm({
-      name: product.name || '',
-      sku: product.sku || '',
-      size: formatSize(product.sizeMl, product.bottleType),
-      sellingPrice: product.sellingPrice || '',
-      description: product.description || '',
-      intensity: product.intensity || 'medium',
-      bestFor: (product.bestFor || []).join(', '),
-      notes: (product.notes || []).join(', '),
-      isBestseller: product.isBestseller || false,
-    });
-    setShowEditModal(true);
+  const openEditModal = async (product) => {
+    setFetchingProduct(true);
+    try {
+      // Fetch full product details (with populated sizes)
+      const { data } = await API.get(`/products/${product._id}`);
+      setProductToEdit(data);
+      setEditForm({
+        name: data.name || '',
+        sku: data.sku || '',
+        description: data.description || '',
+        intensity: data.intensity || 'medium',
+        bestFor: (data.bestFor || []).join(', '),
+        notes: (data.notes || []).join(', '),
+        isBestseller: data.isBestseller || false,
+        sizes: (data.sizes || []).map(s => ({
+          _id: s._id,
+          sizeMl: s.sizeMl,
+          sellingPrice: s.sellingPrice || 0,
+          image: s.image || '',
+          bottleId: s.bottle?._id || s.bottle || '',
+        })),
+      });
+      setShowEditModal(true);
+    } catch (error) {
+      toast.error('Failed to load product details');
+    } finally {
+      setFetchingProduct(false);
+    }
   };
 
   const handleEditChange = (e) => {
@@ -128,39 +133,39 @@ const ProductList = () => {
     }));
   };
 
+  const handleSizeImageChange = (index, imageUrl) => {
+    const updatedSizes = [...editForm.sizes];
+    updatedSizes[index].image = imageUrl;
+    setEditForm({ ...editForm, sizes: updatedSizes });
+  };
+
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     if (!productToEdit) return;
 
     setEditLoading(true);
     try {
-      // Parse size
-      const sizeInfo = parseSize(editForm.size);
-      if (!sizeInfo) {
-        toast.error('Invalid size format. Use e.g. "3.5ml Roll-on" or "6ml Spray"');
-        setEditLoading(false);
-        return;
-      }
-
       const payload = {
         name: editForm.name.trim(),
         sku: editForm.sku.trim(),
-        sizeMl: sizeInfo.sizeMl,
-        bottleType: sizeInfo.type,
-        sellingPrice: parseFloat(editForm.sellingPrice),
         description: editForm.description.trim(),
         intensity: editForm.intensity,
         bestFor: editForm.bestFor.split(',').map(s => s.trim()).filter(Boolean),
         notes: editForm.notes.split(',').map(s => s.trim()).filter(Boolean),
         isBestseller: editForm.isBestseller,
+        sizes: editForm.sizes.map(s => ({
+          _id: s._id, // keep existing id for update
+          sizeMl: s.sizeMl,
+          bottle: s.bottleId,
+          sellingPrice: s.sellingPrice,
+          image: s.image || '',
+          // These will be recalculated by the pre-save hook
+          oilMlUsed: 0,
+          ethanolMlUsed: 0,
+          fixativeMlUsed: 0,
+          makingCost: 0,
+        })),
       };
-
-      // Validate
-      if (!payload.name || !payload.sku || isNaN(payload.sellingPrice) || payload.sellingPrice < 0) {
-        toast.error('Name, SKU, and valid price are required');
-        setEditLoading(false);
-        return;
-      }
 
       await API.put(`/products/${productToEdit._id}`, payload);
       toast.success('Product updated successfully!');
@@ -178,7 +183,6 @@ const ProductList = () => {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      console.log('📎 File selected:', file.name, file.size);
       setUploadFile(file);
       setUploadResult(null);
     }
@@ -203,8 +207,6 @@ const ProductList = () => {
           const sheet = workbook.Sheets[workbook.SheetNames[0]];
           const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
 
-          console.log('📊 Rows found:', rows.length);
-
           if (!rows.length) {
             setUploadResult({ success: false, message: 'File is empty' });
             setUploading(false);
@@ -213,7 +215,6 @@ const ProductList = () => {
 
           const firstRow = rows[0];
           const columns = Object.keys(firstRow);
-          console.log('📋 Columns found:', columns);
 
           const findCol = (possibleNames) => {
             for (const name of possibleNames) {
@@ -234,8 +235,6 @@ const ProductList = () => {
           const bestForCol = findCol(['best for', 'bestfor', 'occasion']);
           const notesCol = findCol(['notes', 'scent notes', 'scentnotes']);
           const bestsellerCol = findCol(['bestseller', 'isbestseller', 'bestseller']);
-
-          console.log('🔍 Column mapping:', { nameCol, skuCol, sizeCol, priceCol });
 
           if (!nameCol || !skuCol || !sizeCol || !priceCol) {
             setUploadResult({
@@ -288,8 +287,6 @@ const ProductList = () => {
             }
           }
 
-          console.log('📦 Items prepared:', items.length);
-
           if (!items.length) {
             setUploadResult({
               success: false,
@@ -300,8 +297,6 @@ const ProductList = () => {
           }
 
           const response = await API.post('/products/bulk', { items });
-          console.log('✅ Upload response:', response.data);
-
           setUploadResult({
             success: true,
             data: response.data,
@@ -316,7 +311,6 @@ const ProductList = () => {
           }, 3000);
 
         } catch (parseError) {
-          console.error('❌ Parse error:', parseError);
           setUploadResult({
             success: false,
             message: parseError.message || 'Failed to parse file'
@@ -332,7 +326,6 @@ const ProductList = () => {
 
       reader.readAsArrayBuffer(uploadFile);
     } catch (err) {
-      console.error('❌ Upload error:', err);
       setUploadResult({
         success: false,
         message: err.response?.data?.message || err.message || 'Upload failed'
@@ -534,10 +527,10 @@ const ProductList = () => {
         </div>
       )}
 
-      {/* ---------- EDIT MODAL (FULLY WORKING) ---------- */}
+      {/* ---------- EDIT MODAL (MULTI-SIZE SUPPORT) ---------- */}
       {showEditModal && productToEdit && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 relative">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 relative">
             <button
               onClick={() => {
                 setShowEditModal(false);
@@ -550,167 +543,198 @@ const ProductList = () => {
 
             <h2 className="text-2xl font-bold mb-1">Edit Product</h2>
             <p className="text-gray-500 text-sm mb-4">
-              Update details for <span className="font-medium">{productToEdit.name}</span>
+              Update details and size images for <span className="font-medium">{productToEdit.name}</span>
             </p>
 
-            <form onSubmit={handleEditSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Name */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Product Name *</label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={editForm.name}
-                    onChange={handleEditChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
-                    required
-                  />
-                </div>
-
-                {/* SKU */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">SKU *</label>
-                  <input
-                    type="text"
-                    name="sku"
-                    value={editForm.sku}
-                    onChange={handleEditChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
-                    required
-                  />
-                </div>
-
-                {/* Size */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Size *</label>
-                  <input
-                    type="text"
-                    name="size"
-                    value={editForm.size}
-                    onChange={handleEditChange}
-                    placeholder="e.g. 3.5ml Roll-on"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
-                    required
-                  />
-                  <p className="text-xs text-gray-400 mt-1">Format: "3.5ml Spray" or "6ml Roll-on"</p>
-                </div>
-
-                {/* Price */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Selling Price *</label>
-                  <input
-                    type="number"
-                    name="sellingPrice"
-                    value={editForm.sellingPrice}
-                    onChange={handleEditChange}
-                    step="0.01"
-                    min="0"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
-                    required
-                  />
-                </div>
-
-                {/* Intensity */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Intensity</label>
-                  <select
-                    name="intensity"
-                    value={editForm.intensity}
-                    onChange={handleEditChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none bg-white"
-                  >
-                    <option value="light">Light</option>
-                    <option value="medium">Medium</option>
-                    <option value="strong">Strong</option>
-                    <option value="fresh">Fresh</option>
-                  </select>
-                </div>
-
-                {/* Bestseller (checkbox) */}
-                <div className="flex items-end">
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
+            {fetchingProduct ? (
+              <div className="flex justify-center py-12">
+                <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
+              </div>
+            ) : (
+              <form onSubmit={handleEditSubmit} className="space-y-4">
+                {/* Product Details */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Product Name *</label>
                     <input
-                      type="checkbox"
-                      name="isBestseller"
-                      checked={editForm.isBestseller}
+                      type="text"
+                      name="name"
+                      value={editForm.name}
                       onChange={handleEditChange}
-                      className="w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                      required
                     />
-                    Mark as Bestseller
-                  </label>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">SKU *</label>
+                    <input
+                      type="text"
+                      name="sku"
+                      value={editForm.sku}
+                      onChange={handleEditChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Intensity</label>
+                    <select
+                      name="intensity"
+                      value={editForm.intensity}
+                      onChange={handleEditChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none bg-white"
+                    >
+                      <option value="light">Light</option>
+                      <option value="medium">Medium</option>
+                      <option value="strong">Strong</option>
+                      <option value="fresh">Fresh</option>
+                    </select>
+                  </div>
+
+                  <div className="flex items-end">
+                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="isBestseller"
+                        checked={editForm.isBestseller}
+                        onChange={handleEditChange}
+                        className="w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
+                      />
+                      Mark as Bestseller
+                    </label>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea
+                      name="description"
+                      value={editForm.description}
+                      onChange={handleEditChange}
+                      rows="2"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Best For</label>
+                    <input
+                      type="text"
+                      name="bestFor"
+                      value={editForm.bestFor}
+                      onChange={handleEditChange}
+                      placeholder="e.g. Women, Men, Unisex"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                    />
+                    <p className="text-xs text-gray-400 mt-1">Comma-separated values</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                    <input
+                      type="text"
+                      name="notes"
+                      value={editForm.notes}
+                      onChange={handleEditChange}
+                      placeholder="e.g. Floral, Woody, Fresh"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                    />
+                    <p className="text-xs text-gray-400 mt-1">Comma-separated values</p>
+                  </div>
                 </div>
 
-                {/* Description (full width) */}
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                  <textarea
-                    name="description"
-                    value={editForm.description}
-                    onChange={handleEditChange}
-                    rows="2"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
-                  />
+                {/* Size Variants Table with Image URL */}
+                <div className="border-t border-gray-200 pt-4">
+                  <h3 className="text-lg font-semibold text-gray-700 mb-3">Size Variants</h3>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Size (ml)</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Selling Price (৳)</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Image URL</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {editForm.sizes.map((size, index) => (
+                          <tr key={size._id || index}>
+                            <td className="px-4 py-2">{size.sizeMl}</td>
+                            <td className="px-4 py-2">
+                              <input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={size.sellingPrice}
+                                onChange={(e) => {
+                                  const updated = [...editForm.sizes];
+                                  updated[index].sellingPrice = parseFloat(e.target.value) || 0;
+                                  setEditForm({ ...editForm, sizes: updated });
+                                }}
+                                className="w-24 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-amber-500 outline-none"
+                              />
+                            </td>
+                            <td className="px-4 py-2">
+                              <input
+                                type="text"
+                                value={size.image || ''}
+                                onChange={(e) => handleSizeImageChange(index, e.target.value)}
+                                placeholder="Image URL (e.g., https://...)"
+                                className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-amber-500 outline-none"
+                              />
+                              {size.image && (
+                                <div className="mt-1">
+                                  <img
+                                    src={size.image}
+                                    alt={`${productToEdit.name} ${size.sizeMl}ml`}
+                                    className="h-12 w-12 object-cover rounded border border-gray-200"
+                                    onError={(e) => { e.target.style.display = 'none'; }}
+                                  />
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                        {editForm.sizes.length === 0 && (
+                          <tr>
+                            <td colSpan="3" className="text-center py-4 text-gray-400">No sizes available</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
 
-                {/* Best For */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Best For</label>
-                  <input
-                    type="text"
-                    name="bestFor"
-                    value={editForm.bestFor}
-                    onChange={handleEditChange}
-                    placeholder="e.g. Women, Men, Unisex"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
-                  />
-                  <p className="text-xs text-gray-400 mt-1">Comma-separated values</p>
+                {/* Actions */}
+                <div className="flex gap-3 pt-4 border-t border-gray-200">
+                  <button
+                    type="submit"
+                    disabled={editLoading}
+                    className="flex-1 bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {editLoading ? (
+                      <>
+                        <Loader2 size={18} className="animate-spin" /> Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save size={18} /> Update Product
+                      </>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowEditModal(false);
+                      setProductToEdit(null);
+                    }}
+                    className="px-6 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
                 </div>
-
-                {/* Notes */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                  <input
-                    type="text"
-                    name="notes"
-                    value={editForm.notes}
-                    onChange={handleEditChange}
-                    placeholder="e.g. Floral, Woody, Fresh"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
-                  />
-                  <p className="text-xs text-gray-400 mt-1">Comma-separated values</p>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="submit"
-                  disabled={editLoading}
-                  className="flex-1 bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {editLoading ? (
-                    <>
-                      <Loader2 size={18} className="animate-spin" /> Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save size={18} /> Update Product
-                    </>
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowEditModal(false);
-                    setProductToEdit(null);
-                  }}
-                  className="px-6 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
+              </form>
+            )}
           </div>
         </div>
       )}

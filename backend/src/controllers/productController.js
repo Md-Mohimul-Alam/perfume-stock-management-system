@@ -1,7 +1,7 @@
 const Product = require('../models/Product');
 const RawMaterial = require('../models/RawMaterial');
 const Bottle = require('../models/Bottle');
-const { updateBestsellers } = require('../services/productService'); // ⬅️ new
+const { updateBestsellers } = require('../services/productService');
 
 // =============================================
 // GET /api/products
@@ -44,7 +44,7 @@ exports.createProduct = async (req, res) => {
       intensity: intensity || 'medium',
       bestFor: bestFor || ['all'],
       notes: notes || [],
-      isBestseller: isBestseller || false,   // can be set manually, but will be overridden by cron
+      isBestseller: isBestseller || false,
       images: images || [],
     });
 
@@ -77,7 +77,7 @@ exports.updateProduct = async (req, res) => {
     if (type) product.type = type;
     if (baseOil) product.baseOil = baseOil;
     if (blendComponents) product.blendComponents = blendComponents;
-    if (sizes) product.sizes = sizes;
+    if (sizes) product.sizes = sizes;   // ← This accepts the image field
     if (isActive !== undefined) product.isActive = isActive;
     if (description !== undefined) product.description = description;
     if (intensity) product.intensity = intensity;
@@ -257,6 +257,7 @@ exports.bulkCreateProducts = async (req, res) => {
           fixativeMlUsed: 0,
           makingCost: 0,
           sellingPrice: parseFloat(sellingPrice),
+          // image: '' – will be added separately via update
         });
 
         await product.save();
@@ -418,11 +419,11 @@ exports.fixProductTypesAndBottles = async (req, res) => {
 };
 
 // =============================================
-// NEW: POST /api/products/update-bestsellers
+// POST /api/products/update-bestsellers
 // =============================================
 exports.triggerBestsellerUpdate = async (req, res) => {
   try {
-    const { topN = 5, timeRange = 'all' } = req.body; // 'all', 'month', 'week'
+    const { topN = 5, timeRange = 'all' } = req.body;
     const updated = await updateBestsellers(topN, timeRange);
     res.json({
       message: `✅ Bestsellers updated (${updated.length} products marked as bestsellers)`,
