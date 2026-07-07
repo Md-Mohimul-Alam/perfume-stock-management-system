@@ -72,6 +72,7 @@ exports.updateProduct = async (req, res) => {
       description, intensity, bestFor, notes, isBestseller, images
     } = req.body;
 
+    // Update simple fields
     if (name) product.name = name;
     if (sku) product.sku = sku;
     if (type) product.type = type;
@@ -85,7 +86,7 @@ exports.updateProduct = async (req, res) => {
     if (isBestseller !== undefined) product.isBestseller = isBestseller;
     if (images) product.images = images;
 
-    // --- Handle sizes properly ---
+    // --- Handle sizes with robust bottle handling ---
     if (sizes) {
       const updatedSizes = [];
 
@@ -93,34 +94,43 @@ exports.updateProduct = async (req, res) => {
         // If bottle is missing or empty, try to keep the existing one
         let bottleId = newSize.bottle;
 
-        if (!bottleId || bottleId === '') {
-          // Find the existing size by matching sizeMl (since _id might not match)
-          const existingSize = product.sizes.find(s =>
-            s.sizeMl === newSize.sizeMl
-          );
-          if (existingSize) {
-            // Use the existing bottle ID
+        // If bottleId is empty or invalid, look for an existing size with the same sizeMl
+        if (!bottleId || bottleId === '' || bottleId === 'undefined') {
+          const existingSize = product.sizes.find(s => s.sizeMl === newSize.sizeMl);
+          if (existingSize && existingSize.bottle) {
             bottleId = existingSize.bottle;
           } else {
-            // This is a new size without a bottle – skip it or throw error
-            // Option 1: Skip adding this size
+            // No existing bottle and no new bottle – skip this size or throw error
+            // Option 1: Skip adding this size (remove it)
             continue;
-            // Option 2: Throw error
-            // throw new Error(`Bottle not specified for size ${newSize.sizeMl}ml`);
+            // Option 2: Throw a clear error
+            // throw new Error(`No bottle specified for size ${newSize.sizeMl}ml`);
           }
         }
 
-        // Validate that the bottle actually exists
+        // Validate that the bottle actually exists (if we have an ID)
         if (bottleId) {
           const bottleExists = await Bottle.findById(bottleId);
           if (!bottleExists) {
-            throw new Error(`Bottle ${bottleId} not found for size ${newSize.sizeMl}ml`);
+            throw new Error(`Bottle with ID ${bottleId} not found for size ${newSize.sizeMl}ml`);
           }
+        } else {
+          // If we still have no bottle, skip this size
+          continue;
         }
 
+        // Build the size object with the correct bottle ID
         updatedSizes.push({
-          ...newSize,
+          _id: newSize._id, // keep existing _id if present (for update)
+          sizeMl: newSize.sizeMl,
           bottle: bottleId,
+          sellingPrice: newSize.sellingPrice || 0,
+          image: newSize.image || '',
+          // These will be recalculated by the pre-save hook
+          oilMlUsed: 0,
+          ethanolMlUsed: 0,
+          fixativeMlUsed: 0,
+          makingCost: 0,
         });
       }
 
