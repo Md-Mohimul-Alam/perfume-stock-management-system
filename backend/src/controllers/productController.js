@@ -62,6 +62,9 @@ exports.createProduct = async (req, res) => {
 // =============================================
 // PUT /api/products/:id
 // =============================================
+// =============================================
+// PUT /api/products/:id
+// =============================================
 exports.updateProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
@@ -77,7 +80,6 @@ exports.updateProduct = async (req, res) => {
     if (type) product.type = type;
     if (baseOil) product.baseOil = baseOil;
     if (blendComponents) product.blendComponents = blendComponents;
-    if (sizes) product.sizes = sizes;   // ← This accepts the image field
     if (isActive !== undefined) product.isActive = isActive;
     if (description !== undefined) product.description = description;
     if (intensity) product.intensity = intensity;
@@ -85,6 +87,29 @@ exports.updateProduct = async (req, res) => {
     if (notes) product.notes = notes;
     if (isBestseller !== undefined) product.isBestseller = isBestseller;
     if (images) product.images = images;
+
+    // --- Handle sizes carefully: preserve existing bottle IDs if not provided ---
+    if (sizes) {
+      const updatedSizes = sizes.map((newSize, index) => {
+        // If bottle is missing or empty, try to keep the existing one
+        if (!newSize.bottle) {
+          // Find the existing size by _id (if it exists)
+          const existingSize = product.sizes.find(s =>
+            s._id && s._id.toString() === newSize._id
+          );
+          if (existingSize) {
+            // Use the existing bottle ID
+            return { ...newSize, bottle: existingSize.bottle };
+          }
+          // If it's a new size (no _id) and bottle is empty, we can't create it
+          // So we skip it (or you could throw an error)
+          // For safety, we'll keep it as-is and let the validator fail if required
+          // But better to skip or set a default if you have a fallback
+        }
+        return newSize;
+      });
+      product.sizes = updatedSizes;
+    }
 
     await product.save();
 
