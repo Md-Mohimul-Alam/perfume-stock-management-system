@@ -2,10 +2,13 @@ const multer = require('multer');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 
+// Use absolute path for uploads directory
+const uploadDir = path.join(__dirname, '../uploads');
+
 // Configure storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/');
+    cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
