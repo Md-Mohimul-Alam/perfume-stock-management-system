@@ -53,7 +53,7 @@ const ProductList = () => {
     bestFor: '',
     notes: '',
     isBestseller: false,
-    sizes: [], // array of { sizeMl, sellingPrice, image, bottleId, _id }
+    sizes: [], // { _id, sizeMl, sellingPrice, image, bottleId }
   });
   const [editLoading, setEditLoading] = useState(false);
   const [fetchingProduct, setFetchingProduct] = useState(false);
@@ -139,6 +139,34 @@ const ProductList = () => {
     setEditForm({ ...editForm, sizes: updatedSizes });
   };
 
+  // -- Image Upload for a specific size --
+  const handleSizeImageUpload = async (index, event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const response = await API.post('/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      const imageUrl = response.data.url;
+
+      // Update the size's image field
+      const updatedSizes = [...editForm.sizes];
+      updatedSizes[index].image = imageUrl;
+      setEditForm({ ...editForm, sizes: updatedSizes });
+
+      toast.success('Image uploaded!');
+    } catch (error) {
+      toast.error('Upload failed: ' + (error.response?.data?.message || error.message));
+    }
+
+    // Reset the input so the same file can be uploaded again if needed
+    event.target.value = '';
+  };
+
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     if (!productToEdit) return;
@@ -154,7 +182,7 @@ const ProductList = () => {
         notes: editForm.notes.split(',').map(s => s.trim()).filter(Boolean),
         isBestseller: editForm.isBestseller,
         sizes: editForm.sizes.map(s => ({
-          _id: s._id, // keep existing id for update
+          _id: s._id,
           sizeMl: s.sizeMl,
           bottle: s.bottleId,
           sellingPrice: s.sellingPrice,
@@ -527,7 +555,7 @@ const ProductList = () => {
         </div>
       )}
 
-      {/* ---------- EDIT MODAL (MULTI-SIZE SUPPORT) ---------- */}
+      {/* ---------- EDIT MODAL (MULTI-SIZE WITH UPLOAD) ---------- */}
       {showEditModal && productToEdit && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 relative">
@@ -644,7 +672,7 @@ const ProductList = () => {
                   </div>
                 </div>
 
-                {/* Size Variants Table with Image URL */}
+                {/* Size Variants Table with Image Upload */}
                 <div className="border-t border-gray-200 pt-4">
                   <h3 className="text-lg font-semibold text-gray-700 mb-3">Size Variants</h3>
                   <div className="overflow-x-auto">
@@ -675,22 +703,31 @@ const ProductList = () => {
                               />
                             </td>
                             <td className="px-4 py-2">
-                              <input
-                                type="text"
-                                value={size.image || ''}
-                                onChange={(e) => handleSizeImageChange(index, e.target.value)}
-                                placeholder="Image URL (e.g., https://...)"
-                                className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-amber-500 outline-none"
-                              />
-                              {size.image && (
-                                <div className="mt-1">
-                                  <img
-                                    src={size.image}
-                                    alt={`${productToEdit.name} ${size.sizeMl}ml`}
-                                    className="h-12 w-12 object-cover rounded border border-gray-200"
-                                    onError={(e) => { e.target.style.display = 'none'; }}
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="text"
+                                  value={size.image || ''}
+                                  onChange={(e) => handleSizeImageChange(index, e.target.value)}
+                                  placeholder="Image URL or upload"
+                                  className="flex-1 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-amber-500 outline-none text-sm"
+                                />
+                                <label className="cursor-pointer bg-amber-500 text-white px-3 py-1 rounded text-sm hover:bg-amber-600 transition whitespace-nowrap">
+                                  Upload
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={(e) => handleSizeImageUpload(index, e)}
                                   />
-                                </div>
+                                </label>
+                              </div>
+                              {size.image && (
+                                <img
+                                  src={size.image}
+                                  alt={`${productToEdit.name} ${size.sizeMl}ml`}
+                                  className="mt-1 h-12 w-12 object-cover rounded border border-gray-200"
+                                  onError={(e) => { e.target.style.display = 'none'; }}
+                                />
                               )}
                             </td>
                           </tr>

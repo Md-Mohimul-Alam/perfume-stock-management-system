@@ -3,6 +3,8 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const connectDB = require('./config/db');
 const { notFound, errorHandler } = require('./middlewares/errorMiddleware');
+const path = require('path'); // Added for serving static files
+const fs = require('fs'); // Added to check/create uploads folder
 
 dotenv.config();
 connectDB();
@@ -33,6 +35,14 @@ app.use(cors({
 
 app.use(express.json());
 
+// ------------------- Serve uploaded files -------------------
+// Ensure uploads directory exists
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+app.use('/uploads', express.static(uploadDir));
+
 // ------------------- Routes -------------------
 // Root route – welcome message
 app.get('/', (req, res) => {
@@ -53,6 +63,9 @@ app.use('/api/sales', require('./routes/saleRoutes'));
 app.use('/api/expenses', require('./routes/expenseRoutes'));
 app.use('/api/investors', require('./routes/investorRoutes'));
 app.use('/api/reports', require('./routes/reportRoutes'));
+
+// Upload routes (must be after static file serving but before error handlers)
+app.use('/api/upload', require('./routes/uploadRoutes'));
 
 // ------------------- Error handling -------------------
 app.use(notFound);
