@@ -1,0 +1,6162 @@
+[
+  {
+    "_id": "6a40206f2864f27c316b3969",
+    "name": "Ahsas al Arabia",
+    "sku": "AhsAra",
+    "type": "roll-on",
+    "description": "Medium oriental woody floral blend. Best for evening elegance.",
+    "intensity": "medium",
+    "bestFor": "evening",
+    "notes": "oriental woody floral",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:43.561Z",
+    "updatedAt": "2026-07-06T18:42:33.793Z",
+    "baseOil": "Ahsas al Arabia",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 150,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 250,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 650,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1250,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 1250
+  },
+  {
+    "_id": "6a4020702864f27c316b397c",
+    "name": "Ahsas al Arabia Spray",
+    "sku": "AhsAra_SP",
+    "type": "spray",
+    "description": "Medium oriental woody floral blend. Best for evening elegance.",
+    "intensity": "medium",
+    "bestFor": "evening",
+    "notes": "oriental woody floral",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:44.418Z",
+    "updatedAt": "2026-07-06T19:59:26.087Z",
+    "baseOil": "",
+    "blendComponents": "Ahsas al Arabia (45%); Ethanol (55%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 300,
+        "oilMlUsed": 2.7,
+        "ethanolMlUsed": 3.3,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 700,
+        "oilMlUsed": 6.75,
+        "ethanolMlUsed": 8.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1000,
+        "oilMlUsed": 13.5,
+        "ethanolMlUsed": 16.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 1300,
+        "oilMlUsed": 22.5,
+        "ethanolMlUsed": 27.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 1700,
+        "oilMlUsed": 45,
+        "ethanolMlUsed": 55,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 300,
+    "maxPrice": 1700
+  },
+  {
+    "_id": "6a40206d2864f27c316b3941",
+    "name": "Ameer Al oud",
+    "sku": "AmeOud",
+    "type": "roll-on",
+    "description": "Strong oriental woody spicy fragrance. Perfect for evening sophistication.",
+    "intensity": "strong",
+    "bestFor": "evening",
+    "notes": "oriental woody spicy",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:41.848Z",
+    "updatedAt": "2026-07-06T18:42:33.726Z",
+    "baseOil": "Ameer Al oud",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 150,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 250,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 650,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1250,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 1250
+  },
+  {
+    "_id": "6a40206e2864f27c316b3954",
+    "name": "Ameer Al oud Spray",
+    "sku": "AmeOud_SP",
+    "type": "spray",
+    "description": "Strong oriental woody spicy fragrance. Perfect for evening sophistication.",
+    "intensity": "strong",
+    "bestFor": "evening",
+    "notes": "oriental woody spicy",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:42.701Z",
+    "updatedAt": "2026-07-06T19:59:25.959Z",
+    "baseOil": "",
+    "blendComponents": "Ameer Al oud (45%); Ethanol (55%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 300,
+        "oilMlUsed": 2.7,
+        "ethanolMlUsed": 3.3,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 700,
+        "oilMlUsed": 6.75,
+        "ethanolMlUsed": 8.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1000,
+        "oilMlUsed": 13.5,
+        "ethanolMlUsed": 16.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 1300,
+        "oilMlUsed": 22.5,
+        "ethanolMlUsed": 27.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 1700,
+        "oilMlUsed": 45,
+        "ethanolMlUsed": 55,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 300,
+    "maxPrice": 1700
+  },
+  {
+    "_id": "6a4020732864f27c316b39b9",
+    "name": "Aqua DI Gio",
+    "sku": "AquGio",
+    "type": "roll-on",
+    "description": "Fresh aquatic citrus fragrance. A daytime classic.",
+    "intensity": "medium",
+    "bestFor": "daytime",
+    "notes": "aquatic citrus",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:47.003Z",
+    "updatedAt": "2026-07-06T18:42:33.935Z",
+    "baseOil": "Aqua DI Gio",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 180,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 280,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 750,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1500,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 1500
+  },
+  {
+    "_id": "6a4020732864f27c316b39cc",
+    "name": "Aqua DI Gio Spray",
+    "sku": "AquGio_SP",
+    "type": "spray",
+    "description": "Fresh aquatic citrus fragrance. A daytime classic.",
+    "intensity": "medium",
+    "bestFor": "daytime",
+    "notes": "aquatic citrus",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:47.860Z",
+    "updatedAt": "2026-07-06T19:59:26.332Z",
+    "baseOil": "",
+    "blendComponents": "Aqua DI Gio (45%); Ethanol (55%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 330,
+        "oilMlUsed": 2.7,
+        "ethanolMlUsed": 3.3,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 780,
+        "oilMlUsed": 6.75,
+        "ethanolMlUsed": 8.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1050,
+        "oilMlUsed": 13.5,
+        "ethanolMlUsed": 16.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 1300,
+        "oilMlUsed": 22.5,
+        "ethanolMlUsed": 27.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 1650,
+        "oilMlUsed": 45,
+        "ethanolMlUsed": 55,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 330,
+    "maxPrice": 1650
+  },
+  {
+    "_id": "6a4020612864f27c316b3829",
+    "name": "Armanis.w.y",
+    "sku": "ArmWy",
+    "type": "roll-on",
+    "description": "Spicy sweet woody fragrance. A strong statement for evening events.",
+    "intensity": "medium",
+    "bestFor": "evening",
+    "notes": "spicy sweet woody",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:29.563Z",
+    "updatedAt": "2026-07-06T18:42:33.262Z",
+    "baseOil": "Armanis.w.y",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 150,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 250,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 700,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1400,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 1400
+  },
+  {
+    "_id": "6a4020622864f27c316b383c",
+    "name": "Armanis.w.y Spray",
+    "sku": "ArmWy_SP",
+    "type": "spray",
+    "description": "Spicy sweet woody fragrance. A strong statement for evening events.",
+    "intensity": "medium",
+    "bestFor": "evening",
+    "notes": "spicy sweet woody",
+    "isBestseller": true,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:30.435Z",
+    "updatedAt": "2026-07-06T19:59:25.097Z",
+    "baseOil": "",
+    "blendComponents": "Armanis.w.y (45%); Ethanol (55%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 300,
+        "oilMlUsed": 2.7,
+        "ethanolMlUsed": 3.3,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 700,
+        "oilMlUsed": 6.75,
+        "ethanolMlUsed": 8.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1100,
+        "oilMlUsed": 13.5,
+        "ethanolMlUsed": 16.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 1500,
+        "oilMlUsed": 22.5,
+        "ethanolMlUsed": 27.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 1900,
+        "oilMlUsed": 45,
+        "ethanolMlUsed": 55,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 300,
+    "maxPrice": 1900
+  },
+  {
+    "_id": "6a4020712864f27c316b3991",
+    "name": "Baccarat rouge",
+    "sku": "BacRou",
+    "type": "roll-on",
+    "description": "Luxury saffron amber woody fragrance. For special occasions.",
+    "intensity": "strong",
+    "bestFor": "special",
+    "notes": "saffron amber woody",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:45.280Z",
+    "updatedAt": "2026-07-06T18:42:33.868Z",
+    "baseOil": "Baccarat rouge",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 180,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 280,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 750,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1500,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 1500
+  },
+  {
+    "_id": "6a4020722864f27c316b39a4",
+    "name": "Baccarat rouge Spray",
+    "sku": "BacRou_SP",
+    "type": "spray",
+    "description": "Luxury saffron amber woody fragrance. For special occasions.",
+    "intensity": "strong",
+    "bestFor": "special",
+    "notes": "saffron amber woody",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:46.138Z",
+    "updatedAt": "2026-07-06T19:59:26.204Z",
+    "baseOil": "",
+    "blendComponents": "Baccarat rouge (45%); Ethanol (55%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 330,
+        "oilMlUsed": 2.7,
+        "ethanolMlUsed": 3.3,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 780,
+        "oilMlUsed": 6.75,
+        "ethanolMlUsed": 8.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1050,
+        "oilMlUsed": 13.5,
+        "ethanolMlUsed": 16.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 1300,
+        "oilMlUsed": 22.5,
+        "ethanolMlUsed": 27.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 1650,
+        "oilMlUsed": 45,
+        "ethanolMlUsed": 55,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 330,
+    "maxPrice": 1650
+  },
+  {
+    "_id": "6a4020532864f27c316b36e9",
+    "name": "Blue berry",
+    "sku": "BluBer",
+    "type": "roll-on",
+    "description": "A light, sweet fruity fragrance with juicy blueberry notes. Perfect for daytime freshness.",
+    "intensity": "light",
+    "bestFor": "daytime",
+    "notes": "fruity sweet",
+    "isBestseller": true,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:15.386Z",
+    "updatedAt": "2026-07-06T18:42:32.726Z",
+    "baseOil": "Blue berry",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 150,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 250,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 650,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1250,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 1250
+  },
+  {
+    "_id": "6a4020542864f27c316b36fc",
+    "name": "Blue berry Spray",
+    "sku": "BluBer_SP",
+    "type": "spray",
+    "description": "A light, sweet fruity fragrance with juicy blueberry notes. Perfect for daytime freshness.",
+    "intensity": "light",
+    "bestFor": "daytime",
+    "notes": "fruity sweet",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:16.262Z",
+    "updatedAt": "2026-07-06T19:59:24.253Z",
+    "baseOil": "",
+    "blendComponents": "Blue berry (45%); Ethanol (55%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 300,
+        "oilMlUsed": 2.7,
+        "ethanolMlUsed": 3.3,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 700,
+        "oilMlUsed": 6.75,
+        "ethanolMlUsed": 8.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1000,
+        "oilMlUsed": 13.5,
+        "ethanolMlUsed": 16.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 1300,
+        "oilMlUsed": 22.5,
+        "ethanolMlUsed": 27.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 1700,
+        "oilMlUsed": 45,
+        "ethanolMlUsed": 55,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 300,
+    "maxPrice": 1700
+  },
+  {
+    "_id": "6a40205d2864f27c316b37d9",
+    "name": "Blue de Chanel",
+    "sku": "BluCha",
+    "type": "roll-on",
+    "description": "Fresh citrus with a woody base. Versatile for any occasion.",
+    "intensity": "medium",
+    "bestFor": "all",
+    "notes": "citrus woody fresh",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:25.981Z",
+    "updatedAt": "2026-07-06T18:42:33.131Z",
+    "baseOil": "Blue de Chanel",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 1300,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 1650,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 180,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 280,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 1650
+  },
+  {
+    "_id": "6a40205e2864f27c316b37ec",
+    "name": "Blue de Chanel Spray",
+    "sku": "BluCha_SP",
+    "type": "spray",
+    "description": "Fresh citrus with a woody base. Versatile for any occasion.",
+    "intensity": "medium",
+    "bestFor": "all",
+    "notes": "citrus woody fresh",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:26.833Z",
+    "updatedAt": "2026-07-06T19:59:24.857Z",
+    "baseOil": "",
+    "blendComponents": "Blue de Chanel (45%); Ethanol (55%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 330,
+        "oilMlUsed": 2.7,
+        "ethanolMlUsed": 3.3,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 780,
+        "oilMlUsed": 6.75,
+        "ethanolMlUsed": 8.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 330,
+        "oilMlUsed": 13.5,
+        "ethanolMlUsed": 16.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 780,
+        "oilMlUsed": 22.5,
+        "ethanolMlUsed": 27.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 1050,
+        "oilMlUsed": 45,
+        "ethanolMlUsed": 55,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 330,
+    "maxPrice": 1050
+  },
+  {
+    "_id": "6a40207f2864f27c316b3ad1",
+    "name": "Burberry Her",
+    "sku": "BurH",
+    "type": "roll-on",
+    "description": "Medium floral fruity fragrance. A modern daytime classic.",
+    "intensity": "medium",
+    "bestFor": "daytime",
+    "notes": "floral fruity",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:59.167Z",
+    "updatedAt": "2026-07-06T18:42:34.395Z",
+    "baseOil": "Burberry Her",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 180,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 280,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 750,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1500,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 1500
+  },
+  {
+    "_id": "6a4020802864f27c316b3ae4",
+    "name": "Burberry Her Spray",
+    "sku": "BurH_SP",
+    "type": "spray",
+    "description": "Medium floral fruity fragrance. A modern daytime classic.",
+    "intensity": "medium",
+    "bestFor": "daytime",
+    "notes": "floral fruity",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:12:00.044Z",
+    "updatedAt": "2026-07-06T19:59:27.169Z",
+    "baseOil": "",
+    "blendComponents": "Burberry Her (45%); Ethanol (55%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 330,
+        "oilMlUsed": 2.7,
+        "ethanolMlUsed": 3.3,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 780,
+        "oilMlUsed": 6.75,
+        "ethanolMlUsed": 8.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1050,
+        "oilMlUsed": 13.5,
+        "ethanolMlUsed": 16.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 1300,
+        "oilMlUsed": 22.5,
+        "ethanolMlUsed": 27.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 1650,
+        "oilMlUsed": 45,
+        "ethanolMlUsed": 55,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 330,
+    "maxPrice": 1650
+  },
+  {
+    "_id": "6a4020572864f27c316b3739",
+    "name": "CK-1",
+    "sku": "CK1",
+    "type": "roll-on",
+    "description": "Unisex fresh citrus fragrance with green notes. A timeless daytime scent.",
+    "intensity": "light",
+    "bestFor": "daytime",
+    "notes": "citrus fresh green",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:19.064Z",
+    "updatedAt": "2026-07-06T18:42:32.856Z",
+    "baseOil": "CK-1",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 150,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 250,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 650,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1250,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 1250
+  },
+  {
+    "_id": "6a4020572864f27c316b374c",
+    "name": "CK-1 Spray",
+    "sku": "CK1_SP",
+    "type": "spray",
+    "description": "Unisex fresh citrus fragrance with green notes. A timeless daytime scent.",
+    "intensity": "light",
+    "bestFor": "daytime",
+    "notes": "citrus fresh green",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:19.918Z",
+    "updatedAt": "2026-07-06T19:59:24.496Z",
+    "baseOil": "",
+    "blendComponents": "CK-1 (45%); Ethanol (55%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 300,
+        "oilMlUsed": 2.7,
+        "ethanolMlUsed": 3.3,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 700,
+        "oilMlUsed": 6.75,
+        "ethanolMlUsed": 8.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1000,
+        "oilMlUsed": 13.5,
+        "ethanolMlUsed": 16.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 1300,
+        "oilMlUsed": 22.5,
+        "ethanolMlUsed": 27.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 1700,
+        "oilMlUsed": 45,
+        "ethanolMlUsed": 55,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 300,
+    "maxPrice": 1700
+  },
+  {
+    "_id": "6a40207b2864f27c316b3a81",
+    "name": "Chanel chance",
+    "sku": "ChaCha",
+    "type": "roll-on",
+    "description": "Fresh floral fragrance for any occasion. Light and elegant.",
+    "intensity": "medium",
+    "bestFor": "all",
+    "notes": "floral fresh",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:55.769Z",
+    "updatedAt": "2026-07-06T18:42:34.264Z",
+    "baseOil": "Chanel chance",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 180,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 280,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 750,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1500,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 1500
+  },
+  {
+    "_id": "6a40207c2864f27c316b3a94",
+    "name": "Chanel chance Spray",
+    "sku": "ChaCha_SP",
+    "type": "spray",
+    "description": "Fresh floral fragrance for any occasion. Light and elegant.",
+    "intensity": "medium",
+    "bestFor": "all",
+    "notes": "floral fresh",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:56.622Z",
+    "updatedAt": "2026-07-06T19:59:26.931Z",
+    "baseOil": "",
+    "blendComponents": "Chanel chance (45%); Ethanol (55%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 330,
+        "oilMlUsed": 2.7,
+        "ethanolMlUsed": 3.3,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 780,
+        "oilMlUsed": 6.75,
+        "ethanolMlUsed": 8.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1050,
+        "oilMlUsed": 13.5,
+        "ethanolMlUsed": 16.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 1300,
+        "oilMlUsed": 22.5,
+        "ethanolMlUsed": 27.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 1650,
+        "oilMlUsed": 45,
+        "ethanolMlUsed": 55,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 330,
+    "maxPrice": 1650
+  },
+  {
+    "_id": "6a40207d2864f27c316b3aa9",
+    "name": "Chocolate",
+    "sku": "CoCo",
+    "type": "roll-on",
+    "description": "Light gourmand sweet fragrance. Delicious and comforting.",
+    "intensity": "light",
+    "bestFor": "daytime",
+    "notes": "gourmand sweet",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:57.468Z",
+    "updatedAt": "2026-07-06T18:42:34.329Z",
+    "baseOil": "Chocolate",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 150,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 250,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 650,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1250,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 1250
+  },
+  {
+    "_id": "6a40207e2864f27c316b3abc",
+    "name": "Chocolate Spray",
+    "sku": "CoCo_SP",
+    "type": "spray",
+    "description": "Light gourmand sweet fragrance. Delicious and comforting.",
+    "intensity": "light",
+    "bestFor": "daytime",
+    "notes": "gourmand sweet",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:58.321Z",
+    "updatedAt": "2026-07-06T19:59:27.055Z",
+    "baseOil": "",
+    "blendComponents": "Chocolate (45%); Ethanol (55%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 300,
+        "oilMlUsed": 2.7,
+        "ethanolMlUsed": 3.3,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 700,
+        "oilMlUsed": 6.75,
+        "ethanolMlUsed": 8.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1000,
+        "oilMlUsed": 13.5,
+        "ethanolMlUsed": 16.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 1300,
+        "oilMlUsed": 22.5,
+        "ethanolMlUsed": 27.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 1700,
+        "oilMlUsed": 45,
+        "ethanolMlUsed": 55,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 300,
+    "maxPrice": 1700
+  },
+  {
+    "_id": "6a40208d2864f27c316b3c11",
+    "name": "Creed Aventus",
+    "sku": "CreAve",
+    "type": "roll-on",
+    "description": "Strong fruity woody smoky fragrance. A statement evening scent.",
+    "intensity": "strong",
+    "bestFor": "evening",
+    "notes": "fruity woody smoky",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:12:13.050Z",
+    "updatedAt": "2026-07-06T18:42:34.935Z",
+    "baseOil": "Creed Aventus",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 150,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 250,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 650,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1250,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 1250
+  },
+  {
+    "_id": "6a40208d2864f27c316b3c24",
+    "name": "Creed Aventus Spray",
+    "sku": "CreAve_SP",
+    "type": "spray",
+    "description": "Strong fruity woody smoky fragrance. A statement evening scent.",
+    "intensity": "strong",
+    "bestFor": "evening",
+    "notes": "fruity woody smoky",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:12:13.918Z",
+    "updatedAt": "2026-07-06T19:59:28.172Z",
+    "baseOil": "",
+    "blendComponents": "Creed Aventus (45%); Ethanol (55%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 300,
+        "oilMlUsed": 2.7,
+        "ethanolMlUsed": 3.3,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 700,
+        "oilMlUsed": 6.75,
+        "ethanolMlUsed": 8.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1000,
+        "oilMlUsed": 13.5,
+        "ethanolMlUsed": 16.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 1300,
+        "oilMlUsed": 22.5,
+        "ethanolMlUsed": 27.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 1700,
+        "oilMlUsed": 45,
+        "ethanolMlUsed": 55,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 300,
+    "maxPrice": 1700
+  },
+  {
+    "_id": "6a4020902864f27c316b3c61",
+    "name": "Creed absolute",
+    "sku": "CreAbs",
+    "type": "roll-on",
+    "description": "Strong woody floral fragrance. For special occasions.",
+    "intensity": "strong",
+    "bestFor": "special",
+    "notes": "woody floral",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:12:16.615Z",
+    "updatedAt": "2026-07-06T18:42:35.066Z",
+    "baseOil": "Creed absolute",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 230,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 400,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 950,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1950,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 1950
+  },
+  {
+    "_id": "6a4020912864f27c316b3c74",
+    "name": "Creed absolute Spray",
+    "sku": "CreAbs_SP",
+    "type": "spray",
+    "description": "Strong woody floral fragrance. For special occasions.",
+    "intensity": "strong",
+    "bestFor": "special",
+    "notes": "woody floral",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:12:17.496Z",
+    "updatedAt": "2026-07-06T19:59:28.407Z",
+    "baseOil": "",
+    "blendComponents": "Creed absolute (45%); Ethanol (55%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 450,
+        "oilMlUsed": 2.7,
+        "ethanolMlUsed": 3.3,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 1000,
+        "oilMlUsed": 6.75,
+        "ethanolMlUsed": 8.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1800,
+        "oilMlUsed": 13.5,
+        "ethanolMlUsed": 16.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 2800,
+        "oilMlUsed": 22.5,
+        "ethanolMlUsed": 27.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 4000,
+        "oilMlUsed": 45,
+        "ethanolMlUsed": 55,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 450,
+    "maxPrice": 4000
+  },
+  {
+    "_id": "6a40206c2864f27c316b3919",
+    "name": "Davidoff Cool Water",
+    "sku": "DavCoo",
+    "type": "roll-on",
+    "description": "Fresh aquatic fragrance with a clean, refreshing scent. Ideal for daytime.",
+    "intensity": "medium",
+    "bestFor": "daytime",
+    "notes": "aquatic fresh",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:40.002Z",
+    "updatedAt": "2026-07-06T18:42:33.657Z",
+    "baseOil": "Davidoff Cool Water",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 150,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 250,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 650,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1250,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 1250
+  },
+  {
+    "_id": "6a40206c2864f27c316b392c",
+    "name": "Davidoff Cool Water Spray",
+    "sku": "DavCoo_SP",
+    "type": "spray",
+    "description": "Fresh aquatic fragrance with a clean, refreshing scent. Ideal for daytime.",
+    "intensity": "medium",
+    "bestFor": "daytime",
+    "notes": "aquatic fresh",
+    "isBestseller": true,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:40.961Z",
+    "updatedAt": "2026-07-06T19:59:25.837Z",
+    "baseOil": "",
+    "blendComponents": "Davidoff Cool Water (45%); Ethanol (55%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 300,
+        "oilMlUsed": 2.7,
+        "ethanolMlUsed": 3.3,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 700,
+        "oilMlUsed": 6.75,
+        "ethanolMlUsed": 8.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1000,
+        "oilMlUsed": 13.5,
+        "ethanolMlUsed": 16.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 1300,
+        "oilMlUsed": 22.5,
+        "ethanolMlUsed": 27.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 1700,
+        "oilMlUsed": 45,
+        "ethanolMlUsed": 55,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 300,
+    "maxPrice": 1700
+  },
+  {
+    "_id": "6a4020632864f27c316b3851",
+    "name": "Dior Sauvage",
+    "sku": "DioSau",
+    "type": "roll-on",
+    "description": "Spicy fresh woody fragrance with strong character. Suitable for all occasions.",
+    "intensity": "strong",
+    "bestFor": "all",
+    "notes": "spicy fresh woody",
+    "isBestseller": true,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:31.289Z",
+    "updatedAt": "2026-07-06T18:42:33.330Z",
+    "baseOil": "Dior Sauvage",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 180,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 300,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 750,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1500,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 1500
+  },
+  {
+    "_id": "6a4020642864f27c316b3864",
+    "name": "Dior Sauvage Spray",
+    "sku": "DioSau_SP",
+    "type": "spray",
+    "description": "Spicy fresh woody fragrance with strong character. Suitable for all occasions.",
+    "intensity": "strong",
+    "bestFor": "all",
+    "notes": "spicy fresh woody",
+    "isBestseller": true,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:32.151Z",
+    "updatedAt": "2026-07-06T19:59:25.217Z",
+    "baseOil": "",
+    "blendComponents": "Dior Sauvage (45%); Ethanol (55%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 330,
+        "oilMlUsed": 2.7,
+        "ethanolMlUsed": 3.3,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 800,
+        "oilMlUsed": 6.75,
+        "ethanolMlUsed": 8.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1100,
+        "oilMlUsed": 13.5,
+        "ethanolMlUsed": 16.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 1400,
+        "oilMlUsed": 22.5,
+        "ethanolMlUsed": 27.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 1800,
+        "oilMlUsed": 45,
+        "ethanolMlUsed": 55,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 330,
+    "maxPrice": 1800
+  },
+  {
+    "_id": "6a40208b2864f27c316b3be9",
+    "name": "Diptyque tam dao",
+    "sku": "DipTam",
+    "type": "roll-on",
+    "description": "Medium woody spicy fragrance. Calming and elegant.",
+    "intensity": "medium",
+    "bestFor": "evening",
+    "notes": "woody spicy",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:12:11.316Z",
+    "updatedAt": "2026-07-06T18:42:34.867Z",
+    "baseOil": "Diptyque tam dao",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 200,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 300,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 800,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1450,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 1450
+  },
+  {
+    "_id": "6a40208c2864f27c316b3bfc",
+    "name": "Diptyque tam dao Spray",
+    "sku": "DipTam_SP",
+    "type": "spray",
+    "description": "Medium woody spicy fragrance. Calming and elegant.",
+    "intensity": "medium",
+    "bestFor": "evening",
+    "notes": "woody spicy",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:12:12.196Z",
+    "updatedAt": "2026-07-06T19:59:28.054Z",
+    "baseOil": "",
+    "blendComponents": "Diptyque tam dao (45%); Ethanol (55%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 350,
+        "oilMlUsed": 2.7,
+        "ethanolMlUsed": 3.3,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 850,
+        "oilMlUsed": 6.75,
+        "ethanolMlUsed": 8.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1500,
+        "oilMlUsed": 13.5,
+        "ethanolMlUsed": 16.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 1900,
+        "oilMlUsed": 22.5,
+        "ethanolMlUsed": 27.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 2500,
+        "oilMlUsed": 45,
+        "ethanolMlUsed": 55,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 350,
+    "maxPrice": 2500
+  },
+  {
+    "_id": "6a40204f2864f27c316b3699",
+    "name": "Dunhil desire",
+    "sku": "DunDes",
+    "type": "roll-on",
+    "description": "A warm, masculine fragrance with amber and woody notes. Perfect for evening occasions.",
+    "intensity": "medium",
+    "bestFor": "evening",
+    "notes": "amber woody",
+    "isBestseller": true,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:11.878Z",
+    "updatedAt": "2026-07-06T18:37:54.897Z",
+    "baseOil": "Dunhil desire",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 0,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 150,
+        "oilMlUsed": 0,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 250,
+        "oilMlUsed": 0,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 650,
+        "oilMlUsed": 0,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1250,
+        "oilMlUsed": 0,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 1250
+  },
+  {
+    "_id": "6a4020502864f27c316b36ac",
+    "name": "Dunhil desire Spray",
+    "sku": "DunDes_SP",
+    "type": "spray",
+    "description": "A warm, masculine fragrance with amber and woody notes. Perfect for evening occasions.",
+    "intensity": "medium",
+    "bestFor": "evening",
+    "notes": "amber woody",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:12.766Z",
+    "updatedAt": "2026-07-06T19:59:24.022Z",
+    "baseOil": "",
+    "blendComponents": "Dunhil desire (45%); Ethanol (55%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 300,
+        "oilMlUsed": 2.7,
+        "ethanolMlUsed": 3.3,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 700,
+        "oilMlUsed": 6.75,
+        "ethanolMlUsed": 8.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1000,
+        "oilMlUsed": 13.5,
+        "ethanolMlUsed": 16.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 1300,
+        "oilMlUsed": 22.5,
+        "ethanolMlUsed": 27.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 1700,
+        "oilMlUsed": 45,
+        "ethanolMlUsed": 55,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 300,
+    "maxPrice": 1700
+  },
+  {
+    "_id": "6a4020972864f27c316b3d01",
+    "name": "Dunhill Icon",
+    "sku": "DunIco_2",
+    "type": "roll-on",
+    "description": "",
+    "intensity": "medium",
+    "bestFor": "all",
+    "notes": "",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:12:23.867Z",
+    "updatedAt": "2026-07-06T18:42:35.358Z",
+    "baseOil": "Dunhill Icon",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 0
+  },
+  {
+    "_id": "6a4020892864f27c316b3bc1",
+    "name": "Dunhill Icon",
+    "sku": "DunIco",
+    "type": "roll-on",
+    "description": "Medium woody spicy fragrance. Sophisticated evening wear.",
+    "intensity": "medium",
+    "bestFor": "evening",
+    "notes": "woody spicy",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:12:09.620Z",
+    "updatedAt": "2026-07-06T19:29:46.416Z",
+    "baseOil": "Dunhill Icon",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 200,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 300,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 750,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1450,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 1450
+  },
+  {
+    "_id": "6a4020982864f27c316b3d14",
+    "name": "Dunhill Icon Spray",
+    "sku": "DunIco_2_SP",
+    "type": "spray",
+    "description": "",
+    "intensity": "medium",
+    "bestFor": "all",
+    "notes": "",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:12:24.779Z",
+    "updatedAt": "2026-07-06T19:59:28.773Z",
+    "baseOil": "",
+    "blendComponents": "Dunhill Icon (45%); Ethanol (55%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 2.7,
+        "ethanolMlUsed": 3.3,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 6.75,
+        "ethanolMlUsed": 8.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 13.5,
+        "ethanolMlUsed": 16.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 22.5,
+        "ethanolMlUsed": 27.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 45,
+        "ethanolMlUsed": 55,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 0
+  },
+  {
+    "_id": "6a40208a2864f27c316b3bd4",
+    "name": "Dunhill Icon Spray",
+    "sku": "DunIco_SP",
+    "type": "spray",
+    "description": "Medium woody spicy fragrance. Sophisticated evening wear.",
+    "intensity": "medium",
+    "bestFor": "evening",
+    "notes": "woody spicy",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:12:10.468Z",
+    "updatedAt": "2026-07-06T19:59:27.929Z",
+    "baseOil": "",
+    "blendComponents": "Dunhill Icon (45%); Ethanol (55%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 350,
+        "oilMlUsed": 2.7,
+        "ethanolMlUsed": 3.3,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 850,
+        "oilMlUsed": 6.75,
+        "ethanolMlUsed": 8.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1550,
+        "oilMlUsed": 13.5,
+        "ethanolMlUsed": 16.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 1850,
+        "oilMlUsed": 22.5,
+        "ethanolMlUsed": 27.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 2200,
+        "oilMlUsed": 45,
+        "ethanolMlUsed": 55,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 350,
+    "maxPrice": 2200
+  },
+  {
+    "_id": "6a40205c2864f27c316b37b1",
+    "name": "Fantasy",
+    "sku": "Fant",
+    "type": "roll-on",
+    "description": "Fruity floral fragrance with sweet undertones. Perfect for daytime elegance.",
+    "intensity": "medium",
+    "bestFor": "daytime",
+    "notes": "fruity floral sweet",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:24.250Z",
+    "updatedAt": "2026-07-06T19:29:42.455Z",
+    "baseOil": "Fantasy",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 150,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 250,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 650,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1250,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 1250
+  },
+  {
+    "_id": "6a4020962864f27c316b3cd9",
+    "name": "Fantasy",
+    "sku": "Fant_2",
+    "type": "roll-on",
+    "description": "",
+    "intensity": "medium",
+    "bestFor": "all",
+    "notes": "",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:12:22.135Z",
+    "updatedAt": "2026-07-06T18:42:35.287Z",
+    "baseOil": "Fantasy Perfume (ready)",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 0
+  },
+  {
+    "_id": "6a40205d2864f27c316b37c4",
+    "name": "Fantasy Spray",
+    "sku": "Fant_SP",
+    "type": "spray",
+    "description": "Fruity floral fragrance with sweet undertones. Perfect for daytime elegance.",
+    "intensity": "medium",
+    "bestFor": "daytime",
+    "notes": "fruity floral sweet",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:25.117Z",
+    "updatedAt": "2026-07-06T19:59:23.692Z",
+    "baseOil": "",
+    "blendComponents": "Fantasy Perfume (ready) (45%); Ethanol (55%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 300,
+        "oilMlUsed": 2.7,
+        "ethanolMlUsed": 3.3,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 700,
+        "oilMlUsed": 6.75,
+        "ethanolMlUsed": 8.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1000,
+        "oilMlUsed": 13.5,
+        "ethanolMlUsed": 16.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 1300,
+        "oilMlUsed": 22.5,
+        "ethanolMlUsed": 27.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 1700,
+        "oilMlUsed": 45,
+        "ethanolMlUsed": 55,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 300,
+    "maxPrice": 1700
+  },
+  {
+    "_id": "6a4020962864f27c316b3cec",
+    "name": "Fantasy Spray",
+    "sku": "Fant_2_SP",
+    "type": "spray",
+    "description": "",
+    "intensity": "medium",
+    "bestFor": "all",
+    "notes": "",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:12:22.998Z",
+    "updatedAt": "2026-07-06T19:59:23.513Z",
+    "baseOil": "",
+    "blendComponents": "Fantasy Perfume (ready) (45%); Ethanol (55%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 2.7,
+        "ethanolMlUsed": 3.3,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 6.75,
+        "ethanolMlUsed": 8.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 13.5,
+        "ethanolMlUsed": 16.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 22.5,
+        "ethanolMlUsed": 27.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 45,
+        "ethanolMlUsed": 55,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 0
+  },
+  {
+    "_id": "6a4020872864f27c316b3b99",
+    "name": "Fogg",
+    "sku": "Fgg",
+    "type": "roll-on",
+    "description": "Fresh aquatic fragrance. Clean and refreshing for daytime.",
+    "intensity": "medium",
+    "bestFor": "daytime",
+    "notes": "aquatic fresh",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:12:07.886Z",
+    "updatedAt": "2026-07-06T18:42:34.727Z",
+    "baseOil": "Fogg",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 150,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 250,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 650,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1250,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 1250
+  },
+  {
+    "_id": "6a4020882864f27c316b3bac",
+    "name": "Fogg Spray",
+    "sku": "Fgg_SP",
+    "type": "spray",
+    "description": "Fresh aquatic fragrance. Clean and refreshing for daytime.",
+    "intensity": "medium",
+    "bestFor": "daytime",
+    "notes": "aquatic fresh",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:12:08.766Z",
+    "updatedAt": "2026-07-06T19:59:27.803Z",
+    "baseOil": "",
+    "blendComponents": "Fogg (45%); Ethanol (55%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 300,
+        "oilMlUsed": 2.7,
+        "ethanolMlUsed": 3.3,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 700,
+        "oilMlUsed": 6.75,
+        "ethanolMlUsed": 8.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1000,
+        "oilMlUsed": 13.5,
+        "ethanolMlUsed": 16.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 1300,
+        "oilMlUsed": 22.5,
+        "ethanolMlUsed": 27.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 1700,
+        "oilMlUsed": 45,
+        "ethanolMlUsed": 55,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 300,
+    "maxPrice": 1700
+  },
+  {
+    "_id": "6a4020682864f27c316b38c9",
+    "name": "Good Girl",
+    "sku": "GooGir",
+    "type": "roll-on",
+    "description": "Floral gourmand sweet fragrance with strong presence. Ideal for evening glamour.",
+    "intensity": "strong",
+    "bestFor": "evening",
+    "notes": "floral gourmand sweet",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:36.534Z",
+    "updatedAt": "2026-07-06T18:42:33.525Z",
+    "baseOil": "Good Girl",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 180,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 280,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 750,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1500,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 1500
+  },
+  {
+    "_id": "6a4020692864f27c316b38dc",
+    "name": "Good Girl Spray",
+    "sku": "GooGir_SP",
+    "type": "spray",
+    "description": "Floral gourmand sweet fragrance with strong presence. Ideal for evening glamour.",
+    "intensity": "strong",
+    "bestFor": "evening",
+    "notes": "floral gourmand sweet",
+    "isBestseller": true,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:37.389Z",
+    "updatedAt": "2026-07-06T19:59:25.593Z",
+    "baseOil": "",
+    "blendComponents": "Good Girl (45%); Ethanol (55%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 330,
+        "oilMlUsed": 2.7,
+        "ethanolMlUsed": 3.3,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 780,
+        "oilMlUsed": 6.75,
+        "ethanolMlUsed": 8.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1050,
+        "oilMlUsed": 13.5,
+        "ethanolMlUsed": 16.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 1300,
+        "oilMlUsed": 22.5,
+        "ethanolMlUsed": 27.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 1650,
+        "oilMlUsed": 45,
+        "ethanolMlUsed": 55,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 330,
+    "maxPrice": 1650
+  },
+  {
+    "_id": "6a40208e2864f27c316b3c39",
+    "name": "Gucci Flora",
+    "sku": "GucFla",
+    "type": "roll-on",
+    "description": "Medium floral fresh fragrance. A daytime floral classic.",
+    "intensity": "medium",
+    "bestFor": "daytime",
+    "notes": "floral fresh",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:12:14.880Z",
+    "updatedAt": "2026-07-06T18:42:35.000Z",
+    "baseOil": "Gucci Flora",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 180,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 270,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 700,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1000,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 1000
+  },
+  {
+    "_id": "6a40208f2864f27c316b3c4c",
+    "name": "Gucci Flora Spray",
+    "sku": "GucFla_SP",
+    "type": "spray",
+    "description": "Medium floral fresh fragrance. A daytime floral classic.",
+    "intensity": "medium",
+    "bestFor": "daytime",
+    "notes": "floral fresh",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:12:15.742Z",
+    "updatedAt": "2026-07-06T19:59:28.292Z",
+    "baseOil": "",
+    "blendComponents": "Gucci Flora (45%); Ethanol (55%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 330,
+        "oilMlUsed": 2.7,
+        "ethanolMlUsed": 3.3,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 800,
+        "oilMlUsed": 6.75,
+        "ethanolMlUsed": 8.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1400,
+        "oilMlUsed": 13.5,
+        "ethanolMlUsed": 16.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 1900,
+        "oilMlUsed": 22.5,
+        "ethanolMlUsed": 27.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 2300,
+        "oilMlUsed": 45,
+        "ethanolMlUsed": 55,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 330,
+    "maxPrice": 2300
+  },
+  {
+    "_id": "6a4020802864f27c316b3af9",
+    "name": "Hawas For Him",
+    "sku": "HFH",
+    "type": "roll-on",
+    "description": "Strong aquatic spicy fragrance. Evening freshness.",
+    "intensity": "strong",
+    "bestFor": "evening",
+    "notes": "aquatic spicy",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:12:00.907Z",
+    "updatedAt": "2026-07-06T18:42:34.467Z",
+    "baseOil": "Hawas For Him",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 180,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 280,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 750,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1500,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 1500
+  },
+  {
+    "_id": "6a4020812864f27c316b3b0c",
+    "name": "Hawas For Him Spray",
+    "sku": "HFH_SP",
+    "type": "spray",
+    "description": "Strong aquatic spicy fragrance. Evening freshness.",
+    "intensity": "strong",
+    "bestFor": "evening",
+    "notes": "aquatic spicy",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:12:01.758Z",
+    "updatedAt": "2026-07-06T19:59:27.287Z",
+    "baseOil": "",
+    "blendComponents": "Hawas For Him (45%); Ethanol (55%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 330,
+        "oilMlUsed": 2.7,
+        "ethanolMlUsed": 3.3,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 780,
+        "oilMlUsed": 6.75,
+        "ethanolMlUsed": 8.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1050,
+        "oilMlUsed": 13.5,
+        "ethanolMlUsed": 16.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 1300,
+        "oilMlUsed": 22.5,
+        "ethanolMlUsed": 27.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 1650,
+        "oilMlUsed": 45,
+        "ethanolMlUsed": 55,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 330,
+    "maxPrice": 1650
+  },
+  {
+    "_id": "6a4020582864f27c316b3761",
+    "name": "LOST Cherry",
+    "sku": "LostChe",
+    "type": "roll-on",
+    "description": "Sweet cherry with almond and gourmand notes. A luxurious evening fragrance.",
+    "intensity": "medium",
+    "bestFor": "evening",
+    "notes": "fruity gourmand almond",
+    "isBestseller": true,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:20.781Z",
+    "updatedAt": "2026-07-06T18:42:32.926Z",
+    "baseOil": "LOST Cherry",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 150,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 250,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 650,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1250,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 1250
+  },
+  {
+    "_id": "6a4020592864f27c316b3774",
+    "name": "LOST Cherry Spray",
+    "sku": "LostChe_SP",
+    "type": "spray",
+    "description": "Sweet cherry with almond and gourmand notes. A luxurious evening fragrance.",
+    "intensity": "medium",
+    "bestFor": "evening",
+    "notes": "fruity gourmand almond",
+    "isBestseller": true,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:21.653Z",
+    "updatedAt": "2026-07-06T19:59:24.613Z",
+    "baseOil": "",
+    "blendComponents": "LOST Cherry (45%); Ethanol (55%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 300,
+        "oilMlUsed": 2.7,
+        "ethanolMlUsed": 3.3,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 700,
+        "oilMlUsed": 6.75,
+        "ethanolMlUsed": 8.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1000,
+        "oilMlUsed": 13.5,
+        "ethanolMlUsed": 16.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 1300,
+        "oilMlUsed": 22.5,
+        "ethanolMlUsed": 27.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 1700,
+        "oilMlUsed": 45,
+        "ethanolMlUsed": 55,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 300,
+    "maxPrice": 1700
+  },
+  {
+    "_id": "6a4020942864f27c316b3cb1",
+    "name": "Luxe Special",
+    "sku": "LUXE1",
+    "type": "roll-on",
+    "description": "Medium luxury blend fragrance. Versatile for any occasion.",
+    "intensity": "medium",
+    "bestFor": "all",
+    "notes": "luxury blend",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:12:20.418Z",
+    "updatedAt": "2026-07-06T18:42:35.211Z",
+    "baseOil": "Luxe Special",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 220,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 350,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 800,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1500,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 1500
+  },
+  {
+    "_id": "6a4020952864f27c316b3cc4",
+    "name": "Luxe Special Spray",
+    "sku": "LUXE1_SP",
+    "type": "spray",
+    "description": "Medium luxury blend fragrance. Versatile for any occasion.",
+    "intensity": "medium",
+    "bestFor": "all",
+    "notes": "luxury blend",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:12:21.284Z",
+    "updatedAt": "2026-07-06T19:59:28.647Z",
+    "baseOil": "",
+    "blendComponents": "Creed Aventus (43.87%); Gucci Flora (21.12%); Ethanol (35%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 370,
+        "oilMlUsed": 3.8993999999999995,
+        "ethanolMlUsed": 2.1,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 850,
+        "oilMlUsed": 9.7485,
+        "ethanolMlUsed": 5.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1600,
+        "oilMlUsed": 19.497,
+        "ethanolMlUsed": 10.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 3000,
+        "oilMlUsed": 32.495,
+        "ethanolMlUsed": 17.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 4500,
+        "oilMlUsed": 64.99,
+        "ethanolMlUsed": 35,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 370,
+    "maxPrice": 4500
+  },
+  {
+    "_id": "6a4020782864f27c316b3a31",
+    "name": "Miss Dior",
+    "sku": "MisDio",
+    "type": "roll-on",
+    "description": "Floral fruity fragrance with medium intensity. Elegant evening scent.",
+    "intensity": "medium",
+    "bestFor": "evening",
+    "notes": "floral fruity",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:52.362Z",
+    "updatedAt": "2026-07-06T18:42:34.133Z",
+    "baseOil": "Miss Dior",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 180,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 280,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 750,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1500,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 1500
+  },
+  {
+    "_id": "6a4020792864f27c316b3a44",
+    "name": "Miss Dior Spray",
+    "sku": "MisDio_SP",
+    "type": "spray",
+    "description": "Floral fruity fragrance with medium intensity. Elegant evening scent.",
+    "intensity": "medium",
+    "bestFor": "evening",
+    "notes": "floral fruity",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:53.214Z",
+    "updatedAt": "2026-07-06T19:59:26.698Z",
+    "baseOil": "",
+    "blendComponents": "Miss Dior (45%); Ethanol (55%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 330,
+        "oilMlUsed": 2.7,
+        "ethanolMlUsed": 3.3,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 780,
+        "oilMlUsed": 6.75,
+        "ethanolMlUsed": 8.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1050,
+        "oilMlUsed": 13.5,
+        "ethanolMlUsed": 16.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 1300,
+        "oilMlUsed": 22.5,
+        "ethanolMlUsed": 27.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 1650,
+        "oilMlUsed": 45,
+        "ethanolMlUsed": 55,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 330,
+    "maxPrice": 1650
+  },
+  {
+    "_id": "6a40209b2864f27c316b3d51",
+    "name": "Nautica voyage",
+    "sku": "NV",
+    "type": "roll-on",
+    "description": "Fresh aquatic fruity fragrance. Perfect for summer days.",
+    "intensity": "medium",
+    "bestFor": "daytime",
+    "notes": "aquatic fruity",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:12:27.579Z",
+    "updatedAt": "2026-07-06T18:42:35.502Z",
+    "baseOil": "Nautica voyage",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 180,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 270,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 670,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1250,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 1250
+  },
+  {
+    "_id": "6a40209c2864f27c316b3d64",
+    "name": "Nautica voyage Spray",
+    "sku": "NV_SP",
+    "type": "spray",
+    "description": "Fresh aquatic fruity fragrance. Perfect for summer days.",
+    "intensity": "medium",
+    "bestFor": "daytime",
+    "notes": "aquatic fruity",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:12:28.452Z",
+    "updatedAt": "2026-07-06T19:59:29.028Z",
+    "baseOil": "",
+    "blendComponents": "Nautica voyage (45%); Ethanol (55%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 300,
+        "oilMlUsed": 2.7,
+        "ethanolMlUsed": 3.3,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 720,
+        "oilMlUsed": 6.75,
+        "ethanolMlUsed": 8.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1350,
+        "oilMlUsed": 13.5,
+        "ethanolMlUsed": 16.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 1700,
+        "oilMlUsed": 22.5,
+        "ethanolMlUsed": 27.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 2500,
+        "oilMlUsed": 45,
+        "ethanolMlUsed": 55,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 300,
+    "maxPrice": 2500
+  },
+  {
+    "_id": "6a40207a2864f27c316b3a59",
+    "name": "Paris Hilton",
+    "sku": "ParHil",
+    "type": "roll-on",
+    "description": "Light floral fruity sweet fragrance. Perfect for daytime fun.",
+    "intensity": "light",
+    "bestFor": "daytime",
+    "notes": "floral fruity sweet",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:54.060Z",
+    "updatedAt": "2026-07-06T18:42:34.197Z",
+    "baseOil": "Paris Hilton",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 150,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 250,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 650,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1250,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 1250
+  },
+  {
+    "_id": "6a40207a2864f27c316b3a6c",
+    "name": "Paris Hilton Spray",
+    "sku": "ParHil_SP",
+    "type": "spray",
+    "description": "Light floral fruity sweet fragrance. Perfect for daytime fun.",
+    "intensity": "light",
+    "bestFor": "daytime",
+    "notes": "floral fruity sweet",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:54.917Z",
+    "updatedAt": "2026-07-06T19:59:26.816Z",
+    "baseOil": "",
+    "blendComponents": "Paris Hilton (45%); Ethanol (55%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 300,
+        "oilMlUsed": 2.7,
+        "ethanolMlUsed": 3.3,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 700,
+        "oilMlUsed": 6.75,
+        "ethanolMlUsed": 8.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1000,
+        "oilMlUsed": 13.5,
+        "ethanolMlUsed": 16.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 1300,
+        "oilMlUsed": 22.5,
+        "ethanolMlUsed": 27.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 1700,
+        "oilMlUsed": 45,
+        "ethanolMlUsed": 55,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 300,
+    "maxPrice": 1700
+  },
+  {
+    "_id": "6a4020862864f27c316b3b71",
+    "name": "Prada Candy",
+    "sku": "PRCn",
+    "type": "roll-on",
+    "description": "Medium gourmand sweet fragrance. Sweet evening indulgence.",
+    "intensity": "medium",
+    "bestFor": "evening",
+    "notes": "gourmand sweet",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:12:06.153Z",
+    "updatedAt": "2026-07-06T18:42:34.661Z",
+    "baseOil": "Prada Candy",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 180,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 280,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 750,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1500,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 1500
+  },
+  {
+    "_id": "6a4020872864f27c316b3b84",
+    "name": "Prada Candy Spray",
+    "sku": "PRCn_SP",
+    "type": "spray",
+    "description": "Medium gourmand sweet fragrance. Sweet evening indulgence.",
+    "intensity": "medium",
+    "bestFor": "evening",
+    "notes": "gourmand sweet",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:12:07.005Z",
+    "updatedAt": "2026-07-06T19:59:27.668Z",
+    "baseOil": "",
+    "blendComponents": "Prada Candy (45%); Ethanol (55%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 330,
+        "oilMlUsed": 2.7,
+        "ethanolMlUsed": 3.3,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 780,
+        "oilMlUsed": 6.75,
+        "ethanolMlUsed": 8.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1050,
+        "oilMlUsed": 13.5,
+        "ethanolMlUsed": 16.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 1300,
+        "oilMlUsed": 22.5,
+        "ethanolMlUsed": 27.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 1650,
+        "oilMlUsed": 45,
+        "ethanolMlUsed": 55,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 330,
+    "maxPrice": 1650
+  },
+  {
+    "_id": "6a4020842864f27c316b3b49",
+    "name": "Pure Seduction",
+    "sku": "PuSD",
+    "type": "roll-on",
+    "description": "Light floral fruity fragrance. Perfect for romantic evenings.",
+    "intensity": "light",
+    "bestFor": "evening",
+    "notes": "floral fruity",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:12:04.425Z",
+    "updatedAt": "2026-07-06T18:42:34.601Z",
+    "baseOil": "Pure Seduction",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 180,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 280,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 750,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1500,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 1500
+  },
+  {
+    "_id": "6a4020852864f27c316b3b5c",
+    "name": "Pure Seduction Spray",
+    "sku": "PuSD_SP",
+    "type": "spray",
+    "description": "Light floral fruity fragrance. Perfect for romantic evenings.",
+    "intensity": "light",
+    "bestFor": "evening",
+    "notes": "floral fruity",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:12:05.293Z",
+    "updatedAt": "2026-07-06T19:59:27.543Z",
+    "baseOil": "",
+    "blendComponents": "Pure Seduction (45%); Ethanol (55%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 330,
+        "oilMlUsed": 2.7,
+        "ethanolMlUsed": 3.3,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 780,
+        "oilMlUsed": 6.75,
+        "ethanolMlUsed": 8.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1050,
+        "oilMlUsed": 13.5,
+        "ethanolMlUsed": 16.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 1300,
+        "oilMlUsed": 22.5,
+        "ethanolMlUsed": 27.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 1650,
+        "oilMlUsed": 45,
+        "ethanolMlUsed": 55,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 330,
+    "maxPrice": 1650
+  },
+  {
+    "_id": "6a4020742864f27c316b39e1",
+    "name": "Red Tobaco",
+    "sku": "RedTob",
+    "type": "roll-on",
+    "description": "Strong tobacco spicy sweet fragrance. Bold evening statement.",
+    "intensity": "strong",
+    "bestFor": "evening",
+    "notes": "tobacco spicy sweet",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:48.727Z",
+    "updatedAt": "2026-07-06T18:42:34.004Z",
+    "baseOil": "Red Tobaco",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 150,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 250,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 650,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1250,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 1250
+  },
+  {
+    "_id": "6a4020752864f27c316b39f4",
+    "name": "Red Tobaco Spray",
+    "sku": "RedTob_SP",
+    "type": "spray",
+    "description": "Strong tobacco spicy sweet fragrance. Bold evening statement.",
+    "intensity": "strong",
+    "bestFor": "evening",
+    "notes": "tobacco spicy sweet",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:49.590Z",
+    "updatedAt": "2026-07-06T19:59:26.447Z",
+    "baseOil": "",
+    "blendComponents": "Red Tobaco (45%); Ethanol (55%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 300,
+        "oilMlUsed": 2.7,
+        "ethanolMlUsed": 3.3,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 700,
+        "oilMlUsed": 6.75,
+        "ethanolMlUsed": 8.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1000,
+        "oilMlUsed": 13.5,
+        "ethanolMlUsed": 16.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 1300,
+        "oilMlUsed": 22.5,
+        "ethanolMlUsed": 27.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 1700,
+        "oilMlUsed": 45,
+        "ethanolMlUsed": 55,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 300,
+    "maxPrice": 1700
+  },
+  {
+    "_id": "6a4020662864f27c316b38a1",
+    "name": "Rose",
+    "sku": "Rose",
+    "type": "roll-on",
+    "description": "Classic floral sweet rose fragrance. Timeless for any occasion.",
+    "intensity": "medium",
+    "bestFor": "all",
+    "notes": "floral sweet",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:34.753Z",
+    "updatedAt": "2026-07-06T18:42:33.457Z",
+    "baseOil": "Rose",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 150,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 250,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 650,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1250,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 1250
+  },
+  {
+    "_id": "6a4020672864f27c316b38b4",
+    "name": "Rose Spray",
+    "sku": "Rose_SP",
+    "type": "spray",
+    "description": "Classic floral sweet rose fragrance. Timeless for any occasion.",
+    "intensity": "medium",
+    "bestFor": "all",
+    "notes": "floral sweet",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:35.642Z",
+    "updatedAt": "2026-07-06T19:59:25.472Z",
+    "baseOil": "",
+    "blendComponents": "Rose (45%); Ethanol (55%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 300,
+        "oilMlUsed": 2.7,
+        "ethanolMlUsed": 3.3,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 700,
+        "oilMlUsed": 6.75,
+        "ethanolMlUsed": 8.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1000,
+        "oilMlUsed": 13.5,
+        "ethanolMlUsed": 16.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 1300,
+        "oilMlUsed": 22.5,
+        "ethanolMlUsed": 27.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 1700,
+        "oilMlUsed": 45,
+        "ethanolMlUsed": 55,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 300,
+    "maxPrice": 1700
+  },
+  {
+    "_id": "6a4020992864f27c316b3d29",
+    "name": "SRK",
+    "sku": "SR2",
+    "type": "roll-on",
+    "description": "",
+    "intensity": "medium",
+    "bestFor": "all",
+    "notes": "",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:12:25.798Z",
+    "updatedAt": "2026-07-06T18:42:35.432Z",
+    "baseOil": "SRK",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 0
+  },
+  {
+    "_id": "6a4020922864f27c316b3c89",
+    "name": "SRK",
+    "sku": "SR",
+    "type": "roll-on",
+    "description": "Medium oriental woody fragrance. Elegant evening scent.",
+    "intensity": "medium",
+    "bestFor": "evening",
+    "notes": "oriental woody",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:12:18.568Z",
+    "updatedAt": "2026-07-06T19:29:47.144Z",
+    "baseOil": "SRK",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 220,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 400,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 780,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1550,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 1550
+  },
+  {
+    "_id": "6a40209a2864f27c316b3d3c",
+    "name": "SRK Spray",
+    "sku": "SR2_SP",
+    "type": "spray",
+    "description": "",
+    "intensity": "medium",
+    "bestFor": "all",
+    "notes": "",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:12:26.705Z",
+    "updatedAt": "2026-07-06T19:59:28.897Z",
+    "baseOil": "",
+    "blendComponents": "Dunhill Icon (43.87%); Diptyque tam dao (21.12%); Ethanol (35%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3.8993999999999995,
+        "ethanolMlUsed": 2.1,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 9.7485,
+        "ethanolMlUsed": 5.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 19.497,
+        "ethanolMlUsed": 10.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 32.495,
+        "ethanolMlUsed": 17.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 64.99,
+        "ethanolMlUsed": 35,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 0
+  },
+  {
+    "_id": "6a4020932864f27c316b3c9c",
+    "name": "SRK Spray",
+    "sku": "SR_SP",
+    "type": "spray",
+    "description": "Medium oriental woody fragrance. Elegant evening scent.",
+    "intensity": "medium",
+    "bestFor": "evening",
+    "notes": "oriental woody",
+    "isBestseller": true,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:12:19.521Z",
+    "updatedAt": "2026-07-06T19:59:28.529Z",
+    "baseOil": "",
+    "blendComponents": "Dunhill Icon (43.87%); Diptyque tam dao (21.12%); Ethanol (35%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 380,
+        "oilMlUsed": 3.8993999999999995,
+        "ethanolMlUsed": 2.1,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 900,
+        "oilMlUsed": 9.7485,
+        "ethanolMlUsed": 5.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1600,
+        "oilMlUsed": 19.497,
+        "ethanolMlUsed": 10.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 1900,
+        "oilMlUsed": 32.495,
+        "ethanolMlUsed": 17.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 2800,
+        "oilMlUsed": 64.99,
+        "ethanolMlUsed": 35,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 380,
+    "maxPrice": 2800
+  },
+  {
+    "_id": "6a4020652864f27c316b3879",
+    "name": "TubeRose",
+    "sku": "TubRos",
+    "type": "roll-on",
+    "description": "Floral creamy sweet fragrance. Perfect for romantic evenings.",
+    "intensity": "medium",
+    "bestFor": "evening",
+    "notes": "floral creamy sweet",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:33.019Z",
+    "updatedAt": "2026-07-06T18:42:33.392Z",
+    "baseOil": "TubeRose",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 150,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 250,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 650,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1250,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 1250
+  },
+  {
+    "_id": "6a4020652864f27c316b388c",
+    "name": "TubeRose Spray",
+    "sku": "TubRos_SP",
+    "type": "spray",
+    "description": "Floral creamy sweet fragrance. Perfect for romantic evenings.",
+    "intensity": "medium",
+    "bestFor": "evening",
+    "notes": "floral creamy sweet",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:33.883Z",
+    "updatedAt": "2026-07-06T19:59:25.344Z",
+    "baseOil": "",
+    "blendComponents": "TubeRose (45%); Ethanol (55%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 300,
+        "oilMlUsed": 2.7,
+        "ethanolMlUsed": 3.3,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 700,
+        "oilMlUsed": 6.75,
+        "ethanolMlUsed": 8.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1000,
+        "oilMlUsed": 13.5,
+        "ethanolMlUsed": 16.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 1300,
+        "oilMlUsed": 22.5,
+        "ethanolMlUsed": 27.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 1700,
+        "oilMlUsed": 45,
+        "ethanolMlUsed": 55,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 300,
+    "maxPrice": 1700
+  },
+  {
+    "_id": "6a40205a2864f27c316b3789",
+    "name": "Ultra male",
+    "sku": "UltMal",
+    "type": "roll-on",
+    "description": "Spicy, sweet, and woody aromatic blend. Strong and captivating for evening wear.",
+    "intensity": "strong",
+    "bestFor": "evening",
+    "notes": "spicy sweet woody",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:22.508Z",
+    "updatedAt": "2026-07-06T18:42:32.994Z",
+    "baseOil": "Ultra male",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 150,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 250,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 650,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1250,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 1250
+  },
+  {
+    "_id": "6a40205b2864f27c316b379c",
+    "name": "Ultra male Spray",
+    "sku": "UltMal_SP",
+    "type": "spray",
+    "description": "Spicy, sweet, and woody aromatic blend. Strong and captivating for evening wear.",
+    "intensity": "strong",
+    "bestFor": "evening",
+    "notes": "spicy sweet woody",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:23.390Z",
+    "updatedAt": "2026-07-06T19:59:24.738Z",
+    "baseOil": "",
+    "blendComponents": "Ultra male (45%); Ethanol (55%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 300,
+        "oilMlUsed": 2.7,
+        "ethanolMlUsed": 3.3,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 700,
+        "oilMlUsed": 6.75,
+        "ethanolMlUsed": 8.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1000,
+        "oilMlUsed": 13.5,
+        "ethanolMlUsed": 16.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 1300,
+        "oilMlUsed": 22.5,
+        "ethanolMlUsed": 27.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 1700,
+        "oilMlUsed": 45,
+        "ethanolMlUsed": 55,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 300,
+    "maxPrice": 1700
+  },
+  {
+    "_id": "6a4020552864f27c316b3711",
+    "name": "Vampire B.",
+    "sku": "VampB",
+    "type": "roll-on",
+    "description": "Deep, mysterious oriental scent with spicy and woody undertones. Best for special evenings.",
+    "intensity": "strong",
+    "bestFor": "evening",
+    "notes": "oriental spicy woody",
+    "isBestseller": true,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:17.183Z",
+    "updatedAt": "2026-07-06T18:42:32.793Z",
+    "baseOil": "Vampire B.",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 200,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 300,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 800,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1650,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 1650
+  },
+  {
+    "_id": "6a4020562864f27c316b3724",
+    "name": "Vampire B. Spray",
+    "sku": "VampB_SP",
+    "type": "spray",
+    "description": "Deep, mysterious oriental scent with spicy and woody undertones. Best for special evenings.",
+    "intensity": "strong",
+    "bestFor": "evening",
+    "notes": "oriental spicy woody",
+    "isBestseller": true,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:18.200Z",
+    "updatedAt": "2026-07-06T19:59:24.373Z",
+    "baseOil": "",
+    "blendComponents": "Vampire B. (45%); Ethanol (55%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 350,
+        "oilMlUsed": 2.7,
+        "ethanolMlUsed": 3.3,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 850,
+        "oilMlUsed": 6.75,
+        "ethanolMlUsed": 8.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1500,
+        "oilMlUsed": 13.5,
+        "ethanolMlUsed": 16.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 1900,
+        "oilMlUsed": 22.5,
+        "ethanolMlUsed": 27.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 2200,
+        "oilMlUsed": 45,
+        "ethanolMlUsed": 55,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 350,
+    "maxPrice": 2200
+  },
+  {
+    "_id": "6a40206a2864f27c316b38f1",
+    "name": "Vanila",
+    "sku": "Vanil",
+    "type": "roll-on",
+    "description": "Warm, sweet vanilla fragrance with light intensity. Perfect for all-day comfort.",
+    "intensity": "light",
+    "bestFor": "all",
+    "notes": "vanilla sweet warm",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:38.248Z",
+    "updatedAt": "2026-07-06T18:42:33.593Z",
+    "baseOil": "Vanila",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 150,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 250,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 650,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1250,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 1250
+  },
+  {
+    "_id": "6a40206b2864f27c316b3904",
+    "name": "Vanila Spray",
+    "sku": "Vanil_SP",
+    "type": "spray",
+    "description": "Warm, sweet vanilla fragrance with light intensity. Perfect for all-day comfort.",
+    "intensity": "light",
+    "bestFor": "all",
+    "notes": "vanilla sweet warm",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:39.128Z",
+    "updatedAt": "2026-07-06T19:59:25.719Z",
+    "baseOil": "",
+    "blendComponents": "Vanila (45%); Ethanol (55%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 300,
+        "oilMlUsed": 2.7,
+        "ethanolMlUsed": 3.3,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 700,
+        "oilMlUsed": 6.75,
+        "ethanolMlUsed": 8.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1000,
+        "oilMlUsed": 13.5,
+        "ethanolMlUsed": 16.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 1300,
+        "oilMlUsed": 22.5,
+        "ethanolMlUsed": 27.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 1700,
+        "oilMlUsed": 45,
+        "ethanolMlUsed": 55,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 300,
+    "maxPrice": 1700
+  },
+  {
+    "_id": "6a4020512864f27c316b36c1",
+    "name": "Versace EROS",
+    "sku": "VerEros",
+    "type": "roll-on",
+    "description": "Fresh mint and vanilla fragrance with a strong, captivating presence. Ideal for evening wear.",
+    "intensity": "strong",
+    "bestFor": "evening",
+    "notes": "fresh mint vanilla",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:13.641Z",
+    "updatedAt": "2026-07-06T18:42:32.655Z",
+    "baseOil": "Versace EROS",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 150,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 250,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 650,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1250,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 1250
+  },
+  {
+    "_id": "6a4020522864f27c316b36d4",
+    "name": "Versace EROS Spray",
+    "sku": "VerEros_SP",
+    "type": "spray",
+    "description": "Fresh mint and vanilla fragrance with a strong, captivating presence. Ideal for evening wear.",
+    "intensity": "strong",
+    "bestFor": "evening",
+    "notes": "fresh mint vanilla",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:14.488Z",
+    "updatedAt": "2026-07-06T19:59:24.138Z",
+    "baseOil": "",
+    "blendComponents": "Versace EROS (45%); Ethanol (55%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 300,
+        "oilMlUsed": 2.7,
+        "ethanolMlUsed": 3.3,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 700,
+        "oilMlUsed": 6.75,
+        "ethanolMlUsed": 8.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1000,
+        "oilMlUsed": 13.5,
+        "ethanolMlUsed": 16.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 1300,
+        "oilMlUsed": 22.5,
+        "ethanolMlUsed": 27.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 1700,
+        "oilMlUsed": 45,
+        "ethanolMlUsed": 55,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 300,
+    "maxPrice": 1700
+  },
+  {
+    "_id": "6a4020822864f27c316b3b21",
+    "name": "White Oud",
+    "sku": "WO",
+    "type": "roll-on",
+    "description": "Strong woody oud fragrance. A sophisticated evening scent.",
+    "intensity": "strong",
+    "bestFor": "evening",
+    "notes": "oud woody",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:12:02.620Z",
+    "updatedAt": "2026-07-06T18:42:34.534Z",
+    "baseOil": "White Oud",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 180,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 280,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 750,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1500,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 1500
+  },
+  {
+    "_id": "6a4020832864f27c316b3b34",
+    "name": "White Oud Spray",
+    "sku": "WO_SP",
+    "type": "spray",
+    "description": "Strong woody oud fragrance. A sophisticated evening scent.",
+    "intensity": "strong",
+    "bestFor": "evening",
+    "notes": "oud woody",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:12:03.558Z",
+    "updatedAt": "2026-07-06T19:59:27.417Z",
+    "baseOil": "",
+    "blendComponents": "White Oud (45%); Ethanol (55%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 330,
+        "oilMlUsed": 2.7,
+        "ethanolMlUsed": 3.3,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 780,
+        "oilMlUsed": 6.75,
+        "ethanolMlUsed": 8.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1050,
+        "oilMlUsed": 13.5,
+        "ethanolMlUsed": 16.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 1300,
+        "oilMlUsed": 22.5,
+        "ethanolMlUsed": 27.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 1650,
+        "oilMlUsed": 45,
+        "ethanolMlUsed": 55,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 330,
+    "maxPrice": 1650
+  },
+  {
+    "_id": "6a4020762864f27c316b3a09",
+    "name": "kacha beli",
+    "sku": "KacBel",
+    "type": "roll-on",
+    "description": "Light fruity sweet fragrance. Fresh and cheerful for daytime.",
+    "intensity": "light",
+    "bestFor": "daytime",
+    "notes": "fruity sweet",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:50.444Z",
+    "updatedAt": "2026-07-06T18:42:34.067Z",
+    "baseOil": "kacha beli",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 150,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 250,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 650,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1250,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 1250
+  },
+  {
+    "_id": "6a4020772864f27c316b3a1c",
+    "name": "kacha beli Spray",
+    "sku": "KacBel_SP",
+    "type": "spray",
+    "description": "Light fruity sweet fragrance. Fresh and cheerful for daytime.",
+    "intensity": "light",
+    "bestFor": "daytime",
+    "notes": "fruity sweet",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:51.328Z",
+    "updatedAt": "2026-07-06T19:59:26.568Z",
+    "baseOil": "",
+    "blendComponents": "kacha beli (45%); Ethanol (55%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 300,
+        "oilMlUsed": 2.7,
+        "ethanolMlUsed": 3.3,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 700,
+        "oilMlUsed": 6.75,
+        "ethanolMlUsed": 8.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1000,
+        "oilMlUsed": 13.5,
+        "ethanolMlUsed": 16.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 1300,
+        "oilMlUsed": 22.5,
+        "ethanolMlUsed": 27.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 1700,
+        "oilMlUsed": 45,
+        "ethanolMlUsed": 55,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 300,
+    "maxPrice": 1700
+  },
+  {
+    "_id": "6a40205f2864f27c316b3801",
+    "name": "victoriya secret",
+    "sku": "VicSec",
+    "type": "roll-on",
+    "description": "Seductive floral and vanilla fragrance. Light and sweet for daytime.",
+    "intensity": "light",
+    "bestFor": "daytime",
+    "notes": "floral vanilla sweet",
+    "isBestseller": false,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:27.711Z",
+    "updatedAt": "2026-07-06T18:42:33.197Z",
+    "baseOil": "victoriya secret",
+    "blendComponents": "",
+    "sizes": [
+      {
+        "sizeMl": 3,
+        "bottleType": "",
+        "sellingPrice": 0,
+        "oilMlUsed": 3,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7d"
+      },
+      {
+        "sizeMl": 3.5,
+        "bottleType": "",
+        "sellingPrice": 180,
+        "oilMlUsed": 3.5,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7e"
+      },
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 280,
+        "oilMlUsed": 6,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e7f"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 750,
+        "oilMlUsed": 15,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e80"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1500,
+        "oilMlUsed": 30,
+        "ethanolMlUsed": 0,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa869a6a41926cb0c6e81"
+      }
+    ],
+    "minPrice": 0,
+    "maxPrice": 1500
+  },
+  {
+    "_id": "6a4020602864f27c316b3814",
+    "name": "victoriya secret Spray",
+    "sku": "VicSec_SP",
+    "type": "spray",
+    "description": "Seductive floral and vanilla fragrance. Light and sweet for daytime.",
+    "intensity": "light",
+    "bestFor": "daytime",
+    "notes": "floral vanilla sweet",
+    "isBestseller": true,
+    "isActive": true,
+    "createdAt": "2026-06-27T19:11:28.570Z",
+    "updatedAt": "2026-07-06T19:59:24.975Z",
+    "baseOil": "",
+    "blendComponents": "victoriya secret (45%); Ethanol (55%)",
+    "sizes": [
+      {
+        "sizeMl": 6,
+        "bottleType": "",
+        "sellingPrice": 750,
+        "oilMlUsed": 2.7,
+        "ethanolMlUsed": 3.3,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e82"
+      },
+      {
+        "sizeMl": 15,
+        "bottleType": "",
+        "sellingPrice": 1500,
+        "oilMlUsed": 6.75,
+        "ethanolMlUsed": 8.25,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e83"
+      },
+      {
+        "sizeMl": 30,
+        "bottleType": "",
+        "sellingPrice": 1050,
+        "oilMlUsed": 13.5,
+        "ethanolMlUsed": 16.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e84"
+      },
+      {
+        "sizeMl": 50,
+        "bottleType": "",
+        "sellingPrice": 1300,
+        "oilMlUsed": 22.5,
+        "ethanolMlUsed": 27.5,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e85"
+      },
+      {
+        "sizeMl": 100,
+        "bottleType": "",
+        "sellingPrice": 1650,
+        "oilMlUsed": 45,
+        "ethanolMlUsed": 55,
+        "fixativeMlUsed": 0,
+        "makingCost": 0,
+        "bottleId": "6a3fa86aa6a41926cb0c6e86"
+      }
+    ],
+    "minPrice": 750,
+    "maxPrice": 1650
+  }
+]

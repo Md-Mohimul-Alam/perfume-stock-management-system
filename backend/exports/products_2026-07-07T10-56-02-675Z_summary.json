@@ -1,0 +1,25 @@
+{
+  "totalProducts": 88,
+  "byType": {
+    "rollOn": 44,
+    "spray": 44
+  },
+  "byIntensity": {
+    "medium": 48,
+    "strong": 24,
+    "light": 16
+  },
+  "byBestseller": {
+    "true": 13,
+    "false": 75
+  },
+  "byActive": {
+    "true": 88,
+    "false": 0
+  },
+  "priceRange": {
+    "min": 150,
+    "max": 4500
+  },
+  "hasImages": 0
+}

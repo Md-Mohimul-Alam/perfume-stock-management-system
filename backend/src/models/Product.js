@@ -15,6 +15,7 @@ const sizeVariantSchema = mongoose.Schema({
   fixativeMlUsed: { type: Number, default: 0 },
   makingCost: { type: Number, default: 0 },
   sellingPrice: { type: Number, required: true, min: 0 },
+  image: { type: String, default: '' }, // ✅ NEW: per‑size image URL
 });
 
 const productSchema = mongoose.Schema(
@@ -26,13 +27,13 @@ const productSchema = mongoose.Schema(
     blendComponents: [blendComponentSchema],
     sizes: [sizeVariantSchema],
     isActive: { type: Boolean, default: true },
-    // === NEW FIELDS FOR CUSTOMER DISPLAY ===
+    // === CUSTOMER DISPLAY FIELDS ===
     description: { type: String, default: '' },
     intensity: { type: String, enum: ['light', 'medium', 'strong'], default: 'medium' },
     bestFor: { type: [String], default: ['all'] },
     notes: { type: [String], default: [] },
     isBestseller: { type: Boolean, default: false },
-    images: { type: [String], default: [] },
+    images: { type: [String], default: [] }, // optional product‑level images
   },
   { timestamps: true }
 );
