@@ -1,8 +1,9 @@
-const path = require('path');
+const axios = require('axios');
+const FormData = require('form-data');
 const fs = require('fs');
-const { v4: uuidv4 } = require('uuid'); // or use crypto.randomUUID()
+const path = require('path');
 
-// Ensure uploads directory exists
+// Ensure uploads directory exists (still needed for multer)
 const uploadDir = path.join(__dirname, '../uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
@@ -14,12 +15,27 @@ exports.uploadImage = async (req, res) => {
       return res.status(400).json({ message: 'No file uploaded' });
     }
 
-    // Generate public URL – adjust based on your hosting
-    const baseUrl = process.env.BASE_URL || 'http://localhost:5000';
-    const url = `${baseUrl}/uploads/${req.file.filename}`;
+    // Build form data for imgBB
+    const formData = new FormData();
+    formData.append('image', fs.createReadStream(req.file.path));
+    formData.append('key', process.env.IMGBB_API_KEY);
 
-    res.json({ url });
+    // Upload to imgBB
+    const response = await axios.post('https://api.imgbb.com/1/upload', formData, {
+      headers: formData.getHeaders(),
+    });
+
+    // Delete local file after successful upload
+    fs.unlinkSync(req.file.path);
+
+    // Return the permanent URL from imgBB
+    res.json({ url: response.data.data.url });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    // Clean up local file if upload fails
+    if (req.file && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+    console.error('Upload error:', error.message);
+    res.status(500).json({ message: error.response?.data?.error?.message || error.message });
   }
 };
