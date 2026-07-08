@@ -40,7 +40,14 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
   console.log('✅ Uploads directory created');
 }
-app.use('/uploads', express.static(uploadDir));
+
+// ✅ FIX: Add CORS headers for static files to prevent OpaqueResponseBlocking
+app.use('/uploads', (req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none');
+  next();
+}, express.static(uploadDir));
 
 // ------------------- Routes -------------------
 app.get('/', (req, res) => {
@@ -60,7 +67,7 @@ app.use('/api/sales', require('./routes/saleRoutes'));
 app.use('/api/expenses', require('./routes/expenseRoutes'));
 app.use('/api/investors', require('./routes/investorRoutes'));
 app.use('/api/reports', require('./routes/reportRoutes'));
-app.use('/api/upload', require('./routes/uploadRoutes'));   // ✅ added
+app.use('/api/upload', require('./routes/uploadRoutes'));
 
 // ------------------- Error handling -------------------
 app.use(notFound);
