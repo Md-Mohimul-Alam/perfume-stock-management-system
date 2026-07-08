@@ -39,3 +39,4 @@ exports.uploadImage = async (req, res) => {
     res.status(500).json({ message: error.response?.data?.error?.message || error.message });
   }
 };
+
