@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../../api/axios';
-import { Plus, Trash2, Save, X, Package, Droplet } from 'lucide-react';
+import { Plus, Trash2, Save, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const NewPurchase = () => {
@@ -93,11 +93,9 @@ const NewPurchase = () => {
       let newItemId;
 
       if (quickAddType === 'RawMaterial') {
-        // Validate
         if (!newMaterialData.name.trim() || !newMaterialData.sku.trim()) {
           throw new Error('Name and SKU are required');
         }
-        // Check duplicate SKU
         const existing = materials.find(m => m.sku === newMaterialData.sku.trim());
         if (existing) {
           throw new Error(`SKU "${newMaterialData.sku}" already exists`);
@@ -110,10 +108,8 @@ const NewPurchase = () => {
         newItemId = response.data._id;
         toast.success('Raw material created');
       } else {
-        // Bottle
         const size = parseFloat(newBottleData.sizeMl);
         if (!size || size <= 0) throw new Error('Please enter a valid size (ml)');
-        // Check for existing bottle
         const existing = bottles.find(b =>
           b.sizeMl === size && b.type === newBottleData.type
         );
@@ -128,18 +124,9 @@ const NewPurchase = () => {
         toast.success('Bottle created');
       }
 
-      // Refresh the dropdown lists
       await fetchItems();
-
-      // Auto‑select the newly created item in the purchase form
-      setNewItem(prev => ({
-        ...prev,
-        itemId: newItemId,
-      }));
-
-      // Close modal
+      setNewItem(prev => ({ ...prev, itemId: newItemId }));
       setShowQuickAdd(false);
-      // Optionally focus on the quantity field
     } catch (error) {
       setQuickAddError(error.response?.data?.message || error.message || 'Creation failed');
     } finally {
@@ -185,7 +172,6 @@ const NewPurchase = () => {
       items: [...prev.items, newItemEntry],
     }));
 
-    // Reset new item fields
     setNewItem({
       itemType: 'RawMaterial',
       itemId: '',
@@ -250,28 +236,30 @@ const NewPurchase = () => {
   };
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
+      {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <button
           onClick={() => navigate('/purchases')}
-          className="text-gray-500 hover:text-gray-700 transition"
+          className="text-gray-500 hover:text-gray-700 transition p-1"
+          aria-label="Go back"
         >
           <X size={24} />
         </button>
-        <h1 className="text-3xl font-bold text-gray-800">New Purchase</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">New Purchase</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Invoice & Supplier */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Invoice No *</label>
               <input
                 type="text"
                 value={form.invoiceNo}
                 onChange={(e) => setForm({ ...form, invoiceNo: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-sm sm:text-base"
                 required
               />
             </div>
@@ -281,7 +269,7 @@ const NewPurchase = () => {
                 type="text"
                 value={form.supplier}
                 onChange={(e) => setForm({ ...form, supplier: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-sm sm:text-base"
                 placeholder="Supplier name"
               />
             </div>
@@ -291,7 +279,7 @@ const NewPurchase = () => {
                 type="date"
                 value={form.purchaseDate}
                 onChange={(e) => setForm({ ...form, purchaseDate: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-sm sm:text-base"
               />
             </div>
           </div>
@@ -301,16 +289,16 @@ const NewPurchase = () => {
               type="text"
               value={form.notes}
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-sm sm:text-base"
               placeholder="Optional notes"
             />
           </div>
         </div>
 
         {/* Add Item Section */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-6">
           <h2 className="text-lg font-semibold text-gray-700 mb-4">Add Items</h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Item Type</label>
               <select
@@ -318,20 +306,20 @@ const NewPurchase = () => {
                 onChange={(e) => {
                   setNewItem({ ...newItem, itemType: e.target.value, itemId: '' });
                 }}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none bg-white"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none bg-white text-sm sm:text-base"
               >
                 <option value="RawMaterial">Raw Material</option>
                 <option value="Bottle">Bottle</option>
               </select>
             </div>
 
-            <div className="md:col-span-1">
+            <div className="sm:col-span-1">
               <label className="block text-sm font-medium text-gray-700 mb-1">Item</label>
               <div className="flex gap-2">
                 <select
                   value={newItem.itemId}
                   onChange={(e) => setNewItem({ ...newItem, itemId: e.target.value })}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none bg-white"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none bg-white text-sm sm:text-base truncate"
                 >
                   <option value="">Select Item</option>
                   {newItem.itemType === 'RawMaterial' ? (
@@ -366,7 +354,7 @@ const NewPurchase = () => {
                 step="1"
                 value={newItem.quantity}
                 onChange={(e) => setNewItem({ ...newItem, quantity: parseInt(e.target.value) || 1 })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-sm sm:text-base"
               />
             </div>
 
@@ -378,7 +366,7 @@ const NewPurchase = () => {
                 step="0.01"
                 value={newItem.costPerUnit}
                 onChange={(e) => setNewItem({ ...newItem, costPerUnit: parseFloat(e.target.value) || 0 })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-sm sm:text-base"
               />
             </div>
           </div>
@@ -386,7 +374,7 @@ const NewPurchase = () => {
           <button
             type="button"
             onClick={handleAddItem}
-            className="mt-4 flex items-center gap-2 bg-amber-100 text-amber-700 px-4 py-2 rounded-lg hover:bg-amber-200 transition"
+            className="mt-4 flex items-center gap-2 bg-amber-100 text-amber-700 px-4 py-2 rounded-lg hover:bg-amber-200 transition text-sm sm:text-base"
           >
             <Plus size={18} /> Add Item
           </button>
@@ -394,18 +382,18 @@ const NewPurchase = () => {
 
         {/* Items List */}
         {form.items.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-6">
             <h3 className="text-lg font-semibold text-gray-700 mb-4">Items Added</h3>
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
+              <table className="min-w-full divide-y divide-gray-200 text-sm sm:text-base">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Item</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Quantity</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Unit Cost</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total</th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                    <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase">Item</th>
+                    <th className="px-3 sm:px-4 py-2 sm:py-3 text-right text-xs font-medium text-gray-500 uppercase">Qty</th>
+                    <th className="px-3 sm:px-4 py-2 sm:py-3 text-right text-xs font-medium text-gray-500 uppercase">Unit Cost</th>
+                    <th className="px-3 sm:px-4 py-2 sm:py-3 text-right text-xs font-medium text-gray-500 uppercase">Total</th>
+                    <th className="px-3 sm:px-4 py-2 sm:py-3 text-center text-xs font-medium text-gray-500 uppercase">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -414,22 +402,23 @@ const NewPurchase = () => {
                                      getItemName(item.itemType, item.item);
                     return (
                       <tr key={idx}>
-                        <td className="px-4 py-3">
+                        <td className="px-3 sm:px-4 py-2 sm:py-3">
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                             item.itemType === 'RawMaterial' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
                           }`}>
                             {item.itemType === 'RawMaterial' ? 'Oil' : 'Bottle'}
                           </span>
                         </td>
-                        <td className="px-4 py-3">{itemName}</td>
-                        <td className="px-4 py-3 text-right">{item.quantity}</td>
-                        <td className="px-4 py-3 text-right">৳{item.costPerUnit.toFixed(2)}</td>
-                        <td className="px-4 py-3 text-right font-semibold">৳{item.totalCost.toFixed(2)}</td>
-                        <td className="px-4 py-3 text-center">
+                        <td className="px-3 sm:px-4 py-2 sm:py-3 truncate max-w-[120px] sm:max-w-xs">{itemName}</td>
+                        <td className="px-3 sm:px-4 py-2 sm:py-3 text-right">{item.quantity}</td>
+                        <td className="px-3 sm:px-4 py-2 sm:py-3 text-right">৳{item.costPerUnit.toFixed(2)}</td>
+                        <td className="px-3 sm:px-4 py-2 sm:py-3 text-right font-semibold">৳{item.totalCost.toFixed(2)}</td>
+                        <td className="px-3 sm:px-4 py-2 sm:py-3 text-center">
                           <button
                             type="button"
                             onClick={() => removeItem(idx)}
-                            className="text-red-600 hover:text-red-800 transition"
+                            className="text-red-600 hover:text-red-800 transition p-1"
+                            aria-label="Remove item"
                           >
                             <Trash2 size={18} />
                           </button>
@@ -440,9 +429,9 @@ const NewPurchase = () => {
                 </tbody>
                 <tfoot className="bg-gray-50 font-semibold">
                   <tr>
-                    <td colSpan="4" className="px-4 py-3 text-right">Grand Total</td>
-                    <td className="px-4 py-3 text-right text-amber-600">৳{calculateTotal().toFixed(2)}</td>
-                    <td className="px-4 py-3" />
+                    <td colSpan="4" className="px-3 sm:px-4 py-2 sm:py-3 text-right">Grand Total</td>
+                    <td className="px-3 sm:px-4 py-2 sm:py-3 text-right text-amber-600">৳{calculateTotal().toFixed(2)}</td>
+                    <td className="px-3 sm:px-4 py-2 sm:py-3" />
                   </tr>
                 </tfoot>
               </table>
@@ -450,12 +439,12 @@ const NewPurchase = () => {
           </div>
         )}
 
-        {/* Submit */}
-        <div className="flex gap-4">
+        {/* Submit Buttons */}
+        <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
           <button
             type="submit"
             disabled={loading || form.items.length === 0}
-            className="flex-1 bg-amber-600 text-white py-3 rounded-lg hover:bg-amber-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full sm:flex-1 bg-amber-600 text-white py-3 rounded-lg hover:bg-amber-700 transition disabled:opacity-50 flex items-center justify-center gap-2 text-sm sm:text-base"
           >
             <Save size={20} />
             {loading ? 'Saving...' : 'Save Purchase'}
@@ -463,7 +452,7 @@ const NewPurchase = () => {
           <button
             type="button"
             onClick={() => navigate('/purchases')}
-            className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+            className="w-full sm:flex-1 px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition text-sm sm:text-base"
           >
             Cancel
           </button>
@@ -471,14 +460,15 @@ const NewPurchase = () => {
       </form>
 
       {/* ==============================
-          QUICK‑ADD MODAL
+          QUICK‑ADD MODAL (Responsive)
           ============================== */}
       {showQuickAdd && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative max-h-[90vh] overflow-y-auto">
             <button
               onClick={() => setShowQuickAdd(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1"
+              aria-label="Close modal"
             >
               <X size={24} />
             </button>
@@ -492,7 +482,6 @@ const NewPurchase = () => {
 
             <form onSubmit={handleQuickAddSubmit} className="space-y-4">
               {quickAddType === 'RawMaterial' ? (
-                // ----- Raw Material fields -----
                 <>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
@@ -500,7 +489,7 @@ const NewPurchase = () => {
                       type="text"
                       value={newMaterialData.name}
                       onChange={(e) => setNewMaterialData({ ...newMaterialData, name: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
                       required
                     />
                   </div>
@@ -510,7 +499,7 @@ const NewPurchase = () => {
                       type="text"
                       value={newMaterialData.sku}
                       onChange={(e) => setNewMaterialData({ ...newMaterialData, sku: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
                       required
                     />
                   </div>
@@ -519,7 +508,7 @@ const NewPurchase = () => {
                     <select
                       value={newMaterialData.type}
                       onChange={(e) => setNewMaterialData({ ...newMaterialData, type: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-sm"
                     >
                       <option value="oil">Oil</option>
                       <option value="ethanol">Ethanol</option>
@@ -528,7 +517,6 @@ const NewPurchase = () => {
                   </div>
                 </>
               ) : (
-                // ----- Bottle fields -----
                 <>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Size (ml) *</label>
@@ -538,7 +526,7 @@ const NewPurchase = () => {
                       min="0.1"
                       value={newBottleData.sizeMl}
                       onChange={(e) => setNewBottleData({ ...newBottleData, sizeMl: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
                       required
                     />
                   </div>
@@ -547,7 +535,7 @@ const NewPurchase = () => {
                     <select
                       value={newBottleData.type}
                       onChange={(e) => setNewBottleData({ ...newBottleData, type: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-sm"
                     >
                       <option value="spray">Spray</option>
                       <option value="roll-on">Roll‑on</option>
@@ -562,18 +550,18 @@ const NewPurchase = () => {
                 </div>
               )}
 
-              <div className="flex gap-3 pt-2">
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
                 <button
                   type="submit"
                   disabled={quickAddSubmitting}
-                  className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+                  className="w-full sm:flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 text-sm"
                 >
                   {quickAddSubmitting ? 'Creating...' : 'Create & Select'}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowQuickAdd(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  className="w-full sm:flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
                 >
                   Cancel
                 </button>
