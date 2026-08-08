@@ -54,6 +54,8 @@ const ProductList = () => {
     notes: '',
     isBestseller: false,
     sizes: [], // { _id, sizeMl, sellingPrice, image, bottleId }
+    baseOil: '',
+    blendComponents: [],
   });
   const [editLoading, setEditLoading] = useState(false);
   const [fetchingProduct, setFetchingProduct] = useState(false);
@@ -64,8 +66,12 @@ const ProductList = () => {
   const [uploading, setUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState(null);
 
+  // Materials for dropdowns
+  const [materials, setMaterials] = useState([]);
+
   useEffect(() => {
     fetchProducts();
+    fetchMaterials();
   }, []);
 
   const fetchProducts = async () => {
@@ -78,6 +84,15 @@ const ProductList = () => {
       console.error('Fetch error:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchMaterials = async () => {
+    try {
+      const { data } = await API.get('/inventory/materials');
+      setMaterials(data);
+    } catch (error) {
+      console.error('Failed to fetch materials', error);
     }
   };
 
@@ -98,7 +113,6 @@ const ProductList = () => {
   const openEditModal = async (product) => {
     setFetchingProduct(true);
     try {
-      // Fetch full product details (with populated sizes)
       const { data } = await API.get(`/products/${product._id}`);
       setProductToEdit(data);
       setEditForm({
@@ -115,6 +129,11 @@ const ProductList = () => {
           sellingPrice: s.sellingPrice || 0,
           image: s.image || '',
           bottleId: s.bottle?._id || s.bottle || '',
+        })),
+        baseOil: data.baseOil?._id || data.baseOil || '',
+        blendComponents: (data.blendComponents || []).map(c => ({
+          material: c.material?._id || c.material || '',
+          percentage: c.percentage || 0,
         })),
       });
       setShowEditModal(true);
@@ -139,7 +158,6 @@ const ProductList = () => {
     setEditForm({ ...editForm, sizes: updatedSizes });
   };
 
-  // -- Image Upload for a specific size --
   const handleSizeImageUpload = async (index, event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -152,24 +170,57 @@ const ProductList = () => {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       const imageUrl = response.data.url;
-
-      // Update the size's image field
       const updatedSizes = [...editForm.sizes];
       updatedSizes[index].image = imageUrl;
       setEditForm({ ...editForm, sizes: updatedSizes });
-
       toast.success('Image uploaded!');
     } catch (error) {
       toast.error('Upload failed: ' + (error.response?.data?.message || error.message));
     }
-
-    // Reset the input so the same file can be uploaded again if needed
     event.target.value = '';
+  };
+
+  // Blend component handlers for edit modal
+  const addBlendComponentEdit = () => {
+    setEditForm(prev => ({
+      ...prev,
+      blendComponents: [...prev.blendComponents, { material: '', percentage: 0 }],
+    }));
+  };
+
+  const updateBlendComponentEdit = (index, field, value) => {
+    const updated = [...editForm.blendComponents];
+    updated[index][field] = field === 'percentage' ? parseFloat(value) || 0 : value;
+    setEditForm(prev => ({ ...prev, blendComponents: updated }));
+  };
+
+  const removeBlendComponentEdit = (index) => {
+    const updated = editForm.blendComponents.filter((_, i) => i !== index);
+    setEditForm(prev => ({ ...prev, blendComponents: updated }));
   };
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     if (!productToEdit) return;
+
+    // Validation
+    const type = productToEdit.type;
+    if (type === 'roll-on' && !editForm.baseOil) {
+      toast.error('Please select a base oil for roll-on product');
+      return;
+    }
+    if (type === 'spray') {
+      const invalid = editForm.blendComponents.some(c => !c.material || c.percentage <= 0 || c.percentage > 100);
+      if (invalid || editForm.blendComponents.length === 0) {
+        toast.error('Please add at least one valid blend component (material + percentage)');
+        return;
+      }
+      const total = editForm.blendComponents.reduce((sum, c) => sum + (c.percentage || 0), 0);
+      if (total !== 100) {
+        toast.error(`Total blend percentage must equal 100%. Currently: ${total}%`);
+        return;
+      }
+    }
 
     setEditLoading(true);
     try {
@@ -193,6 +244,8 @@ const ProductList = () => {
           fixativeMlUsed: 0,
           makingCost: 0,
         })),
+        baseOil: type === 'roll-on' ? editForm.baseOil : null,
+        blendComponents: type === 'spray' ? editForm.blendComponents : [],
       };
 
       await API.put(`/products/${productToEdit._id}`, payload);
@@ -207,7 +260,7 @@ const ProductList = () => {
     }
   };
 
-  // ---------- Bulk Upload Handlers ----------
+  // ---------- Bulk Upload Handlers (unchanged) ----------
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -486,7 +539,7 @@ const ProductList = () => {
                   <tr key={p._id} className="hover:bg-gray-50 transition">
                     <td className="px-6 py-4 font-medium text-gray-800">{p.name}</td>
                     <td className="px-6 py-4 text-gray-600">{p.sku}</td>
-                    <td className="px-6 py-4 capitalize">{p.bottleType || p.type || '-'}</td>
+                    <td className="px-6 py-4 capitalize">{p.type || '-'}</td>
                     <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">{p.description || '-'}</td>
                     <td className="px-6 py-4 capitalize">{p.intensity || 'medium'}</td>
                     <td className="px-6 py-4 text-sm">{p.bestFor?.join(', ') || 'all'}</td>
@@ -555,7 +608,7 @@ const ProductList = () => {
         </div>
       )}
 
-      {/* ---------- EDIT MODAL (MULTI-SIZE WITH UPLOAD) ---------- */}
+      {/* ---------- EDIT MODAL (WITH RAW MATERIALS) ---------- */}
       {showEditModal && productToEdit && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 relative">
@@ -672,6 +725,88 @@ const ProductList = () => {
                   </div>
                 </div>
 
+                {/* ===== RAW MATERIALS (EDIT) ===== */}
+                <div className="border-t border-gray-200 pt-4">
+                  <h3 className="text-lg font-semibold text-gray-700 mb-3">Raw Material Assignment</h3>
+                  {productToEdit.type === 'roll-on' ? (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Base Oil *</label>
+                      <select
+                        name="baseOil"
+                        value={editForm.baseOil}
+                        onChange={handleEditChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none bg-white"
+                      >
+                        <option value="">Select base oil</option>
+                        {materials
+                          .filter(m => m.type === 'oil')
+                          .map(m => (
+                            <option key={m._id} value={m._id}>
+                              {m.name} ({m.sku}) – {m.currentStockMl || 0}ml
+                            </option>
+                          ))}
+                      </select>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-sm font-medium text-gray-700">Blend Components</label>
+                        <button
+                          type="button"
+                          onClick={addBlendComponentEdit}
+                          className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1"
+                        >
+                          <Plus size={16} /> Add Component
+                        </button>
+                      </div>
+                      {editForm.blendComponents.length === 0 && (
+                        <p className="text-sm text-gray-400 italic">No blend components added.</p>
+                      )}
+                      {editForm.blendComponents.map((comp, idx) => (
+                        <div key={idx} className="flex flex-wrap items-center gap-2 mb-2">
+                          <select
+                            value={comp.material}
+                            onChange={(e) => updateBlendComponentEdit(idx, 'material', e.target.value)}
+                            className="flex-1 min-w-[180px] px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none bg-white text-sm"
+                          >
+                            <option value="">Select material</option>
+                            {materials.map(m => (
+                              <option key={m._id} value={m._id}>
+                                {m.name} ({m.sku}) – {m.type}
+                              </option>
+                            ))}
+                          </select>
+                          <div className="flex items-center gap-1">
+                            <input
+                              type="number"
+                              placeholder="%"
+                              value={comp.percentage || ''}
+                              onChange={(e) => updateBlendComponentEdit(idx, 'percentage', e.target.value)}
+                              className="w-20 px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-sm"
+                              min="0"
+                              max="100"
+                              step="0.1"
+                            />
+                            <span className="text-sm text-gray-500">%</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeBlendComponentEdit(idx)}
+                            className="text-red-600 hover:text-red-800 p-1"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      ))}
+                      <p className="text-xs text-gray-400 mt-1">
+                        Percentages must sum to 100%. Total: <span className="font-semibold">
+                          {editForm.blendComponents.reduce((sum, c) => sum + (c.percentage || 0), 0)}%
+                        </span>
+                      </p>
+                    </div>
+                  )}
+                </div>
+
                 {/* Size Variants Table with Image Upload */}
                 <div className="border-t border-gray-200 pt-4">
                   <h3 className="text-lg font-semibold text-gray-700 mb-3">Size Variants</h3>
@@ -776,7 +911,7 @@ const ProductList = () => {
         </div>
       )}
 
-      {/* ---------- BULK UPLOAD MODAL ---------- */}
+      {/* ---------- BULK UPLOAD MODAL (unchanged) ---------- */}
       {showUploadModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 relative">

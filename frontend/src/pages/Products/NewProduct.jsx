@@ -10,7 +10,7 @@ const NewProduct = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  // Product fields – INCLUDING NEW ONES
+  // Product fields – INCLUDING RAW MATERIALS
   const [product, setProduct] = useState({
     name: '',
     sku: '',
@@ -20,6 +20,8 @@ const NewProduct = () => {
     bestFor: [],
     notes: [],
     isBestseller: false,
+    baseOil: '',               // for roll-on
+    blendComponents: [],       // for spray: [{ material: '', percentage: 0 }]
   });
 
   // Size variant fields
@@ -30,52 +32,80 @@ const NewProduct = () => {
     sellingPrice: '',
   });
 
-  // All bottle types (for dropdown)
+  // All bottles and materials for dropdowns
   const [bottles, setBottles] = useState([]);
+  const [materials, setMaterials] = useState([]);
 
   useEffect(() => {
-    fetchBottles();
+    fetchBottlesAndMaterials();
   }, []);
 
-  const fetchBottles = async () => {
+  const fetchBottlesAndMaterials = async () => {
     try {
-      const { data } = await API.get('/inventory/bottles');
-      setBottles(data);
+      const [bottlesRes, materialsRes] = await Promise.all([
+        API.get('/inventory/bottles'),
+        API.get('/inventory/materials'),
+      ]);
+      setBottles(bottlesRes.data);
+      setMaterials(materialsRes.data);
     } catch (err) {
-      toast.error('Failed to load bottles');
+      toast.error('Failed to load bottles or materials');
     }
   };
 
   const handleProductChange = (e) => {
-    setProduct({ ...product, [e.target.name]: e.target.value });
+    const { name, value, type, checked } = e.target;
+    setProduct(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
   };
 
   const handleSizeChange = (e) => {
     setSizeForm({ ...sizeForm, [e.target.name]: e.target.value });
   };
 
+  // ---- Blend components ----
+  const addBlendComponent = () => {
+    setProduct(prev => ({
+      ...prev,
+      blendComponents: [...prev.blendComponents, { material: '', percentage: 0 }],
+    }));
+  };
+
+  const updateBlendComponent = (index, field, value) => {
+    const updated = [...product.blendComponents];
+    updated[index][field] = field === 'percentage' ? parseFloat(value) || 0 : value;
+    setProduct(prev => ({ ...prev, blendComponents: updated }));
+  };
+
+  const removeBlendComponent = (index) => {
+    const updated = product.blendComponents.filter((_, i) => i !== index);
+    setProduct(prev => ({ ...prev, blendComponents: updated }));
+  };
+
+  // ---- Size variants ----
   const addSizeVariant = () => {
     const { sizeMl, bottleType, sellingPrice } = sizeForm;
     if (!sizeMl || !sellingPrice) {
       toast.error('Please fill in size and selling price');
       return;
     }
-    // Check duplicate
     const exists = sizes.some(s => s.sizeMl === parseFloat(sizeMl) && s.bottleType === bottleType);
     if (exists) {
       toast.error('This size variant already added');
       return;
     }
+    const bottleId = bottles.find(b => b.sizeMl === parseFloat(sizeMl) && b.type === bottleType)?._id || '';
     setSizes([
       ...sizes,
       {
         sizeMl: parseFloat(sizeMl),
         bottleType,
         sellingPrice: parseFloat(sellingPrice),
-        bottleId: bottles.find(b => b.sizeMl === parseFloat(sizeMl) && b.type === bottleType)?._id || '',
+        bottleId,
       },
     ]);
-    // Reset form
     setSizeForm({ sizeMl: '', bottleType: 'spray', sellingPrice: '' });
   };
 
@@ -93,7 +123,6 @@ const NewProduct = () => {
       setError('At least one size variant is required');
       return;
     }
-    // Validate each size has a valid bottle reference
     for (const s of sizes) {
       if (!s.bottleId) {
         setError(`Bottle ${s.sizeMl}ml (${s.bottleType}) not found. Please add it first.`);
@@ -101,10 +130,27 @@ const NewProduct = () => {
       }
     }
 
+    // Validate raw materials
+    if (product.type === 'roll-on' && !product.baseOil) {
+      setError('Please select a base oil for roll-on product');
+      return;
+    }
+    if (product.type === 'spray') {
+      const invalid = product.blendComponents.some(c => !c.material || c.percentage <= 0 || c.percentage > 100);
+      if (invalid || product.blendComponents.length === 0) {
+        setError('Please add at least one valid blend component (material + percentage)');
+        return;
+      }
+      const total = product.blendComponents.reduce((sum, c) => sum + (c.percentage || 0), 0);
+      if (total !== 100) {
+        setError(`Total blend percentage must equal 100%. Currently: ${total}%`);
+        return;
+      }
+    }
+
     setSubmitting(true);
     setError('');
     try {
-      // Prepare payload with all fields
       const payload = {
         name: product.name,
         sku: product.sku,
@@ -123,8 +169,9 @@ const NewProduct = () => {
           makingCost: 0,
           sellingPrice: s.sellingPrice,
         })),
-        baseOil: null,
-        blendComponents: [],
+        // Raw material links
+        baseOil: product.type === 'roll-on' ? product.baseOil : null,
+        blendComponents: product.type === 'spray' ? product.blendComponents : [],
       };
       await API.post('/products', payload);
       toast.success('Product created successfully');
@@ -136,15 +183,7 @@ const NewProduct = () => {
     }
   };
 
-  // Filter bottles by type and size (we need unique combos)
-  const uniqueBottleOptions = bottles.reduce((acc, b) => {
-    const key = `${b.sizeMl}-${b.type}`;
-    if (!acc.find(item => item.sizeMl === b.sizeMl && item.type === b.type)) {
-      acc.push({ sizeMl: b.sizeMl, type: b.type });
-    }
-    return acc;
-  }, []);
-
+  // ---- UI ----
   return (
     <div>
       <h1 className="text-3xl font-bold mb-6">Add New Product</h1>
@@ -166,7 +205,7 @@ const NewProduct = () => {
                 name="name"
                 value={product.name}
                 onChange={handleProductChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-secondary outline-none"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
                 required
               />
             </div>
@@ -177,7 +216,7 @@ const NewProduct = () => {
                 name="sku"
                 value={product.sku}
                 onChange={handleProductChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-secondary outline-none"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
                 required
               />
             </div>
@@ -186,8 +225,16 @@ const NewProduct = () => {
               <select
                 name="type"
                 value={product.type}
-                onChange={handleProductChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-secondary outline-none bg-white"
+                onChange={(e) => {
+                  // Reset raw material fields when type changes
+                  setProduct(prev => ({
+                    ...prev,
+                    type: e.target.value,
+                    baseOil: '',
+                    blendComponents: [],
+                  }));
+                }}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none bg-white"
               >
                 <option value="spray">Spray</option>
                 <option value="roll-on">Roll‑on</option>
@@ -203,7 +250,7 @@ const NewProduct = () => {
                 name="description"
                 value={product.description}
                 onChange={handleProductChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-secondary outline-none"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
                 rows="2"
                 placeholder="Short product description"
               />
@@ -214,7 +261,7 @@ const NewProduct = () => {
                 name="intensity"
                 value={product.intensity}
                 onChange={handleProductChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-secondary outline-none bg-white"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none bg-white"
               >
                 <option value="light">Light</option>
                 <option value="medium">Medium</option>
@@ -230,7 +277,7 @@ const NewProduct = () => {
                   const val = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
                   setProduct({ ...product, bestFor: val });
                 }}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-secondary outline-none"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
                 placeholder="e.g. daytime, evening, special"
               />
             </div>
@@ -243,7 +290,7 @@ const NewProduct = () => {
                   const val = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
                   setProduct({ ...product, notes: val });
                 }}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-secondary outline-none"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
                 placeholder="e.g. floral, woody, citrus"
               />
             </div>
@@ -252,14 +299,97 @@ const NewProduct = () => {
                 type="checkbox"
                 name="isBestseller"
                 checked={product.isBestseller}
-                onChange={(e) => setProduct({ ...product, isBestseller: e.target.checked })}
-                className="w-4 h-4 text-brand-primary focus:ring-brand-primary"
+                onChange={handleProductChange}
+                className="w-4 h-4 text-amber-600 focus:ring-amber-500"
               />
               <label className="text-sm font-medium text-gray-700">Mark as Bestseller</label>
             </div>
           </div>
 
-          {/* Add Size Variant (unchanged) */}
+          {/* ===== RAW MATERIAL SELECTION ===== */}
+          <div className="border-t border-gray-200 pt-6">
+            <h3 className="text-lg font-semibold mb-4">Raw Material Assignment</h3>
+            {product.type === 'roll-on' ? (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Base Oil *</label>
+                <select
+                  name="baseOil"
+                  value={product.baseOil}
+                  onChange={handleProductChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none bg-white"
+                >
+                  <option value="">Select base oil</option>
+                  {materials
+                    .filter(m => m.type === 'oil')
+                    .map(m => (
+                      <option key={m._id} value={m._id}>
+                        {m.name} ({m.sku}) – {m.currentStockMl || 0}ml
+                      </option>
+                    ))}
+                </select>
+                <p className="text-xs text-gray-400 mt-1">Only materials of type "oil" are shown.</p>
+              </div>
+            ) : (
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700">Blend Components</label>
+                  <button
+                    type="button"
+                    onClick={addBlendComponent}
+                    className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1"
+                  >
+                    <Plus size={16} /> Add Component
+                  </button>
+                </div>
+                {product.blendComponents.length === 0 && (
+                  <p className="text-sm text-gray-400 italic">No blend components added yet.</p>
+                )}
+                {product.blendComponents.map((comp, idx) => (
+                  <div key={idx} className="flex flex-wrap items-center gap-2 mb-2">
+                    <select
+                      value={comp.material}
+                      onChange={(e) => updateBlendComponent(idx, 'material', e.target.value)}
+                      className="flex-1 min-w-[180px] px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none bg-white text-sm"
+                    >
+                      <option value="">Select material</option>
+                      {materials.map(m => (
+                        <option key={m._id} value={m._id}>
+                          {m.name} ({m.sku}) – {m.type}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="number"
+                        placeholder="%"
+                        value={comp.percentage || ''}
+                        onChange={(e) => updateBlendComponent(idx, 'percentage', e.target.value)}
+                        className="w-20 px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-sm"
+                        min="0"
+                        max="100"
+                        step="0.1"
+                      />
+                      <span className="text-sm text-gray-500">%</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeBlendComponent(idx)}
+                      className="text-red-600 hover:text-red-800 p-1"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                ))}
+                <p className="text-xs text-gray-400 mt-1">
+                  Percentages must sum to 100%. Total: <span className="font-semibold">
+                    {product.blendComponents.reduce((sum, c) => sum + (c.percentage || 0), 0)}%
+                  </span>
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Size Variant Section (unchanged) */}
           <div className="border-t border-gray-200 pt-6">
             <h3 className="text-lg font-semibold mb-4">Add Size Variant</h3>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
@@ -272,7 +402,7 @@ const NewProduct = () => {
                   min="0.1"
                   value={sizeForm.sizeMl}
                   onChange={handleSizeChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-secondary outline-none"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
                   placeholder="e.g. 3.5"
                 />
               </div>
@@ -282,7 +412,7 @@ const NewProduct = () => {
                   name="bottleType"
                   value={sizeForm.bottleType}
                   onChange={handleSizeChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-secondary outline-none bg-white"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none bg-white"
                 >
                   <option value="spray">Spray</option>
                   <option value="roll-on">Roll‑on</option>
@@ -297,7 +427,7 @@ const NewProduct = () => {
                   min="0"
                   value={sizeForm.sellingPrice}
                   onChange={handleSizeChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-secondary outline-none"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
                   placeholder="e.g. 100"
                 />
               </div>
@@ -305,7 +435,7 @@ const NewProduct = () => {
                 <button
                   type="button"
                   onClick={addSizeVariant}
-                  className="w-full bg-brand-primary text-white py-2 rounded-lg hover:bg-brand-secondary transition flex items-center justify-center gap-2"
+                  className="w-full bg-amber-600 text-white py-2 rounded-lg hover:bg-amber-700 transition flex items-center justify-center gap-2"
                 >
                   <Plus size={18} /> Add
                 </button>
@@ -316,7 +446,7 @@ const NewProduct = () => {
             </p>
           </div>
 
-          {/* Sizes Table (unchanged) */}
+          {/* Sizes Table */}
           {sizes.length > 0 && (
             <div className="border-t border-gray-200 pt-6">
               <h3 className="text-lg font-semibold mb-4">Size Variants ({sizes.length})</h3>
@@ -357,7 +487,7 @@ const NewProduct = () => {
             <button
               type="submit"
               disabled={submitting}
-              className="bg-brand-primary text-white px-6 py-2 rounded-lg hover:bg-brand-secondary transition disabled:opacity-50 flex items-center gap-2"
+              className="bg-amber-600 text-white px-6 py-2 rounded-lg hover:bg-amber-700 transition disabled:opacity-50 flex items-center gap-2"
             >
               <Save size={18} />
               {submitting ? 'Creating...' : 'Create Product'}
