@@ -10,6 +10,7 @@ const NewPurchase = () => {
   const [materials, setMaterials] = useState([]);
   const [bottles, setBottles] = useState([]);
 
+  // Main purchase form
   const [form, setForm] = useState({
     invoiceNo: '',
     supplier: '',
@@ -25,35 +26,128 @@ const NewPurchase = () => {
     costPerUnit: 0,
   });
 
+  // Quick‑add modal state
+  const [showQuickAdd, setShowQuickAdd] = useState(false);
+  const [quickAddType, setQuickAddType] = useState('RawMaterial');
+  const [quickAddSubmitting, setQuickAddSubmitting] = useState(false);
+  const [quickAddError, setQuickAddError] = useState('');
+
+  // Form for new raw material
+  const [newMaterialData, setNewMaterialData] = useState({
+    name: '',
+    sku: '',
+    type: 'oil',
+  });
+
+  // Form for new bottle
+  const [newBottleData, setNewBottleData] = useState({
+    sizeMl: '',
+    type: 'spray',
+  });
+
+  // Fetch all items on mount
   useEffect(() => {
-    // Fetch all raw materials and bottles for dropdowns
-    const fetchItems = async () => {
-      try {
-        const [matsRes, botsRes] = await Promise.all([
-          API.get('/inventory/materials'),
-          API.get('/inventory/bottles'),
-        ]);
-        setMaterials(matsRes.data);
-        setBottles(botsRes.data);
-      } catch (error) {
-        toast.error('Failed to load items');
-      }
-    };
     fetchItems();
   }, []);
+
+  const fetchItems = async () => {
+    try {
+      const [matsRes, botsRes] = await Promise.all([
+        API.get('/inventory/materials'),
+        API.get('/inventory/bottles'),
+      ]);
+      setMaterials(matsRes.data);
+      setBottles(botsRes.data);
+    } catch (error) {
+      toast.error('Failed to load items');
+    }
+  };
 
   // Auto-generate invoice number
   useEffect(() => {
     if (!form.invoiceNo) {
       const now = new Date();
-      const prefix = 'PUR-' + now.getFullYear().toString().slice(-2) + 
-                     String(now.getMonth()+1).padStart(2,'0') + 
+      const prefix = 'PUR-' + now.getFullYear().toString().slice(-2) +
+                     String(now.getMonth()+1).padStart(2,'0') +
                      String(now.getDate()).padStart(2,'0') + '-';
-      // We'll set a placeholder, but user can change it
       setForm(prev => ({ ...prev, invoiceNo: prefix + '001' }));
     }
   }, []);
 
+  // ----- Quick‑add handlers -----
+  const openQuickAdd = (type) => {
+    setQuickAddType(type);
+    setQuickAddError('');
+    setNewMaterialData({ name: '', sku: '', type: 'oil' });
+    setNewBottleData({ sizeMl: '', type: 'spray' });
+    setShowQuickAdd(true);
+  };
+
+  const handleQuickAddSubmit = async (e) => {
+    e.preventDefault();
+    setQuickAddSubmitting(true);
+    setQuickAddError('');
+
+    try {
+      let response;
+      let newItemId;
+
+      if (quickAddType === 'RawMaterial') {
+        // Validate
+        if (!newMaterialData.name.trim() || !newMaterialData.sku.trim()) {
+          throw new Error('Name and SKU are required');
+        }
+        // Check duplicate SKU
+        const existing = materials.find(m => m.sku === newMaterialData.sku.trim());
+        if (existing) {
+          throw new Error(`SKU "${newMaterialData.sku}" already exists`);
+        }
+        response = await API.post('/inventory/materials', {
+          name: newMaterialData.name.trim(),
+          sku: newMaterialData.sku.trim(),
+          type: newMaterialData.type,
+        });
+        newItemId = response.data._id;
+        toast.success('Raw material created');
+      } else {
+        // Bottle
+        const size = parseFloat(newBottleData.sizeMl);
+        if (!size || size <= 0) throw new Error('Please enter a valid size (ml)');
+        // Check for existing bottle
+        const existing = bottles.find(b =>
+          b.sizeMl === size && b.type === newBottleData.type
+        );
+        if (existing) {
+          throw new Error(`Bottle ${size}ml (${newBottleData.type}) already exists`);
+        }
+        response = await API.post('/inventory/bottles', {
+          sizeMl: size,
+          type: newBottleData.type,
+        });
+        newItemId = response.data._id;
+        toast.success('Bottle created');
+      }
+
+      // Refresh the dropdown lists
+      await fetchItems();
+
+      // Auto‑select the newly created item in the purchase form
+      setNewItem(prev => ({
+        ...prev,
+        itemId: newItemId,
+      }));
+
+      // Close modal
+      setShowQuickAdd(false);
+      // Optionally focus on the quantity field
+    } catch (error) {
+      setQuickAddError(error.response?.data?.message || error.message || 'Creation failed');
+    } finally {
+      setQuickAddSubmitting(false);
+    }
+  };
+
+  // ----- Main form handlers -----
   const handleAddItem = () => {
     const { itemType, itemId, quantity, costPerUnit } = newItem;
     if (!itemId) {
@@ -65,7 +159,6 @@ const NewPurchase = () => {
       return;
     }
 
-    // Find selected item details
     let itemDetails = null;
     if (itemType === 'RawMaterial') {
       itemDetails = materials.find(m => m._id === itemId);
@@ -84,7 +177,7 @@ const NewPurchase = () => {
       quantity,
       costPerUnit,
       totalCost,
-      _tempItem: itemDetails, // for display
+      _tempItem: itemDetails,
     };
 
     setForm(prev => ({
@@ -152,7 +245,7 @@ const NewPurchase = () => {
       return mat ? `${mat.name} (${mat.sku})` : 'Unknown';
     } else {
       const bot = bottles.find(b => b._id === id);
-      return bot ? `${bot.sizeMl}ml ${bot.type} (${bot.sku})` : 'Unknown';
+      return bot ? `${bot.sizeMl}ml ${bot.type}` : 'Unknown';
     }
   };
 
@@ -232,28 +325,37 @@ const NewPurchase = () => {
               </select>
             </div>
 
-            <div>
+            <div className="md:col-span-1">
               <label className="block text-sm font-medium text-gray-700 mb-1">Item</label>
-              <select
-                value={newItem.itemId}
-                onChange={(e) => setNewItem({ ...newItem, itemId: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none bg-white"
-              >
-                <option value="">Select Item</option>
-                {newItem.itemType === 'RawMaterial' ? (
-                  materials.map(m => (
-                    <option key={m._id} value={m._id}>
-                      {m.name} ({m.sku}) - {m.stock}ml
-                    </option>
-                  ))
-                ) : (
-                  bottles.map(b => (
-                    <option key={b._id} value={b._id}>
-                      {b.sizeMl}ml {b.type} ({b.sku}) - {b.stock}pcs
-                    </option>
-                  ))
-                )}
-              </select>
+              <div className="flex gap-2">
+                <select
+                  value={newItem.itemId}
+                  onChange={(e) => setNewItem({ ...newItem, itemId: e.target.value })}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none bg-white"
+                >
+                  <option value="">Select Item</option>
+                  {newItem.itemType === 'RawMaterial' ? (
+                    materials.map(m => (
+                      <option key={m._id} value={m._id}>
+                        {m.name} ({m.sku}) - {m.currentStockMl || 0}ml
+                      </option>
+                    ))
+                  ) : (
+                    bottles.map(b => (
+                      <option key={b._id} value={b._id}>
+                        {b.sizeMl}ml {b.type} - {b.currentStock || 0}pcs
+                      </option>
+                    ))
+                  )}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => openQuickAdd(newItem.itemType)}
+                  className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 whitespace-nowrap text-sm"
+                >
+                  + New
+                </button>
+              </div>
             </div>
 
             <div>
@@ -308,7 +410,7 @@ const NewPurchase = () => {
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {form.items.map((item, idx) => {
-                    const itemName = item._tempItem?.name || item._tempItem?.sku || 
+                    const itemName = item._tempItem?.name || item._tempItem?.sku ||
                                      getItemName(item.itemType, item.item);
                     return (
                       <tr key={idx}>
@@ -367,6 +469,119 @@ const NewPurchase = () => {
           </button>
         </div>
       </form>
+
+      {/* ==============================
+          QUICK‑ADD MODAL
+          ============================== */}
+      {showQuickAdd && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
+            <button
+              onClick={() => setShowQuickAdd(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+            >
+              <X size={24} />
+            </button>
+
+            <h2 className="text-2xl font-bold mb-2">
+              Add New {quickAddType === 'RawMaterial' ? 'Raw Material' : 'Bottle'}
+            </h2>
+            <p className="text-gray-500 text-sm mb-4">
+              This will create a new item. You can then add it to the purchase.
+            </p>
+
+            <form onSubmit={handleQuickAddSubmit} className="space-y-4">
+              {quickAddType === 'RawMaterial' ? (
+                // ----- Raw Material fields -----
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                    <input
+                      type="text"
+                      value={newMaterialData.name}
+                      onChange={(e) => setNewMaterialData({ ...newMaterialData, name: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">SKU *</label>
+                    <input
+                      type="text"
+                      value={newMaterialData.sku}
+                      onChange={(e) => setNewMaterialData({ ...newMaterialData, sku: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                    <select
+                      value={newMaterialData.type}
+                      onChange={(e) => setNewMaterialData({ ...newMaterialData, type: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                    >
+                      <option value="oil">Oil</option>
+                      <option value="ethanol">Ethanol</option>
+                      <option value="fixative">Fixative</option>
+                    </select>
+                  </div>
+                </>
+              ) : (
+                // ----- Bottle fields -----
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Size (ml) *</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0.1"
+                      value={newBottleData.sizeMl}
+                      onChange={(e) => setNewBottleData({ ...newBottleData, sizeMl: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                    <select
+                      value={newBottleData.type}
+                      onChange={(e) => setNewBottleData({ ...newBottleData, type: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                    >
+                      <option value="spray">Spray</option>
+                      <option value="roll-on">Roll‑on</option>
+                    </select>
+                  </div>
+                </>
+              )}
+
+              {quickAddError && (
+                <div className="text-red-600 text-sm bg-red-50 p-2 rounded-lg">
+                  {quickAddError}
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="submit"
+                  disabled={quickAddSubmitting}
+                  className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+                >
+                  {quickAddSubmitting ? 'Creating...' : 'Create & Select'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowQuickAdd(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
