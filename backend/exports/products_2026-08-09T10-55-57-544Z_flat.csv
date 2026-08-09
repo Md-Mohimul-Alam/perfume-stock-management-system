@@ -1,0 +1,3107 @@
+name,sku,type,sizeMl,sellingPrice,oilMlUsed,ethanolMlUsed,fixativeMlUsed,makingCost,isActive,description,intensity,bestFor,notes,baseOil,blendComponents
+Ahsas al Arabia,AhsAra,roll-on,3.5,150,3.5,0,0,0,true,Medium oriental woody floral blend. Best for evening elegance.,medium,evening,oriental woody floral,6a3e242f2f2b2f71f964fd35,
+Ahsas al Arabia,AhsAra,roll-on,6,250,6,0,0,0,true,Medium oriental woody floral blend. Best for evening elegance.,medium,evening,oriental woody floral,6a3e242f2f2b2f71f964fd35,
+Ahsas al Arabia,AhsAra,roll-on,15,650,15,0,0,0,true,Medium oriental woody floral blend. Best for evening elegance.,medium,evening,oriental woody floral,6a3e242f2f2b2f71f964fd35,
+Ahsas al Arabia,AhsAra,roll-on,30,1250,30,0,0,0,true,Medium oriental woody floral blend. Best for evening elegance.,medium,evening,oriental woody floral,6a3e242f2f2b2f71f964fd35,
+Ahsas al Arabia Spray,AhsAra_SP,spray,6,300,2.7,3.3,0,0,true,Medium oriental woody floral blend. Best for evening elegance.,medium,evening,oriental woody floral,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd35'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091e3668fc77ab691d83')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091e3668fc77ab691d84')
+}
+Ahsas al Arabia Spray,AhsAra_SP,spray,15,700,6.75,8.25,0,0,true,Medium oriental woody floral blend. Best for evening elegance.,medium,evening,oriental woody floral,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd35'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091e3668fc77ab691d83')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091e3668fc77ab691d84')
+}
+Ahsas al Arabia Spray,AhsAra_SP,spray,30,1000,13.5,16.5,0,0,true,Medium oriental woody floral blend. Best for evening elegance.,medium,evening,oriental woody floral,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd35'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091e3668fc77ab691d83')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091e3668fc77ab691d84')
+}
+Ahsas al Arabia Spray,AhsAra_SP,spray,50,1300,22.5,27.5,0,0,true,Medium oriental woody floral blend. Best for evening elegance.,medium,evening,oriental woody floral,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd35'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091e3668fc77ab691d83')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091e3668fc77ab691d84')
+}
+Ahsas al Arabia Spray,AhsAra_SP,spray,100,1700,45,55,0,0,true,Medium oriental woody floral blend. Best for evening elegance.,medium,evening,oriental woody floral,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd35'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091e3668fc77ab691d83')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091e3668fc77ab691d84')
+}
+Ameer Al oud,AmeOud,roll-on,3.5,150,3.5,0,0,0,true,Strong oriental woody spicy fragrance. Perfect for evening sophistication.,strong,evening,oriental woody spicy,6a3e242e2f2b2f71f964fd33,
+Ameer Al oud,AmeOud,roll-on,6,250,6,0,0,0,true,Strong oriental woody spicy fragrance. Perfect for evening sophistication.,strong,evening,oriental woody spicy,6a3e242e2f2b2f71f964fd33,
+Ameer Al oud,AmeOud,roll-on,15,650,15,0,0,0,true,Strong oriental woody spicy fragrance. Perfect for evening sophistication.,strong,evening,oriental woody spicy,6a3e242e2f2b2f71f964fd33,
+Ameer Al oud,AmeOud,roll-on,30,1250,30,0,0,0,true,Strong oriental woody spicy fragrance. Perfect for evening sophistication.,strong,evening,oriental woody spicy,6a3e242e2f2b2f71f964fd33,
+Ameer Al oud Spray,AmeOud_SP,spray,6,300,2.7,3.3,0,0,true,Strong oriental woody spicy fragrance. Perfect for evening sophistication.,strong,evening,oriental woody spicy,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd33'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091d3668fc77ab691d7d')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091d3668fc77ab691d7e')
+}
+Ameer Al oud Spray,AmeOud_SP,spray,15,700,6.75,8.25,0,0,true,Strong oriental woody spicy fragrance. Perfect for evening sophistication.,strong,evening,oriental woody spicy,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd33'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091d3668fc77ab691d7d')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091d3668fc77ab691d7e')
+}
+Ameer Al oud Spray,AmeOud_SP,spray,30,1000,13.5,16.5,0,0,true,Strong oriental woody spicy fragrance. Perfect for evening sophistication.,strong,evening,oriental woody spicy,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd33'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091d3668fc77ab691d7d')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091d3668fc77ab691d7e')
+}
+Ameer Al oud Spray,AmeOud_SP,spray,50,1300,22.5,27.5,0,0,true,Strong oriental woody spicy fragrance. Perfect for evening sophistication.,strong,evening,oriental woody spicy,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd33'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091d3668fc77ab691d7d')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091d3668fc77ab691d7e')
+}
+Ameer Al oud Spray,AmeOud_SP,spray,100,1700,45,55,0,0,true,Strong oriental woody spicy fragrance. Perfect for evening sophistication.,strong,evening,oriental woody spicy,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd33'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091d3668fc77ab691d7d')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091d3668fc77ab691d7e')
+}
+Aqua DI Gio,AquGio,roll-on,3.5,180,3.5,0,0,0,true,Fresh aquatic citrus fragrance. A daytime classic.,medium,daytime,aquatic citrus,6a3e242f2f2b2f71f964fd39,
+Aqua DI Gio,AquGio,roll-on,6,280,6,0,0,0,true,Fresh aquatic citrus fragrance. A daytime classic.,medium,daytime,aquatic citrus,6a3e242f2f2b2f71f964fd39,
+Aqua DI Gio,AquGio,roll-on,15,750,15,0,0,0,true,Fresh aquatic citrus fragrance. A daytime classic.,medium,daytime,aquatic citrus,6a3e242f2f2b2f71f964fd39,
+Aqua DI Gio,AquGio,roll-on,30,1500,30,0,0,0,true,Fresh aquatic citrus fragrance. A daytime classic.,medium,daytime,aquatic citrus,6a3e242f2f2b2f71f964fd39,
+Aqua DI Gio Spray,AquGio_SP,spray,6,330,2.7,3.3,0,0,true,Fresh aquatic citrus fragrance. A daytime classic.,medium,daytime,aquatic citrus,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd39'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091e3668fc77ab691d8f')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091e3668fc77ab691d90')
+}
+Aqua DI Gio Spray,AquGio_SP,spray,15,780,6.75,8.25,0,0,true,Fresh aquatic citrus fragrance. A daytime classic.,medium,daytime,aquatic citrus,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd39'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091e3668fc77ab691d8f')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091e3668fc77ab691d90')
+}
+Aqua DI Gio Spray,AquGio_SP,spray,30,1050,13.5,16.5,0,0,true,Fresh aquatic citrus fragrance. A daytime classic.,medium,daytime,aquatic citrus,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd39'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091e3668fc77ab691d8f')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091e3668fc77ab691d90')
+}
+Aqua DI Gio Spray,AquGio_SP,spray,50,1300,22.5,27.5,0,0,true,Fresh aquatic citrus fragrance. A daytime classic.,medium,daytime,aquatic citrus,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd39'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091e3668fc77ab691d8f')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091e3668fc77ab691d90')
+}
+Aqua DI Gio Spray,AquGio_SP,spray,100,1650,45,55,0,0,true,Fresh aquatic citrus fragrance. A daytime classic.,medium,daytime,aquatic citrus,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd39'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091e3668fc77ab691d8f')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091e3668fc77ab691d90')
+}
+Ariana Grande Cloud,AGC,roll-on,3.5,170,3.5,0,0,148.67169697333333,true,"Top Notes: Lavender, pear, and bergamot.
+Heart/Middle Notes: Whipped cream, praline, coconut, and vanilla orchid.
+Base Notes: Musk and woody notes.",medium,daytime,floral,fruity,gourmand,6a77747b21fc6555b5eab13e,
+Ariana Grande Cloud,AGC,roll-on,6,330,6,0,0,200.15315315027027,true,"Top Notes: Lavender, pear, and bergamot.
+Heart/Middle Notes: Whipped cream, praline, coconut, and vanilla orchid.
+Base Notes: Musk and woody notes.",medium,daytime,floral,fruity,gourmand,6a77747b21fc6555b5eab13e,
+Ariana Grande Cloud,AGC,roll-on,15,770,15,0,0,330,true,"Top Notes: Lavender, pear, and bergamot.
+Heart/Middle Notes: Whipped cream, praline, coconut, and vanilla orchid.
+Base Notes: Musk and woody notes.",medium,daytime,floral,fruity,gourmand,6a77747b21fc6555b5eab13e,
+Ariana Grande Cloud,AGC,roll-on,30,1350,30,0,0,505,true,"Top Notes: Lavender, pear, and bergamot.
+Heart/Middle Notes: Whipped cream, praline, coconut, and vanilla orchid.
+Base Notes: Musk and woody notes.",medium,daytime,floral,fruity,gourmand,6a77747b21fc6555b5eab13e,
+Ariana Grande Cloud Spray,AGC_SP,spray,6,350,3.3,2.7,0,172.978,true,"Top Notes: Lavender, pear, and bergamot.
+Heart/Middle Notes: Whipped cream, praline, coconut, and vanilla orchid.
+Base Notes: Musk and woody notes.",medium,daytime,floral,fruity,gourmand,,{
+  material: new ObjectId('6a77747b21fc6555b5eab13e'),
+  percentage: 55,
+  _id: new ObjectId('6a7857bfdc763d4c040da03d')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 45,
+  _id: new ObjectId('6a7857bfdc763d4c040da03e')
+}
+Ariana Grande Cloud Spray,AGC_SP,spray,15,800,8.25,6.75,0,259.945,true,"Top Notes: Lavender, pear, and bergamot.
+Heart/Middle Notes: Whipped cream, praline, coconut, and vanilla orchid.
+Base Notes: Musk and woody notes.",medium,daytime,floral,fruity,gourmand,,{
+  material: new ObjectId('6a77747b21fc6555b5eab13e'),
+  percentage: 55,
+  _id: new ObjectId('6a7857bfdc763d4c040da03d')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 45,
+  _id: new ObjectId('6a7857bfdc763d4c040da03e')
+}
+Ariana Grande Cloud Spray,AGC_SP,spray,30,1500,16.5,13.5,0,462.2233333333333,true,"Top Notes: Lavender, pear, and bergamot.
+Heart/Middle Notes: Whipped cream, praline, coconut, and vanilla orchid.
+Base Notes: Musk and woody notes.",medium,daytime,floral,fruity,gourmand,,{
+  material: new ObjectId('6a77747b21fc6555b5eab13e'),
+  percentage: 55,
+  _id: new ObjectId('6a7857bfdc763d4c040da03d')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 45,
+  _id: new ObjectId('6a7857bfdc763d4c040da03e')
+}
+Ariana Grande Cloud Spray,AGC_SP,spray,50,1700,27.5,22.5,0,658.15,true,"Top Notes: Lavender, pear, and bergamot.
+Heart/Middle Notes: Whipped cream, praline, coconut, and vanilla orchid.
+Base Notes: Musk and woody notes.",medium,daytime,floral,fruity,gourmand,,{
+  material: new ObjectId('6a77747b21fc6555b5eab13e'),
+  percentage: 55,
+  _id: new ObjectId('6a7857bfdc763d4c040da03d')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 45,
+  _id: new ObjectId('6a7857bfdc763d4c040da03e')
+}
+Ariana Grande Cloud Spray,AGC_SP,spray,100,2200,55,45,0,1131.3,true,"Top Notes: Lavender, pear, and bergamot.
+Heart/Middle Notes: Whipped cream, praline, coconut, and vanilla orchid.
+Base Notes: Musk and woody notes.",medium,daytime,floral,fruity,gourmand,,{
+  material: new ObjectId('6a77747b21fc6555b5eab13e'),
+  percentage: 55,
+  _id: new ObjectId('6a7857bfdc763d4c040da03d')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 45,
+  _id: new ObjectId('6a7857bfdc763d4c040da03e')
+}
+Ariana Grande thank you,AG-Thnk,roll-on,3.5,210,3.5,0,0,155.67169697333333,true,"Top Notes: White raspberry and pear.
+Heart/Middle Notes: Coconut cream and pink rose petals.
+Base Notes: Macaron sugar and velvet musk",medium,daytime,evening,floral,fruity,gourmand,6a7773a121fc6555b5eab13a,
+Ariana Grande thank you,AG-Thnk,roll-on,6,350,6,0,0,212.15315315027027,true,"Top Notes: White raspberry and pear.
+Heart/Middle Notes: Coconut cream and pink rose petals.
+Base Notes: Macaron sugar and velvet musk",medium,daytime,evening,floral,fruity,gourmand,6a7773a121fc6555b5eab13a,
+Ariana Grande thank you,AG-Thnk,roll-on,15,800,15,0,0,360,true,"Top Notes: White raspberry and pear.
+Heart/Middle Notes: Coconut cream and pink rose petals.
+Base Notes: Macaron sugar and velvet musk",medium,daytime,evening,floral,fruity,gourmand,6a7773a121fc6555b5eab13a,
+Ariana Grande thank you,AG-Thnk,roll-on,30,1400,30,0,0,565,true,"Top Notes: White raspberry and pear.
+Heart/Middle Notes: Coconut cream and pink rose petals.
+Base Notes: Macaron sugar and velvet musk",medium,daytime,evening,floral,fruity,gourmand,6a7773a121fc6555b5eab13a,
+Ariana Grande thank you Spray,AG-Thnk_SP,spray,6,370,3.3,2.7,0,179.578,true,"Top Notes: White raspberry and pear.
+Heart/Middle Notes: Coconut cream and pink rose petals.
+Base Notes: Macaron sugar and velvet musk",medium,daytime,evening,floral,fruity,gourmand,,{
+  material: new ObjectId('6a7773a121fc6555b5eab13a'),
+  percentage: 55,
+  _id: new ObjectId('6a7788a521fc6555b5eae4d1')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 45,
+  _id: new ObjectId('6a7788a521fc6555b5eae4d2')
+}
+Ariana Grande thank you Spray,AG-Thnk_SP,spray,15,830,8.25,6.75,0,276.445,true,"Top Notes: White raspberry and pear.
+Heart/Middle Notes: Coconut cream and pink rose petals.
+Base Notes: Macaron sugar and velvet musk",medium,daytime,evening,floral,fruity,gourmand,,{
+  material: new ObjectId('6a7773a121fc6555b5eab13a'),
+  percentage: 55,
+  _id: new ObjectId('6a7788a521fc6555b5eae4d1')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 45,
+  _id: new ObjectId('6a7788a521fc6555b5eae4d2')
+}
+Ariana Grande thank you Spray,AG-Thnk_SP,spray,30,1430,16.5,13.5,0,495.2233333333333,true,"Top Notes: White raspberry and pear.
+Heart/Middle Notes: Coconut cream and pink rose petals.
+Base Notes: Macaron sugar and velvet musk",medium,daytime,evening,floral,fruity,gourmand,,{
+  material: new ObjectId('6a7773a121fc6555b5eab13a'),
+  percentage: 55,
+  _id: new ObjectId('6a7788a521fc6555b5eae4d1')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 45,
+  _id: new ObjectId('6a7788a521fc6555b5eae4d2')
+}
+Ariana Grande thank you Spray,AG-Thnk_SP,spray,50,1600,27.5,22.5,0,713.15,true,"Top Notes: White raspberry and pear.
+Heart/Middle Notes: Coconut cream and pink rose petals.
+Base Notes: Macaron sugar and velvet musk",medium,daytime,evening,floral,fruity,gourmand,,{
+  material: new ObjectId('6a7773a121fc6555b5eab13a'),
+  percentage: 55,
+  _id: new ObjectId('6a7788a521fc6555b5eae4d1')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 45,
+  _id: new ObjectId('6a7788a521fc6555b5eae4d2')
+}
+Ariana Grande thank you Spray,AG-Thnk_SP,spray,100,2000,55,45,0,1241.3,true,"Top Notes: White raspberry and pear.
+Heart/Middle Notes: Coconut cream and pink rose petals.
+Base Notes: Macaron sugar and velvet musk",medium,daytime,evening,floral,fruity,gourmand,,{
+  material: new ObjectId('6a7773a121fc6555b5eab13a'),
+  percentage: 55,
+  _id: new ObjectId('6a7788a521fc6555b5eae4d1')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 45,
+  _id: new ObjectId('6a7788a521fc6555b5eae4d2')
+}
+Armanis.w.y,ArmWy,roll-on,3.5,150,3.5,0,0,127.75,true,Spicy sweet woody fragrance. A strong statement for evening events.,medium,evening,spicy sweet woody,6a3e242e2f2b2f71f964fd1e,
+Armanis.w.y,ArmWy,roll-on,6,250,6,0,0,165,true,Spicy sweet woody fragrance. A strong statement for evening events.,medium,evening,spicy sweet woody,6a3e242e2f2b2f71f964fd1e,
+Armanis.w.y,ArmWy,roll-on,15,700,15,0,0,205,true,Spicy sweet woody fragrance. A strong statement for evening events.,medium,evening,spicy sweet woody,6a3e242e2f2b2f71f964fd1e,
+Armanis.w.y,ArmWy,roll-on,30,1400,30,0,0,325,true,Spicy sweet woody fragrance. A strong statement for evening events.,medium,evening,spicy sweet woody,6a3e242e2f2b2f71f964fd1e,
+Armanis.w.y Spray,ArmWy_SP,spray,6,300,2.7,3.3,0,149.662,true,Spicy sweet woody fragrance. A strong statement for evening events.,medium,evening,spicy sweet woody,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd1e'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091d3668fc77ab691d4c')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091d3668fc77ab691d4d')
+}
+Armanis.w.y Spray,ArmWy_SP,spray,15,700,6.75,8.25,0,201.655,true,Spicy sweet woody fragrance. A strong statement for evening events.,medium,evening,spicy sweet woody,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd1e'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091d3668fc77ab691d4c')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091d3668fc77ab691d4d')
+}
+Armanis.w.y Spray,ArmWy_SP,spray,30,1100,13.5,16.5,0,348.31,true,Spicy sweet woody fragrance. A strong statement for evening events.,medium,evening,spicy sweet woody,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd1e'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091d3668fc77ab691d4c')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091d3668fc77ab691d4d')
+}
+Armanis.w.y Spray,ArmWy_SP,spray,50,1500,22.5,27.5,0,463.85,true,Spicy sweet woody fragrance. A strong statement for evening events.,medium,evening,spicy sweet woody,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd1e'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091d3668fc77ab691d4c')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091d3668fc77ab691d4d')
+}
+Armanis.w.y Spray,ArmWy_SP,spray,100,1900,45,55,0,742.7,true,Spicy sweet woody fragrance. A strong statement for evening events.,medium,evening,spicy sweet woody,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd1e'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091d3668fc77ab691d4c')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091d3668fc77ab691d4d')
+}
+Baccarat rouge,BacRou,roll-on,3.5,180,3.5,0,0,0,true,Luxury saffron amber woody fragrance. For special occasions.,strong,special,saffron amber woody,6a3e242f2f2b2f71f964fd37,
+Baccarat rouge,BacRou,roll-on,6,280,6,0,0,0,true,Luxury saffron amber woody fragrance. For special occasions.,strong,special,saffron amber woody,6a3e242f2f2b2f71f964fd37,
+Baccarat rouge,BacRou,roll-on,15,750,15,0,0,0,true,Luxury saffron amber woody fragrance. For special occasions.,strong,special,saffron amber woody,6a3e242f2f2b2f71f964fd37,
+Baccarat rouge,BacRou,roll-on,30,1500,30,0,0,0,true,Luxury saffron amber woody fragrance. For special occasions.,strong,special,saffron amber woody,6a3e242f2f2b2f71f964fd37,
+Baccarat rouge Spray,BacRou_SP,spray,6,330,2.7,3.3,0,0,true,Luxury saffron amber woody fragrance. For special occasions.,strong,special,saffron amber woody,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd37'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091e3668fc77ab691d89')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091e3668fc77ab691d8a')
+}
+Baccarat rouge Spray,BacRou_SP,spray,15,780,6.75,8.25,0,0,true,Luxury saffron amber woody fragrance. For special occasions.,strong,special,saffron amber woody,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd37'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091e3668fc77ab691d89')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091e3668fc77ab691d8a')
+}
+Baccarat rouge Spray,BacRou_SP,spray,30,1050,13.5,16.5,0,0,true,Luxury saffron amber woody fragrance. For special occasions.,strong,special,saffron amber woody,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd37'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091e3668fc77ab691d89')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091e3668fc77ab691d8a')
+}
+Baccarat rouge Spray,BacRou_SP,spray,50,1300,22.5,27.5,0,0,true,Luxury saffron amber woody fragrance. For special occasions.,strong,special,saffron amber woody,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd37'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091e3668fc77ab691d89')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091e3668fc77ab691d8a')
+}
+Baccarat rouge Spray,BacRou_SP,spray,100,1650,45,55,0,0,true,Luxury saffron amber woody fragrance. For special occasions.,strong,special,saffron amber woody,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd37'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091e3668fc77ab691d89')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091e3668fc77ab691d8a')
+}
+Black Orchid,BLOr,roll-on,6,330,6,0,0,194.15315315027027,true,"Top Notes: Black truffle, ylang-ylang, black currant, gardenia, jasmine, bergamot, mandarin orange, and Amalfi lemon.
+Heart/Middle Notes: Orchid, spices, fruity notes, lotus, gardenia, and jasmine.
+Base Notes: Mexican chocolate, patchouli, vanille, incense, amber, sandalwood, vetiver, and white musk",medium,evening,special,amber,floral,6a77740b21fc6555b5eab13c,
+Black Orchid,BLOr,roll-on,15,700,15,0,0,315,true,"Top Notes: Black truffle, ylang-ylang, black currant, gardenia, jasmine, bergamot, mandarin orange, and Amalfi lemon.
+Heart/Middle Notes: Orchid, spices, fruity notes, lotus, gardenia, and jasmine.
+Base Notes: Mexican chocolate, patchouli, vanille, incense, amber, sandalwood, vetiver, and white musk",medium,evening,special,amber,floral,6a77740b21fc6555b5eab13c,
+Black Orchid,BLOr,roll-on,30,1300,30,0,0,475,true,"Top Notes: Black truffle, ylang-ylang, black currant, gardenia, jasmine, bergamot, mandarin orange, and Amalfi lemon.
+Heart/Middle Notes: Orchid, spices, fruity notes, lotus, gardenia, and jasmine.
+Base Notes: Mexican chocolate, patchouli, vanille, incense, amber, sandalwood, vetiver, and white musk",medium,evening,special,amber,floral,6a77740b21fc6555b5eab13c,
+Black Orchid,BLOr,roll-on,3.5,180,3.5,0,0,145.17169697333333,true,"Top Notes: Black truffle, ylang-ylang, black currant, gardenia, jasmine, bergamot, mandarin orange, and Amalfi lemon.
+Heart/Middle Notes: Orchid, spices, fruity notes, lotus, gardenia, and jasmine.
+Base Notes: Mexican chocolate, patchouli, vanille, incense, amber, sandalwood, vetiver, and white musk",medium,evening,special,amber,floral,6a77740b21fc6555b5eab13c,
+Black Orchid Spray,BLOr_SP,spray,6,350,3.3000000000000003,2.7,0,168.658,true,"Top Notes: Black truffle, ylang-ylang, black currant, gardenia, jasmine, bergamot, mandarin orange, and Amalfi lemon.
+Heart/Middle Notes: Orchid, spices, fruity notes, lotus, gardenia, and jasmine.
+Base Notes: Mexican chocolate, patchouli, vanille, incense, amber, sandalwood, vetiver, and white musk",medium,evening,special,amber,floral,,{
+  material: new ObjectId('6a77740b21fc6555b5eab13c'),
+  percentage: 52,
+  _id: new ObjectId('6a78550adc763d4c040d94a3')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 45,
+  _id: new ObjectId('6a78550adc763d4c040d94a4')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd73'),
+  percentage: 1,
+  _id: new ObjectId('6a78550adc763d4c040d94a5')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd7a'),
+  percentage: 1,
+  _id: new ObjectId('6a78550adc763d4c040d94a6')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd82'),
+  percentage: 1,
+  _id: new ObjectId('6a78550adc763d4c040d94a7')
+}
+Black Orchid Spray,BLOr_SP,spray,15,800,8.25,6.75,0,249.14499999999998,true,"Top Notes: Black truffle, ylang-ylang, black currant, gardenia, jasmine, bergamot, mandarin orange, and Amalfi lemon.
+Heart/Middle Notes: Orchid, spices, fruity notes, lotus, gardenia, and jasmine.
+Base Notes: Mexican chocolate, patchouli, vanille, incense, amber, sandalwood, vetiver, and white musk",medium,evening,special,amber,floral,,{
+  material: new ObjectId('6a77740b21fc6555b5eab13c'),
+  percentage: 52,
+  _id: new ObjectId('6a78550adc763d4c040d94a3')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 45,
+  _id: new ObjectId('6a78550adc763d4c040d94a4')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd73'),
+  percentage: 1,
+  _id: new ObjectId('6a78550adc763d4c040d94a5')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd7a'),
+  percentage: 1,
+  _id: new ObjectId('6a78550adc763d4c040d94a6')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd82'),
+  percentage: 1,
+  _id: new ObjectId('6a78550adc763d4c040d94a7')
+}
+Black Orchid Spray,BLOr_SP,spray,30,1400,16.5,13.5,0,440.62333333333333,true,"Top Notes: Black truffle, ylang-ylang, black currant, gardenia, jasmine, bergamot, mandarin orange, and Amalfi lemon.
+Heart/Middle Notes: Orchid, spices, fruity notes, lotus, gardenia, and jasmine.
+Base Notes: Mexican chocolate, patchouli, vanille, incense, amber, sandalwood, vetiver, and white musk",medium,evening,special,amber,floral,,{
+  material: new ObjectId('6a77740b21fc6555b5eab13c'),
+  percentage: 52,
+  _id: new ObjectId('6a78550adc763d4c040d94a3')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 45,
+  _id: new ObjectId('6a78550adc763d4c040d94a4')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd73'),
+  percentage: 1,
+  _id: new ObjectId('6a78550adc763d4c040d94a5')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd7a'),
+  percentage: 1,
+  _id: new ObjectId('6a78550adc763d4c040d94a6')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd82'),
+  percentage: 1,
+  _id: new ObjectId('6a78550adc763d4c040d94a7')
+}
+Black Orchid Spray,BLOr_SP,spray,50,1650,27.5,22.5,0,622.15,true,"Top Notes: Black truffle, ylang-ylang, black currant, gardenia, jasmine, bergamot, mandarin orange, and Amalfi lemon.
+Heart/Middle Notes: Orchid, spices, fruity notes, lotus, gardenia, and jasmine.
+Base Notes: Mexican chocolate, patchouli, vanille, incense, amber, sandalwood, vetiver, and white musk",medium,evening,special,amber,floral,,{
+  material: new ObjectId('6a77740b21fc6555b5eab13c'),
+  percentage: 52,
+  _id: new ObjectId('6a78550adc763d4c040d94a3')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 45,
+  _id: new ObjectId('6a78550adc763d4c040d94a4')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd73'),
+  percentage: 1,
+  _id: new ObjectId('6a78550adc763d4c040d94a5')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd7a'),
+  percentage: 1,
+  _id: new ObjectId('6a78550adc763d4c040d94a6')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd82'),
+  percentage: 1,
+  _id: new ObjectId('6a78550adc763d4c040d94a7')
+}
+Black Orchid Spray,BLOr_SP,spray,100,2000,55,45,0,1059.3,true,"Top Notes: Black truffle, ylang-ylang, black currant, gardenia, jasmine, bergamot, mandarin orange, and Amalfi lemon.
+Heart/Middle Notes: Orchid, spices, fruity notes, lotus, gardenia, and jasmine.
+Base Notes: Mexican chocolate, patchouli, vanille, incense, amber, sandalwood, vetiver, and white musk",medium,evening,special,amber,floral,,{
+  material: new ObjectId('6a77740b21fc6555b5eab13c'),
+  percentage: 52,
+  _id: new ObjectId('6a78550adc763d4c040d94a3')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 45,
+  _id: new ObjectId('6a78550adc763d4c040d94a4')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd73'),
+  percentage: 1,
+  _id: new ObjectId('6a78550adc763d4c040d94a5')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd7a'),
+  percentage: 1,
+  _id: new ObjectId('6a78550adc763d4c040d94a6')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd82'),
+  percentage: 1,
+  _id: new ObjectId('6a78550adc763d4c040d94a7')
+}
+Blue berry,BluBer,roll-on,3.5,150,3.5,0,0,141.75,true,"A light, sweet fruity fragrance with juicy blueberry notes. Perfect for daytime freshness.",light,daytime,fruity sweet,6a3e242d2f2b2f71f964fd04,
+Blue berry,BluBer,roll-on,6,250,6,0,0,189,true,"A light, sweet fruity fragrance with juicy blueberry notes. Perfect for daytime freshness.",light,daytime,fruity sweet,6a3e242d2f2b2f71f964fd04,
+Blue berry,BluBer,roll-on,15,650,15,0,0,265,true,"A light, sweet fruity fragrance with juicy blueberry notes. Perfect for daytime freshness.",light,daytime,fruity sweet,6a3e242d2f2b2f71f964fd04,
+Blue berry,BluBer,roll-on,30,1250,30,0,0,445,true,"A light, sweet fruity fragrance with juicy blueberry notes. Perfect for daytime freshness.",light,daytime,fruity sweet,6a3e242d2f2b2f71f964fd04,
+Blue berry Spray,BluBer_SP,spray,6,300,2.7,3.3,0,160.462,true,"A light, sweet fruity fragrance with juicy blueberry notes. Perfect for daytime freshness.",light,daytime,fruity sweet,,{
+  material: new ObjectId('6a3e242d2f2b2f71f964fd04'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d19')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d1a')
+}
+Blue berry Spray,BluBer_SP,spray,15,700,6.75,8.25,0,228.655,true,"A light, sweet fruity fragrance with juicy blueberry notes. Perfect for daytime freshness.",light,daytime,fruity sweet,,{
+  material: new ObjectId('6a3e242d2f2b2f71f964fd04'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d19')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d1a')
+}
+Blue berry Spray,BluBer_SP,spray,30,1000,13.5,16.5,0,402.31,true,"A light, sweet fruity fragrance with juicy blueberry notes. Perfect for daytime freshness.",light,daytime,fruity sweet,,{
+  material: new ObjectId('6a3e242d2f2b2f71f964fd04'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d19')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d1a')
+}
+Blue berry Spray,BluBer_SP,spray,50,1300,22.5,27.5,0,553.85,true,"A light, sweet fruity fragrance with juicy blueberry notes. Perfect for daytime freshness.",light,daytime,fruity sweet,,{
+  material: new ObjectId('6a3e242d2f2b2f71f964fd04'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d19')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d1a')
+}
+Blue berry Spray,BluBer_SP,spray,100,1700,45,55,0,922.7,true,"A light, sweet fruity fragrance with juicy blueberry notes. Perfect for daytime freshness.",light,daytime,fruity sweet,,{
+  material: new ObjectId('6a3e242d2f2b2f71f964fd04'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d19')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d1a')
+}
+Blue de Chanel,BluCha,roll-on,3.5,1300,3.5,0,0,0,true,Fresh citrus with a woody base. Versatile for any occasion.,medium,all,citrus woody fresh,6a3e242e2f2b2f71f964fd19,
+Blue de Chanel,BluCha,roll-on,6,1650,6,0,0,0,true,Fresh citrus with a woody base. Versatile for any occasion.,medium,all,citrus woody fresh,6a3e242e2f2b2f71f964fd19,
+Blue de Chanel,BluCha,roll-on,15,180,15,0,0,0,true,Fresh citrus with a woody base. Versatile for any occasion.,medium,all,citrus woody fresh,6a3e242e2f2b2f71f964fd19,
+Blue de Chanel,BluCha,roll-on,30,280,30,0,0,0,true,Fresh citrus with a woody base. Versatile for any occasion.,medium,all,citrus woody fresh,6a3e242e2f2b2f71f964fd19,
+Blue de Chanel Spray,BluCha_SP,spray,6,330,2.7,3.3,0,0,true,Fresh citrus with a woody base. Versatile for any occasion.,medium,all,citrus woody fresh,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd19'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d3f')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d40')
+}
+Blue de Chanel Spray,BluCha_SP,spray,15,780,6.75,8.25,0,0,true,Fresh citrus with a woody base. Versatile for any occasion.,medium,all,citrus woody fresh,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd19'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d3f')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d40')
+}
+Blue de Chanel Spray,BluCha_SP,spray,30,330,13.5,16.5,0,0,true,Fresh citrus with a woody base. Versatile for any occasion.,medium,all,citrus woody fresh,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd19'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d3f')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d40')
+}
+Blue de Chanel Spray,BluCha_SP,spray,50,780,22.5,27.5,0,0,true,Fresh citrus with a woody base. Versatile for any occasion.,medium,all,citrus woody fresh,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd19'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d3f')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d40')
+}
+Blue de Chanel Spray,BluCha_SP,spray,100,1050,45,55,0,0,true,Fresh citrus with a woody base. Versatile for any occasion.,medium,all,citrus woody fresh,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd19'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d3f')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d40')
+}
+Burberry Her,BurH,roll-on,3.5,180,3.5,0,0,0,true,Medium floral fruity fragrance. A modern daytime classic.,medium,daytime,floral fruity,6a3e24302f2b2f71f964fd4c,
+Burberry Her,BurH,roll-on,6,280,6,0,0,0,true,Medium floral fruity fragrance. A modern daytime classic.,medium,daytime,floral fruity,6a3e24302f2b2f71f964fd4c,
+Burberry Her,BurH,roll-on,15,750,15,0,0,0,true,Medium floral fruity fragrance. A modern daytime classic.,medium,daytime,floral fruity,6a3e24302f2b2f71f964fd4c,
+Burberry Her,BurH,roll-on,30,1500,30,0,0,0,true,Medium floral fruity fragrance. A modern daytime classic.,medium,daytime,floral fruity,6a3e24302f2b2f71f964fd4c,
+Burberry Her Spray,BurH_SP,spray,6,330,2.7,3.3,0,0,true,Medium floral fruity fragrance. A modern daytime classic.,medium,daytime,floral fruity,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd4c'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091f3668fc77ab691dba')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091f3668fc77ab691dbb')
+}
+Burberry Her Spray,BurH_SP,spray,15,780,6.75,8.25,0,0,true,Medium floral fruity fragrance. A modern daytime classic.,medium,daytime,floral fruity,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd4c'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091f3668fc77ab691dba')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091f3668fc77ab691dbb')
+}
+Burberry Her Spray,BurH_SP,spray,30,1050,13.5,16.5,0,0,true,Medium floral fruity fragrance. A modern daytime classic.,medium,daytime,floral fruity,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd4c'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091f3668fc77ab691dba')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091f3668fc77ab691dbb')
+}
+Burberry Her Spray,BurH_SP,spray,50,1300,22.5,27.5,0,0,true,Medium floral fruity fragrance. A modern daytime classic.,medium,daytime,floral fruity,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd4c'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091f3668fc77ab691dba')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091f3668fc77ab691dbb')
+}
+Burberry Her Spray,BurH_SP,spray,100,1650,45,55,0,0,true,Medium floral fruity fragrance. A modern daytime classic.,medium,daytime,floral fruity,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd4c'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091f3668fc77ab691dba')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091f3668fc77ab691dbb')
+}
+CK-1,CK1,roll-on,3.5,150,3.5,0,0,127.75,true,Unisex fresh citrus fragrance with green notes. A timeless daytime scent.,light,daytime,citrus fresh green,6a3e242d2f2b2f71f964fd0c,
+CK-1,CK1,roll-on,6,250,6,0,0,165,true,Unisex fresh citrus fragrance with green notes. A timeless daytime scent.,light,daytime,citrus fresh green,6a3e242d2f2b2f71f964fd0c,
+CK-1,CK1,roll-on,15,650,15,0,0,205,true,Unisex fresh citrus fragrance with green notes. A timeless daytime scent.,light,daytime,citrus fresh green,6a3e242d2f2b2f71f964fd0c,
+CK-1,CK1,roll-on,30,1250,30,0,0,325,true,Unisex fresh citrus fragrance with green notes. A timeless daytime scent.,light,daytime,citrus fresh green,6a3e242d2f2b2f71f964fd0c,
+CK-1 Spray,CK1_SP,spray,6,300,2.7,3.3,0,149.662,true,Unisex fresh citrus fragrance with green notes. A timeless daytime scent.,light,daytime,citrus fresh green,,{
+  material: new ObjectId('6a3e242d2f2b2f71f964fd0c'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d29')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d2a')
+}
+CK-1 Spray,CK1_SP,spray,15,700,6.75,8.25,0,201.655,true,Unisex fresh citrus fragrance with green notes. A timeless daytime scent.,light,daytime,citrus fresh green,,{
+  material: new ObjectId('6a3e242d2f2b2f71f964fd0c'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d29')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d2a')
+}
+CK-1 Spray,CK1_SP,spray,30,1000,13.5,16.5,0,348.31,true,Unisex fresh citrus fragrance with green notes. A timeless daytime scent.,light,daytime,citrus fresh green,,{
+  material: new ObjectId('6a3e242d2f2b2f71f964fd0c'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d29')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d2a')
+}
+CK-1 Spray,CK1_SP,spray,50,1300,22.5,27.5,0,463.85,true,Unisex fresh citrus fragrance with green notes. A timeless daytime scent.,light,daytime,citrus fresh green,,{
+  material: new ObjectId('6a3e242d2f2b2f71f964fd0c'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d29')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d2a')
+}
+CK-1 Spray,CK1_SP,spray,100,1700,45,55,0,742.7,true,Unisex fresh citrus fragrance with green notes. A timeless daytime scent.,light,daytime,citrus fresh green,,{
+  material: new ObjectId('6a3e242d2f2b2f71f964fd0c'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d29')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d2a')
+}
+Chanel chance,ChaCha,roll-on,3.5,180,3.5,0,0,0,true,Fresh floral fragrance for any occasion. Light and elegant.,medium,all,floral fresh,6a3e242f2f2b2f71f964fd43,
+Chanel chance,ChaCha,roll-on,6,280,6,0,0,0,true,Fresh floral fragrance for any occasion. Light and elegant.,medium,all,floral fresh,6a3e242f2f2b2f71f964fd43,
+Chanel chance,ChaCha,roll-on,15,750,15,0,0,0,true,Fresh floral fragrance for any occasion. Light and elegant.,medium,all,floral fresh,6a3e242f2f2b2f71f964fd43,
+Chanel chance,ChaCha,roll-on,30,1500,30,0,0,0,true,Fresh floral fragrance for any occasion. Light and elegant.,medium,all,floral fresh,6a3e242f2f2b2f71f964fd43,
+Chanel chance Spray,ChaCha_SP,spray,6,330,2.7,3.3,0,0,true,Fresh floral fragrance for any occasion. Light and elegant.,medium,all,floral fresh,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd43'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091e3668fc77ab691dad')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091e3668fc77ab691dae')
+}
+Chanel chance Spray,ChaCha_SP,spray,15,780,6.75,8.25,0,0,true,Fresh floral fragrance for any occasion. Light and elegant.,medium,all,floral fresh,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd43'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091e3668fc77ab691dad')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091e3668fc77ab691dae')
+}
+Chanel chance Spray,ChaCha_SP,spray,30,1050,13.5,16.5,0,0,true,Fresh floral fragrance for any occasion. Light and elegant.,medium,all,floral fresh,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd43'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091e3668fc77ab691dad')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091e3668fc77ab691dae')
+}
+Chanel chance Spray,ChaCha_SP,spray,50,1300,22.5,27.5,0,0,true,Fresh floral fragrance for any occasion. Light and elegant.,medium,all,floral fresh,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd43'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091e3668fc77ab691dad')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091e3668fc77ab691dae')
+}
+Chanel chance Spray,ChaCha_SP,spray,100,1650,45,55,0,0,true,Fresh floral fragrance for any occasion. Light and elegant.,medium,all,floral fresh,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd43'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091e3668fc77ab691dad')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091e3668fc77ab691dae')
+}
+Chocolate,CoCo,roll-on,3.5,150,3.5,0,0,0,true,Light gourmand sweet fragrance. Delicious and comforting.,light,daytime,gourmand sweet,6a3e242f2f2b2f71f964fd4a,
+Chocolate,CoCo,roll-on,6,250,6,0,0,0,true,Light gourmand sweet fragrance. Delicious and comforting.,light,daytime,gourmand sweet,6a3e242f2f2b2f71f964fd4a,
+Chocolate,CoCo,roll-on,15,650,15,0,0,0,true,Light gourmand sweet fragrance. Delicious and comforting.,light,daytime,gourmand sweet,6a3e242f2f2b2f71f964fd4a,
+Chocolate,CoCo,roll-on,30,1250,30,0,0,0,true,Light gourmand sweet fragrance. Delicious and comforting.,light,daytime,gourmand sweet,6a3e242f2f2b2f71f964fd4a,
+Chocolate Spray,CoCo_SP,spray,6,300,2.7,3.3,0,0,true,Light gourmand sweet fragrance. Delicious and comforting.,light,daytime,gourmand sweet,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd4a'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091f3668fc77ab691db4')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091f3668fc77ab691db5')
+}
+Chocolate Spray,CoCo_SP,spray,15,700,6.75,8.25,0,0,true,Light gourmand sweet fragrance. Delicious and comforting.,light,daytime,gourmand sweet,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd4a'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091f3668fc77ab691db4')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091f3668fc77ab691db5')
+}
+Chocolate Spray,CoCo_SP,spray,30,1000,13.5,16.5,0,0,true,Light gourmand sweet fragrance. Delicious and comforting.,light,daytime,gourmand sweet,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd4a'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091f3668fc77ab691db4')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091f3668fc77ab691db5')
+}
+Chocolate Spray,CoCo_SP,spray,50,1300,22.5,27.5,0,0,true,Light gourmand sweet fragrance. Delicious and comforting.,light,daytime,gourmand sweet,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd4a'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091f3668fc77ab691db4')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091f3668fc77ab691db5')
+}
+Chocolate Spray,CoCo_SP,spray,100,1700,45,55,0,0,true,Light gourmand sweet fragrance. Delicious and comforting.,light,daytime,gourmand sweet,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd4a'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091f3668fc77ab691db4')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091f3668fc77ab691db5')
+}
+Creed Aventus,CreAve,roll-on,3.5,150,3.5,0,0,0,true,Strong fruity woody smoky fragrance. A statement evening scent.,strong,evening,fruity woody smoky,6a3e24302f2b2f71f964fd60,
+Creed Aventus,CreAve,roll-on,6,250,6,0,0,0,true,Strong fruity woody smoky fragrance. A statement evening scent.,strong,evening,fruity woody smoky,6a3e24302f2b2f71f964fd60,
+Creed Aventus,CreAve,roll-on,15,650,15,0,0,0,true,Strong fruity woody smoky fragrance. A statement evening scent.,strong,evening,fruity woody smoky,6a3e24302f2b2f71f964fd60,
+Creed Aventus,CreAve,roll-on,30,1250,30,0,0,0,true,Strong fruity woody smoky fragrance. A statement evening scent.,strong,evening,fruity woody smoky,6a3e24302f2b2f71f964fd60,
+Creed Aventus Spray,CreAve_SP,spray,6,300,2.7,3.3,0,0,true,Strong fruity woody smoky fragrance. A statement evening scent.,strong,evening,fruity woody smoky,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd60'),
+  percentage: 45,
+  _id: new ObjectId('6a4c09203668fc77ab691dee')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c09203668fc77ab691def')
+}
+Creed Aventus Spray,CreAve_SP,spray,15,700,6.75,8.25,0,0,true,Strong fruity woody smoky fragrance. A statement evening scent.,strong,evening,fruity woody smoky,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd60'),
+  percentage: 45,
+  _id: new ObjectId('6a4c09203668fc77ab691dee')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c09203668fc77ab691def')
+}
+Creed Aventus Spray,CreAve_SP,spray,30,1000,13.5,16.5,0,0,true,Strong fruity woody smoky fragrance. A statement evening scent.,strong,evening,fruity woody smoky,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd60'),
+  percentage: 45,
+  _id: new ObjectId('6a4c09203668fc77ab691dee')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c09203668fc77ab691def')
+}
+Creed Aventus Spray,CreAve_SP,spray,50,1300,22.5,27.5,0,0,true,Strong fruity woody smoky fragrance. A statement evening scent.,strong,evening,fruity woody smoky,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd60'),
+  percentage: 45,
+  _id: new ObjectId('6a4c09203668fc77ab691dee')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c09203668fc77ab691def')
+}
+Creed Aventus Spray,CreAve_SP,spray,100,1700,45,55,0,0,true,Strong fruity woody smoky fragrance. A statement evening scent.,strong,evening,fruity woody smoky,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd60'),
+  percentage: 45,
+  _id: new ObjectId('6a4c09203668fc77ab691dee')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c09203668fc77ab691def')
+}
+Creed absolute,CreAbs,roll-on,3.5,230,3.5,0,0,0,true,Strong woody floral fragrance. For special occasions.,strong,special,woody floral,6a3e24312f2b2f71f964fd67,
+Creed absolute,CreAbs,roll-on,6,400,6,0,0,0,true,Strong woody floral fragrance. For special occasions.,strong,special,woody floral,6a3e24312f2b2f71f964fd67,
+Creed absolute,CreAbs,roll-on,15,950,15,0,0,0,true,Strong woody floral fragrance. For special occasions.,strong,special,woody floral,6a3e24312f2b2f71f964fd67,
+Creed absolute,CreAbs,roll-on,30,1950,30,0,0,0,true,Strong woody floral fragrance. For special occasions.,strong,special,woody floral,6a3e24312f2b2f71f964fd67,
+Creed absolute Spray,CreAbs_SP,spray,6,450,2.7,3.3,0,0,true,Strong woody floral fragrance. For special occasions.,strong,special,woody floral,,{
+  material: new ObjectId('6a3e24312f2b2f71f964fd67'),
+  percentage: 45,
+  _id: new ObjectId('6a4c09203668fc77ab691dfd')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c09203668fc77ab691dfe')
+}
+Creed absolute Spray,CreAbs_SP,spray,15,1000,6.75,8.25,0,0,true,Strong woody floral fragrance. For special occasions.,strong,special,woody floral,,{
+  material: new ObjectId('6a3e24312f2b2f71f964fd67'),
+  percentage: 45,
+  _id: new ObjectId('6a4c09203668fc77ab691dfd')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c09203668fc77ab691dfe')
+}
+Creed absolute Spray,CreAbs_SP,spray,30,1800,13.5,16.5,0,0,true,Strong woody floral fragrance. For special occasions.,strong,special,woody floral,,{
+  material: new ObjectId('6a3e24312f2b2f71f964fd67'),
+  percentage: 45,
+  _id: new ObjectId('6a4c09203668fc77ab691dfd')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c09203668fc77ab691dfe')
+}
+Creed absolute Spray,CreAbs_SP,spray,50,2800,22.5,27.5,0,0,true,Strong woody floral fragrance. For special occasions.,strong,special,woody floral,,{
+  material: new ObjectId('6a3e24312f2b2f71f964fd67'),
+  percentage: 45,
+  _id: new ObjectId('6a4c09203668fc77ab691dfd')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c09203668fc77ab691dfe')
+}
+Creed absolute Spray,CreAbs_SP,spray,100,4000,45,55,0,0,true,Strong woody floral fragrance. For special occasions.,strong,special,woody floral,,{
+  material: new ObjectId('6a3e24312f2b2f71f964fd67'),
+  percentage: 45,
+  _id: new ObjectId('6a4c09203668fc77ab691dfd')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c09203668fc77ab691dfe')
+}
+Davidoff Cool Water,DavCoo,roll-on,3.5,150,3.5,0,0,0,true,"Fresh aquatic fragrance with a clean, refreshing scent. Ideal for daytime.",medium,daytime,aquatic fresh,6a3e242e2f2b2f71f964fd30,
+Davidoff Cool Water,DavCoo,roll-on,6,250,6,0,0,0,true,"Fresh aquatic fragrance with a clean, refreshing scent. Ideal for daytime.",medium,daytime,aquatic fresh,6a3e242e2f2b2f71f964fd30,
+Davidoff Cool Water,DavCoo,roll-on,15,650,15,0,0,0,true,"Fresh aquatic fragrance with a clean, refreshing scent. Ideal for daytime.",medium,daytime,aquatic fresh,6a3e242e2f2b2f71f964fd30,
+Davidoff Cool Water,DavCoo,roll-on,30,1250,30,0,0,0,true,"Fresh aquatic fragrance with a clean, refreshing scent. Ideal for daytime.",medium,daytime,aquatic fresh,6a3e242e2f2b2f71f964fd30,
+Davidoff Cool Water Spray,DavCoo_SP,spray,6,300,2.7,3.3,0,0,true,"Fresh aquatic fragrance with a clean, refreshing scent. Ideal for daytime.",medium,daytime,aquatic fresh,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd30'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091d3668fc77ab691d76')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091d3668fc77ab691d77')
+}
+Davidoff Cool Water Spray,DavCoo_SP,spray,15,700,6.75,8.25,0,0,true,"Fresh aquatic fragrance with a clean, refreshing scent. Ideal for daytime.",medium,daytime,aquatic fresh,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd30'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091d3668fc77ab691d76')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091d3668fc77ab691d77')
+}
+Davidoff Cool Water Spray,DavCoo_SP,spray,30,1000,13.5,16.5,0,0,true,"Fresh aquatic fragrance with a clean, refreshing scent. Ideal for daytime.",medium,daytime,aquatic fresh,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd30'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091d3668fc77ab691d76')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091d3668fc77ab691d77')
+}
+Davidoff Cool Water Spray,DavCoo_SP,spray,50,1300,22.5,27.5,0,0,true,"Fresh aquatic fragrance with a clean, refreshing scent. Ideal for daytime.",medium,daytime,aquatic fresh,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd30'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091d3668fc77ab691d76')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091d3668fc77ab691d77')
+}
+Davidoff Cool Water Spray,DavCoo_SP,spray,100,1700,45,55,0,0,true,"Fresh aquatic fragrance with a clean, refreshing scent. Ideal for daytime.",medium,daytime,aquatic fresh,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd30'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091d3668fc77ab691d76')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091d3668fc77ab691d77')
+}
+Dior Sauvage,DioSau,roll-on,3.5,180,3.5,0,0,145.477969348659,true,Spicy fresh woody fragrance with strong character. Suitable for all occasions.,strong,all,spicy fresh woody,6a3e242e2f2b2f71f964fd21,
+Dior Sauvage,DioSau,roll-on,6,300,6,0,0,195.39080459770116,true,Spicy fresh woody fragrance with strong character. Suitable for all occasions.,strong,all,spicy fresh woody,6a3e242e2f2b2f71f964fd21,
+Dior Sauvage,DioSau,roll-on,15,750,15,0,0,280.97701149425285,true,Spicy fresh woody fragrance with strong character. Suitable for all occasions.,strong,all,spicy fresh woody,6a3e242e2f2b2f71f964fd21,
+Dior Sauvage,DioSau,roll-on,30,1500,30,0,0,476.9540229885057,true,Spicy fresh woody fragrance with strong character. Suitable for all occasions.,strong,all,spicy fresh woody,6a3e242e2f2b2f71f964fd21,
+Dior Sauvage Spray,DioSau_SP,spray,6,330,2.7,3.3,0,163.3378620689655,true,Spicy fresh woody fragrance with strong character. Suitable for all occasions.,strong,all,spicy fresh woody,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd21'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091d3668fc77ab691d53')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091d3668fc77ab691d54')
+}
+Dior Sauvage Spray,DioSau_SP,spray,15,800,6.75,8.25,0,235.8446551724138,true,Spicy fresh woody fragrance with strong character. Suitable for all occasions.,strong,all,spicy fresh woody,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd21'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091d3668fc77ab691d53')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091d3668fc77ab691d54')
+}
+Dior Sauvage Spray,DioSau_SP,spray,30,1100,13.5,16.5,0,416.6893103448276,true,Spicy fresh woody fragrance with strong character. Suitable for all occasions.,strong,all,spicy fresh woody,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd21'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091d3668fc77ab691d53')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091d3668fc77ab691d54')
+}
+Dior Sauvage Spray,DioSau_SP,spray,50,1400,22.5,27.5,0,577.8155172413793,true,Spicy fresh woody fragrance with strong character. Suitable for all occasions.,strong,all,spicy fresh woody,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd21'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091d3668fc77ab691d53')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091d3668fc77ab691d54')
+}
+Dior Sauvage Spray,DioSau_SP,spray,100,1800,45,55,0,970.6310344827587,true,Spicy fresh woody fragrance with strong character. Suitable for all occasions.,strong,all,spicy fresh woody,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd21'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091d3668fc77ab691d53')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091d3668fc77ab691d54')
+}
+Diptyque tam dao,DipTam,roll-on,3.5,200,3.5,0,0,0,true,Medium woody spicy fragrance. Calming and elegant.,medium,evening,woody spicy,6a3e24302f2b2f71f964fd5c,
+Diptyque tam dao,DipTam,roll-on,6,300,6,0,0,0,true,Medium woody spicy fragrance. Calming and elegant.,medium,evening,woody spicy,6a3e24302f2b2f71f964fd5c,
+Diptyque tam dao,DipTam,roll-on,15,800,15,0,0,0,true,Medium woody spicy fragrance. Calming and elegant.,medium,evening,woody spicy,6a3e24302f2b2f71f964fd5c,
+Diptyque tam dao,DipTam,roll-on,30,1450,30,0,0,0,true,Medium woody spicy fragrance. Calming and elegant.,medium,evening,woody spicy,6a3e24302f2b2f71f964fd5c,
+Diptyque tam dao Spray,DipTam_SP,spray,6,350,2.7,3.3,0,0,true,Medium woody spicy fragrance. Calming and elegant.,medium,evening,woody spicy,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd5c'),
+  percentage: 45,
+  _id: new ObjectId('6a4c09203668fc77ab691de6')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c09203668fc77ab691de7')
+}
+Diptyque tam dao Spray,DipTam_SP,spray,15,850,6.75,8.25,0,0,true,Medium woody spicy fragrance. Calming and elegant.,medium,evening,woody spicy,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd5c'),
+  percentage: 45,
+  _id: new ObjectId('6a4c09203668fc77ab691de6')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c09203668fc77ab691de7')
+}
+Diptyque tam dao Spray,DipTam_SP,spray,30,1500,13.5,16.5,0,0,true,Medium woody spicy fragrance. Calming and elegant.,medium,evening,woody spicy,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd5c'),
+  percentage: 45,
+  _id: new ObjectId('6a4c09203668fc77ab691de6')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c09203668fc77ab691de7')
+}
+Diptyque tam dao Spray,DipTam_SP,spray,50,1900,22.5,27.5,0,0,true,Medium woody spicy fragrance. Calming and elegant.,medium,evening,woody spicy,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd5c'),
+  percentage: 45,
+  _id: new ObjectId('6a4c09203668fc77ab691de6')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c09203668fc77ab691de7')
+}
+Diptyque tam dao Spray,DipTam_SP,spray,100,2500,45,55,0,0,true,Medium woody spicy fragrance. Calming and elegant.,medium,evening,woody spicy,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd5c'),
+  percentage: 45,
+  _id: new ObjectId('6a4c09203668fc77ab691de6')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c09203668fc77ab691de7')
+}
+Dunhil desire,DunDes,roll-on,3.5,150,3.5,0,0,127.75,true,"A warm, masculine fragrance with amber and woody notes. Perfect for evening occasions.",medium,evening,amber woody,6a3e242d2f2b2f71f964fcfd,
+Dunhil desire,DunDes,roll-on,6,250,6,0,0,165,true,"A warm, masculine fragrance with amber and woody notes. Perfect for evening occasions.",medium,evening,amber woody,6a3e242d2f2b2f71f964fcfd,
+Dunhil desire,DunDes,roll-on,15,650,15,0,0,205,true,"A warm, masculine fragrance with amber and woody notes. Perfect for evening occasions.",medium,evening,amber woody,6a3e242d2f2b2f71f964fcfd,
+Dunhil desire,DunDes,roll-on,30,1250,30,0,0,325,true,"A warm, masculine fragrance with amber and woody notes. Perfect for evening occasions.",medium,evening,amber woody,6a3e242d2f2b2f71f964fcfd,
+Dunhil desire Spray,DunDes_SP,spray,6,300,2.7,3.3,0,149.662,true,"A warm, masculine fragrance with amber and woody notes. Perfect for evening occasions.",medium,evening,amber woody,,{
+  material: new ObjectId('6a3e242d2f2b2f71f964fcfd'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d0a')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d0b')
+}
+Dunhil desire Spray,DunDes_SP,spray,15,700,6.75,8.25,0,201.655,true,"A warm, masculine fragrance with amber and woody notes. Perfect for evening occasions.",medium,evening,amber woody,,{
+  material: new ObjectId('6a3e242d2f2b2f71f964fcfd'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d0a')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d0b')
+}
+Dunhil desire Spray,DunDes_SP,spray,30,1000,13.5,16.5,0,348.31,true,"A warm, masculine fragrance with amber and woody notes. Perfect for evening occasions.",medium,evening,amber woody,,{
+  material: new ObjectId('6a3e242d2f2b2f71f964fcfd'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d0a')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d0b')
+}
+Dunhil desire Spray,DunDes_SP,spray,50,1300,22.5,27.5,0,463.85,true,"A warm, masculine fragrance with amber and woody notes. Perfect for evening occasions.",medium,evening,amber woody,,{
+  material: new ObjectId('6a3e242d2f2b2f71f964fcfd'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d0a')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d0b')
+}
+Dunhil desire Spray,DunDes_SP,spray,100,1700,45,55,0,742.7,true,"A warm, masculine fragrance with amber and woody notes. Perfect for evening occasions.",medium,evening,amber woody,,{
+  material: new ObjectId('6a3e242d2f2b2f71f964fcfd'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d0a')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d0b')
+}
+Dunhill Icon,DunIco_2,roll-on,3.5,0,3.5,0,0,0,true,,medium,all,,6a3e24312f2b2f71f964fd6f,
+Dunhill Icon,DunIco_2,roll-on,6,0,6,0,0,0,true,,medium,all,,6a3e24312f2b2f71f964fd6f,
+Dunhill Icon,DunIco_2,roll-on,15,0,15,0,0,0,true,,medium,all,,6a3e24312f2b2f71f964fd6f,
+Dunhill Icon,DunIco_2,roll-on,30,0,30,0,0,0,true,,medium,all,,6a3e24312f2b2f71f964fd6f,
+Dunhill Icon,DunIco,roll-on,3.5,200,3.5,0,0,0,true,Medium woody spicy fragrance. Sophisticated evening wear.,medium,evening,woody spicy,6a3e24302f2b2f71f964fd58,
+Dunhill Icon,DunIco,roll-on,6,300,6,0,0,0,true,Medium woody spicy fragrance. Sophisticated evening wear.,medium,evening,woody spicy,6a3e24302f2b2f71f964fd58,
+Dunhill Icon,DunIco,roll-on,15,750,15,0,0,0,true,Medium woody spicy fragrance. Sophisticated evening wear.,medium,evening,woody spicy,6a3e24302f2b2f71f964fd58,
+Dunhill Icon,DunIco,roll-on,30,1450,30,0,0,0,true,Medium woody spicy fragrance. Sophisticated evening wear.,medium,evening,woody spicy,6a3e24302f2b2f71f964fd58,
+Dunhill Icon Spray,DunIco_2_SP,spray,6,0,2.7,3.3,0,0,true,,medium,all,,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd58'),
+  percentage: 45,
+  _id: new ObjectId('6a4c09203668fc77ab691e1a')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c09203668fc77ab691e1b')
+}
+Dunhill Icon Spray,DunIco_2_SP,spray,15,0,6.75,8.25,0,0,true,,medium,all,,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd58'),
+  percentage: 45,
+  _id: new ObjectId('6a4c09203668fc77ab691e1a')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c09203668fc77ab691e1b')
+}
+Dunhill Icon Spray,DunIco_2_SP,spray,30,0,13.5,16.5,0,0,true,,medium,all,,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd58'),
+  percentage: 45,
+  _id: new ObjectId('6a4c09203668fc77ab691e1a')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c09203668fc77ab691e1b')
+}
+Dunhill Icon Spray,DunIco_2_SP,spray,50,0,22.5,27.5,0,0,true,,medium,all,,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd58'),
+  percentage: 45,
+  _id: new ObjectId('6a4c09203668fc77ab691e1a')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c09203668fc77ab691e1b')
+}
+Dunhill Icon Spray,DunIco_2_SP,spray,100,0,45,55,0,0,true,,medium,all,,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd58'),
+  percentage: 45,
+  _id: new ObjectId('6a4c09203668fc77ab691e1a')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c09203668fc77ab691e1b')
+}
+Dunhill Icon Spray,DunIco_SP,spray,6,350,2.7,3.3,0,0,true,Medium woody spicy fragrance. Sophisticated evening wear.,medium,evening,woody spicy,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd58'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091f3668fc77ab691dde')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091f3668fc77ab691ddf')
+}
+Dunhill Icon Spray,DunIco_SP,spray,15,850,6.75,8.25,0,0,true,Medium woody spicy fragrance. Sophisticated evening wear.,medium,evening,woody spicy,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd58'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091f3668fc77ab691dde')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091f3668fc77ab691ddf')
+}
+Dunhill Icon Spray,DunIco_SP,spray,30,1550,13.5,16.5,0,0,true,Medium woody spicy fragrance. Sophisticated evening wear.,medium,evening,woody spicy,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd58'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091f3668fc77ab691dde')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091f3668fc77ab691ddf')
+}
+Dunhill Icon Spray,DunIco_SP,spray,50,1850,22.5,27.5,0,0,true,Medium woody spicy fragrance. Sophisticated evening wear.,medium,evening,woody spicy,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd58'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091f3668fc77ab691dde')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091f3668fc77ab691ddf')
+}
+Dunhill Icon Spray,DunIco_SP,spray,100,2200,45,55,0,0,true,Medium woody spicy fragrance. Sophisticated evening wear.,medium,evening,woody spicy,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd58'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091f3668fc77ab691dde')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091f3668fc77ab691ddf')
+}
+Fantasy,Fant,roll-on,3.5,150,3.5,0,0,127.75,true,Fruity floral fragrance with sweet undertones. Perfect for daytime elegance.,medium,daytime,fruity floral sweet,6a3e242e2f2b2f71f964fd16,
+Fantasy,Fant,roll-on,6,250,6,0,0,165,true,Fruity floral fragrance with sweet undertones. Perfect for daytime elegance.,medium,daytime,fruity floral sweet,6a3e242e2f2b2f71f964fd16,
+Fantasy,Fant,roll-on,15,650,15,0,0,205,true,Fruity floral fragrance with sweet undertones. Perfect for daytime elegance.,medium,daytime,fruity floral sweet,6a3e242e2f2b2f71f964fd16,
+Fantasy,Fant,roll-on,30,1250,30,0,0,325,true,Fruity floral fragrance with sweet undertones. Perfect for daytime elegance.,medium,daytime,fruity floral sweet,6a3e242e2f2b2f71f964fd16,
+Fantasy,Fant_2,roll-on,3.5,0,3.5,0,0,0,true,,medium,all,,6a3e24312f2b2f71f964fd6d,
+Fantasy,Fant_2,roll-on,6,0,6,0,0,0,true,,medium,all,,6a3e24312f2b2f71f964fd6d,
+Fantasy,Fant_2,roll-on,15,0,15,0,0,0,true,,medium,all,,6a3e24312f2b2f71f964fd6d,
+Fantasy,Fant_2,roll-on,30,0,30,0,0,0,true,,medium,all,,6a3e24312f2b2f71f964fd6d,
+Fantasy Spray,Fant_SP,spray,6,300,2.7,3.3,0,182.062,true,Fruity floral fragrance with sweet undertones. Perfect for daytime elegance.,medium,daytime,fruity floral sweet,,{
+  material: new ObjectId('6a3e24312f2b2f71f964fd6d'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091b3668fc77ab691af1')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091b3668fc77ab691af2')
+}
+Fantasy Spray,Fant_SP,spray,15,700,6.75,8.25,0,282.655,true,Fruity floral fragrance with sweet undertones. Perfect for daytime elegance.,medium,daytime,fruity floral sweet,,{
+  material: new ObjectId('6a3e24312f2b2f71f964fd6d'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091b3668fc77ab691af1')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091b3668fc77ab691af2')
+}
+Fantasy Spray,Fant_SP,spray,30,1000,13.5,16.5,0,510.31,true,Fruity floral fragrance with sweet undertones. Perfect for daytime elegance.,medium,daytime,fruity floral sweet,,{
+  material: new ObjectId('6a3e24312f2b2f71f964fd6d'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091b3668fc77ab691af1')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091b3668fc77ab691af2')
+}
+Fantasy Spray,Fant_SP,spray,50,1300,22.5,27.5,0,733.85,true,Fruity floral fragrance with sweet undertones. Perfect for daytime elegance.,medium,daytime,fruity floral sweet,,{
+  material: new ObjectId('6a3e24312f2b2f71f964fd6d'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091b3668fc77ab691af1')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091b3668fc77ab691af2')
+}
+Fantasy Spray,Fant_SP,spray,100,1700,45,55,0,1282.7,true,Fruity floral fragrance with sweet undertones. Perfect for daytime elegance.,medium,daytime,fruity floral sweet,,{
+  material: new ObjectId('6a3e24312f2b2f71f964fd6d'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091b3668fc77ab691af1')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091b3668fc77ab691af2')
+}
+Fantasy Spray,Fant_2_SP,spray,6,0,2.7,3.3,0,0,true,,medium,all,,,{
+  material: new ObjectId('6a3e24312f2b2f71f964fd6d'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091b3668fc77ab691ae4')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091b3668fc77ab691ae5')
+}
+Fantasy Spray,Fant_2_SP,spray,15,0,6.75,8.25,0,0,true,,medium,all,,,{
+  material: new ObjectId('6a3e24312f2b2f71f964fd6d'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091b3668fc77ab691ae4')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091b3668fc77ab691ae5')
+}
+Fantasy Spray,Fant_2_SP,spray,30,0,13.5,16.5,0,0,true,,medium,all,,,{
+  material: new ObjectId('6a3e24312f2b2f71f964fd6d'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091b3668fc77ab691ae4')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091b3668fc77ab691ae5')
+}
+Fantasy Spray,Fant_2_SP,spray,50,0,22.5,27.5,0,0,true,,medium,all,,,{
+  material: new ObjectId('6a3e24312f2b2f71f964fd6d'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091b3668fc77ab691ae4')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091b3668fc77ab691ae5')
+}
+Fantasy Spray,Fant_2_SP,spray,100,0,45,55,0,0,true,,medium,all,,,{
+  material: new ObjectId('6a3e24312f2b2f71f964fd6d'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091b3668fc77ab691ae4')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091b3668fc77ab691ae5')
+}
+Fogg,Fgg,roll-on,3.5,150,3.5,0,0,0,true,Fresh aquatic fragrance. Clean and refreshing for daytime.,medium,daytime,aquatic fresh,6a3e24302f2b2f71f964fd56,
+Fogg,Fgg,roll-on,6,250,6,0,0,0,true,Fresh aquatic fragrance. Clean and refreshing for daytime.,medium,daytime,aquatic fresh,6a3e24302f2b2f71f964fd56,
+Fogg,Fgg,roll-on,15,650,15,0,0,0,true,Fresh aquatic fragrance. Clean and refreshing for daytime.,medium,daytime,aquatic fresh,6a3e24302f2b2f71f964fd56,
+Fogg,Fgg,roll-on,30,1250,30,0,0,0,true,Fresh aquatic fragrance. Clean and refreshing for daytime.,medium,daytime,aquatic fresh,6a3e24302f2b2f71f964fd56,
+Fogg Spray,Fgg_SP,spray,6,300,2.7,3.3,0,0,true,Fresh aquatic fragrance. Clean and refreshing for daytime.,medium,daytime,aquatic fresh,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd56'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091f3668fc77ab691dd8')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091f3668fc77ab691dd9')
+}
+Fogg Spray,Fgg_SP,spray,15,700,6.75,8.25,0,0,true,Fresh aquatic fragrance. Clean and refreshing for daytime.,medium,daytime,aquatic fresh,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd56'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091f3668fc77ab691dd8')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091f3668fc77ab691dd9')
+}
+Fogg Spray,Fgg_SP,spray,30,1000,13.5,16.5,0,0,true,Fresh aquatic fragrance. Clean and refreshing for daytime.,medium,daytime,aquatic fresh,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd56'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091f3668fc77ab691dd8')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091f3668fc77ab691dd9')
+}
+Fogg Spray,Fgg_SP,spray,50,1300,22.5,27.5,0,0,true,Fresh aquatic fragrance. Clean and refreshing for daytime.,medium,daytime,aquatic fresh,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd56'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091f3668fc77ab691dd8')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091f3668fc77ab691dd9')
+}
+Fogg Spray,Fgg_SP,spray,100,1700,45,55,0,0,true,Fresh aquatic fragrance. Clean and refreshing for daytime.,medium,daytime,aquatic fresh,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd56'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091f3668fc77ab691dd8')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091f3668fc77ab691dd9')
+}
+Good Girl,GooGir,roll-on,3.5,180,3.5,0,0,0,true,Floral gourmand sweet fragrance with strong presence. Ideal for evening glamour.,strong,evening,floral gourmand sweet,6a3e242e2f2b2f71f964fd29,
+Good Girl,GooGir,roll-on,6,280,6,0,0,0,true,Floral gourmand sweet fragrance with strong presence. Ideal for evening glamour.,strong,evening,floral gourmand sweet,6a3e242e2f2b2f71f964fd29,
+Good Girl,GooGir,roll-on,15,750,15,0,0,0,true,Floral gourmand sweet fragrance with strong presence. Ideal for evening glamour.,strong,evening,floral gourmand sweet,6a3e242e2f2b2f71f964fd29,
+Good Girl,GooGir,roll-on,30,1500,30,0,0,0,true,Floral gourmand sweet fragrance with strong presence. Ideal for evening glamour.,strong,evening,floral gourmand sweet,6a3e242e2f2b2f71f964fd29,
+Good Girl Spray,GooGir_SP,spray,6,330,2.7,3.3,0,0,true,Floral gourmand sweet fragrance with strong presence. Ideal for evening glamour.,strong,evening,floral gourmand sweet,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd29'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091d3668fc77ab691d67')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091d3668fc77ab691d68')
+}
+Good Girl Spray,GooGir_SP,spray,15,780,6.75,8.25,0,0,true,Floral gourmand sweet fragrance with strong presence. Ideal for evening glamour.,strong,evening,floral gourmand sweet,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd29'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091d3668fc77ab691d67')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091d3668fc77ab691d68')
+}
+Good Girl Spray,GooGir_SP,spray,30,1050,13.5,16.5,0,0,true,Floral gourmand sweet fragrance with strong presence. Ideal for evening glamour.,strong,evening,floral gourmand sweet,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd29'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091d3668fc77ab691d67')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091d3668fc77ab691d68')
+}
+Good Girl Spray,GooGir_SP,spray,50,1300,22.5,27.5,0,0,true,Floral gourmand sweet fragrance with strong presence. Ideal for evening glamour.,strong,evening,floral gourmand sweet,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd29'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091d3668fc77ab691d67')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091d3668fc77ab691d68')
+}
+Good Girl Spray,GooGir_SP,spray,100,1650,45,55,0,0,true,Floral gourmand sweet fragrance with strong presence. Ideal for evening glamour.,strong,evening,floral gourmand sweet,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd29'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091d3668fc77ab691d67')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091d3668fc77ab691d68')
+}
+Gucci Flora,GucFla,roll-on,3.5,180,3.5,0,0,0,true,Medium floral fresh fragrance. A daytime floral classic.,medium,daytime,floral fresh,6a3e24312f2b2f71f964fd63,
+Gucci Flora,GucFla,roll-on,6,270,6,0,0,0,true,Medium floral fresh fragrance. A daytime floral classic.,medium,daytime,floral fresh,6a3e24312f2b2f71f964fd63,
+Gucci Flora,GucFla,roll-on,15,700,15,0,0,0,true,Medium floral fresh fragrance. A daytime floral classic.,medium,daytime,floral fresh,6a3e24312f2b2f71f964fd63,
+Gucci Flora,GucFla,roll-on,30,1000,30,0,0,0,true,Medium floral fresh fragrance. A daytime floral classic.,medium,daytime,floral fresh,6a3e24312f2b2f71f964fd63,
+Gucci Flora Spray,GucFla_SP,spray,6,330,2.7,3.3,0,0,true,Medium floral fresh fragrance. A daytime floral classic.,medium,daytime,floral fresh,,{
+  material: new ObjectId('6a3e24312f2b2f71f964fd63'),
+  percentage: 45,
+  _id: new ObjectId('6a4c09203668fc77ab691df5')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c09203668fc77ab691df6')
+}
+Gucci Flora Spray,GucFla_SP,spray,15,800,6.75,8.25,0,0,true,Medium floral fresh fragrance. A daytime floral classic.,medium,daytime,floral fresh,,{
+  material: new ObjectId('6a3e24312f2b2f71f964fd63'),
+  percentage: 45,
+  _id: new ObjectId('6a4c09203668fc77ab691df5')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c09203668fc77ab691df6')
+}
+Gucci Flora Spray,GucFla_SP,spray,30,1400,13.5,16.5,0,0,true,Medium floral fresh fragrance. A daytime floral classic.,medium,daytime,floral fresh,,{
+  material: new ObjectId('6a3e24312f2b2f71f964fd63'),
+  percentage: 45,
+  _id: new ObjectId('6a4c09203668fc77ab691df5')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c09203668fc77ab691df6')
+}
+Gucci Flora Spray,GucFla_SP,spray,50,1900,22.5,27.5,0,0,true,Medium floral fresh fragrance. A daytime floral classic.,medium,daytime,floral fresh,,{
+  material: new ObjectId('6a3e24312f2b2f71f964fd63'),
+  percentage: 45,
+  _id: new ObjectId('6a4c09203668fc77ab691df5')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c09203668fc77ab691df6')
+}
+Gucci Flora Spray,GucFla_SP,spray,100,2300,45,55,0,0,true,Medium floral fresh fragrance. A daytime floral classic.,medium,daytime,floral fresh,,{
+  material: new ObjectId('6a3e24312f2b2f71f964fd63'),
+  percentage: 45,
+  _id: new ObjectId('6a4c09203668fc77ab691df5')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c09203668fc77ab691df6')
+}
+Hawas For Him,HFH,roll-on,3.5,180,3.5,0,0,0,true,Strong aquatic spicy fragrance. Evening freshness.,strong,evening,aquatic spicy,6a3e24302f2b2f71f964fd4e,
+Hawas For Him,HFH,roll-on,6,280,6,0,0,0,true,Strong aquatic spicy fragrance. Evening freshness.,strong,evening,aquatic spicy,6a3e24302f2b2f71f964fd4e,
+Hawas For Him,HFH,roll-on,15,750,15,0,0,0,true,Strong aquatic spicy fragrance. Evening freshness.,strong,evening,aquatic spicy,6a3e24302f2b2f71f964fd4e,
+Hawas For Him,HFH,roll-on,30,1500,30,0,0,0,true,Strong aquatic spicy fragrance. Evening freshness.,strong,evening,aquatic spicy,6a3e24302f2b2f71f964fd4e,
+Hawas For Him Spray,HFH_SP,spray,6,330,2.7,3.3,0,0,true,Strong aquatic spicy fragrance. Evening freshness.,strong,evening,aquatic spicy,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd4e'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091f3668fc77ab691dc0')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091f3668fc77ab691dc1')
+}
+Hawas For Him Spray,HFH_SP,spray,15,780,6.75,8.25,0,0,true,Strong aquatic spicy fragrance. Evening freshness.,strong,evening,aquatic spicy,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd4e'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091f3668fc77ab691dc0')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091f3668fc77ab691dc1')
+}
+Hawas For Him Spray,HFH_SP,spray,30,1050,13.5,16.5,0,0,true,Strong aquatic spicy fragrance. Evening freshness.,strong,evening,aquatic spicy,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd4e'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091f3668fc77ab691dc0')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091f3668fc77ab691dc1')
+}
+Hawas For Him Spray,HFH_SP,spray,50,1300,22.5,27.5,0,0,true,Strong aquatic spicy fragrance. Evening freshness.,strong,evening,aquatic spicy,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd4e'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091f3668fc77ab691dc0')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091f3668fc77ab691dc1')
+}
+Hawas For Him Spray,HFH_SP,spray,100,1650,45,55,0,0,true,Strong aquatic spicy fragrance. Evening freshness.,strong,evening,aquatic spicy,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd4e'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091f3668fc77ab691dc0')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091f3668fc77ab691dc1')
+}
+Hawas Ice,HI,roll-on,3.5,150,3.5,0,0,138.17169697333333,true,"Top Notes: Frozen apple, Italian lemon, Sicilian bergamot, and star anise.Heart/
+Middle Notes: Plum, orange blossom, and cardamom.
+Base Notes: Musk, amber, driftwood, and moss.",medium,Daytime,aromatic,aquatic,6a7773ce21fc6555b5eab13b,
+Hawas Ice,HI,roll-on,6,250,6,0,0,182.15315315027027,true,"Top Notes: Frozen apple, Italian lemon, Sicilian bergamot, and star anise.Heart/
+Middle Notes: Plum, orange blossom, and cardamom.
+Base Notes: Musk, amber, driftwood, and moss.",medium,Daytime,aromatic,aquatic,6a7773ce21fc6555b5eab13b,
+Hawas Ice,HI,roll-on,15,600,15,0,0,295,true,"Top Notes: Frozen apple, Italian lemon, Sicilian bergamot, and star anise.Heart/
+Middle Notes: Plum, orange blossom, and cardamom.
+Base Notes: Musk, amber, driftwood, and moss.",medium,Daytime,aromatic,aquatic,6a7773ce21fc6555b5eab13b,
+Hawas Ice,HI,roll-on,30,1000,30,0,0,532.3333333333333,true,"Top Notes: Frozen apple, Italian lemon, Sicilian bergamot, and star anise.Heart/
+Middle Notes: Plum, orange blossom, and cardamom.
+Base Notes: Musk, amber, driftwood, and moss.",medium,Daytime,aromatic,aquatic,6a7773ce21fc6555b5eab13b,
+Hawas Ice Spray,HI_SP,spray,6,270,3.3000000000000003,2.7,0,162.418,true,"Top Notes: Frozen apple, Italian lemon, Sicilian bergamot, and star anise.Heart/
+Middle Notes: Plum, orange blossom, and cardamom.
+Base Notes: Musk, amber, driftwood, and moss.",medium,Daytime,aromatic,aquatic,,{
+  material: new ObjectId('6a7773ce21fc6555b5eab13b'),
+  percentage: 52,
+  _id: new ObjectId('6a7852f3dc763d4c040d894f')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 45,
+  _id: new ObjectId('6a7852f3dc763d4c040d8950')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd82'),
+  percentage: 1,
+  _id: new ObjectId('6a7852f3dc763d4c040d8951')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd7a'),
+  percentage: 1,
+  _id: new ObjectId('6a7852f3dc763d4c040d8952')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd73'),
+  percentage: 1,
+  _id: new ObjectId('6a7852f3dc763d4c040d8953')
+}
+Hawas Ice Spray,HI_SP,spray,15,600,8.25,6.75,0,233.54500000000002,true,"Top Notes: Frozen apple, Italian lemon, Sicilian bergamot, and star anise.Heart/
+Middle Notes: Plum, orange blossom, and cardamom.
+Base Notes: Musk, amber, driftwood, and moss.",medium,Daytime,aromatic,aquatic,,{
+  material: new ObjectId('6a7773ce21fc6555b5eab13b'),
+  percentage: 52,
+  _id: new ObjectId('6a7852f3dc763d4c040d894f')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 45,
+  _id: new ObjectId('6a7852f3dc763d4c040d8950')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd82'),
+  percentage: 1,
+  _id: new ObjectId('6a7852f3dc763d4c040d8951')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd7a'),
+  percentage: 1,
+  _id: new ObjectId('6a7852f3dc763d4c040d8952')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd73'),
+  percentage: 1,
+  _id: new ObjectId('6a7852f3dc763d4c040d8953')
+}
+Hawas Ice Spray,HI_SP,spray,30,900,16.5,13.5,0,409.42333333333335,true,"Top Notes: Frozen apple, Italian lemon, Sicilian bergamot, and star anise.Heart/
+Middle Notes: Plum, orange blossom, and cardamom.
+Base Notes: Musk, amber, driftwood, and moss.",medium,Daytime,aromatic,aquatic,,{
+  material: new ObjectId('6a7773ce21fc6555b5eab13b'),
+  percentage: 52,
+  _id: new ObjectId('6a7852f3dc763d4c040d894f')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 45,
+  _id: new ObjectId('6a7852f3dc763d4c040d8950')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd82'),
+  percentage: 1,
+  _id: new ObjectId('6a7852f3dc763d4c040d8951')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd7a'),
+  percentage: 1,
+  _id: new ObjectId('6a7852f3dc763d4c040d8952')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd73'),
+  percentage: 1,
+  _id: new ObjectId('6a7852f3dc763d4c040d8953')
+}
+Hawas Ice Spray,HI_SP,spray,50,1050,27.5,22.5,0,570.15,true,"Top Notes: Frozen apple, Italian lemon, Sicilian bergamot, and star anise.Heart/
+Middle Notes: Plum, orange blossom, and cardamom.
+Base Notes: Musk, amber, driftwood, and moss.",medium,Daytime,aromatic,aquatic,,{
+  material: new ObjectId('6a7773ce21fc6555b5eab13b'),
+  percentage: 52,
+  _id: new ObjectId('6a7852f3dc763d4c040d894f')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 45,
+  _id: new ObjectId('6a7852f3dc763d4c040d8950')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd82'),
+  percentage: 1,
+  _id: new ObjectId('6a7852f3dc763d4c040d8951')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd7a'),
+  percentage: 1,
+  _id: new ObjectId('6a7852f3dc763d4c040d8952')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd73'),
+  percentage: 1,
+  _id: new ObjectId('6a7852f3dc763d4c040d8953')
+}
+Hawas Ice Spray,HI_SP,spray,100,1300,55,45,0,955.3,true,"Top Notes: Frozen apple, Italian lemon, Sicilian bergamot, and star anise.Heart/
+Middle Notes: Plum, orange blossom, and cardamom.
+Base Notes: Musk, amber, driftwood, and moss.",medium,Daytime,aromatic,aquatic,,{
+  material: new ObjectId('6a7773ce21fc6555b5eab13b'),
+  percentage: 52,
+  _id: new ObjectId('6a7852f3dc763d4c040d894f')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 45,
+  _id: new ObjectId('6a7852f3dc763d4c040d8950')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd82'),
+  percentage: 1,
+  _id: new ObjectId('6a7852f3dc763d4c040d8951')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd7a'),
+  percentage: 1,
+  _id: new ObjectId('6a7852f3dc763d4c040d8952')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd73'),
+  percentage: 1,
+  _id: new ObjectId('6a7852f3dc763d4c040d8953')
+}
+LOST Cherry,LostChe,roll-on,3.5,150,3.5,0,0,131.25,true,Sweet cherry with almond and gourmand notes. A luxurious evening fragrance.,medium,evening,fruity gourmand almond,6a3e242d2f2b2f71f964fd0f,
+LOST Cherry,LostChe,roll-on,6,250,6,0,0,171,true,Sweet cherry with almond and gourmand notes. A luxurious evening fragrance.,medium,evening,fruity gourmand almond,6a3e242d2f2b2f71f964fd0f,
+LOST Cherry,LostChe,roll-on,15,650,15,0,0,220,true,Sweet cherry with almond and gourmand notes. A luxurious evening fragrance.,medium,evening,fruity gourmand almond,6a3e242d2f2b2f71f964fd0f,
+LOST Cherry,LostChe,roll-on,30,1250,30,0,0,355,true,Sweet cherry with almond and gourmand notes. A luxurious evening fragrance.,medium,evening,fruity gourmand almond,6a3e242d2f2b2f71f964fd0f,
+LOST Cherry Spray,LostChe_SP,spray,6,300,2.7,3.3,0,152.362,true,Sweet cherry with almond and gourmand notes. A luxurious evening fragrance.,medium,evening,fruity gourmand almond,,{
+  material: new ObjectId('6a3e242d2f2b2f71f964fd0f'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d30')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d31')
+}
+LOST Cherry Spray,LostChe_SP,spray,15,700,6.75,8.25,0,208.405,true,Sweet cherry with almond and gourmand notes. A luxurious evening fragrance.,medium,evening,fruity gourmand almond,,{
+  material: new ObjectId('6a3e242d2f2b2f71f964fd0f'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d30')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d31')
+}
+LOST Cherry Spray,LostChe_SP,spray,30,1000,13.5,16.5,0,361.81,true,Sweet cherry with almond and gourmand notes. A luxurious evening fragrance.,medium,evening,fruity gourmand almond,,{
+  material: new ObjectId('6a3e242d2f2b2f71f964fd0f'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d30')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d31')
+}
+LOST Cherry Spray,LostChe_SP,spray,50,1300,22.5,27.5,0,486.35,true,Sweet cherry with almond and gourmand notes. A luxurious evening fragrance.,medium,evening,fruity gourmand almond,,{
+  material: new ObjectId('6a3e242d2f2b2f71f964fd0f'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d30')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d31')
+}
+LOST Cherry Spray,LostChe_SP,spray,100,1700,45,55,0,787.7,true,Sweet cherry with almond and gourmand notes. A luxurious evening fragrance.,medium,evening,fruity gourmand almond,,{
+  material: new ObjectId('6a3e242d2f2b2f71f964fd0f'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d30')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d31')
+}
+Luxe Special,LUXE1,roll-on,3.5,220,3.5,0,0,0,true,Medium luxury blend fragrance. Versatile for any occasion.,medium,all,luxury blend,6a3e24312f2b2f71f964fd6b,
+Luxe Special,LUXE1,roll-on,6,350,6,0,0,0,true,Medium luxury blend fragrance. Versatile for any occasion.,medium,all,luxury blend,6a3e24312f2b2f71f964fd6b,
+Luxe Special,LUXE1,roll-on,15,800,15,0,0,0,true,Medium luxury blend fragrance. Versatile for any occasion.,medium,all,luxury blend,6a3e24312f2b2f71f964fd6b,
+Luxe Special,LUXE1,roll-on,30,1500,30,0,0,0,true,Medium luxury blend fragrance. Versatile for any occasion.,medium,all,luxury blend,6a3e24312f2b2f71f964fd6b,
+Luxe Special Spray,LUXE1_SP,spray,6,370,3.8993999999999995,2.1,0,0,true,Medium luxury blend fragrance. Versatile for any occasion.,medium,all,luxury blend,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd60'),
+  percentage: 43.87,
+  _id: new ObjectId('6a4c09203668fc77ab691e0f')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd63'),
+  percentage: 21.12,
+  _id: new ObjectId('6a4c09203668fc77ab691e10')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 35,
+  _id: new ObjectId('6a4c09203668fc77ab691e11')
+}
+Luxe Special Spray,LUXE1_SP,spray,15,850,9.7485,5.25,0,0,true,Medium luxury blend fragrance. Versatile for any occasion.,medium,all,luxury blend,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd60'),
+  percentage: 43.87,
+  _id: new ObjectId('6a4c09203668fc77ab691e0f')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd63'),
+  percentage: 21.12,
+  _id: new ObjectId('6a4c09203668fc77ab691e10')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 35,
+  _id: new ObjectId('6a4c09203668fc77ab691e11')
+}
+Luxe Special Spray,LUXE1_SP,spray,30,1600,19.497,10.5,0,0,true,Medium luxury blend fragrance. Versatile for any occasion.,medium,all,luxury blend,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd60'),
+  percentage: 43.87,
+  _id: new ObjectId('6a4c09203668fc77ab691e0f')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd63'),
+  percentage: 21.12,
+  _id: new ObjectId('6a4c09203668fc77ab691e10')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 35,
+  _id: new ObjectId('6a4c09203668fc77ab691e11')
+}
+Luxe Special Spray,LUXE1_SP,spray,50,3000,32.495,17.5,0,0,true,Medium luxury blend fragrance. Versatile for any occasion.,medium,all,luxury blend,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd60'),
+  percentage: 43.87,
+  _id: new ObjectId('6a4c09203668fc77ab691e0f')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd63'),
+  percentage: 21.12,
+  _id: new ObjectId('6a4c09203668fc77ab691e10')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 35,
+  _id: new ObjectId('6a4c09203668fc77ab691e11')
+}
+Luxe Special Spray,LUXE1_SP,spray,100,4500,64.99,35,0,0,true,Medium luxury blend fragrance. Versatile for any occasion.,medium,all,luxury blend,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd60'),
+  percentage: 43.87,
+  _id: new ObjectId('6a4c09203668fc77ab691e0f')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd63'),
+  percentage: 21.12,
+  _id: new ObjectId('6a4c09203668fc77ab691e10')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 35,
+  _id: new ObjectId('6a4c09203668fc77ab691e11')
+}
+Miss Dior,MisDio,roll-on,3.5,180,3.5,0,0,0,true,Floral fruity fragrance with medium intensity. Elegant evening scent.,medium,evening,floral fruity,6a3e242f2f2b2f71f964fd3f,
+Miss Dior,MisDio,roll-on,6,280,6,0,0,0,true,Floral fruity fragrance with medium intensity. Elegant evening scent.,medium,evening,floral fruity,6a3e242f2f2b2f71f964fd3f,
+Miss Dior,MisDio,roll-on,15,750,15,0,0,0,true,Floral fruity fragrance with medium intensity. Elegant evening scent.,medium,evening,floral fruity,6a3e242f2f2b2f71f964fd3f,
+Miss Dior,MisDio,roll-on,30,1500,30,0,0,0,true,Floral fruity fragrance with medium intensity. Elegant evening scent.,medium,evening,floral fruity,6a3e242f2f2b2f71f964fd3f,
+Miss Dior Spray,MisDio_SP,spray,6,330,2.7,3.3,0,0,true,Floral fruity fragrance with medium intensity. Elegant evening scent.,medium,evening,floral fruity,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd3f'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091e3668fc77ab691da1')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091e3668fc77ab691da2')
+}
+Miss Dior Spray,MisDio_SP,spray,15,780,6.75,8.25,0,0,true,Floral fruity fragrance with medium intensity. Elegant evening scent.,medium,evening,floral fruity,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd3f'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091e3668fc77ab691da1')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091e3668fc77ab691da2')
+}
+Miss Dior Spray,MisDio_SP,spray,30,1050,13.5,16.5,0,0,true,Floral fruity fragrance with medium intensity. Elegant evening scent.,medium,evening,floral fruity,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd3f'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091e3668fc77ab691da1')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091e3668fc77ab691da2')
+}
+Miss Dior Spray,MisDio_SP,spray,50,1300,22.5,27.5,0,0,true,Floral fruity fragrance with medium intensity. Elegant evening scent.,medium,evening,floral fruity,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd3f'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091e3668fc77ab691da1')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091e3668fc77ab691da2')
+}
+Miss Dior Spray,MisDio_SP,spray,100,1650,45,55,0,0,true,Floral fruity fragrance with medium intensity. Elegant evening scent.,medium,evening,floral fruity,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd3f'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091e3668fc77ab691da1')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091e3668fc77ab691da2')
+}
+Nautica voyage,NV,roll-on,3.5,180,3.5,0,0,148.75,true,Fresh aquatic fruity fragrance. Perfect for summer days.,medium,daytime,aquatic fruity,6a3e24312f2b2f71f964fd89,
+Nautica voyage,NV,roll-on,6,270,6,0,0,201,true,Fresh aquatic fruity fragrance. Perfect for summer days.,medium,daytime,aquatic fruity,6a3e24312f2b2f71f964fd89,
+Nautica voyage,NV,roll-on,15,670,15,0,0,295,true,Fresh aquatic fruity fragrance. Perfect for summer days.,medium,daytime,aquatic fruity,6a3e24312f2b2f71f964fd89,
+Nautica voyage,NV,roll-on,30,1250,30,0,0,505,true,Fresh aquatic fruity fragrance. Perfect for summer days.,medium,daytime,aquatic fruity,6a3e24312f2b2f71f964fd89,
+Nautica voyage Spray,NV_SP,spray,6,300,2.7,3.3,0,165.862,true,Fresh aquatic fruity fragrance. Perfect for summer days.,medium,daytime,aquatic fruity,,{
+  material: new ObjectId('6a3e24312f2b2f71f964fd89'),
+  percentage: 45,
+  _id: new ObjectId('6a4c09213668fc77ab691e2e')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c09213668fc77ab691e2f')
+}
+Nautica voyage Spray,NV_SP,spray,15,720,6.75,8.25,0,242.155,true,Fresh aquatic fruity fragrance. Perfect for summer days.,medium,daytime,aquatic fruity,,{
+  material: new ObjectId('6a3e24312f2b2f71f964fd89'),
+  percentage: 45,
+  _id: new ObjectId('6a4c09213668fc77ab691e2e')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c09213668fc77ab691e2f')
+}
+Nautica voyage Spray,NV_SP,spray,30,1350,13.5,16.5,0,429.31,true,Fresh aquatic fruity fragrance. Perfect for summer days.,medium,daytime,aquatic fruity,,{
+  material: new ObjectId('6a3e24312f2b2f71f964fd89'),
+  percentage: 45,
+  _id: new ObjectId('6a4c09213668fc77ab691e2e')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c09213668fc77ab691e2f')
+}
+Nautica voyage Spray,NV_SP,spray,50,1700,22.5,27.5,0,598.85,true,Fresh aquatic fruity fragrance. Perfect for summer days.,medium,daytime,aquatic fruity,,{
+  material: new ObjectId('6a3e24312f2b2f71f964fd89'),
+  percentage: 45,
+  _id: new ObjectId('6a4c09213668fc77ab691e2e')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c09213668fc77ab691e2f')
+}
+Nautica voyage Spray,NV_SP,spray,100,2500,45,55,0,1012.7,true,Fresh aquatic fruity fragrance. Perfect for summer days.,medium,daytime,aquatic fruity,,{
+  material: new ObjectId('6a3e24312f2b2f71f964fd89'),
+  percentage: 45,
+  _id: new ObjectId('6a4c09213668fc77ab691e2e')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c09213668fc77ab691e2f')
+}
+Paris Hilton,ParHil,roll-on,3.5,150,3.5,0,0,0,true,Light floral fruity sweet fragrance. Perfect for daytime fun.,light,daytime,floral fruity sweet,6a3e242f2f2b2f71f964fd41,
+Paris Hilton,ParHil,roll-on,6,250,6,0,0,0,true,Light floral fruity sweet fragrance. Perfect for daytime fun.,light,daytime,floral fruity sweet,6a3e242f2f2b2f71f964fd41,
+Paris Hilton,ParHil,roll-on,15,650,15,0,0,0,true,Light floral fruity sweet fragrance. Perfect for daytime fun.,light,daytime,floral fruity sweet,6a3e242f2f2b2f71f964fd41,
+Paris Hilton,ParHil,roll-on,30,1250,30,0,0,0,true,Light floral fruity sweet fragrance. Perfect for daytime fun.,light,daytime,floral fruity sweet,6a3e242f2f2b2f71f964fd41,
+Paris Hilton Spray,ParHil_SP,spray,6,300,2.7,3.3,0,0,true,Light floral fruity sweet fragrance. Perfect for daytime fun.,light,daytime,floral fruity sweet,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd41'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091e3668fc77ab691da7')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091e3668fc77ab691da8')
+}
+Paris Hilton Spray,ParHil_SP,spray,15,700,6.75,8.25,0,0,true,Light floral fruity sweet fragrance. Perfect for daytime fun.,light,daytime,floral fruity sweet,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd41'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091e3668fc77ab691da7')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091e3668fc77ab691da8')
+}
+Paris Hilton Spray,ParHil_SP,spray,30,1000,13.5,16.5,0,0,true,Light floral fruity sweet fragrance. Perfect for daytime fun.,light,daytime,floral fruity sweet,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd41'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091e3668fc77ab691da7')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091e3668fc77ab691da8')
+}
+Paris Hilton Spray,ParHil_SP,spray,50,1300,22.5,27.5,0,0,true,Light floral fruity sweet fragrance. Perfect for daytime fun.,light,daytime,floral fruity sweet,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd41'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091e3668fc77ab691da7')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091e3668fc77ab691da8')
+}
+Paris Hilton Spray,ParHil_SP,spray,100,1700,45,55,0,0,true,Light floral fruity sweet fragrance. Perfect for daytime fun.,light,daytime,floral fruity sweet,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd41'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091e3668fc77ab691da7')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091e3668fc77ab691da8')
+}
+Prada Candy,PRCn,roll-on,3.5,180,3.5,0,0,0,true,Medium gourmand sweet fragrance. Sweet evening indulgence.,medium,evening,gourmand sweet,6a3e24302f2b2f71f964fd54,
+Prada Candy,PRCn,roll-on,6,280,6,0,0,0,true,Medium gourmand sweet fragrance. Sweet evening indulgence.,medium,evening,gourmand sweet,6a3e24302f2b2f71f964fd54,
+Prada Candy,PRCn,roll-on,15,750,15,0,0,0,true,Medium gourmand sweet fragrance. Sweet evening indulgence.,medium,evening,gourmand sweet,6a3e24302f2b2f71f964fd54,
+Prada Candy,PRCn,roll-on,30,1500,30,0,0,0,true,Medium gourmand sweet fragrance. Sweet evening indulgence.,medium,evening,gourmand sweet,6a3e24302f2b2f71f964fd54,
+Prada Candy Spray,PRCn_SP,spray,6,330,2.7,3.3,0,0,true,Medium gourmand sweet fragrance. Sweet evening indulgence.,medium,evening,gourmand sweet,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd54'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091f3668fc77ab691dd2')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091f3668fc77ab691dd3')
+}
+Prada Candy Spray,PRCn_SP,spray,15,780,6.75,8.25,0,0,true,Medium gourmand sweet fragrance. Sweet evening indulgence.,medium,evening,gourmand sweet,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd54'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091f3668fc77ab691dd2')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091f3668fc77ab691dd3')
+}
+Prada Candy Spray,PRCn_SP,spray,30,1050,13.5,16.5,0,0,true,Medium gourmand sweet fragrance. Sweet evening indulgence.,medium,evening,gourmand sweet,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd54'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091f3668fc77ab691dd2')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091f3668fc77ab691dd3')
+}
+Prada Candy Spray,PRCn_SP,spray,50,1300,22.5,27.5,0,0,true,Medium gourmand sweet fragrance. Sweet evening indulgence.,medium,evening,gourmand sweet,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd54'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091f3668fc77ab691dd2')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091f3668fc77ab691dd3')
+}
+Prada Candy Spray,PRCn_SP,spray,100,1650,45,55,0,0,true,Medium gourmand sweet fragrance. Sweet evening indulgence.,medium,evening,gourmand sweet,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd54'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091f3668fc77ab691dd2')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091f3668fc77ab691dd3')
+}
+Pure Seduction,PuSD,roll-on,3.5,180,3.5,0,0,0,true,Light floral fruity fragrance. Perfect for romantic evenings.,light,evening,floral fruity,6a3e24302f2b2f71f964fd52,
+Pure Seduction,PuSD,roll-on,6,280,6,0,0,0,true,Light floral fruity fragrance. Perfect for romantic evenings.,light,evening,floral fruity,6a3e24302f2b2f71f964fd52,
+Pure Seduction,PuSD,roll-on,15,750,15,0,0,0,true,Light floral fruity fragrance. Perfect for romantic evenings.,light,evening,floral fruity,6a3e24302f2b2f71f964fd52,
+Pure Seduction,PuSD,roll-on,30,1500,30,0,0,0,true,Light floral fruity fragrance. Perfect for romantic evenings.,light,evening,floral fruity,6a3e24302f2b2f71f964fd52,
+Pure Seduction Spray,PuSD_SP,spray,6,330,2.7,3.3,0,0,true,Light floral fruity fragrance. Perfect for romantic evenings.,light,evening,floral fruity,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd52'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091f3668fc77ab691dcc')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091f3668fc77ab691dcd')
+}
+Pure Seduction Spray,PuSD_SP,spray,15,780,6.75,8.25,0,0,true,Light floral fruity fragrance. Perfect for romantic evenings.,light,evening,floral fruity,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd52'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091f3668fc77ab691dcc')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091f3668fc77ab691dcd')
+}
+Pure Seduction Spray,PuSD_SP,spray,30,1050,13.5,16.5,0,0,true,Light floral fruity fragrance. Perfect for romantic evenings.,light,evening,floral fruity,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd52'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091f3668fc77ab691dcc')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091f3668fc77ab691dcd')
+}
+Pure Seduction Spray,PuSD_SP,spray,50,1300,22.5,27.5,0,0,true,Light floral fruity fragrance. Perfect for romantic evenings.,light,evening,floral fruity,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd52'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091f3668fc77ab691dcc')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091f3668fc77ab691dcd')
+}
+Pure Seduction Spray,PuSD_SP,spray,100,1650,45,55,0,0,true,Light floral fruity fragrance. Perfect for romantic evenings.,light,evening,floral fruity,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd52'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091f3668fc77ab691dcc')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091f3668fc77ab691dcd')
+}
+Red Tobaco,RedTob,roll-on,3.5,150,3.5,0,0,0,true,Strong tobacco spicy sweet fragrance. Bold evening statement.,strong,evening,tobacco spicy sweet,6a3e242f2f2b2f71f964fd3b,
+Red Tobaco,RedTob,roll-on,6,250,6,0,0,0,true,Strong tobacco spicy sweet fragrance. Bold evening statement.,strong,evening,tobacco spicy sweet,6a3e242f2f2b2f71f964fd3b,
+Red Tobaco,RedTob,roll-on,15,650,15,0,0,0,true,Strong tobacco spicy sweet fragrance. Bold evening statement.,strong,evening,tobacco spicy sweet,6a3e242f2f2b2f71f964fd3b,
+Red Tobaco,RedTob,roll-on,30,1250,30,0,0,0,true,Strong tobacco spicy sweet fragrance. Bold evening statement.,strong,evening,tobacco spicy sweet,6a3e242f2f2b2f71f964fd3b,
+Red Tobaco Spray,RedTob_SP,spray,6,300,2.7,3.3,0,0,true,Strong tobacco spicy sweet fragrance. Bold evening statement.,strong,evening,tobacco spicy sweet,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd3b'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091e3668fc77ab691d95')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091e3668fc77ab691d96')
+}
+Red Tobaco Spray,RedTob_SP,spray,15,700,6.75,8.25,0,0,true,Strong tobacco spicy sweet fragrance. Bold evening statement.,strong,evening,tobacco spicy sweet,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd3b'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091e3668fc77ab691d95')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091e3668fc77ab691d96')
+}
+Red Tobaco Spray,RedTob_SP,spray,30,1000,13.5,16.5,0,0,true,Strong tobacco spicy sweet fragrance. Bold evening statement.,strong,evening,tobacco spicy sweet,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd3b'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091e3668fc77ab691d95')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091e3668fc77ab691d96')
+}
+Red Tobaco Spray,RedTob_SP,spray,50,1300,22.5,27.5,0,0,true,Strong tobacco spicy sweet fragrance. Bold evening statement.,strong,evening,tobacco spicy sweet,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd3b'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091e3668fc77ab691d95')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091e3668fc77ab691d96')
+}
+Red Tobaco Spray,RedTob_SP,spray,100,1700,45,55,0,0,true,Strong tobacco spicy sweet fragrance. Bold evening statement.,strong,evening,tobacco spicy sweet,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd3b'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091e3668fc77ab691d95')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091e3668fc77ab691d96')
+}
+Rose,Rose,roll-on,3.5,150,3.5,0,0,0,true,Classic floral sweet rose fragrance. Timeless for any occasion.,medium,all,floral sweet,6a3e242e2f2b2f71f964fd27,
+Rose,Rose,roll-on,6,250,6,0,0,0,true,Classic floral sweet rose fragrance. Timeless for any occasion.,medium,all,floral sweet,6a3e242e2f2b2f71f964fd27,
+Rose,Rose,roll-on,15,650,15,0,0,0,true,Classic floral sweet rose fragrance. Timeless for any occasion.,medium,all,floral sweet,6a3e242e2f2b2f71f964fd27,
+Rose,Rose,roll-on,30,1250,30,0,0,0,true,Classic floral sweet rose fragrance. Timeless for any occasion.,medium,all,floral sweet,6a3e242e2f2b2f71f964fd27,
+Rose Spray,Rose_SP,spray,6,300,2.7,3.3,0,0,true,Classic floral sweet rose fragrance. Timeless for any occasion.,medium,all,floral sweet,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd27'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091d3668fc77ab691d61')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091d3668fc77ab691d62')
+}
+Rose Spray,Rose_SP,spray,15,700,6.75,8.25,0,0,true,Classic floral sweet rose fragrance. Timeless for any occasion.,medium,all,floral sweet,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd27'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091d3668fc77ab691d61')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091d3668fc77ab691d62')
+}
+Rose Spray,Rose_SP,spray,30,1000,13.5,16.5,0,0,true,Classic floral sweet rose fragrance. Timeless for any occasion.,medium,all,floral sweet,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd27'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091d3668fc77ab691d61')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091d3668fc77ab691d62')
+}
+Rose Spray,Rose_SP,spray,50,1300,22.5,27.5,0,0,true,Classic floral sweet rose fragrance. Timeless for any occasion.,medium,all,floral sweet,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd27'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091d3668fc77ab691d61')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091d3668fc77ab691d62')
+}
+Rose Spray,Rose_SP,spray,100,1700,45,55,0,0,true,Classic floral sweet rose fragrance. Timeless for any occasion.,medium,all,floral sweet,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd27'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091d3668fc77ab691d61')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091d3668fc77ab691d62')
+}
+SRK,SR2,roll-on,3.5,0,3.5,0,0,0,true,,medium,all,,6a3e24312f2b2f71f964fd71,
+SRK,SR2,roll-on,6,0,6,0,0,0,true,,medium,all,,6a3e24312f2b2f71f964fd71,
+SRK,SR2,roll-on,15,0,15,0,0,0,true,,medium,all,,6a3e24312f2b2f71f964fd71,
+SRK,SR2,roll-on,30,0,30,0,0,0,true,,medium,all,,6a3e24312f2b2f71f964fd71,
+SRK,SR,roll-on,3.5,220,3.5,0,0,0,true,Medium oriental woody fragrance. Elegant evening scent.,medium,evening,oriental woody,6a3e24312f2b2f71f964fd69,
+SRK,SR,roll-on,6,400,6,0,0,0,true,Medium oriental woody fragrance. Elegant evening scent.,medium,evening,oriental woody,6a3e24312f2b2f71f964fd69,
+SRK,SR,roll-on,15,780,15,0,0,0,true,Medium oriental woody fragrance. Elegant evening scent.,medium,evening,oriental woody,6a3e24312f2b2f71f964fd69,
+SRK,SR,roll-on,30,1550,30,0,0,0,true,Medium oriental woody fragrance. Elegant evening scent.,medium,evening,oriental woody,6a3e24312f2b2f71f964fd69,
+SRK Spray,SR2_SP,spray,6,0,3.8993999999999995,2.1,0,0,true,,medium,all,,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd58'),
+  percentage: 43.87,
+  _id: new ObjectId('6a4c09203668fc77ab691e22')
+},{
+  material: new ObjectId('6a3e24302f2b2f71f964fd5c'),
+  percentage: 21.12,
+  _id: new ObjectId('6a4c09203668fc77ab691e23')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 35,
+  _id: new ObjectId('6a4c09203668fc77ab691e24')
+}
+SRK Spray,SR2_SP,spray,15,0,9.7485,5.25,0,0,true,,medium,all,,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd58'),
+  percentage: 43.87,
+  _id: new ObjectId('6a4c09203668fc77ab691e22')
+},{
+  material: new ObjectId('6a3e24302f2b2f71f964fd5c'),
+  percentage: 21.12,
+  _id: new ObjectId('6a4c09203668fc77ab691e23')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 35,
+  _id: new ObjectId('6a4c09203668fc77ab691e24')
+}
+SRK Spray,SR2_SP,spray,30,0,19.497,10.5,0,0,true,,medium,all,,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd58'),
+  percentage: 43.87,
+  _id: new ObjectId('6a4c09203668fc77ab691e22')
+},{
+  material: new ObjectId('6a3e24302f2b2f71f964fd5c'),
+  percentage: 21.12,
+  _id: new ObjectId('6a4c09203668fc77ab691e23')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 35,
+  _id: new ObjectId('6a4c09203668fc77ab691e24')
+}
+SRK Spray,SR2_SP,spray,50,0,32.495,17.5,0,0,true,,medium,all,,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd58'),
+  percentage: 43.87,
+  _id: new ObjectId('6a4c09203668fc77ab691e22')
+},{
+  material: new ObjectId('6a3e24302f2b2f71f964fd5c'),
+  percentage: 21.12,
+  _id: new ObjectId('6a4c09203668fc77ab691e23')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 35,
+  _id: new ObjectId('6a4c09203668fc77ab691e24')
+}
+SRK Spray,SR2_SP,spray,100,0,64.99,35,0,0,true,,medium,all,,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd58'),
+  percentage: 43.87,
+  _id: new ObjectId('6a4c09203668fc77ab691e22')
+},{
+  material: new ObjectId('6a3e24302f2b2f71f964fd5c'),
+  percentage: 21.12,
+  _id: new ObjectId('6a4c09203668fc77ab691e23')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 35,
+  _id: new ObjectId('6a4c09203668fc77ab691e24')
+}
+SRK Spray,SR_SP,spray,6,380,3.8993999999999995,2.1,0,0,true,Medium oriental woody fragrance. Elegant evening scent.,medium,evening,oriental woody,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd58'),
+  percentage: 43.87,
+  _id: new ObjectId('6a4c09203668fc77ab691e03')
+},{
+  material: new ObjectId('6a3e24302f2b2f71f964fd5c'),
+  percentage: 21.12,
+  _id: new ObjectId('6a4c09203668fc77ab691e04')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 35,
+  _id: new ObjectId('6a4c09203668fc77ab691e05')
+}
+SRK Spray,SR_SP,spray,15,900,9.7485,5.25,0,0,true,Medium oriental woody fragrance. Elegant evening scent.,medium,evening,oriental woody,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd58'),
+  percentage: 43.87,
+  _id: new ObjectId('6a4c09203668fc77ab691e03')
+},{
+  material: new ObjectId('6a3e24302f2b2f71f964fd5c'),
+  percentage: 21.12,
+  _id: new ObjectId('6a4c09203668fc77ab691e04')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 35,
+  _id: new ObjectId('6a4c09203668fc77ab691e05')
+}
+SRK Spray,SR_SP,spray,30,1600,19.497,10.5,0,0,true,Medium oriental woody fragrance. Elegant evening scent.,medium,evening,oriental woody,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd58'),
+  percentage: 43.87,
+  _id: new ObjectId('6a4c09203668fc77ab691e03')
+},{
+  material: new ObjectId('6a3e24302f2b2f71f964fd5c'),
+  percentage: 21.12,
+  _id: new ObjectId('6a4c09203668fc77ab691e04')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 35,
+  _id: new ObjectId('6a4c09203668fc77ab691e05')
+}
+SRK Spray,SR_SP,spray,50,1900,32.495,17.5,0,0,true,Medium oriental woody fragrance. Elegant evening scent.,medium,evening,oriental woody,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd58'),
+  percentage: 43.87,
+  _id: new ObjectId('6a4c09203668fc77ab691e03')
+},{
+  material: new ObjectId('6a3e24302f2b2f71f964fd5c'),
+  percentage: 21.12,
+  _id: new ObjectId('6a4c09203668fc77ab691e04')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 35,
+  _id: new ObjectId('6a4c09203668fc77ab691e05')
+}
+SRK Spray,SR_SP,spray,100,2800,64.99,35,0,0,true,Medium oriental woody fragrance. Elegant evening scent.,medium,evening,oriental woody,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd58'),
+  percentage: 43.87,
+  _id: new ObjectId('6a4c09203668fc77ab691e03')
+},{
+  material: new ObjectId('6a3e24302f2b2f71f964fd5c'),
+  percentage: 21.12,
+  _id: new ObjectId('6a4c09203668fc77ab691e04')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 35,
+  _id: new ObjectId('6a4c09203668fc77ab691e05')
+}
+Sultan (al-haramain),SUL,roll-on,3.5,220,3.5,0,0,155.67169697333333,true,"Top Notes: Strawberry and pineapple.
+Heart/Middle Notes: Peach, raspberry, ylang-ylang, fresh floral notes, and musk.
+Base Notes: Vanilla, amber, sandalwood, patchouli, cinnamon, rose, jasmine, and lavender.",medium,daytime,vanilla,sweet,oud,6a77744021fc6555b5eab13d,
+Sultan (al-haramain),SUL,roll-on,15,800,15,0,0,360,true,"Top Notes: Strawberry and pineapple.
+Heart/Middle Notes: Peach, raspberry, ylang-ylang, fresh floral notes, and musk.
+Base Notes: Vanilla, amber, sandalwood, patchouli, cinnamon, rose, jasmine, and lavender.",medium,daytime,vanilla,sweet,oud,6a77744021fc6555b5eab13d,
+Sultan (al-haramain),SUL,roll-on,6,380,6,0,0,212.15315315027027,true,"Top Notes: Strawberry and pineapple.
+Heart/Middle Notes: Peach, raspberry, ylang-ylang, fresh floral notes, and musk.
+Base Notes: Vanilla, amber, sandalwood, patchouli, cinnamon, rose, jasmine, and lavender.",medium,daytime,vanilla,sweet,oud,6a77744021fc6555b5eab13d,
+Sultan (al-haramain),SUL,roll-on,30,1500,30,0,0,565,true,"Top Notes: Strawberry and pineapple.
+Heart/Middle Notes: Peach, raspberry, ylang-ylang, fresh floral notes, and musk.
+Base Notes: Vanilla, amber, sandalwood, patchouli, cinnamon, rose, jasmine, and lavender.",medium,daytime,vanilla,sweet,oud,6a77744021fc6555b5eab13d,
+TubeRose,TubRos,roll-on,3.5,150,3.5,0,0,0,true,Floral creamy sweet fragrance. Perfect for romantic evenings.,medium,evening,floral creamy sweet,6a3e242e2f2b2f71f964fd25,
+TubeRose,TubRos,roll-on,6,250,6,0,0,0,true,Floral creamy sweet fragrance. Perfect for romantic evenings.,medium,evening,floral creamy sweet,6a3e242e2f2b2f71f964fd25,
+TubeRose,TubRos,roll-on,15,650,15,0,0,0,true,Floral creamy sweet fragrance. Perfect for romantic evenings.,medium,evening,floral creamy sweet,6a3e242e2f2b2f71f964fd25,
+TubeRose,TubRos,roll-on,30,1250,30,0,0,0,true,Floral creamy sweet fragrance. Perfect for romantic evenings.,medium,evening,floral creamy sweet,6a3e242e2f2b2f71f964fd25,
+TubeRose Spray,TubRos_SP,spray,6,300,2.7,3.3,0,0,true,Floral creamy sweet fragrance. Perfect for romantic evenings.,medium,evening,floral creamy sweet,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd25'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091d3668fc77ab691d5b')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091d3668fc77ab691d5c')
+}
+TubeRose Spray,TubRos_SP,spray,15,700,6.75,8.25,0,0,true,Floral creamy sweet fragrance. Perfect for romantic evenings.,medium,evening,floral creamy sweet,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd25'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091d3668fc77ab691d5b')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091d3668fc77ab691d5c')
+}
+TubeRose Spray,TubRos_SP,spray,30,1000,13.5,16.5,0,0,true,Floral creamy sweet fragrance. Perfect for romantic evenings.,medium,evening,floral creamy sweet,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd25'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091d3668fc77ab691d5b')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091d3668fc77ab691d5c')
+}
+TubeRose Spray,TubRos_SP,spray,50,1300,22.5,27.5,0,0,true,Floral creamy sweet fragrance. Perfect for romantic evenings.,medium,evening,floral creamy sweet,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd25'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091d3668fc77ab691d5b')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091d3668fc77ab691d5c')
+}
+TubeRose Spray,TubRos_SP,spray,100,1700,45,55,0,0,true,Floral creamy sweet fragrance. Perfect for romantic evenings.,medium,evening,floral creamy sweet,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd25'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091d3668fc77ab691d5b')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091d3668fc77ab691d5c')
+}
+Ultra male,UltMal,roll-on,3.5,150,3.5,0,0,140.31315789473683,true,"Spicy, sweet, and woody aromatic blend. Strong and captivating for evening wear.",strong,evening,spicy sweet woody,6a3e242d2f2b2f71f964fd13,
+Ultra male,UltMal,roll-on,6,250,6,0,0,186.53684210526316,true,"Spicy, sweet, and woody aromatic blend. Strong and captivating for evening wear.",strong,evening,spicy sweet woody,6a3e242d2f2b2f71f964fd13,
+Ultra male,UltMal,roll-on,15,650,15,0,0,258.8421052631579,true,"Spicy, sweet, and woody aromatic blend. Strong and captivating for evening wear.",strong,evening,spicy sweet woody,6a3e242d2f2b2f71f964fd13,
+Ultra male,UltMal,roll-on,30,1250,30,0,0,432.6842105263158,true,"Spicy, sweet, and woody aromatic blend. Strong and captivating for evening wear.",strong,evening,spicy sweet woody,6a3e242d2f2b2f71f964fd13,
+Ultra male Spray,UltMal_SP,spray,6,300,2.7,3.3,0,159.35357894736842,true,"Spicy, sweet, and woody aromatic blend. Strong and captivating for evening wear.",strong,evening,spicy sweet woody,,{
+  material: new ObjectId('6a3e242d2f2b2f71f964fd13'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d38')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d39')
+}
+Ultra male Spray,UltMal_SP,spray,15,700,6.75,8.25,0,225.88394736842105,true,"Spicy, sweet, and woody aromatic blend. Strong and captivating for evening wear.",strong,evening,spicy sweet woody,,{
+  material: new ObjectId('6a3e242d2f2b2f71f964fd13'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d38')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d39')
+}
+Ultra male Spray,UltMal_SP,spray,30,1000,13.5,16.5,0,396.7678947368421,true,"Spicy, sweet, and woody aromatic blend. Strong and captivating for evening wear.",strong,evening,spicy sweet woody,,{
+  material: new ObjectId('6a3e242d2f2b2f71f964fd13'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d38')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d39')
+}
+Ultra male Spray,UltMal_SP,spray,50,1300,22.5,27.5,0,544.6131578947368,true,"Spicy, sweet, and woody aromatic blend. Strong and captivating for evening wear.",strong,evening,spicy sweet woody,,{
+  material: new ObjectId('6a3e242d2f2b2f71f964fd13'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d38')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d39')
+}
+Ultra male Spray,UltMal_SP,spray,100,1700,45,55,0,904.2263157894737,true,"Spicy, sweet, and woody aromatic blend. Strong and captivating for evening wear.",strong,evening,spicy sweet woody,,{
+  material: new ObjectId('6a3e242d2f2b2f71f964fd13'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d38')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d39')
+}
+Valentino,Valen,roll-on,3.5,220,3.5,0,0,155.67169697333333,true,"Top Note: Rich Bourbon vanilla infusion (provides a thick, warm, and comforting opening sweetness).
+Heart/Middle Note: Aromatic lavandin/lavender (adds a fresh, floral, and classically masculine punch).
+Base Note: Smoked vetiver (grounds the sweetness with a dark, sophisticated woodiness)",medium,special,evening,amber,vanilla,lavender.,6a7774b221fc6555b5eab13f,
+Valentino,Valen,roll-on,6,380,6,0,0,212.15315315027027,true,"Top Note: Rich Bourbon vanilla infusion (provides a thick, warm, and comforting opening sweetness).
+Heart/Middle Note: Aromatic lavandin/lavender (adds a fresh, floral, and classically masculine punch).
+Base Note: Smoked vetiver (grounds the sweetness with a dark, sophisticated woodiness)",medium,special,evening,amber,vanilla,lavender.,6a7774b221fc6555b5eab13f,
+Valentino,Valen,roll-on,15,700,15,0,0,360,true,"Top Note: Rich Bourbon vanilla infusion (provides a thick, warm, and comforting opening sweetness).
+Heart/Middle Note: Aromatic lavandin/lavender (adds a fresh, floral, and classically masculine punch).
+Base Note: Smoked vetiver (grounds the sweetness with a dark, sophisticated woodiness)",medium,special,evening,amber,vanilla,lavender.,6a7774b221fc6555b5eab13f,
+Valentino,Valen,roll-on,30,1300,30,0,0,565,true,"Top Note: Rich Bourbon vanilla infusion (provides a thick, warm, and comforting opening sweetness).
+Heart/Middle Note: Aromatic lavandin/lavender (adds a fresh, floral, and classically masculine punch).
+Base Note: Smoked vetiver (grounds the sweetness with a dark, sophisticated woodiness)",medium,special,evening,amber,vanilla,lavender.,6a7774b221fc6555b5eab13f,
+Valentino Spray,Valen_SP,spray,6,400,3.3000000000000003,2.7,0,178.018,true,"Top Note: Rich Bourbon vanilla infusion (provides a thick, warm, and comforting opening sweetness).
+Heart/Middle Note: Aromatic lavandin/lavender (adds a fresh, floral, and classically masculine punch).
+Base Note: Smoked vetiver (grounds the sweetness with a dark, sophisticated woodiness)",medium,special,evening,amber,vanilla,lavender.,,{
+  material: new ObjectId('6a7774b221fc6555b5eab13f'),
+  percentage: 52,
+  _id: new ObjectId('6a7859d6dc763d4c040da518')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 45,
+  _id: new ObjectId('6a7859d6dc763d4c040da519')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd73'),
+  percentage: 1,
+  _id: new ObjectId('6a7859d6dc763d4c040da51a')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd7a'),
+  percentage: 1,
+  _id: new ObjectId('6a7859d6dc763d4c040da51b')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd82'),
+  percentage: 1,
+  _id: new ObjectId('6a7859d6dc763d4c040da51c')
+}
+Valentino Spray,Valen_SP,spray,15,900,8.25,6.75,0,272.545,true,"Top Note: Rich Bourbon vanilla infusion (provides a thick, warm, and comforting opening sweetness).
+Heart/Middle Note: Aromatic lavandin/lavender (adds a fresh, floral, and classically masculine punch).
+Base Note: Smoked vetiver (grounds the sweetness with a dark, sophisticated woodiness)",medium,special,evening,amber,vanilla,lavender.,,{
+  material: new ObjectId('6a7774b221fc6555b5eab13f'),
+  percentage: 52,
+  _id: new ObjectId('6a7859d6dc763d4c040da518')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 45,
+  _id: new ObjectId('6a7859d6dc763d4c040da519')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd73'),
+  percentage: 1,
+  _id: new ObjectId('6a7859d6dc763d4c040da51a')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd7a'),
+  percentage: 1,
+  _id: new ObjectId('6a7859d6dc763d4c040da51b')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd82'),
+  percentage: 1,
+  _id: new ObjectId('6a7859d6dc763d4c040da51c')
+}
+Valentino Spray,Valen_SP,spray,30,1200,16.5,13.5,0,487.42333333333335,true,"Top Note: Rich Bourbon vanilla infusion (provides a thick, warm, and comforting opening sweetness).
+Heart/Middle Note: Aromatic lavandin/lavender (adds a fresh, floral, and classically masculine punch).
+Base Note: Smoked vetiver (grounds the sweetness with a dark, sophisticated woodiness)",medium,special,evening,amber,vanilla,lavender.,,{
+  material: new ObjectId('6a7774b221fc6555b5eab13f'),
+  percentage: 52,
+  _id: new ObjectId('6a7859d6dc763d4c040da518')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 45,
+  _id: new ObjectId('6a7859d6dc763d4c040da519')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd73'),
+  percentage: 1,
+  _id: new ObjectId('6a7859d6dc763d4c040da51a')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd7a'),
+  percentage: 1,
+  _id: new ObjectId('6a7859d6dc763d4c040da51b')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd82'),
+  percentage: 1,
+  _id: new ObjectId('6a7859d6dc763d4c040da51c')
+}
+Valentino Spray,Valen_SP,spray,50,1500,27.5,22.5,0,700.15,true,"Top Note: Rich Bourbon vanilla infusion (provides a thick, warm, and comforting opening sweetness).
+Heart/Middle Note: Aromatic lavandin/lavender (adds a fresh, floral, and classically masculine punch).
+Base Note: Smoked vetiver (grounds the sweetness with a dark, sophisticated woodiness)",medium,special,evening,amber,vanilla,lavender.,,{
+  material: new ObjectId('6a7774b221fc6555b5eab13f'),
+  percentage: 52,
+  _id: new ObjectId('6a7859d6dc763d4c040da518')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 45,
+  _id: new ObjectId('6a7859d6dc763d4c040da519')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd73'),
+  percentage: 1,
+  _id: new ObjectId('6a7859d6dc763d4c040da51a')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd7a'),
+  percentage: 1,
+  _id: new ObjectId('6a7859d6dc763d4c040da51b')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd82'),
+  percentage: 1,
+  _id: new ObjectId('6a7859d6dc763d4c040da51c')
+}
+Valentino Spray,Valen_SP,spray,100,1900,55,45,0,1215.3,true,"Top Note: Rich Bourbon vanilla infusion (provides a thick, warm, and comforting opening sweetness).
+Heart/Middle Note: Aromatic lavandin/lavender (adds a fresh, floral, and classically masculine punch).
+Base Note: Smoked vetiver (grounds the sweetness with a dark, sophisticated woodiness)",medium,special,evening,amber,vanilla,lavender.,,{
+  material: new ObjectId('6a7774b221fc6555b5eab13f'),
+  percentage: 52,
+  _id: new ObjectId('6a7859d6dc763d4c040da518')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 45,
+  _id: new ObjectId('6a7859d6dc763d4c040da519')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd73'),
+  percentage: 1,
+  _id: new ObjectId('6a7859d6dc763d4c040da51a')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd7a'),
+  percentage: 1,
+  _id: new ObjectId('6a7859d6dc763d4c040da51b')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd82'),
+  percentage: 1,
+  _id: new ObjectId('6a7859d6dc763d4c040da51c')
+}
+Vampire B.,VampB,roll-on,3.5,200,3.5,0,0,148.45833333333331,true,"Deep, mysterious oriental scent with spicy and woody undertones. Best for special evenings.",strong,evening,oriental spicy woody,6a3e242d2f2b2f71f964fd08,
+Vampire B.,VampB,roll-on,6,300,6,0,0,200.5,true,"Deep, mysterious oriental scent with spicy and woody undertones. Best for special evenings.",strong,evening,oriental spicy woody,6a3e242d2f2b2f71f964fd08,
+Vampire B.,VampB,roll-on,15,800,15,0,0,293.75,true,"Deep, mysterious oriental scent with spicy and woody undertones. Best for special evenings.",strong,evening,oriental spicy woody,6a3e242d2f2b2f71f964fd08,
+Vampire B.,VampB,roll-on,30,1650,30,0,0,502.5,true,"Deep, mysterious oriental scent with spicy and woody undertones. Best for special evenings.",strong,evening,oriental spicy woody,6a3e242d2f2b2f71f964fd08,
+Vampire B. Spray,VampB_SP,spray,6,350,2.7,3.3,0,165.637,true,"Deep, mysterious oriental scent with spicy and woody undertones. Best for special evenings.",strong,evening,oriental spicy woody,,{
+  material: new ObjectId('6a3e242d2f2b2f71f964fd08'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d21')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d22')
+}
+Vampire B. Spray,VampB_SP,spray,15,850,6.75,8.25,0,241.5925,true,"Deep, mysterious oriental scent with spicy and woody undertones. Best for special evenings.",strong,evening,oriental spicy woody,,{
+  material: new ObjectId('6a3e242d2f2b2f71f964fd08'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d21')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d22')
+}
+Vampire B. Spray,VampB_SP,spray,30,1500,13.5,16.5,0,428.185,true,"Deep, mysterious oriental scent with spicy and woody undertones. Best for special evenings.",strong,evening,oriental spicy woody,,{
+  material: new ObjectId('6a3e242d2f2b2f71f964fd08'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d21')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d22')
+}
+Vampire B. Spray,VampB_SP,spray,50,1900,22.5,27.5,0,596.975,true,"Deep, mysterious oriental scent with spicy and woody undertones. Best for special evenings.",strong,evening,oriental spicy woody,,{
+  material: new ObjectId('6a3e242d2f2b2f71f964fd08'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d21')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d22')
+}
+Vampire B. Spray,VampB_SP,spray,100,2200,45,55,0,1008.95,true,"Deep, mysterious oriental scent with spicy and woody undertones. Best for special evenings.",strong,evening,oriental spicy woody,,{
+  material: new ObjectId('6a3e242d2f2b2f71f964fd08'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d21')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d22')
+}
+Vanila,Vanil,roll-on,3.5,150,3.5,0,0,0,true,"Warm, sweet vanilla fragrance with light intensity. Perfect for all-day comfort.",light,all,vanilla sweet warm,6a3e242e2f2b2f71f964fd2d,
+Vanila,Vanil,roll-on,6,250,6,0,0,0,true,"Warm, sweet vanilla fragrance with light intensity. Perfect for all-day comfort.",light,all,vanilla sweet warm,6a3e242e2f2b2f71f964fd2d,
+Vanila,Vanil,roll-on,15,650,15,0,0,0,true,"Warm, sweet vanilla fragrance with light intensity. Perfect for all-day comfort.",light,all,vanilla sweet warm,6a3e242e2f2b2f71f964fd2d,
+Vanila,Vanil,roll-on,30,1250,30,0,0,0,true,"Warm, sweet vanilla fragrance with light intensity. Perfect for all-day comfort.",light,all,vanilla sweet warm,6a3e242e2f2b2f71f964fd2d,
+Vanila Spray,Vanil_SP,spray,6,300,2.7,3.3,0,0,true,"Warm, sweet vanilla fragrance with light intensity. Perfect for all-day comfort.",light,all,vanilla sweet warm,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd2d'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091d3668fc77ab691d6f')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091d3668fc77ab691d70')
+}
+Vanila Spray,Vanil_SP,spray,15,700,6.75,8.25,0,0,true,"Warm, sweet vanilla fragrance with light intensity. Perfect for all-day comfort.",light,all,vanilla sweet warm,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd2d'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091d3668fc77ab691d6f')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091d3668fc77ab691d70')
+}
+Vanila Spray,Vanil_SP,spray,30,1000,13.5,16.5,0,0,true,"Warm, sweet vanilla fragrance with light intensity. Perfect for all-day comfort.",light,all,vanilla sweet warm,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd2d'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091d3668fc77ab691d6f')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091d3668fc77ab691d70')
+}
+Vanila Spray,Vanil_SP,spray,50,1300,22.5,27.5,0,0,true,"Warm, sweet vanilla fragrance with light intensity. Perfect for all-day comfort.",light,all,vanilla sweet warm,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd2d'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091d3668fc77ab691d6f')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091d3668fc77ab691d70')
+}
+Vanila Spray,Vanil_SP,spray,100,1700,45,55,0,0,true,"Warm, sweet vanilla fragrance with light intensity. Perfect for all-day comfort.",light,all,vanilla sweet warm,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd2d'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091d3668fc77ab691d6f')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091d3668fc77ab691d70')
+}
+Versace EROS,VerEros,roll-on,3.5,150,3.5,0,0,132.05769230769232,true,"Fresh mint and vanilla fragrance with a strong, captivating presence. Ideal for evening wear.",strong,evening,fresh mint vanilla,6a3e242d2f2b2f71f964fd00,
+Versace EROS,VerEros,roll-on,6,250,6,0,0,172.3846153846154,true,"Fresh mint and vanilla fragrance with a strong, captivating presence. Ideal for evening wear.",strong,evening,fresh mint vanilla,6a3e242d2f2b2f71f964fd00,
+Versace EROS,VerEros,roll-on,15,650,15,0,0,223.46153846153845,true,"Fresh mint and vanilla fragrance with a strong, captivating presence. Ideal for evening wear.",strong,evening,fresh mint vanilla,6a3e242d2f2b2f71f964fd00,
+Versace EROS,VerEros,roll-on,30,1250,30,0,0,361.9230769230769,true,"Fresh mint and vanilla fragrance with a strong, captivating presence. Ideal for evening wear.",strong,evening,fresh mint vanilla,6a3e242d2f2b2f71f964fd00,
+Versace EROS Spray,VerEros_SP,spray,6,300,2.7,3.3,0,152.98507692307692,true,"Fresh mint and vanilla fragrance with a strong, captivating presence. Ideal for evening wear.",strong,evening,fresh mint vanilla,,{
+  material: new ObjectId('6a3e242d2f2b2f71f964fd00'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d11')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d12')
+}
+Versace EROS Spray,VerEros_SP,spray,15,700,6.75,8.25,0,209.9626923076923,true,"Fresh mint and vanilla fragrance with a strong, captivating presence. Ideal for evening wear.",strong,evening,fresh mint vanilla,,{
+  material: new ObjectId('6a3e242d2f2b2f71f964fd00'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d11')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d12')
+}
+Versace EROS Spray,VerEros_SP,spray,30,1000,13.5,16.5,0,364.9253846153846,true,"Fresh mint and vanilla fragrance with a strong, captivating presence. Ideal for evening wear.",strong,evening,fresh mint vanilla,,{
+  material: new ObjectId('6a3e242d2f2b2f71f964fd00'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d11')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d12')
+}
+Versace EROS Spray,VerEros_SP,spray,50,1300,22.5,27.5,0,491.5423076923077,true,"Fresh mint and vanilla fragrance with a strong, captivating presence. Ideal for evening wear.",strong,evening,fresh mint vanilla,,{
+  material: new ObjectId('6a3e242d2f2b2f71f964fd00'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d11')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d12')
+}
+Versace EROS Spray,VerEros_SP,spray,100,1700,45,55,0,798.0846153846154,true,"Fresh mint and vanilla fragrance with a strong, captivating presence. Ideal for evening wear.",strong,evening,fresh mint vanilla,,{
+  material: new ObjectId('6a3e242d2f2b2f71f964fd00'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d11')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d12')
+}
+Versace Eros Flame,VrEf,roll-on,3.5,210,3.5,0,0,155.67169697333333,true,"Top Notes: Mandarin orange, chinotto (bitter orange), lemon, Madagascar pepper, and rosemary.
+Heart/Middle Notes: Pepperwood, geranium, and rose.
+Base Notes: Vanilla, tonka bean, sandalwood, Texas cedar, patchouli, and oakmoss.",strong,special,Cold,Hot,Sweet,Spicy,6a77731f21fc6555b5eab138,
+Versace Eros Flame,VrEf,roll-on,6,350,6,0,0,212.15315315027027,true,"Top Notes: Mandarin orange, chinotto (bitter orange), lemon, Madagascar pepper, and rosemary.
+Heart/Middle Notes: Pepperwood, geranium, and rose.
+Base Notes: Vanilla, tonka bean, sandalwood, Texas cedar, patchouli, and oakmoss.",strong,special,Cold,Hot,Sweet,Spicy,6a77731f21fc6555b5eab138,
+Versace Eros Flame,VrEf,roll-on,15,850,15,0,0,360,true,"Top Notes: Mandarin orange, chinotto (bitter orange), lemon, Madagascar pepper, and rosemary.
+Heart/Middle Notes: Pepperwood, geranium, and rose.
+Base Notes: Vanilla, tonka bean, sandalwood, Texas cedar, patchouli, and oakmoss.",strong,special,Cold,Hot,Sweet,Spicy,6a77731f21fc6555b5eab138,
+Versace Eros Flame,VrEf,roll-on,30,1400,30,0,0,565,true,"Top Notes: Mandarin orange, chinotto (bitter orange), lemon, Madagascar pepper, and rosemary.
+Heart/Middle Notes: Pepperwood, geranium, and rose.
+Base Notes: Vanilla, tonka bean, sandalwood, Texas cedar, patchouli, and oakmoss.",strong,special,Cold,Hot,Sweet,Spicy,6a77731f21fc6555b5eab138,
+Versace Eros Flame Spray,VrEf_SP,spray,6,370,3.3000000000000003,2.7,0,178.018,true,"Top Notes: Mandarin orange, chinotto (bitter orange), lemon, Madagascar pepper, and rosemary.
+Heart/Middle Notes: Pepperwood, geranium, and rose.
+Base Notes: Vanilla, tonka bean, sandalwood, Texas cedar, patchouli, and oakmoss.",strong,special,Cold,Hot,Sweet,Spicy,,{
+  material: new ObjectId('6a77731f21fc6555b5eab138'),
+  percentage: 52,
+  _id: new ObjectId('6a77848a21fc6555b5ead7d9')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 45,
+  _id: new ObjectId('6a77848a21fc6555b5ead7da')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd82'),
+  percentage: 1,
+  _id: new ObjectId('6a77848a21fc6555b5ead7db')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd73'),
+  percentage: 1,
+  _id: new ObjectId('6a77848a21fc6555b5ead7dc')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd7a'),
+  percentage: 1,
+  _id: new ObjectId('6a77848a21fc6555b5ead7dd')
+}
+Versace Eros Flame Spray,VrEf_SP,spray,15,870,8.25,6.75,0,272.545,true,"Top Notes: Mandarin orange, chinotto (bitter orange), lemon, Madagascar pepper, and rosemary.
+Heart/Middle Notes: Pepperwood, geranium, and rose.
+Base Notes: Vanilla, tonka bean, sandalwood, Texas cedar, patchouli, and oakmoss.",strong,special,Cold,Hot,Sweet,Spicy,,{
+  material: new ObjectId('6a77731f21fc6555b5eab138'),
+  percentage: 52,
+  _id: new ObjectId('6a77848a21fc6555b5ead7d9')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 45,
+  _id: new ObjectId('6a77848a21fc6555b5ead7da')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd82'),
+  percentage: 1,
+  _id: new ObjectId('6a77848a21fc6555b5ead7db')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd73'),
+  percentage: 1,
+  _id: new ObjectId('6a77848a21fc6555b5ead7dc')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd7a'),
+  percentage: 1,
+  _id: new ObjectId('6a77848a21fc6555b5ead7dd')
+}
+Versace Eros Flame Spray,VrEf_SP,spray,30,1450,16.5,13.5,0,487.42333333333335,true,"Top Notes: Mandarin orange, chinotto (bitter orange), lemon, Madagascar pepper, and rosemary.
+Heart/Middle Notes: Pepperwood, geranium, and rose.
+Base Notes: Vanilla, tonka bean, sandalwood, Texas cedar, patchouli, and oakmoss.",strong,special,Cold,Hot,Sweet,Spicy,,{
+  material: new ObjectId('6a77731f21fc6555b5eab138'),
+  percentage: 52,
+  _id: new ObjectId('6a77848a21fc6555b5ead7d9')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 45,
+  _id: new ObjectId('6a77848a21fc6555b5ead7da')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd82'),
+  percentage: 1,
+  _id: new ObjectId('6a77848a21fc6555b5ead7db')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd73'),
+  percentage: 1,
+  _id: new ObjectId('6a77848a21fc6555b5ead7dc')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd7a'),
+  percentage: 1,
+  _id: new ObjectId('6a77848a21fc6555b5ead7dd')
+}
+Versace Eros Flame Spray,VrEf_SP,spray,50,1600,27.5,22.5,0,700.15,true,"Top Notes: Mandarin orange, chinotto (bitter orange), lemon, Madagascar pepper, and rosemary.
+Heart/Middle Notes: Pepperwood, geranium, and rose.
+Base Notes: Vanilla, tonka bean, sandalwood, Texas cedar, patchouli, and oakmoss.",strong,special,Cold,Hot,Sweet,Spicy,,{
+  material: new ObjectId('6a77731f21fc6555b5eab138'),
+  percentage: 52,
+  _id: new ObjectId('6a77848a21fc6555b5ead7d9')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 45,
+  _id: new ObjectId('6a77848a21fc6555b5ead7da')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd82'),
+  percentage: 1,
+  _id: new ObjectId('6a77848a21fc6555b5ead7db')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd73'),
+  percentage: 1,
+  _id: new ObjectId('6a77848a21fc6555b5ead7dc')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd7a'),
+  percentage: 1,
+  _id: new ObjectId('6a77848a21fc6555b5ead7dd')
+}
+Versace Eros Flame Spray,VrEf_SP,spray,100,2500,55,45,0,1215.3,true,"Top Notes: Mandarin orange, chinotto (bitter orange), lemon, Madagascar pepper, and rosemary.
+Heart/Middle Notes: Pepperwood, geranium, and rose.
+Base Notes: Vanilla, tonka bean, sandalwood, Texas cedar, patchouli, and oakmoss.",strong,special,Cold,Hot,Sweet,Spicy,,{
+  material: new ObjectId('6a77731f21fc6555b5eab138'),
+  percentage: 52,
+  _id: new ObjectId('6a77848a21fc6555b5ead7d9')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 45,
+  _id: new ObjectId('6a77848a21fc6555b5ead7da')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd82'),
+  percentage: 1,
+  _id: new ObjectId('6a77848a21fc6555b5ead7db')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd73'),
+  percentage: 1,
+  _id: new ObjectId('6a77848a21fc6555b5ead7dc')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd7a'),
+  percentage: 1,
+  _id: new ObjectId('6a77848a21fc6555b5ead7dd')
+}
+White Oud,WO,roll-on,3.5,180,3.5,0,0,0,true,Strong woody oud fragrance. A sophisticated evening scent.,strong,evening,oud woody,6a3e24302f2b2f71f964fd50,
+White Oud,WO,roll-on,6,280,6,0,0,0,true,Strong woody oud fragrance. A sophisticated evening scent.,strong,evening,oud woody,6a3e24302f2b2f71f964fd50,
+White Oud,WO,roll-on,15,750,15,0,0,0,true,Strong woody oud fragrance. A sophisticated evening scent.,strong,evening,oud woody,6a3e24302f2b2f71f964fd50,
+White Oud,WO,roll-on,30,1500,30,0,0,0,true,Strong woody oud fragrance. A sophisticated evening scent.,strong,evening,oud woody,6a3e24302f2b2f71f964fd50,
+White Oud Spray,WO_SP,spray,6,330,2.7,3.3,0,0,true,Strong woody oud fragrance. A sophisticated evening scent.,strong,evening,oud woody,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd50'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091f3668fc77ab691dc6')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091f3668fc77ab691dc7')
+}
+White Oud Spray,WO_SP,spray,15,780,6.75,8.25,0,0,true,Strong woody oud fragrance. A sophisticated evening scent.,strong,evening,oud woody,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd50'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091f3668fc77ab691dc6')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091f3668fc77ab691dc7')
+}
+White Oud Spray,WO_SP,spray,30,1050,13.5,16.5,0,0,true,Strong woody oud fragrance. A sophisticated evening scent.,strong,evening,oud woody,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd50'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091f3668fc77ab691dc6')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091f3668fc77ab691dc7')
+}
+White Oud Spray,WO_SP,spray,50,1300,22.5,27.5,0,0,true,Strong woody oud fragrance. A sophisticated evening scent.,strong,evening,oud woody,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd50'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091f3668fc77ab691dc6')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091f3668fc77ab691dc7')
+}
+White Oud Spray,WO_SP,spray,100,1650,45,55,0,0,true,Strong woody oud fragrance. A sophisticated evening scent.,strong,evening,oud woody,,{
+  material: new ObjectId('6a3e24302f2b2f71f964fd50'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091f3668fc77ab691dc6')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091f3668fc77ab691dc7')
+}
+kacha beli,KacBel,roll-on,3.5,150,3.5,0,0,0,true,Light fruity sweet fragrance. Fresh and cheerful for daytime.,light,daytime,fruity sweet,6a3e242f2f2b2f71f964fd3d,
+kacha beli,KacBel,roll-on,6,250,6,0,0,0,true,Light fruity sweet fragrance. Fresh and cheerful for daytime.,light,daytime,fruity sweet,6a3e242f2f2b2f71f964fd3d,
+kacha beli,KacBel,roll-on,15,650,15,0,0,0,true,Light fruity sweet fragrance. Fresh and cheerful for daytime.,light,daytime,fruity sweet,6a3e242f2f2b2f71f964fd3d,
+kacha beli,KacBel,roll-on,30,1250,30,0,0,0,true,Light fruity sweet fragrance. Fresh and cheerful for daytime.,light,daytime,fruity sweet,6a3e242f2f2b2f71f964fd3d,
+kacha beli Spray,KacBel_SP,spray,6,300,2.7,3.3,0,0,true,Light fruity sweet fragrance. Fresh and cheerful for daytime.,light,daytime,fruity sweet,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd3d'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091e3668fc77ab691d9b')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091e3668fc77ab691d9c')
+}
+kacha beli Spray,KacBel_SP,spray,15,700,6.75,8.25,0,0,true,Light fruity sweet fragrance. Fresh and cheerful for daytime.,light,daytime,fruity sweet,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd3d'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091e3668fc77ab691d9b')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091e3668fc77ab691d9c')
+}
+kacha beli Spray,KacBel_SP,spray,30,1000,13.5,16.5,0,0,true,Light fruity sweet fragrance. Fresh and cheerful for daytime.,light,daytime,fruity sweet,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd3d'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091e3668fc77ab691d9b')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091e3668fc77ab691d9c')
+}
+kacha beli Spray,KacBel_SP,spray,50,1300,22.5,27.5,0,0,true,Light fruity sweet fragrance. Fresh and cheerful for daytime.,light,daytime,fruity sweet,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd3d'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091e3668fc77ab691d9b')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091e3668fc77ab691d9c')
+}
+kacha beli Spray,KacBel_SP,spray,100,1700,45,55,0,0,true,Light fruity sweet fragrance. Fresh and cheerful for daytime.,light,daytime,fruity sweet,,{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd3d'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091e3668fc77ab691d9b')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091e3668fc77ab691d9c')
+}
+lacoste White,LaW,roll-on,3.5,150,3.5,0,0,127.67169697333333,true,"Top Notes: Grapefruit, rosemary, and cardamom.
+Heart/Middle Notes: Ylang-ylang and tuberose (creamy white florals).
+Base Notes: Suede, Virginia cedar, vetiver, and leather",light,daytime,woody,citrus,6a77734b21fc6555b5eab139,
+lacoste White,LaW,roll-on,6,250,6,0,0,164.15315315027027,true,"Top Notes: Grapefruit, rosemary, and cardamom.
+Heart/Middle Notes: Ylang-ylang and tuberose (creamy white florals).
+Base Notes: Suede, Virginia cedar, vetiver, and leather",light,daytime,woody,citrus,6a77734b21fc6555b5eab139,
+lacoste White,LaW,roll-on,15,600,15,0,0,250,true,"Top Notes: Grapefruit, rosemary, and cardamom.
+Heart/Middle Notes: Ylang-ylang and tuberose (creamy white florals).
+Base Notes: Suede, Virginia cedar, vetiver, and leather",light,daytime,woody,citrus,6a77734b21fc6555b5eab139,
+lacoste White,LaW,roll-on,30,1150,30,0,0,442.3333333333333,true,"Top Notes: Grapefruit, rosemary, and cardamom.
+Heart/Middle Notes: Ylang-ylang and tuberose (creamy white florals).
+Base Notes: Suede, Virginia cedar, vetiver, and leather",light,daytime,woody,citrus,6a77734b21fc6555b5eab139,
+lacoste White Spray,LaW_SP,spray,6,280,3.3000000000000003,2.7,0,153.058,true,"Top Notes: Grapefruit, rosemary, and cardamom.
+Heart/Middle Notes: Ylang-ylang and tuberose (creamy white florals).
+Base Notes: Suede, Virginia cedar, vetiver, and leather",light,daytime,woody,citrus,,{
+  material: new ObjectId('6a77734b21fc6555b5eab139'),
+  percentage: 52,
+  _id: new ObjectId('6a7786c021fc6555b5eae04e')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 45,
+  _id: new ObjectId('6a7786c021fc6555b5eae04f')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd7a'),
+  percentage: 1,
+  _id: new ObjectId('6a7786c021fc6555b5eae050')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd73'),
+  percentage: 1,
+  _id: new ObjectId('6a7786c021fc6555b5eae051')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd82'),
+  percentage: 1,
+  _id: new ObjectId('6a7786c021fc6555b5eae052')
+}
+lacoste White Spray,LaW_SP,spray,15,700,8.25,6.75,0,210.14499999999998,true,"Top Notes: Grapefruit, rosemary, and cardamom.
+Heart/Middle Notes: Ylang-ylang and tuberose (creamy white florals).
+Base Notes: Suede, Virginia cedar, vetiver, and leather",light,daytime,woody,citrus,,{
+  material: new ObjectId('6a77734b21fc6555b5eab139'),
+  percentage: 52,
+  _id: new ObjectId('6a7786c021fc6555b5eae04e')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 45,
+  _id: new ObjectId('6a7786c021fc6555b5eae04f')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd7a'),
+  percentage: 1,
+  _id: new ObjectId('6a7786c021fc6555b5eae050')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd73'),
+  percentage: 1,
+  _id: new ObjectId('6a7786c021fc6555b5eae051')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd82'),
+  percentage: 1,
+  _id: new ObjectId('6a7786c021fc6555b5eae052')
+}
+lacoste White Spray,LaW_SP,spray,30,1250,16.5,13.5,0,362.62333333333333,true,"Top Notes: Grapefruit, rosemary, and cardamom.
+Heart/Middle Notes: Ylang-ylang and tuberose (creamy white florals).
+Base Notes: Suede, Virginia cedar, vetiver, and leather",light,daytime,woody,citrus,,{
+  material: new ObjectId('6a77734b21fc6555b5eab139'),
+  percentage: 52,
+  _id: new ObjectId('6a7786c021fc6555b5eae04e')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 45,
+  _id: new ObjectId('6a7786c021fc6555b5eae04f')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd7a'),
+  percentage: 1,
+  _id: new ObjectId('6a7786c021fc6555b5eae050')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd73'),
+  percentage: 1,
+  _id: new ObjectId('6a7786c021fc6555b5eae051')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd82'),
+  percentage: 1,
+  _id: new ObjectId('6a7786c021fc6555b5eae052')
+}
+lacoste White Spray,LaW_SP,spray,50,1450,27.5,22.5,0,492.15,true,"Top Notes: Grapefruit, rosemary, and cardamom.
+Heart/Middle Notes: Ylang-ylang and tuberose (creamy white florals).
+Base Notes: Suede, Virginia cedar, vetiver, and leather",light,daytime,woody,citrus,,{
+  material: new ObjectId('6a77734b21fc6555b5eab139'),
+  percentage: 52,
+  _id: new ObjectId('6a7786c021fc6555b5eae04e')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 45,
+  _id: new ObjectId('6a7786c021fc6555b5eae04f')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd7a'),
+  percentage: 1,
+  _id: new ObjectId('6a7786c021fc6555b5eae050')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd73'),
+  percentage: 1,
+  _id: new ObjectId('6a7786c021fc6555b5eae051')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd82'),
+  percentage: 1,
+  _id: new ObjectId('6a7786c021fc6555b5eae052')
+}
+lacoste White Spray,LaW_SP,spray,100,1900,55,45,0,799.3,true,"Top Notes: Grapefruit, rosemary, and cardamom.
+Heart/Middle Notes: Ylang-ylang and tuberose (creamy white florals).
+Base Notes: Suede, Virginia cedar, vetiver, and leather",light,daytime,woody,citrus,,{
+  material: new ObjectId('6a77734b21fc6555b5eab139'),
+  percentage: 52,
+  _id: new ObjectId('6a7786c021fc6555b5eae04e')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 45,
+  _id: new ObjectId('6a7786c021fc6555b5eae04f')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd7a'),
+  percentage: 1,
+  _id: new ObjectId('6a7786c021fc6555b5eae050')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd73'),
+  percentage: 1,
+  _id: new ObjectId('6a7786c021fc6555b5eae051')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd82'),
+  percentage: 1,
+  _id: new ObjectId('6a7786c021fc6555b5eae052')
+}
+le male elixir,LeME,roll-on,3.5,180,3.5,0,0,148.67169697333333,true,Premium perfume oil with a captivating scent.,medium,Night,Evening,honey leather tobacco,6a77727221fc6555b5eaad44,
+le male elixir,LeME,roll-on,6,300,6,0,0,200.15315315027027,true,Premium perfume oil with a captivating scent.,medium,Night,Evening,honey leather tobacco,6a77727221fc6555b5eaad44,
+le male elixir,LeME,roll-on,15,750,15,0,0,330,true,Premium perfume oil with a captivating scent.,medium,Night,Evening,honey leather tobacco,6a77727221fc6555b5eaad44,
+le male elixir,LeME,roll-on,30,1100,30,0,0,505,true,Premium perfume oil with a captivating scent.,medium,Night,Evening,honey leather tobacco,6a77727221fc6555b5eaad44,
+le male elixir Spray,LeME__SP,spray,6,330,3.3000000000000003,2.7,0,171.778,true,Premium perfume oil with a captivating scent.,medium,Night,Evening,honey leather tobacco,,{
+  material: new ObjectId('6a77727221fc6555b5eaad44'),
+  percentage: 52,
+  _id: new ObjectId('6a77801e21fc6555b5eacd87')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 45,
+  _id: new ObjectId('6a77801e21fc6555b5eacd88')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd73'),
+  percentage: 1,
+  _id: new ObjectId('6a77801e21fc6555b5eacd89')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd82'),
+  percentage: 1,
+  _id: new ObjectId('6a77801e21fc6555b5eacd8a')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd7a'),
+  percentage: 1,
+  _id: new ObjectId('6a77801e21fc6555b5eacd8b')
+}
+le male elixir Spray,LeME__SP,spray,15,800,8.25,6.75,0,256.945,true,Premium perfume oil with a captivating scent.,medium,Night,Evening,honey leather tobacco,,{
+  material: new ObjectId('6a77727221fc6555b5eaad44'),
+  percentage: 52,
+  _id: new ObjectId('6a77801e21fc6555b5eacd87')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 45,
+  _id: new ObjectId('6a77801e21fc6555b5eacd88')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd73'),
+  percentage: 1,
+  _id: new ObjectId('6a77801e21fc6555b5eacd89')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd82'),
+  percentage: 1,
+  _id: new ObjectId('6a77801e21fc6555b5eacd8a')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd7a'),
+  percentage: 1,
+  _id: new ObjectId('6a77801e21fc6555b5eacd8b')
+}
+le male elixir Spray,LeME__SP,spray,30,1100,16.5,13.5,0,456.22333333333336,true,Premium perfume oil with a captivating scent.,medium,Night,Evening,honey leather tobacco,,{
+  material: new ObjectId('6a77727221fc6555b5eaad44'),
+  percentage: 52,
+  _id: new ObjectId('6a77801e21fc6555b5eacd87')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 45,
+  _id: new ObjectId('6a77801e21fc6555b5eacd88')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd73'),
+  percentage: 1,
+  _id: new ObjectId('6a77801e21fc6555b5eacd89')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd82'),
+  percentage: 1,
+  _id: new ObjectId('6a77801e21fc6555b5eacd8a')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd7a'),
+  percentage: 1,
+  _id: new ObjectId('6a77801e21fc6555b5eacd8b')
+}
+le male elixir Spray,LeME__SP,spray,50,1500,27.5,22.5,0,648.15,true,Premium perfume oil with a captivating scent.,medium,Night,Evening,honey leather tobacco,,{
+  material: new ObjectId('6a77727221fc6555b5eaad44'),
+  percentage: 52,
+  _id: new ObjectId('6a77801e21fc6555b5eacd87')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 45,
+  _id: new ObjectId('6a77801e21fc6555b5eacd88')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd73'),
+  percentage: 1,
+  _id: new ObjectId('6a77801e21fc6555b5eacd89')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd82'),
+  percentage: 1,
+  _id: new ObjectId('6a77801e21fc6555b5eacd8a')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd7a'),
+  percentage: 1,
+  _id: new ObjectId('6a77801e21fc6555b5eacd8b')
+}
+le male elixir Spray,LeME__SP,spray,100,2000,55,45,0,1111.3,true,Premium perfume oil with a captivating scent.,medium,Night,Evening,honey leather tobacco,,{
+  material: new ObjectId('6a77727221fc6555b5eaad44'),
+  percentage: 52,
+  _id: new ObjectId('6a77801e21fc6555b5eacd87')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 45,
+  _id: new ObjectId('6a77801e21fc6555b5eacd88')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd73'),
+  percentage: 1,
+  _id: new ObjectId('6a77801e21fc6555b5eacd89')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd82'),
+  percentage: 1,
+  _id: new ObjectId('6a77801e21fc6555b5eacd8a')
+},{
+  material: new ObjectId('6a3e24312f2b2f71f964fd7a'),
+  percentage: 1,
+  _id: new ObjectId('6a77801e21fc6555b5eacd8b')
+}
+victoriya secret,VicSec,roll-on,3.5,180,3.5,0,0,0,true,Seductive floral and vanilla fragrance. Light and sweet for daytime.,light,daytime,floral vanilla sweet,6a3e242e2f2b2f71f964fd1b,
+victoriya secret,VicSec,roll-on,6,280,6,0,0,0,true,Seductive floral and vanilla fragrance. Light and sweet for daytime.,light,daytime,floral vanilla sweet,6a3e242e2f2b2f71f964fd1b,
+victoriya secret,VicSec,roll-on,15,750,15,0,0,0,true,Seductive floral and vanilla fragrance. Light and sweet for daytime.,light,daytime,floral vanilla sweet,6a3e242e2f2b2f71f964fd1b,
+victoriya secret,VicSec,roll-on,30,1500,30,0,0,0,true,Seductive floral and vanilla fragrance. Light and sweet for daytime.,light,daytime,floral vanilla sweet,6a3e242e2f2b2f71f964fd1b,
+victoriya secret Spray,VicSec_SP,spray,6,750,2.7,3.3,0,0,true,Seductive floral and vanilla fragrance. Light and sweet for daytime.,light,daytime,floral vanilla sweet,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd1b'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d45')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d46')
+}
+victoriya secret Spray,VicSec_SP,spray,15,1500,6.75,8.25,0,0,true,Seductive floral and vanilla fragrance. Light and sweet for daytime.,light,daytime,floral vanilla sweet,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd1b'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d45')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d46')
+}
+victoriya secret Spray,VicSec_SP,spray,30,1050,13.5,16.5,0,0,true,Seductive floral and vanilla fragrance. Light and sweet for daytime.,light,daytime,floral vanilla sweet,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd1b'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d45')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d46')
+}
+victoriya secret Spray,VicSec_SP,spray,50,1300,22.5,27.5,0,0,true,Seductive floral and vanilla fragrance. Light and sweet for daytime.,light,daytime,floral vanilla sweet,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd1b'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d45')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d46')
+}
+victoriya secret Spray,VicSec_SP,spray,100,1650,45,55,0,0,true,Seductive floral and vanilla fragrance. Light and sweet for daytime.,light,daytime,floral vanilla sweet,,{
+  material: new ObjectId('6a3e242e2f2b2f71f964fd1b'),
+  percentage: 45,
+  _id: new ObjectId('6a4c091c3668fc77ab691d45')
+},{
+  material: new ObjectId('6a3e242f2f2b2f71f964fd46'),
+  percentage: 55,
+  _id: new ObjectId('6a4c091c3668fc77ab691d46')
+}
