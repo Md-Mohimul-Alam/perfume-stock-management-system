@@ -5,8 +5,6 @@ const InventoryLog = require('../models/InventoryLog');
 const { deductRawMaterial, deductBottle } = require('../services/inventoryService');
 const { generateInvoiceNo } = require('../utils/generateInvoice');
 
-// @desc    Create a sale (auto-deduct stock)
-// @route   POST /api/sales
 // @desc    Create a sale (auto-deduct stock) – with sequential invoice numbers
 // @route   POST /api/sales
 exports.createSale = async (req, res) => {
@@ -18,13 +16,11 @@ exports.createSale = async (req, res) => {
     const lastSale = await Sale.findOne().sort({ createdAt: -1 });
     let nextNumber = 1;
     if (lastSale && lastSale.invoiceNo) {
-      // Extract numeric part after the last dash (e.g., "INV-0001" → 1)
       const match = lastSale.invoiceNo.match(/(\d+)$/);
       if (match) {
         nextNumber = parseInt(match[1]) + 1;
       }
     }
-    // Format invoice number with leading zeros (e.g., INV-0001, INV-0010, INV-0100)
     const invoiceNo = `INV-${String(nextNumber).padStart(4, '0')}`;
 
     // ---------- Process items ----------
@@ -98,7 +94,7 @@ exports.createSale = async (req, res) => {
   }
 };
 
-// @desc    Get all sales (with filters)
+// @desc    Get all sales (with filters) – now populates description
 // @route   GET /api/sales
 exports.getSales = async (req, res) => {
   try {
@@ -112,7 +108,7 @@ exports.getSales = async (req, res) => {
       if (endDate) filter.saleDate.$lte = new Date(endDate);
     }
     const sales = await Sale.find(filter)
-      .populate('items.product', 'name sku type')   // ✅ includes type
+      .populate('items.product', 'name sku type description')   // ✅ includes description
       .sort('-saleDate');
     res.json(sales);
   } catch (error) {
@@ -120,12 +116,12 @@ exports.getSales = async (req, res) => {
   }
 };
 
-// @desc    Get single sale
+// @desc    Get single sale – now populates description
 // @route   GET /api/sales/:id
 exports.getSaleById = async (req, res) => {
   try {
     const sale = await Sale.findById(req.params.id)
-      .populate('items.product', 'name sku type'); // ✅ includes type
+      .populate('items.product', 'name sku type description');  // ✅ includes description
     if (!sale) return res.status(404).json({ message: 'Sale not found' });
     res.json(sale);
   } catch (error) {
@@ -134,7 +130,7 @@ exports.getSaleById = async (req, res) => {
 };
 
 // @desc    Update payment status (e.g., mark due as paid)
-// @route   PUT /api/sales/:id/payment
+// @route   PUT /api/sales/:id/payment  (and also PATCH /api/sales/:id)
 exports.updatePayment = async (req, res) => {
   try {
     const sale = await Sale.findById(req.params.id);
@@ -180,35 +176,30 @@ exports.bulkCreateSales = async (req, res) => {
 
     for (const saleData of sales) {
       try {
-        // Validate required fields
         const { invoiceNo, channel, items, saleDate, paymentStatus, notes } = saleData;
         if (!invoiceNo || !channel || !items || !items.length) {
           errors.push({ saleData, error: 'Missing required fields: invoiceNo, channel, items' });
           continue;
         }
 
-        // Check if invoice already exists
         const existing = await Sale.findOne({ invoiceNo });
         if (existing) {
           errors.push({ saleData, error: `Invoice ${invoiceNo} already exists` });
           continue;
         }
 
-        // Prepare items with product lookups and stock deduction
         const processedItems = [];
         let totalAmount = 0;
 
         for (const item of items) {
           const { sku, sizeMl, quantity, unitPrice } = item;
 
-          // Find product by SKU and populate bottle info
           const product = await Product.findOne({ sku }).populate('sizes.bottle');
           if (!product) {
             errors.push({ saleData, error: `Product SKU ${sku} not found` });
             continue;
           }
 
-          // Check if size exists in product
           const sizeVariant = product.sizes.find(s => s.sizeMl === sizeMl);
           if (!sizeVariant) {
             errors.push({ saleData, error: `Size ${sizeMl}ml not available for SKU ${sku}` });
@@ -228,12 +219,8 @@ exports.bulkCreateSales = async (req, res) => {
           });
         }
 
-        // If any item failed, skip this sale entirely
-        if (processedItems.length === 0) {
-          continue;
-        }
+        if (processedItems.length === 0) continue;
 
-        // Create sale
         const sale = await Sale.create({
           invoiceNo,
           channel,
@@ -250,14 +237,9 @@ exports.bulkCreateSales = async (req, res) => {
           notes: notes || '',
         });
 
-        // Now deduct stock for each item
         for (const item of processedItems) {
           const { productRef, sizeVariant, quantity } = item;
-
-          // Deduct bottles
           await deductBottle(sizeVariant.bottle, quantity, 'sale', sale);
-
-          // Deduct raw materials
           if (productRef.type === 'roll-on') {
             await deductRawMaterial(productRef.baseOil, sizeVariant.oilMlUsed * quantity, 'sale', sale);
           } else {
@@ -268,7 +250,6 @@ exports.bulkCreateSales = async (req, res) => {
           }
         }
 
-        // Record cash transaction if paid
         if (sale.paymentStatus === 'paid') {
           await Transaction.create({
             type: 'cash_in',
@@ -295,6 +276,7 @@ exports.bulkCreateSales = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 // @desc    Delete a sale (permanently)
 // @route   DELETE /api/sales/:id
 exports.deleteSale = async (req, res) => {
@@ -302,7 +284,6 @@ exports.deleteSale = async (req, res) => {
     const sale = await Sale.findById(req.params.id);
     if (!sale) return res.status(404).json({ message: 'Sale not found' });
 
-    // Optionally remove linked logs/transactions
     await InventoryLog.deleteMany({ reference: sale._id, refModel: 'Sale' });
     await Transaction.deleteMany({ reference: sale._id, refModel: 'Sale' });
     await sale.deleteOne();

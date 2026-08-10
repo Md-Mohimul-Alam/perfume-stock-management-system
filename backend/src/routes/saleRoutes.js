@@ -5,18 +5,19 @@ const {
   getSales,
   getSaleById,
   updatePayment,
-  bulkCreateSales,   // 👈 new
+  bulkCreateSales,
+  deleteSale,
 } = require('../controllers/saleController');
 const { protect } = require('../middlewares/authMiddleware');
-const { deleteSale } = require('../controllers/saleController');
 
 router.route('/')
   .get(protect, getSales)
   .post(protect, createSale);
 
-router.post('/bulk', protect, bulkCreateSales);   // 👈 new
-
+router.post('/bulk', protect, bulkCreateSales);
 router.get('/:id', protect, getSaleById);
-router.put('/:id/payment', protect, updatePayment);
+router.put('/:id/payment', protect, updatePayment);   // optional, keep for backward compatibility
+router.patch('/:id', protect, updatePayment);         // 👈 new – handles frontend PATCH
 router.delete('/:id', protect, deleteSale);
+
 module.exports = router;
