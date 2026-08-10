@@ -520,7 +520,7 @@ const SalesList = () => {
       {/* ---------- Details Modal ---------- */}
       {showDetailsModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 relative">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 relative">
             <button
               onClick={() => {
                 setShowDetailsModal(false);
@@ -577,6 +577,7 @@ const SalesList = () => {
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Size</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Qty</th>
@@ -590,7 +591,10 @@ const SalesList = () => {
                         const typeLabel = productType === 'roll-on' ? 'oil' : (productType === 'spray' ? 'perfume' : 'N/A');
                         return (
                           <tr key={idx}>
-                            <td className="px-4 py-3">{item.product?.name || 'Unknown'}</td>
+                            <td className="px-4 py-3 font-medium">{item.product?.name || 'Unknown'}</td>
+                            <td className="px-4 py-3 max-w-xs truncate" title={item.product?.description || ''}>
+                              {item.product?.description || '—'}
+                            </td>
                             <td className="px-4 py-3">{item.sizeMl} ml</td>
                             <td className="px-4 py-3">{typeLabel}</td>
                             <td className="px-4 py-3">{item.quantity}</td>
@@ -600,7 +604,7 @@ const SalesList = () => {
                         );
                       })}
                       <tr className="font-bold bg-gray-50">
-                        <td colSpan="5" className="px-4 py-3 text-right">Grand Total</td>
+                        <td colSpan="6" className="px-4 py-3 text-right">Grand Total</td>
                         <td className="px-4 py-3">৳{selectedSale.totalAmount.toFixed(2)}</td>
                       </tr>
                     </tbody>
