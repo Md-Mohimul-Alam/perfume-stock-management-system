@@ -17,7 +17,7 @@ import {
   Layers,
   ShoppingCart,
   Award,
-  Clock, // 👈 new icon for due
+  Clock,
 } from 'lucide-react';
 import API from '../api/axios';
 import toast from 'react-hot-toast';
@@ -37,14 +37,17 @@ const Dashboard = () => {
     rawMaterialStockValue: 0,
     bottleStockValue: 0,
     totalInventoryValue: 0,
-    dueCount: 0,        // 👈 new
-    dueAmount: 0,       // 👈 new
+    dueCount: 0,
+    dueAmount: 0,
   });
   const [salesTypeCounts, setSalesTypeCounts] = useState({ oil: 0, perfume: 0 });
   const [topProducts, setTopProducts] = useState([]);
   const [bottles, setBottles] = useState([]);
   const [recentExpenses, setRecentExpenses] = useState([]);
   const [recentPurchases, setRecentPurchases] = useState([]);
+
+  // Fixed costs (adjust as needed)
+  const fixedCosts = 10600 + 246 + 127;
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -103,6 +106,9 @@ const Dashboard = () => {
 
         const totalInventoryValue = rawMaterialStockValue + bottleStockValue;
 
+        // --- Available Cash = revenue from paid sales - expenses - purchases - fixed costs
+        const netProfit = (totalRevenue - dueAmount) - totalExpenses - totalPurchases - fixedCosts;
+
         // --- Sales by product type ---
         let oilSold = 0;
         let perfumeSold = 0;
@@ -153,12 +159,12 @@ const Dashboard = () => {
           totalRevenue,
           totalExpenses,
           totalPurchases,
-          netProfit: totalRevenue - totalExpenses - totalPurchases - (10600 + 246 + 127),
+          netProfit,
           rawMaterialStockValue,
           bottleStockValue,
           totalInventoryValue,
-          dueCount,      // 👈 new
-          dueAmount,     // 👈 new
+          dueCount,
+          dueAmount,
         });
         setSalesTypeCounts({ oil: oilSold, perfume: perfumeSold });
         setRecentExpenses(recentExp);
@@ -237,7 +243,7 @@ const Dashboard = () => {
     },
   ];
 
-  // --- Overall Summary (now includes Due) ---
+  // --- Overall Summary ---
   const overallSummary = [
     { 
       label: 'Total Revenue', 
@@ -258,11 +264,11 @@ const Dashboard = () => {
       color: 'text-orange-600' 
     },
     { 
-      label: 'Pending Payments',   // 👈 new card
+      label: 'Pending Payments', 
       value: `৳${stats.dueAmount.toFixed(2)}`, 
       icon: Clock, 
       color: 'text-yellow-600',
-      badge: `${stats.dueCount} due`,  // 👈 show count
+      badge: `${stats.dueCount} due`,
       link: '/sales?paymentStatus=due',
       linkText: 'View due →',
     },
