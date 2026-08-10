@@ -28,6 +28,9 @@ const SalesList = () => {
   const [saleToDelete, setSaleToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
+  // Payment status update
+  const [updatingStatus, setUpdatingStatus] = useState(null);
+
   useEffect(() => {
     fetchSales();
   }, []);
@@ -219,19 +222,14 @@ const SalesList = () => {
     setDetailsLoading(true);
     setShowDetailsModal(true);
     try {
-      // 1. Fetch the sale
       const { data: sale } = await API.get(`/sales/${saleId}`);
 
-      // 2. Collect product IDs from items (if they are strings/ObjectIds)
       const productIds = sale.items
         .map(item => item.product?._id || item.product)
         .filter(id => id);
 
       let productsMap = {};
       if (productIds.length > 0) {
-        // 3. Fetch all products by their IDs (using a bulk endpoint if available)
-        //    For simplicity, we fetch each product individually, but this can be slow.
-        //    If your backend supports `/products?ids=...`, use that instead.
         const productPromises = productIds.map(id => API.get(`/products/${id}`));
         const productResponses = await Promise.all(productPromises);
         productsMap = productResponses.reduce((acc, res) => {
@@ -241,7 +239,6 @@ const SalesList = () => {
         }, {});
       }
 
-      // 4. Merge product details into items
       sale.items = sale.items.map(item => {
         const productId = item.product?._id || item.product;
         const product = productsMap[productId] || null;
@@ -257,6 +254,25 @@ const SalesList = () => {
       setShowDetailsModal(false);
     } finally {
       setDetailsLoading(false);
+    }
+  };
+
+  // ---------- Update Payment Status ----------
+  const updatePaymentStatus = async (saleId, newStatus) => {
+    setUpdatingStatus(saleId);
+    try {
+      await API.patch(`/sales/${saleId}`, { paymentStatus: newStatus });
+      setSales(prevSales =>
+        prevSales.map(s =>
+          s._id === saleId ? { ...s, paymentStatus: newStatus } : s
+        )
+      );
+      toast.success(`Payment status updated to ${newStatus}`);
+    } catch (error) {
+      toast.error('Failed to update payment status');
+      console.error(error);
+    } finally {
+      setUpdatingStatus(null);
     }
   };
 
@@ -364,7 +380,12 @@ const SalesList = () => {
 
       {/* Table */}
       {loading ? (
-        <p>Loading...</p>
+        <div className="flex justify-center items-center py-12">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-brand-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p>Loading sales...</p>
+          </div>
+        </div>
       ) : (
         <div className="bg-white rounded-2xl shadow-card overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
@@ -386,11 +407,19 @@ const SalesList = () => {
                   <td className="px-6 py-4">{s.channel}</td>
                   <td className="px-6 py-4 font-semibold">৳{s.totalAmount.toFixed(2)}</td>
                   <td className="px-6 py-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      s.paymentStatus === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {s.paymentStatus}
-                    </span>
+                    <select
+                      value={s.paymentStatus}
+                      onChange={(e) => updatePaymentStatus(s._id, e.target.value)}
+                      disabled={updatingStatus === s._id}
+                      className={`px-2 py-1 rounded-full text-xs font-medium border-0 focus:ring-2 focus:ring-brand-secondary outline-none cursor-pointer ${
+                        s.paymentStatus === 'paid'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}
+                    >
+                      <option value="paid">Paid</option>
+                      <option value="due">Due</option>
+                    </select>
                   </td>
                   <td className="px-6 py-4 text-center">
                     <div className="flex justify-center gap-2">
