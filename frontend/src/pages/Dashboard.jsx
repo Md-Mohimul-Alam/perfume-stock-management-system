@@ -17,6 +17,7 @@ import {
   Layers,
   ShoppingCart,
   Award,
+  Clock, // 👈 new icon for due
 } from 'lucide-react';
 import API from '../api/axios';
 import toast from 'react-hot-toast';
@@ -36,9 +37,11 @@ const Dashboard = () => {
     rawMaterialStockValue: 0,
     bottleStockValue: 0,
     totalInventoryValue: 0,
+    dueCount: 0,        // 👈 new
+    dueAmount: 0,       // 👈 new
   });
   const [salesTypeCounts, setSalesTypeCounts] = useState({ oil: 0, perfume: 0 });
-  const [topProducts, setTopProducts] = useState([]); // 👈 new
+  const [topProducts, setTopProducts] = useState([]);
   const [bottles, setBottles] = useState([]);
   const [recentExpenses, setRecentExpenses] = useState([]);
   const [recentPurchases, setRecentPurchases] = useState([]);
@@ -72,6 +75,11 @@ const Dashboard = () => {
 
         setBottles(bottleData);
 
+        // --- Due sales ---
+        const dueSales = allSales.filter(s => s.paymentStatus === 'due');
+        const dueCount = dueSales.length;
+        const dueAmount = dueSales.reduce((sum, s) => sum + (parseFloat(s.totalAmount) || 0), 0);
+
         // --- All-time totals ---
         const totalRevenue = allSales.reduce((sum, s) => sum + (parseFloat(s.totalAmount) || 0), 0);
         const totalExpenses = allExpenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
@@ -98,7 +106,7 @@ const Dashboard = () => {
         // --- Sales by product type ---
         let oilSold = 0;
         let perfumeSold = 0;
-        const productSalesMap = {}; // 👈 for top products
+        const productSalesMap = {};
 
         for (const sale of allSales) {
           if (!sale.items || !sale.items.length) continue;
@@ -108,7 +116,6 @@ const Dashboard = () => {
             if (product.type === 'roll-on') oilSold += (item.quantity || 0);
             else if (product.type === 'spray') perfumeSold += (item.quantity || 0);
 
-            // Aggregate by product ID for top products
             const productId = product._id;
             if (!productSalesMap[productId]) {
               productSalesMap[productId] = {
@@ -124,13 +131,11 @@ const Dashboard = () => {
           }
         }
 
-        // Sort and take top 5 products
         const sortedProducts = Object.values(productSalesMap)
           .sort((a, b) => b.totalSold - a.totalSold)
           .slice(0, 5);
         setTopProducts(sortedProducts);
 
-        // --- Recent expenses & purchases (last 5) ---
         const recentExp = [...allExpenses]
           .sort((a, b) => new Date(b.date) - new Date(a.date))
           .slice(0, 5);
@@ -152,6 +157,8 @@ const Dashboard = () => {
           rawMaterialStockValue,
           bottleStockValue,
           totalInventoryValue,
+          dueCount,      // 👈 new
+          dueAmount,     // 👈 new
         });
         setSalesTypeCounts({ oil: oilSold, perfume: perfumeSold });
         setRecentExpenses(recentExp);
@@ -230,7 +237,7 @@ const Dashboard = () => {
     },
   ];
 
-  // --- Overall Summary ---
+  // --- Overall Summary (now includes Due) ---
   const overallSummary = [
     { 
       label: 'Total Revenue', 
@@ -249,6 +256,15 @@ const Dashboard = () => {
       value: `৳${stats.totalPurchases.toFixed(2)}`, 
       icon: ShoppingCart, 
       color: 'text-orange-600' 
+    },
+    { 
+      label: 'Pending Payments',   // 👈 new card
+      value: `৳${stats.dueAmount.toFixed(2)}`, 
+      icon: Clock, 
+      color: 'text-yellow-600',
+      badge: `${stats.dueCount} due`,  // 👈 show count
+      link: '/sales?paymentStatus=due',
+      linkText: 'View due →',
     },
     { 
       label: 'Available Cash', 
@@ -350,9 +366,9 @@ const Dashboard = () => {
               <BarChart3 size={18} className="text-amber-600" />
               Overall Summary
             </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3 sm:gap-4">
               {overallSummary.map((item, idx) => (
-                <div key={idx} className="bg-white rounded-2xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow p-3 sm:p-4 text-center">
+                <div key={idx} className="bg-white rounded-2xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow p-3 sm:p-4 text-center relative">
                   <div className="flex items-center justify-center gap-1.5 sm:gap-2 mb-1">
                     <item.icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${item.color}`} />
                     <p className="text-[10px] sm:text-xs text-gray-500 font-medium uppercase tracking-wider">
@@ -360,6 +376,11 @@ const Dashboard = () => {
                     </p>
                   </div>
                   <p className={`text-base sm:text-lg font-bold ${item.color}`}>{item.value}</p>
+                  {item.badge && (
+                    <span className="absolute -top-1 -right-1 bg-yellow-100 text-yellow-800 text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                      {item.badge}
+                    </span>
+                  )}
                   {item.link && (
                     <Link
                       to={item.link}
@@ -449,7 +470,7 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Two-Column: Sales by Product Type & Top Selling Products (NEW) */}
+          {/* Two-Column: Sales by Product Type & Top Selling Products */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
             {/* Sales by Product Type */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-5">
@@ -471,7 +492,7 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* Top Selling Products (NEW) */}
+            {/* Top Selling Products */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-5">
               <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
                 <Award size={16} className="text-amber-600" />
@@ -503,7 +524,7 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Available Bottles (Inventory) – unchanged */}
+          {/* Available Bottles (Inventory) */}
           <div className="mt-6">
             <h2 className="text-base sm:text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
               <FlaskRound size={18} className="text-cyan-600" />
