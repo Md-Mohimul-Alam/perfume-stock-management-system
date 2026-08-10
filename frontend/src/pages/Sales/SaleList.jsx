@@ -214,13 +214,44 @@ const SalesList = () => {
     }
   };
 
-  // ---------- View Details ----------
+  // ---------- View Details (with product fetching) ----------
   const handleViewDetails = async (saleId) => {
     setDetailsLoading(true);
     setShowDetailsModal(true);
     try {
-      const { data } = await API.get(`/sales/${saleId}`);
-      setSelectedSale(data);
+      // 1. Fetch the sale
+      const { data: sale } = await API.get(`/sales/${saleId}`);
+
+      // 2. Collect product IDs from items (if they are strings/ObjectIds)
+      const productIds = sale.items
+        .map(item => item.product?._id || item.product)
+        .filter(id => id);
+
+      let productsMap = {};
+      if (productIds.length > 0) {
+        // 3. Fetch all products by their IDs (using a bulk endpoint if available)
+        //    For simplicity, we fetch each product individually, but this can be slow.
+        //    If your backend supports `/products?ids=...`, use that instead.
+        const productPromises = productIds.map(id => API.get(`/products/${id}`));
+        const productResponses = await Promise.all(productPromises);
+        productsMap = productResponses.reduce((acc, res) => {
+          const p = res.data;
+          acc[p._id] = p;
+          return acc;
+        }, {});
+      }
+
+      // 4. Merge product details into items
+      sale.items = sale.items.map(item => {
+        const productId = item.product?._id || item.product;
+        const product = productsMap[productId] || null;
+        return {
+          ...item,
+          product: product || { name: 'Unknown', description: '' }
+        };
+      });
+
+      setSelectedSale(sale);
     } catch (error) {
       toast.error('Failed to load sale details');
       setShowDetailsModal(false);
@@ -533,7 +564,10 @@ const SalesList = () => {
 
             {detailsLoading ? (
               <div className="flex justify-center items-center py-12">
-                <p>Loading details...</p>
+                <div className="text-center">
+                  <div className="w-12 h-12 border-4 border-brand-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                  <p>Loading sale details...</p>
+                </div>
               </div>
             ) : selectedSale ? (
               <div>
