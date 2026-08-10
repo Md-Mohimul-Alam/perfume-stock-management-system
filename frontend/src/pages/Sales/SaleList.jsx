@@ -77,7 +77,8 @@ const SalesList = () => {
 
   const filteredSales = applyFilters();
 
-  const channelOptions = ['Fair1', 'Fair2', 'Fair3', 'Fair4', 'Fair5', 'August', 'September', 'October', 'November', 'December', 'Online', 'Other'];
+  // Channel suggestions (predefined list, but users can type anything)
+  const channelSuggestions = ['Fair1', 'Fair2', 'Fair3', 'Fair4', 'Fair5', 'August', 'September', 'October', 'November', 'December', 'Online', 'Other'];
   const paymentStatusOptions = ['paid', 'due'];
   const typeOptions = ['oil', 'perfume'];
 
@@ -335,18 +336,24 @@ const SalesList = () => {
             />
           </div>
         </div>
+
+        {/* Channel filter – now a combobox with datalist */}
         <div className="min-w-[150px]">
           <label className="block text-sm font-medium text-gray-700 mb-1">Channel</label>
-          <select
+          <input
+            type="text"
+            list="channel-filter-suggestions"
             name="channel"
             value={filter.channel}
             onChange={handleFilterChange}
+            placeholder="All or type"
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-secondary outline-none bg-white"
-          >
-            <option value="">All</option>
-            {channelOptions.map(ch => <option key={ch} value={ch}>{ch}</option>)}
-          </select>
+          />
+          <datalist id="channel-filter-suggestions">
+            {channelSuggestions.map(ch => <option key={ch} value={ch} />)}
+          </datalist>
         </div>
+
         <div className="min-w-[150px]">
           <label className="block text-sm font-medium text-gray-700 mb-1">Payment Status</label>
           <select
@@ -359,6 +366,7 @@ const SalesList = () => {
             {paymentStatusOptions.map(ps => <option key={ps} value={ps}>{ps.charAt(0).toUpperCase() + ps.slice(1)}</option>)}
           </select>
         </div>
+
         <div className="min-w-[150px]">
           <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
           <select
@@ -370,6 +378,7 @@ const SalesList = () => {
             {typeOptions.map(t => <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>)}
           </select>
         </div>
+
         <button
           onClick={() => { setFilter({ channel: '', paymentStatus: '' }); setSearch(''); setTypeFilter(''); }}
           className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"

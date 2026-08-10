@@ -21,7 +21,10 @@ const NewSale = () => {
   const [selectedProduct, setSelectedProduct] = useState('');
   const [selectedSize, setSelectedSize] = useState('');
   const [quantity, setQuantity] = useState(1);
-  const [unitPrice, setUnitPrice] = useState(''); // new state for editable unit price
+  const [unitPrice, setUnitPrice] = useState('');
+
+  // Channel suggestions
+  const channelSuggestions = ['Fair1', 'Fair2', 'Fair3', 'Fair4', 'Fair5', 'August', 'September', 'October', 'November', 'December', 'Online', 'Other'];
 
   useEffect(() => {
     fetchProducts();
@@ -101,8 +104,8 @@ const NewSale = () => {
       setError('At least one item is required');
       return;
     }
-    if (!form.channel) {
-      setError('Please select a channel');
+    if (!form.channel.trim()) {
+      setError('Please enter a channel');
       return;
     }
     setSubmitting(true);
@@ -131,8 +134,6 @@ const NewSale = () => {
 
   const totalAmount = form.items.reduce((sum, item) => sum + item.totalPrice, 0);
 
-  const channelOptions = ['Fair1', 'Fair2', 'Fair3', 'Fair4', 'Fair5', 'August', 'September', 'October', 'November', 'December', 'Online', 'Other'];
-
   return (
     <div>
       <h1 className="text-3xl font-bold mb-6">New Sale</h1>
@@ -148,15 +149,18 @@ const NewSale = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Channel *</label>
-              <select
+              <input
+                type="text"
+                list="channel-suggestions"
                 value={form.channel}
                 onChange={(e) => setForm({ ...form, channel: e.target.value })}
+                placeholder="Type or select channel"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-secondary outline-none bg-white"
                 required
-              >
-                <option value="">Select channel</option>
-                {channelOptions.map(ch => <option key={ch} value={ch}>{ch}</option>)}
-              </select>
+              />
+              <datalist id="channel-suggestions">
+                {channelSuggestions.map(ch => <option key={ch} value={ch} />)}
+              </datalist>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Sale Date</label>

@@ -13,8 +13,7 @@ const saleSchema = mongoose.Schema(
     invoiceNo: { type: String, required: true, unique: true },
     channel: {
       type: String,
-      enum: ['Fair1', 'Fair2', 'Fair3', 'Fair4', 'Fair5', 'August', 'September', 'October', 'November', 'December', 'Online', 'Other'],
-      required: true,
+      required: true,   // ✅ no enum – any string allowed
     },
     items: [saleItemSchema],
     totalAmount: { type: Number, required: true },
