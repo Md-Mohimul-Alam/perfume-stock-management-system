@@ -90,7 +90,7 @@ const Materials = () => {
         materialNameMap[m.name.toLowerCase()] = m._id;
       });
 
-      // Compute usage per material (for informational display)
+      // Compute usage per material
       const usageMap = {};
 
       for (const sale of sales) {
@@ -132,24 +132,24 @@ const Materials = () => {
         }
       }
 
-      // ✅ FIX: availableOil = currentStockMl (the actual stock from DB)
+      // ✅ Update materials: availableOil = stock - usedOil
       const updatedMaterials = materialsData.map(m => {
         const used = usageMap[m._id] || 0;
         return {
           ...m,
-          usedOil: used,                     // informational only
-          availableOil: m.currentStockMl,    // ✅ use the actual stock
+          usedOil: used,
+          availableOil: (m.currentStockMl || 0) - used,  // stock - used
         };
       });
       setMaterials(updatedMaterials);
 
-      // Compute summary – only for oil materials
+      // Compute summary (only oils)
       const oilMaterials = updatedMaterials.filter(m => m.type === 'oil');
-      const totalOilStock = oilMaterials.reduce((sum, m) => sum + m.currentStockMl, 0);
+      const totalOilStock = oilMaterials.reduce((sum, m) => sum + (m.currentStockMl || 0), 0);
       const totalUsed = oilMaterials.reduce((sum, m) => sum + m.usedOil, 0);
-      const totalAvailable = oilMaterials.reduce((sum, m) => sum + m.currentStockMl, 0); // same as totalOilStock
+      const totalAvailable = oilMaterials.reduce((sum, m) => sum + m.availableOil, 0);
 
-      // Compute usedRollOn and usedSpray (informational)
+      // Breakdown roll-on vs spray (informational)
       let usedRollOn = 0;
       let usedSpray = 0;
       for (const sale of sales) {
@@ -187,8 +187,8 @@ const Materials = () => {
       setOilSummary({
         usedOilRollOn: usedRollOn,
         usedOilSpray: usedSpray,
-        totalOilStock,             // sum of currentStockMl across oils
-        availableOil: totalOilStock, // available = total stock (since stock is already net)
+        totalOilStock,
+        availableOil: totalAvailable,  // sum of (stock - used) across oils
       });
 
     } catch (error) {
