@@ -42,172 +42,161 @@ const Materials = () => {
     fetchMaterialsAndSummary();
   }, []);
 
-const fetchMaterialsAndSummary = async () => {
-  setLoading(true);
-  try {
-    const [materialsRes, salesRes, productsRes] = await Promise.all([
-      API.get('/inventory/materials'),
-      API.get('/sales'),
-      API.get('/products'),
-    ]);
+  const fetchMaterialsAndSummary = async () => {
+    setLoading(true);
+    try {
+      const [materialsRes, salesRes, productsRes] = await Promise.all([
+        API.get('/inventory/materials'),
+        API.get('/sales'),
+        API.get('/products'),
+      ]);
 
-    const materialsData = materialsRes.data;
-    const sales = salesRes.data || [];
-    const products = productsRes.data || [];
+      const materialsData = materialsRes.data;
+      const sales = salesRes.data || [];
+      const products = productsRes.data || [];
 
-    // Build product map
-    const productMap = {};
-    products.forEach(p => {
-      productMap[p._id] = p;
-    });
+      // Build product map
+      const productMap = {};
+      products.forEach(p => {
+        productMap[p._id] = p;
+      });
 
-    // --- Helper: parse blendComponents string into array of { name, percentage } ---
-    const parseBlendComponents = (product) => {
-      const comps = product.blendComponents;
-      if (!comps) return [];
-      if (Array.isArray(comps)) {
-        // Already array – ensure each has material and percentage
-        return comps
-          .filter(c => c.material && c.percentage)
-          .map(c => ({ material: c.material, percentage: c.percentage }));
-      }
-      // Try to parse string: "Ahsas al Arabia (45%); Ethanol (55%)"
-      const str = String(comps);
-      const parts = str.split(';').map(s => s.trim());
-      const parsed = [];
-      for (const part of parts) {
-        const match = part.match(/^(.*?)\s*\((\d+(?:\.\d+)?)%\)\s*$/);
-        if (match) {
-          const name = match[1].trim();
-          const percentage = parseFloat(match[2]);
-          parsed.push({ name, percentage });
+      // Helper: parse blendComponents string into array of { name, percentage }
+      const parseBlendComponents = (product) => {
+        const comps = product.blendComponents;
+        if (!comps) return [];
+        if (Array.isArray(comps)) {
+          return comps
+            .filter(c => c.material && c.percentage)
+            .map(c => ({ material: c.material, percentage: c.percentage }));
+        }
+        const str = String(comps);
+        const parts = str.split(';').map(s => s.trim());
+        const parsed = [];
+        for (const part of parts) {
+          const match = part.match(/^(.*?)\s*\((\d+(?:\.\d+)?)%\)\s*$/);
+          if (match) {
+            const name = match[1].trim();
+            const percentage = parseFloat(match[2]);
+            parsed.push({ name, percentage });
+          }
+        }
+        return parsed;
+      };
+
+      // Build a map from material name to _id (case‑insensitive)
+      const materialNameMap = {};
+      materialsData.forEach(m => {
+        materialNameMap[m.name.toLowerCase()] = m._id;
+      });
+
+      // Compute usage per material (for informational display)
+      const usageMap = {};
+
+      for (const sale of sales) {
+        if (!sale.items) continue;
+        for (const item of sale.items) {
+          const productId = item.product?._id || item.product;
+          if (!productId) continue;
+          const product = productMap[productId];
+          if (!product) continue;
+
+          const sizeMl = item.sizeMl || 0;
+          const qty = item.quantity || 0;
+
+          if (product.type === 'roll-on') {
+            const oilId = product.baseOil?._id || product.baseOil;
+            if (oilId) {
+              const used = sizeMl * qty;
+              usageMap[oilId] = (usageMap[oilId] || 0) + used;
+            }
+          } else if (product.type === 'spray') {
+            const comps = parseBlendComponents(product);
+            for (const comp of comps) {
+              let materialId = comp.material?._id || comp.material;
+              if (!materialId && comp.name) {
+                const lowerName = comp.name.toLowerCase();
+                materialId = materialNameMap[lowerName];
+                if (!materialId) {
+                  console.warn(`Material "${comp.name}" not found for product ${product.name}`);
+                  continue;
+                }
+              }
+              if (!materialId) continue;
+              const percentage = comp.percentage || 0;
+              if (percentage === 0) continue;
+              const used = (sizeMl * (percentage / 100)) * qty;
+              usageMap[materialId] = (usageMap[materialId] || 0) + used;
+            }
+          }
         }
       }
-      return parsed;
-    };
 
-    // --- Build a map from material name to _id (case‑insensitive) ---
-    const materialNameMap = {};
-    materialsData.forEach(m => {
-      materialNameMap[m.name.toLowerCase()] = m._id;
-    });
+      // ✅ FIX: availableOil = currentStockMl (the actual stock from DB)
+      const updatedMaterials = materialsData.map(m => {
+        const used = usageMap[m._id] || 0;
+        return {
+          ...m,
+          usedOil: used,                     // informational only
+          availableOil: m.currentStockMl,    // ✅ use the actual stock
+        };
+      });
+      setMaterials(updatedMaterials);
 
-    // --- Compute usage per material ---
-    const usageMap = {}; // materialId -> total ml used
+      // Compute summary – only for oil materials
+      const oilMaterials = updatedMaterials.filter(m => m.type === 'oil');
+      const totalOilStock = oilMaterials.reduce((sum, m) => sum + m.currentStockMl, 0);
+      const totalUsed = oilMaterials.reduce((sum, m) => sum + m.usedOil, 0);
+      const totalAvailable = oilMaterials.reduce((sum, m) => sum + m.currentStockMl, 0); // same as totalOilStock
 
-    for (const sale of sales) {
-      if (!sale.items) continue;
-      for (const item of sale.items) {
-        const productId = item.product?._id || item.product;
-        if (!productId) continue;
-        const product = productMap[productId];
-        if (!product) continue;
-
-        const sizeMl = item.sizeMl || 0;
-        const qty = item.quantity || 0;
-
-        if (product.type === 'roll-on') {
-          const oilId = product.baseOil?._id || product.baseOil;
-          if (oilId) {
-            const used = sizeMl * qty;
-            usageMap[oilId] = (usageMap[oilId] || 0) + used;
-          }
-        } else if (product.type === 'spray') {
-          // Get components (either array or parsed from string)
-          let comps = parseBlendComponents(product);
-          // If comps contains objects with 'material' (ObjectId), use them directly
-          // Otherwise, if they have 'name', map to ID
-          for (const comp of comps) {
-            let materialId = comp.material?._id || comp.material;
-            if (!materialId && comp.name) {
-              // Look up by name
-              const lowerName = comp.name.toLowerCase();
-              materialId = materialNameMap[lowerName];
-              if (!materialId) {
-                console.warn(`Material "${comp.name}" not found for product ${product.name}`);
-                continue;
+      // Compute usedRollOn and usedSpray (informational)
+      let usedRollOn = 0;
+      let usedSpray = 0;
+      for (const sale of sales) {
+        if (!sale.items) continue;
+        for (const item of sale.items) {
+          const productId = item.product?._id || item.product;
+          if (!productId) continue;
+          const product = productMap[productId];
+          if (!product) continue;
+          const sizeMl = item.sizeMl || 0;
+          const qty = item.quantity || 0;
+          if (product.type === 'roll-on') {
+            usedRollOn += sizeMl * qty;
+          } else if (product.type === 'spray') {
+            const comps = parseBlendComponents(product);
+            let sprayOilMl = 0;
+            for (const comp of comps) {
+              let materialId = comp.material?._id || comp.material;
+              if (!materialId && comp.name) {
+                const lowerName = comp.name.toLowerCase();
+                materialId = materialNameMap[lowerName];
+              }
+              if (!materialId) continue;
+              const mat = materialsData.find(m => m._id.toString() === materialId.toString());
+              if (mat && mat.type === 'oil') {
+                const percentage = comp.percentage || 0;
+                sprayOilMl += (sizeMl * (percentage / 100));
               }
             }
-            if (!materialId) continue;
-            const percentage = comp.percentage || 0;
-            if (percentage === 0) continue;
-            const used = (sizeMl * (percentage / 100)) * qty;
-            usageMap[materialId] = (usageMap[materialId] || 0) + used;
+            usedSpray += sprayOilMl * qty;
           }
         }
       }
+
+      setOilSummary({
+        usedOilRollOn: usedRollOn,
+        usedOilSpray: usedSpray,
+        totalOilStock,             // sum of currentStockMl across oils
+        availableOil: totalOilStock, // available = total stock (since stock is already net)
+      });
+
+    } catch (error) {
+      console.error('Failed to fetch data', error);
+    } finally {
+      setLoading(false);
     }
-
-    // --- Update materials with used and available ---
-    const updatedMaterials = materialsData.map(m => {
-      const used = usageMap[m._id] || 0;
-      const stock = m.currentStockMl || 0;
-      return {
-        ...m,
-        usedOil: used,
-        availableOil: stock - used,
-      };
-    });
-    setMaterials(updatedMaterials);
-
-    // --- Compute summary from the updated materials (only oils) ---
-    const oilMaterials = updatedMaterials.filter(m => m.type === 'oil');
-    const totalOilStock = oilMaterials.reduce((sum, m) => sum + m.currentStockMl, 0);
-    const totalUsed = oilMaterials.reduce((sum, m) => sum + m.usedOil, 0);
-    const totalAvailable = oilMaterials.reduce((sum, m) => sum + m.availableOil, 0);
-
-    // For breakdown (roll‑on vs spray), we can compute separately by re‑iterating sales
-    // but we can also use the usageMap and distinguish by which products use them.
-    // Simpler: compute usedRollOn and usedSpray from sales directly, using the same parsing.
-    let usedRollOn = 0;
-    let usedSpray = 0;
-    for (const sale of sales) {
-      if (!sale.items) continue;
-      for (const item of sale.items) {
-        const productId = item.product?._id || item.product;
-        if (!productId) continue;
-        const product = productMap[productId];
-        if (!product) continue;
-        const sizeMl = item.sizeMl || 0;
-        const qty = item.quantity || 0;
-        if (product.type === 'roll-on') {
-          usedRollOn += sizeMl * qty;
-        } else if (product.type === 'spray') {
-          // Sum oil amounts from blend components (only oils)
-          const comps = parseBlendComponents(product);
-          let sprayOilMl = 0;
-          for (const comp of comps) {
-            let materialId = comp.material?._id || comp.material;
-            if (!materialId && comp.name) {
-              const lowerName = comp.name.toLowerCase();
-              materialId = materialNameMap[lowerName];
-            }
-            if (!materialId) continue;
-            // Check if this material is an oil
-            const mat = materialsData.find(m => m._id.toString() === materialId.toString());
-            if (mat && mat.type === 'oil') {
-              const percentage = comp.percentage || 0;
-              sprayOilMl += (sizeMl * (percentage / 100));
-            }
-          }
-          usedSpray += sprayOilMl * qty;
-        }
-      }
-    }
-
-    setOilSummary({
-      usedOilRollOn: usedRollOn,
-      usedOilSpray: usedSpray,
-      totalOilStock,
-      availableOil: totalOilStock - (usedRollOn + usedSpray),
-    });
-
-  } catch (error) {
-    console.error('Failed to fetch data', error);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   // ---------- CRUD functions (unchanged) ----------
   const handleAddSubmit = async (e) => {
