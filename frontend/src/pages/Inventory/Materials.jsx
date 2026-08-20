@@ -42,112 +42,209 @@ const Materials = () => {
     fetchMaterialsAndSummary();
   }, []);
 
-  const fetchMaterialsAndSummary = async () => {
-    setLoading(true);
-    try {
-      // Fetch materials, sales, and products in parallel
-      const [materialsRes, salesRes, productsRes] = await Promise.all([
-        API.get('/inventory/materials'),
-        API.get('/sales'),
-        API.get('/products'), // fetch all products with their material references
-      ]);
+const fetchMaterialsAndSummary = async () => {
+  setLoading(true);
+  try {
+    const [materialsRes, salesRes, productsRes] = await Promise.all([
+      API.get('/inventory/materials'),
+      API.get('/sales'),
+      API.get('/products'),
+    ]);
 
-      const materialsData = materialsRes.data;
-      const sales = salesRes.data || [];
-      const products = productsRes.data || [];
+    const materialsData = materialsRes.data;
+    const sales = salesRes.data || [];
+    const products = productsRes.data || [];
 
-      // Build a map of productId -> full product data
-      const productMap = {};
-      products.forEach(p => {
-        productMap[p._id] = p;
-      });
+    // Build product map
+    const productMap = {};
+    products.forEach(p => {
+      productMap[p._id] = p;
+    });
 
-      // Compute usage per material
-      const usageMap = {}; // materialId -> total used (ml)
+    // --- Helper: parse blendComponents string into array ---
+    const parseBlendComponents = (product) => {
+      const comps = product.blendComponents;
+      if (!comps) return [];
+      if (Array.isArray(comps)) {
+        // Already an array – ensure each has material and percentage
+        return comps.filter(c => c.material && c.percentage);
+      }
+      // Try to parse as string: "Ahsas al Arabia (45%); Ethanol (55%)"
+      const str = String(comps);
+      const parts = str.split(';').map(s => s.trim());
+      const parsed = [];
+      for (const part of parts) {
+        const match = part.match(/^(.*?)\s*\((\d+(?:\.\d+)?)%\)\s*$/);
+        if (match) {
+          const name = match[1].trim();
+          const percentage = parseFloat(match[2]);
+          parsed.push({ name, percentage });
+        }
+      }
+      return parsed;
+    };
 
-      for (const sale of sales) {
-        if (!sale.items) continue;
-        for (const item of sale.items) {
-          // ✅ Fix: get product ID correctly (populated product is an object)
-          const productId = item.product?._id || item.product;
-          if (!productId) continue;
-          const product = productMap[productId];
-          if (!product) continue;
+    // --- Compute usage per material ---
+    const usageMap = {}; // materialId -> total ml used
 
-          const sizeMl = item.sizeMl || 0;
-          const qty = item.quantity || 0;
+    for (const sale of sales) {
+      if (!sale.items) continue;
+      for (const item of sale.items) {
+        const productId = item.product?._id || item.product;
+        if (!productId) continue;
+        const product = productMap[productId];
+        if (!product) continue;
 
-          if (product.type === 'roll-on') {
-            // Roll‑on uses baseOil (full sizeMl)
-            const oilId = product.baseOil?._id || product.baseOil;
-            if (oilId) {
-              const used = sizeMl * qty;
-              usageMap[oilId] = (usageMap[oilId] || 0) + used;
+        const sizeMl = item.sizeMl || 0;
+        const qty = item.quantity || 0;
+
+        if (product.type === 'roll-on') {
+          const oilId = product.baseOil?._id || product.baseOil;
+          if (oilId) {
+            const used = sizeMl * qty;
+            usageMap[oilId] = (usageMap[oilId] || 0) + used;
+          }
+        } else if (product.type === 'spray') {
+          // Use parsed blend components
+          const comps = parseBlendComponents(product);
+          for (const comp of comps) {
+            // For spray, the product may store material as an object or ID.
+            // If we only have the name, we need to find the material by name.
+            let materialId = comp.material?._id || comp.material;
+            if (!materialId && comp.name) {
+              // Find material by name (case‑insensitive)
+              const mat = materialsData.find(m =>
+                m.name.toLowerCase() === comp.name.toLowerCase()
+              );
+              if (mat) materialId = mat._id;
             }
-          } else if (product.type === 'spray') {
-            // Spray uses blendComponents with percentages
-            if (product.blendComponents && product.blendComponents.length) {
-              for (const comp of product.blendComponents) {
-                const matId = comp.material?._id || comp.material;
-                if (!matId) continue;
-                const percentage = comp.percentage || 0;
-                const used = (sizeMl * (percentage / 100)) * qty;
-                usageMap[matId] = (usageMap[matId] || 0) + used;
+            if (!materialId) continue;
+            const percentage = comp.percentage || 0;
+            if (percentage === 0) continue;
+            const used = (sizeMl * (percentage / 100)) * qty;
+            usageMap[materialId] = (usageMap[materialId] || 0) + used;
+          }
+        }
+      }
+    }
+
+    // --- Update materials with usage and available ---
+    const updatedMaterials = materialsData.map(m => {
+      const used = usageMap[m._id] || 0;
+      const stock = m.currentStockMl || 0;
+      return {
+        ...m,
+        usedOil: used,
+        availableOil: stock - used,
+      };
+    });
+    setMaterials(updatedMaterials);
+
+    // --- Compute summary from per‑material data ---
+    const oilMaterials = updatedMaterials.filter(m => m.type === 'oil');
+    const totalOilStock = oilMaterials.reduce((sum, m) => sum + m.currentStockMl, 0);
+    const totalUsed = oilMaterials.reduce((sum, m) => sum + m.usedOil, 0);
+    const totalAvailable = oilMaterials.reduce((sum, m) => sum + m.availableOil, 0);
+
+    // For break‑down by roll‑on vs spray, we still need to separate.
+    // You can either recompute from sales, or for simplicity, use the hardcoded 55% as before,
+    // but better: sum usage from roll‑on products only.
+    let usedRollOn = 0;
+    let usedSpray = 0;
+    for (const sale of sales) {
+      if (!sale.items) continue;
+      for (const item of sale.items) {
+        const productId = item.product?._id || item.product;
+        if (!productId) continue;
+        const product = productMap[productId];
+        if (!product) continue;
+        const sizeMl = item.sizeMl || 0;
+        const qty = item.quantity || 0;
+        if (product.type === 'roll-on') {
+          usedRollOn += sizeMl * qty;
+        } else if (product.type === 'spray') {
+          // Now compute actual oil used in sprays from the product's blendComponents
+          const comps = parseBlendComponents(product);
+          for (const comp of comps) {
+            if (comp.material && comp.percentage) {
+              const matId = comp.material?._id || comp.material;
+              if (matId) {
+                const used = (sizeMl * (comp.percentage / 100)) * qty;
+                // We need to sum only oil materials; filter by type later
+                // For simplicity, we'll just add to usedSpray but we should filter oils only.
+                // But we already have total used from usageMap, so we can skip this.
+                // Instead, we can rely on the per‑material usage.
               }
             }
           }
         }
       }
+    }
 
-      // Now update each material with its used amount
-      const updatedMaterials = materialsData.map(m => {
-        const used = usageMap[m._id] || 0;
-        const stock = m.currentStockMl || 0;
-        return {
-          ...m,
-          usedOil: used,
-          availableOil: stock - used,
-        };
-      });
-      setMaterials(updatedMaterials);
+    // Better: compute usedRollOn and usedSpray from the per‑material usage by checking which products are roll‑on vs spray.
+    // This is a bit complex, so we'll just use the previous hardcoded method but correct it.
+    // Actually, we can compute using the product types again, but this time with actual oil percentages.
+    // Let's compute usedRollOn and usedSpray by iterating sales and summing oil usage per material, but only for oil materials.
+    // We'll do that now:
 
-      // Compute overall summary (unchanged)
-      let usedRollOn = 0;
-      let usedSpray = 0;
-      for (const sale of sales) {
-        if (!sale.items) continue;
-        for (const item of sale.items) {
-          const productId = item.product?._id || item.product;
-          if (!productId) continue;
-          const product = productMap[productId];
-          if (!product) continue;
-          const sizeMl = item.sizeMl || 0;
-          const qty = item.quantity || 0;
-          if (product.type === 'roll-on') {
-            usedRollOn += sizeMl * qty;
-          } else if (product.type === 'spray') {
-            // Assuming oil content is 55% of total for spray (adjust as needed)
-            usedSpray += sizeMl * 0.55 * qty;
+    const rollOnUsage = {}; // materialId -> used
+    const sprayUsage = {};  // materialId -> used
+    for (const sale of sales) {
+      if (!sale.items) continue;
+      for (const item of sale.items) {
+        const productId = item.product?._id || item.product;
+        if (!productId) continue;
+        const product = productMap[productId];
+        if (!product) continue;
+        const sizeMl = item.sizeMl || 0;
+        const qty = item.quantity || 0;
+        if (product.type === 'roll-on') {
+          const oilId = product.baseOil?._id || product.baseOil;
+          if (oilId) {
+            const used = sizeMl * qty;
+            rollOnUsage[oilId] = (rollOnUsage[oilId] || 0) + used;
+          }
+        } else if (product.type === 'spray') {
+          const comps = parseBlendComponents(product);
+          for (const comp of comps) {
+            let matId = comp.material?._id || comp.material;
+            if (!matId && comp.name) {
+              const mat = materialsData.find(m => m.name.toLowerCase() === comp.name.toLowerCase());
+              if (mat) matId = mat._id;
+            }
+            if (!matId) continue;
+            const percentage = comp.percentage || 0;
+            if (percentage === 0) continue;
+            const used = (sizeMl * (percentage / 100)) * qty;
+            sprayUsage[matId] = (sprayUsage[matId] || 0) + used;
           }
         }
       }
-      const oilMaterials = materialsData.filter(m => m.type === 'oil');
-      const totalOilStock = oilMaterials.reduce((sum, m) => sum + (m.currentStockMl || 0), 0);
-      const availableOil = totalOilStock - (usedRollOn + usedSpray);
-
-      setOilSummary({
-        usedOilRollOn: usedRollOn,
-        usedOilSpray: usedSpray,
-        totalOilStock,
-        availableOil,
-      });
-
-    } catch (error) {
-      console.error('Failed to fetch data', error);
-    } finally {
-      setLoading(false);
     }
-  };
+
+    // Now sum only oil materials
+    let usedRollOnTotal = 0;
+    let usedSprayTotal = 0;
+    for (const m of materialsData) {
+      if (m.type === 'oil') {
+        usedRollOnTotal += rollOnUsage[m._id] || 0;
+        usedSprayTotal += sprayUsage[m._id] || 0;
+      }
+    }
+
+    setOilSummary({
+      usedOilRollOn: usedRollOnTotal,
+      usedOilSpray: usedSprayTotal,
+      totalOilStock,
+      availableOil: totalOilStock - (usedRollOnTotal + usedSprayTotal),
+    });
+
+  } catch (error) {
+    console.error('Failed to fetch data', error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   // ---------- CRUD functions (unchanged) ----------
   const handleAddSubmit = async (e) => {
