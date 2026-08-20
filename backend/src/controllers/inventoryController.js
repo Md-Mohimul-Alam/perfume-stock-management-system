@@ -8,32 +8,25 @@ const InventoryLog = require('../models/InventoryLog');
 // @route   GET /api/inventory/materials
 exports.getMaterials = async (req, res) => {
   try {
-    const materials = await RawMaterial.aggregate([
-      {
-        // Add a field that sums the totalCost of all purchases
-        $addFields: {
-          totalPurchaseCost: { $sum: "$purchases.totalCost" }
-        }
-      },
-      {
-        // Exclude the purchases array from the output (optional, for performance)
-        $project: {
-          purchases: 0,
-          // Include all other fields
-          _id: 1,
-          name: 1,
-          sku: 1,
-          type: 1,
-          currentStockMl: 1,
-          avgCostPerMl: 1,
-          totalPurchaseCost: 1,
-          createdAt: 1,
-          updatedAt: 1,
-        }
-      }
-    ]);
-    res.json(materials);
+    // Fetch all materials, including the purchases array
+    const materials = await RawMaterial.find();
+
+    // Map each material to add totalPurchaseCost
+    const result = materials.map(m => {
+      // Compute sum of totalCost from purchases (if purchases array exists)
+      const totalPurchaseCost = (m.purchases || []).reduce((sum, p) => sum + (p.totalCost || 0), 0);
+      // Convert to plain object and remove purchases for cleaner response
+      const obj = m.toObject();
+      delete obj.purchases;
+      return {
+        ...obj,
+        totalPurchaseCost,
+      };
+    });
+
+    res.json(result);
   } catch (error) {
+    console.error('Error in getMaterials:', error);
     res.status(500).json({ message: error.message });
   }
 };
