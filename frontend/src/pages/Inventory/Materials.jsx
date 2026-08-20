@@ -132,13 +132,13 @@ const Materials = () => {
         }
       }
 
-      // ✅ Update materials: availableOil = stock - usedOil
+      // Update materials: availableOil = stock - usedOil
       const updatedMaterials = materialsData.map(m => {
         const used = usageMap[m._id] || 0;
         return {
           ...m,
           usedOil: used,
-          availableOil: (m.currentStockMl || 0) - used,  // stock - used
+          availableOil: (m.currentStockMl || 0) - used,
         };
       });
       setMaterials(updatedMaterials);
@@ -146,7 +146,6 @@ const Materials = () => {
       // Compute summary (only oils)
       const oilMaterials = updatedMaterials.filter(m => m.type === 'oil');
       const totalOilStock = oilMaterials.reduce((sum, m) => sum + (m.currentStockMl || 0), 0);
-      const totalUsed = oilMaterials.reduce((sum, m) => sum + m.usedOil, 0);
       const totalAvailable = oilMaterials.reduce((sum, m) => sum + m.availableOil, 0);
 
       // Breakdown roll-on vs spray (informational)
@@ -188,7 +187,7 @@ const Materials = () => {
         usedOilRollOn: usedRollOn,
         usedOilSpray: usedSpray,
         totalOilStock,
-        availableOil: totalAvailable,  // sum of (stock - used) across oils
+        availableOil: totalAvailable,
       });
 
     } catch (error) {
@@ -198,7 +197,7 @@ const Materials = () => {
     }
   };
 
-  // ---------- CRUD functions (unchanged) ----------
+  // ---------- CRUD functions ----------
   const handleAddSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -406,7 +405,7 @@ const Materials = () => {
         </div>
       </div>
 
-      {/* Table with new columns */}
+      {/* Table */}
       {loading ? (
         <p>Loading...</p>
       ) : (
@@ -420,6 +419,7 @@ const Materials = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock (ml)</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Per ml Cost (৳)</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Price (৳)</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Purchases (৳)</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Used Oil (ml)</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Available Oil (ml)</th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Actions</th>
@@ -429,6 +429,7 @@ const Materials = () => {
               {materials.map((m) => {
                 const perMlCost = m.avgCostPerMl || 0;
                 const totalPrice = (m.currentStockMl || 0) * perMlCost;
+                const totalPurchaseCost = m.totalPurchaseCost || 0;
                 const used = m.usedOil || 0;
                 const available = m.availableOil || 0;
                 return (
@@ -439,6 +440,7 @@ const Materials = () => {
                     <td className="px-6 py-4">{m.currentStockMl}</td>
                     <td className="px-6 py-4">{perMlCost.toFixed(2)}</td>
                     <td className="px-6 py-4">{totalPrice.toFixed(2)}</td>
+                    <td className="px-6 py-4">{totalPurchaseCost.toFixed(2)}</td>
                     <td className="px-6 py-4 text-amber-600">{used.toFixed(0)}</td>
                     <td className={`px-6 py-4 font-semibold ${available < 0 ? 'text-red-600' : 'text-green-600'}`}>
                       {available.toFixed(0)}
@@ -464,7 +466,7 @@ const Materials = () => {
               })}
               {materials.length === 0 && (
                 <tr>
-                  <td colSpan="9" className="text-center py-8 text-gray-500">No materials found</td>
+                  <td colSpan="10" className="text-center py-8 text-gray-500">No materials found</td>
                 </tr>
               )}
             </tbody>
@@ -472,7 +474,7 @@ const Materials = () => {
         </div>
       )}
 
-      {/* ---------- Modals (unchanged) ---------- */}
+      {/* ---------- Modals ---------- */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
