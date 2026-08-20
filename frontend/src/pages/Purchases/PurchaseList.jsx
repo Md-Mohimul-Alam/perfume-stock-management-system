@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import API from '../../api/axios';
-import { 
-  Plus, Search, Eye, Edit, Trash2, 
+import {
+  Plus, Search, Eye, Edit, Trash2,
   Package, Droplet, Filter, Calendar,
   X, CheckCircle, AlertCircle, Upload
 } from 'lucide-react';
@@ -17,6 +17,12 @@ const PurchaseList = () => {
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedPurchase, setSelectedPurchase] = useState(null);
+
+  // Edit state
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingPurchase, setEditingPurchase] = useState(null);
+  const [editForm, setEditForm] = useState({ supplier: '', purchaseDate: '', notes: '' });
+  const [editLoading, setEditLoading] = useState(false);
 
   // Upload state
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -71,7 +77,46 @@ const PurchaseList = () => {
     }
   };
 
-  // ---------- UPLOAD HANDLER ----------
+  // ----- EDIT HANDLERS -----
+  const openEditModal = (purchase) => {
+    setEditingPurchase(purchase);
+    setEditForm({
+      supplier: purchase.supplier || '',
+      purchaseDate: new Date(purchase.purchaseDate).toISOString().split('T')[0],
+      notes: purchase.notes || '',
+    });
+    setShowEditModal(true);
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    if (!editingPurchase) return;
+    setEditLoading(true);
+    try {
+      await API.put(`/purchases/${editingPurchase._id}`, editForm);
+      toast.success('Purchase updated');
+      setShowEditModal(false);
+      fetchPurchases();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Update failed');
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  // ----- DELETE HANDLER -----
+  const handleDelete = async (id, invoiceNo) => {
+    if (!window.confirm(`Delete purchase ${invoiceNo}? This will reverse stock.`)) return;
+    try {
+      await API.delete(`/purchases/${id}`);
+      toast.success('Purchase deleted and stock reversed');
+      fetchPurchases();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Delete failed');
+    }
+  };
+
+  // ----- UPLOAD HANDLERS -----
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) setUploadFile(file);
@@ -226,21 +271,21 @@ const PurchaseList = () => {
     }
   };
 
-  // ---------- FILTERING ----------
+  // ----- FILTERING -----
   const getFilteredPurchases = () => {
     let filtered = purchases;
     if (filter.itemType) {
-      filtered = filtered.filter(p => 
+      filtered = filtered.filter(p =>
         p.items.some(item => item.itemType === filter.itemType)
       );
     }
     if (filter.supplier) {
-      filtered = filtered.filter(p => 
+      filtered = filtered.filter(p =>
         p.supplier?.toLowerCase().includes(filter.supplier.toLowerCase())
       );
     }
     if (search) {
-      filtered = filtered.filter(p => 
+      filtered = filtered.filter(p =>
         p.invoiceNo.toLowerCase().includes(search.toLowerCase()) ||
         p.supplier?.toLowerCase().includes(search.toLowerCase())
       );
@@ -257,7 +302,7 @@ const PurchaseList = () => {
   const filteredPurchases = getFilteredPurchases();
   const suppliers = [...new Set(purchases.map(p => p.supplier).filter(Boolean))];
 
-  // ---------- RENDER ----------
+  // ----- RENDER -----
   return (
     <div className="p-6 max-w-7xl mx-auto">
       {/* Header */}
@@ -419,10 +464,24 @@ const PurchaseList = () => {
                     <td className="px-6 py-4 text-center">
                       <button
                         onClick={() => viewDetails(purchase._id)}
-                        className="text-blue-600 hover:text-blue-800 transition"
+                        className="text-blue-600 hover:text-blue-800 transition mr-2"
                         title="View Details"
                       >
                         <Eye size={18} />
+                      </button>
+                      <button
+                        onClick={() => openEditModal(purchase)}
+                        className="text-amber-600 hover:text-amber-800 transition mr-2"
+                        title="Edit"
+                      >
+                        <Edit size={18} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(purchase._id, purchase.invoiceNo)}
+                        className="text-red-600 hover:text-red-800 transition"
+                        title="Delete"
+                      >
+                        <Trash2 size={18} />
                       </button>
                     </td>
                   </tr>
@@ -515,7 +574,79 @@ const PurchaseList = () => {
         </div>
       )}
 
-      {/* ---------- Upload Modal (FIXED) ---------- */}
+      {/* ---------- Edit Modal ---------- */}
+      {showEditModal && editingPurchase && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
+            <button
+              onClick={() => setShowEditModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+            >
+              <X size={24} />
+            </button>
+            <h2 className="text-2xl font-bold mb-2">Edit Purchase</h2>
+            <p className="text-gray-500 text-sm mb-4">
+              You can only edit supplier, date, and notes. To change items, delete and create a new purchase.
+            </p>
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Invoice</label>
+                <input
+                  type="text"
+                  value={editingPurchase.invoiceNo}
+                  disabled
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Supplier</label>
+                <input
+                  type="text"
+                  value={editForm.supplier}
+                  onChange={(e) => setEditForm({ ...editForm, supplier: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Purchase Date</label>
+                <input
+                  type="date"
+                  value={editForm.purchaseDate}
+                  onChange={(e) => setEditForm({ ...editForm, purchaseDate: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                <input
+                  type="text"
+                  value={editForm.notes}
+                  onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="submit"
+                  disabled={editLoading}
+                  className="flex-1 bg-amber-600 text-white py-2 rounded-lg hover:bg-amber-700 disabled:opacity-50"
+                >
+                  {editLoading ? 'Saving...' : 'Save Changes'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ---------- Upload Modal ---------- */}
       {showUploadModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 relative">
@@ -533,10 +664,10 @@ const PurchaseList = () => {
             <p className="text-gray-500 text-sm mb-4">
               Upload CSV/Excel with purchase data. Supports grouping by invoice.
               <br />
-              <span className="text-amber-600">Required columns:</span> 
+              <span className="text-amber-600">Required columns:</span>
               {' Item Type, SKU, Quantity, Cost Per Unit'}
               <br />
-              <span className="text-gray-400">Optional:</span> 
+              <span className="text-gray-400">Optional:</span>
               {' Invoice, Supplier, Date, Notes'}
               <br />
               <span className="text-xs text-gray-400">
@@ -567,7 +698,6 @@ const PurchaseList = () => {
                       <div>
                         <p className="font-medium">{uploadResult.data.message}</p>
                         <p className="text-sm">Created: {uploadResult.data.created?.length || 0}</p>
-                        {/* ✅ FIXED: Proper error rendering */}
                         {uploadResult.data.errors?.length > 0 && (
                           <details className="mt-1">
                             <summary className="cursor-pointer text-sm">
@@ -575,7 +705,6 @@ const PurchaseList = () => {
                             </summary>
                             <ul className="text-xs mt-1 space-y-1 max-h-40 overflow-y-auto">
                               {uploadResult.data.errors.map((e, i) => {
-                                // Handle both string errors and object errors
                                 let errorMessage = '';
                                 let context = '';
                                 if (typeof e === 'string') {

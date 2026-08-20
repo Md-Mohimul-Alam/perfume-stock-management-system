@@ -4,6 +4,7 @@ const Bottle = require('../models/Bottle');
 const InventoryLog = require('../models/InventoryLog');
 const Transaction = require('../models/Transaction');
 const { generateInvoiceNo } = require('../utils/generateInvoice');
+const mongoose = require('mongoose');
 
 // @desc    Create a purchase (materials/bottles)
 // @route   POST /api/purchases
@@ -102,7 +103,7 @@ exports.getPurchases = async (req, res) => {
       if (endDate) filter.purchaseDate.$lte = new Date(endDate);
     }
     const purchases = await Purchase.find(filter)
-      .populate('items.item', 'name sku sizeMl type') // Important!
+      .populate('items.item', 'name sku sizeMl type')
       .sort('-purchaseDate');
     res.json(purchases);
   } catch (error) {
@@ -123,6 +124,111 @@ exports.getPurchaseById = async (req, res) => {
   }
 };
 
+// @desc    Update purchase (supplier, date, notes only)
+// @route   PUT /api/purchases/:id
+exports.updatePurchase = async (req, res) => {
+  try {
+    const { supplier, purchaseDate, notes } = req.body;
+    const purchase = await Purchase.findById(req.params.id);
+    if (!purchase) return res.status(404).json({ message: 'Purchase not found' });
+
+    // Only allow updating these fields – items are immutable
+    if (supplier !== undefined) purchase.supplier = supplier;
+    if (purchaseDate) purchase.purchaseDate = new Date(purchaseDate);
+    if (notes !== undefined) purchase.notes = notes;
+
+    await purchase.save();
+    res.json(purchase);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Delete a purchase (reverses stock)
+// @route   DELETE /api/purchases/:id
+exports.deletePurchase = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const purchase = await Purchase.findById(req.params.id);
+    if (!purchase) {
+      await session.abortTransaction();
+      return res.status(404).json({ message: 'Purchase not found' });
+    }
+
+    // 1. Reverse stock for each item
+    for (const item of purchase.items) {
+      const { itemType, item: itemId, quantity, costPerUnit, totalCost } = item;
+      if (itemType === 'RawMaterial') {
+        const material = await RawMaterial.findById(itemId).session(session);
+        if (!material) {
+          await session.abortTransaction();
+          return res.status(404).json({ message: `Material ${itemId} not found` });
+        }
+        // Remove the purchase entry by invoice number
+        const purchaseEntryIndex = material.purchases.findIndex(p => p.invoiceNo === purchase.invoiceNo);
+        if (purchaseEntryIndex !== -1) {
+          material.purchases.splice(purchaseEntryIndex, 1);
+          // Recalculate avg cost
+          const totalQty = material.purchases.reduce((sum, p) => sum + p.quantityMl, 0);
+          const totalCostSum = material.purchases.reduce((sum, p) => sum + p.totalCost, 0);
+          material.avgCostPerMl = totalQty > 0 ? totalCostSum / totalQty : 0;
+          material.currentStockMl -= quantity;
+          await material.save({ session });
+        } else {
+          // Fallback: just subtract stock
+          material.currentStockMl -= quantity;
+          await material.save({ session });
+        }
+        // Delete inventory logs for this purchase
+        await InventoryLog.deleteMany({
+          reference: purchase._id,
+          reason: 'purchase',
+          material: material._id,
+        }).session(session);
+      } else if (itemType === 'Bottle') {
+        const bottle = await Bottle.findById(itemId).session(session);
+        if (!bottle) {
+          await session.abortTransaction();
+          return res.status(404).json({ message: `Bottle ${itemId} not found` });
+        }
+        // Remove purchase entry by invoice
+        const purchaseEntryIndex = bottle.purchases.findIndex(p => p.invoiceNo === purchase.invoiceNo);
+        if (purchaseEntryIndex !== -1) {
+          bottle.purchases.splice(purchaseEntryIndex, 1);
+          const totalQty = bottle.purchases.reduce((sum, p) => sum + p.quantity, 0);
+          const totalCostSum = bottle.purchases.reduce((sum, p) => sum + p.totalCost, 0);
+          bottle.avgCostPerUnit = totalQty > 0 ? totalCostSum / totalQty : 0;
+          bottle.currentStock -= quantity;
+          await bottle.save({ session });
+        } else {
+          bottle.currentStock -= quantity;
+          await bottle.save({ session });
+        }
+        await InventoryLog.deleteMany({
+          reference: purchase._id,
+          reason: 'purchase',
+          bottle: bottle._id,
+        }).session(session);
+      }
+    }
+
+    // 2. Delete transaction
+    await Transaction.deleteMany({ reference: purchase._id, refModel: 'Purchase' }).session(session);
+
+    // 3. Delete the purchase itself
+    await purchase.deleteOne({ session });
+
+    await session.commitTransaction();
+    res.json({ message: 'Purchase deleted and stock reversed' });
+  } catch (error) {
+    await session.abortTransaction();
+    res.status(500).json({ message: error.message });
+  } finally {
+    session.endSession();
+  }
+};
+
 // @desc    Bulk create purchases from sheet
 // @route   POST /api/purchases/bulk
 exports.bulkCreatePurchases = async (req, res) => {
@@ -139,9 +245,9 @@ exports.bulkCreatePurchases = async (req, res) => {
       try {
         // Validate required fields
         if (!purchaseData.invoiceNo || !purchaseData.items || !purchaseData.items.length) {
-          errors.push({ 
-            purchaseData, 
-            error: 'Missing invoiceNo or items' 
+          errors.push({
+            purchaseData,
+            error: 'Missing invoiceNo or items',
           });
           continue;
         }
@@ -149,9 +255,9 @@ exports.bulkCreatePurchases = async (req, res) => {
         // Check for duplicate invoice
         const existing = await Purchase.findOne({ invoiceNo: purchaseData.invoiceNo });
         if (existing) {
-          errors.push({ 
-            purchaseData, 
-            error: `Invoice ${purchaseData.invoiceNo} already exists` 
+          errors.push({
+            purchaseData,
+            error: `Invoice ${purchaseData.invoiceNo} already exists`,
           });
           continue;
         }
@@ -163,12 +269,10 @@ exports.bulkCreatePurchases = async (req, res) => {
         for (const itemData of purchaseData.items) {
           const { itemType, item: itemId, quantity, costPerUnit } = itemData;
 
-          // Validate required fields
           if (!itemType || !itemId || !quantity || quantity <= 0 || !costPerUnit || costPerUnit <= 0) {
             throw new Error(`Invalid item data: ${JSON.stringify(itemData)}`);
           }
 
-          // Verify the referenced item exists
           const Model = itemType === 'RawMaterial' ? RawMaterial : Bottle;
           const exists = await Model.findById(itemId);
           if (!exists) {
@@ -187,7 +291,6 @@ exports.bulkCreatePurchases = async (req, res) => {
           });
         }
 
-        // Create purchase
         const purchase = new Purchase({
           invoiceNo: purchaseData.invoiceNo,
           supplier: purchaseData.supplier || '',
@@ -200,9 +303,9 @@ exports.bulkCreatePurchases = async (req, res) => {
         await purchase.save();
         created.push(purchase);
       } catch (err) {
-        errors.push({ 
-          purchaseData, 
-          error: err.message 
+        errors.push({
+          purchaseData,
+          error: err.message,
         });
       }
     }

@@ -5,6 +5,8 @@ const {
   getPurchases,
   getPurchaseById,
   bulkCreatePurchases,
+  updatePurchase,
+  deletePurchase,
 } = require('../controllers/purchaseController');
 const { protect } = require('../middlewares/authMiddleware');
 
@@ -12,9 +14,11 @@ router.route('/')
   .get(protect, getPurchases)
   .post(protect, createPurchase);
 
-// ✅ Corrected – use the imported function directly
 router.post('/bulk', protect, bulkCreatePurchases);
 
-router.get('/:id', protect, getPurchaseById);
+router.route('/:id')
+  .get(protect, getPurchaseById)
+  .put(protect, updatePurchase)
+  .delete(protect, deletePurchase);
 
 module.exports = router;
