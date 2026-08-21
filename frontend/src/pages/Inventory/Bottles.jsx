@@ -335,7 +335,8 @@ const Bottles = () => {
               {bottles.map((b) => {
                 const totalPurchased = b.totalPurchased || 0;
                 const sold = b.sold || 0;
-                const available = Math.max(0, totalPurchased - sold);
+                // ✅ FIX: Allow negative values – no Math.max(0, ...)
+                const available = totalPurchased - sold;
                 const unitCost = b.avgCostPerUnit || 0;
                 const totalValue = available * unitCost;
 
@@ -345,7 +346,9 @@ const Bottles = () => {
                     <td className="px-6 py-4 capitalize">{b.type}</td>
                     <td className="px-6 py-4 text-right font-medium">{totalPurchased}</td>
                     <td className="px-6 py-4 text-right text-rose-600">{sold}</td>
-                    <td className="px-6 py-4 text-right font-semibold text-green-600">{available}</td>
+                    <td className={`px-6 py-4 text-right font-semibold ${available < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      {available}
+                    </td>
                     <td className="px-6 py-4 text-right">৳{unitCost.toFixed(2)}</td>
                     <td className="px-6 py-4 text-right font-semibold text-cyan-600">৳{totalValue.toFixed(2)}</td>
                     <td className="px-6 py-4 text-center">
@@ -389,15 +392,12 @@ const Bottles = () => {
                 <td className="px-6 py-3 text-right text-rose-600">
                   {bottles.reduce((sum, b) => sum + (b.sold || 0), 0)}
                 </td>
-                <td className="px-6 py-3 text-right text-green-600">
-                  {bottles.reduce((sum, b) => sum + Math.max(0, (b.totalPurchased || 0) - (b.sold || 0)), 0)}
+                <td className="px-6 py-3 text-right">
+                  {bottles.reduce((sum, b) => sum + ((b.totalPurchased || 0) - (b.sold || 0)), 0)}
                 </td>
                 <td className="px-6 py-3 text-right">-</td>
                 <td className="px-6 py-3 text-right text-cyan-600">
-                  ৳{bottles.reduce((sum, b) => {
-                    const avail = Math.max(0, (b.totalPurchased || 0) - (b.sold || 0));
-                    return sum + (avail * (b.avgCostPerUnit || 0));
-                  }, 0).toFixed(2)}
+                  ৳{bottles.reduce((sum, b) => sum + (((b.totalPurchased || 0) - (b.sold || 0)) * (b.avgCostPerUnit || 0)), 0).toFixed(2)}
                 </td>
                 <td className="px-6 py-3" />
               </tr>
@@ -475,7 +475,7 @@ const Bottles = () => {
         </div>
       )}
 
-      {/* ---------- Edit Modal (ENHANCED) ---------- */}
+      {/* ---------- Edit Modal ---------- */}
       {showEditModal && editingBottle && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
@@ -487,7 +487,6 @@ const Bottles = () => {
             </button>
             <h2 className="text-2xl font-bold mb-4">Edit Bottle</h2>
             <form onSubmit={handleEditSubmit} className="space-y-4">
-              {/* Editable fields */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Size (ml)</label>
                 <input
@@ -533,7 +532,6 @@ const Bottles = () => {
                 />
               </div>
 
-              {/* Read-only summary of stock & sales */}
               <div className="border-t pt-4 mt-2">
                 <p className="text-sm text-gray-500 mb-2">Stock & Sales Summary (read‑only)</p>
                 <div className="grid grid-cols-2 gap-2 text-sm">
@@ -547,8 +545,8 @@ const Bottles = () => {
                   </div>
                   <div className="col-span-2">
                     <span className="text-gray-500">Available Stock</span>
-                    <p className="font-semibold text-green-600">
-                      {Math.max(0, (editingBottle.totalPurchased || 0) - (editingBottle.sold || 0))}
+                    <p className={`font-semibold ${((editingBottle.totalPurchased || 0) - (editingBottle.sold || 0)) < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      {(editingBottle.totalPurchased || 0) - (editingBottle.sold || 0)}
                     </p>
                   </div>
                 </div>
