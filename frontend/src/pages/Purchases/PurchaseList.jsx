@@ -499,7 +499,7 @@ const PurchaseList = () => {
         </div>
       )}
 
-      {/* ---------- Details Modal ---------- */}
+      {/* ---------- Details Modal (FIXED) ---------- */}
       {showDetailsModal && selectedPurchase && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 relative">
@@ -549,7 +549,10 @@ const PurchaseList = () => {
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {selectedPurchase.items.map((item, idx) => {
-                    const itemName = item.item?.name || item.item?.sku || 'Unknown';
+                    // ✅ FIX: Display bottles by size/type, not by name
+                    const itemName = item.item?.sizeMl
+                      ? `${item.item.sizeMl}ml (${item.item.type})`
+                      : (item.item?.name || item.item?.sku || 'Unknown');
                     const unit = item.itemType === 'RawMaterial' ? 'ml' : 'pcs';
                     return (
                       <tr key={idx}>
