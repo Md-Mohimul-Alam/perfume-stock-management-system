@@ -335,10 +335,10 @@ const Bottles = () => {
               {bottles.map((b) => {
                 const totalPurchased = b.totalPurchased || 0;
                 const sold = b.sold || 0;
-                // ✅ FIX: Allow negative values – no Math.max(0, ...)
                 const available = totalPurchased - sold;
                 const unitCost = b.avgCostPerUnit || 0;
-                const totalValue = available * unitCost;
+                // ✅ FIXED: Total Value = Total Stock × Per Unit Cost (cost of all stock ever purchased)
+                const totalValue = totalPurchased * unitCost;
 
                 return (
                   <tr key={b._id} className="hover:bg-gray-50 transition">
@@ -397,7 +397,7 @@ const Bottles = () => {
                 </td>
                 <td className="px-6 py-3 text-right">-</td>
                 <td className="px-6 py-3 text-right text-cyan-600">
-                  ৳{bottles.reduce((sum, b) => sum + (((b.totalPurchased || 0) - (b.sold || 0)) * (b.avgCostPerUnit || 0)), 0).toFixed(2)}
+                  ৳{bottles.reduce((sum, b) => sum + ((b.totalPurchased || 0) * (b.avgCostPerUnit || 0)), 0).toFixed(2)}
                 </td>
                 <td className="px-6 py-3" />
               </tr>
