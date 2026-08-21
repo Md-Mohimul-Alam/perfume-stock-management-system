@@ -156,7 +156,7 @@ const ExpensePage = () => {
     }
   };
 
-  // ---------- Upload (UPDATED) ----------
+  // ---------- Upload ----------
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) setUploadFile(file);
@@ -203,7 +203,6 @@ const ExpensePage = () => {
           const dateCol = findCol(['date', 'day', 'sale date']);
 
           if (amountCol && categoryCol) {
-            // Standard format: category, amount, optional date
             requiredCols = {
               type: 'standard',
               category: categoryCol,
@@ -230,8 +229,7 @@ const ExpensePage = () => {
               return;
             }
 
-            // Use first column as category
-            const catCol = columns[0]; // assume first column is category
+            const catCol = columns[0];
             requiredCols = {
               type: 'pivot',
               category: catCol,
@@ -268,14 +266,12 @@ const ExpensePage = () => {
           }
         }
 
-        // Build expense objects
         const expensesToCreate = [];
         const errors = [];
 
         // ---------- Process REGULAR ----------
         if (uploadType === 'regular') {
           if (requiredCols.type === 'standard') {
-            // Standard format
             for (let idx = 0; idx < rows.length; idx++) {
               const row = rows[idx];
               try {
@@ -319,13 +315,11 @@ const ExpensePage = () => {
                 const amount = parseFloat(row[dateCol]);
                 if (isNaN(amount) || amount <= 0) continue;
 
-                // Parse date from column header
                 let dateObj = new Date();
                 try {
                   const dateStr = dateCol.trim();
                   let parts = dateStr.split(/[\/\-]/);
                   if (parts.length === 2) {
-                    // day/month – assume current year
                     const day = parseInt(parts[0]);
                     const month = parseInt(parts[1]) - 1;
                     const year = new Date().getFullYear();
@@ -780,20 +774,15 @@ const ExpensePage = () => {
                 <div className="grid grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Term *</label>
-                    <select
+                    <input
+                      type="text"
                       name="term"
                       value={formData.term}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-secondary outline-none bg-white"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-secondary outline-none"
+                      placeholder="e.g., Fair 1, Expo 2024, etc."
                       required
-                    >
-                      <option value="">Select</option>
-                      <option value="Fair1">Fair 1</option>
-                      <option value="Fair2">Fair 2</option>
-                      <option value="Fair3">Fair 3</option>
-                      <option value="Fair4">Fair 4</option>
-                      <option value="Fair5">Fair 5</option>
-                    </select>
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Stall Rent *</label>
@@ -879,6 +868,7 @@ const ExpensePage = () => {
             </button>
             <h2 className="text-2xl font-bold mb-4">Edit Expense</h2>
             <form onSubmit={handleEditExpense} className="space-y-4">
+              {/* Type Selection */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
                 <div className="flex gap-4">
@@ -951,20 +941,15 @@ const ExpensePage = () => {
                 <div className="grid grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Term *</label>
-                    <select
+                    <input
+                      type="text"
                       name="term"
                       value={formData.term}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-secondary outline-none bg-white"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-secondary outline-none"
+                      placeholder="e.g., Fair 1, Expo 2024, etc."
                       required
-                    >
-                      <option value="">Select</option>
-                      <option value="Fair1">Fair 1</option>
-                      <option value="Fair2">Fair 2</option>
-                      <option value="Fair3">Fair 3</option>
-                      <option value="Fair4">Fair 4</option>
-                      <option value="Fair5">Fair 5</option>
-                    </select>
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Stall Rent *</label>
