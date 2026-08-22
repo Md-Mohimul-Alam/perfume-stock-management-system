@@ -1,48 +1,62 @@
 Invoice No,Date,Channel,Product Name,SKU,Type,Size (ml),Quantity,Unit Price (৳),Total (৳),Payment Status,Notes
+INV-0550,2026-08-21,Other,Ariana Grande thank you Spray,AG-Thnk_SP,spray,15,1,140.00,140.00,paid,mohim
+INV-0549,2026-08-21,Other,Ariana Grande Cloud,AGC,roll-on,3.5,1,150.00,150.00,due,Sydney
+INV-0549,2026-08-21,Other,Ariana Grande thank you,AG-Thnk,roll-on,3.5,1,200.00,200.00,due,Sydney
+INV-0549,2026-08-21,Other,Good Girl,GooGir,roll-on,3.5,1,150.00,150.00,due,Sydney
+INV-0549,2026-08-21,Other,LOST Cherry,LostChe,roll-on,3.5,1,140.00,140.00,due,Sydney
+INV-0549,2026-08-21,Other,Burberry Her,BurH,roll-on,3.5,1,150.00,150.00,due,Sydney
+INV-0549,2026-08-21,Other,Baccarat rouge,BacRou,roll-on,3.5,1,150.00,150.00,due,Sydney
+INV-0549,2026-08-21,Other,victoriya secret,VicSec,roll-on,3.5,1,160.00,160.00,due,Sydney
 INV-0548,2026-08-20,Other,victoriya secret Spray,VicSec_SP,spray,6,1,330.00,330.00,due,
+INV-0551,2026-08-19,Fair7,Good Girl,GooGir,roll-on,3.5,1,150.00,150.00,paid,multiple pucahse in one invoice
+INV-0551,2026-08-19,Fair7,Ariana Grande thank you,AG-Thnk,roll-on,3.5,1,200.00,200.00,paid,multiple pucahse in one invoice
+INV-0551,2026-08-19,Fair7,Sultan (al-haramain),SUL,roll-on,3.5,1,200.00,200.00,paid,multiple pucahse in one invoice
+INV-0551,2026-08-19,Fair7,Black Orchid,BLOr,roll-on,3.5,1,180.00,180.00,paid,multiple pucahse in one invoice
+INV-0551,2026-08-19,Fair7,Burberry Her Spray,BurH_SP,spray,6,1,60.00,60.00,paid,multiple pucahse in one invoice
+INV-0551,2026-08-19,Fair7,Vampire B.,VampB,roll-on,6,1,350.00,350.00,paid,multiple pucahse in one invoice
 INV-0547,2026-08-19,Fair7,Good Girl,GooGir,roll-on,3.5,1,180.00,180.00,paid,
 INV-0547,2026-08-19,Fair7,Dior Sauvage,DioSau,roll-on,3.5,1,180.00,180.00,paid,
 INV-0547,2026-08-19,Fair7,Armanis.w.y Spray,ArmWy_SP,spray,15,1,650.00,650.00,paid,
 INV-0547,2026-08-19,Fair7,le male elixir Spray,LeME__SP,spray,15,1,770.00,770.00,paid,
+INV-0545,2026-08-18,Fair7,Dior Sauvage,DioSau,roll-on,3.5,1,180.00,180.00,paid,
+INV-0545,2026-08-18,Fair7,Good Girl,GooGir,roll-on,3.5,1,180.00,180.00,paid,
+INV-0544,2026-08-18,Fair7,Vampire B.,VampB,roll-on,3.5,1,200.00,200.00,paid,
+INV-0543,2026-08-18,Fair7,Diptyque tam dao,DipTam,roll-on,3.5,1,180.00,180.00,paid,
+INV-0542,2026-08-18,Fair7,Blue berry,BluBer,roll-on,3.5,1,150.00,150.00,paid,
 INV-0541,2026-08-18,Fair7,Vampire B.,VampB,roll-on,3.5,1,200.00,200.00,paid,
+INV-0540,2026-08-18,Fair7,Valentino,Valen,roll-on,3.5,1,220.00,220.00,paid,
+INV-0540,2026-08-18,Fair7,Fantasy,Fant,roll-on,3.5,1,150.00,150.00,paid,
 INV-0539,2026-08-18,Fair7,Dunhill Icon,DunIco,roll-on,6,1,280.00,280.00,paid,
 INV-0539,2026-08-18,Fair7,Nautica voyage,NV,roll-on,6,1,280.00,280.00,paid,
 INV-0539,2026-08-18,Fair7,Dior Sauvage,DioSau,roll-on,6,1,280.00,280.00,paid,
-INV-0540,2026-08-18,Fair7,Valentino,Valen,roll-on,3.5,1,220.00,220.00,paid,
-INV-0540,2026-08-18,Fair7,Fantasy,Fant,roll-on,3.5,1,150.00,150.00,paid,
-INV-0542,2026-08-18,Fair7,Blue berry,BluBer,roll-on,3.5,1,150.00,150.00,paid,
-INV-0543,2026-08-18,Fair7,Diptyque tam dao,DipTam,roll-on,3.5,1,180.00,180.00,paid,
-INV-0544,2026-08-18,Fair7,Vampire B.,VampB,roll-on,3.5,1,200.00,200.00,paid,
-INV-0545,2026-08-18,Fair7,Dior Sauvage,DioSau,roll-on,3.5,1,180.00,180.00,paid,
-INV-0545,2026-08-18,Fair7,Good Girl,GooGir,roll-on,3.5,1,180.00,180.00,paid,
-INV-0546,2026-08-17,Fair7,Vampire B.,VampB,roll-on,3.5,1,170.00,170.00,paid,
-INV-0546,2026-08-17,Fair7,Valentino,Valen,roll-on,3.5,1,220.00,220.00,paid,
-INV-0538,2026-08-17,Fair7,Vanila,Vanil,roll-on,3.5,1,150.00,150.00,paid,
-INV-0537,2026-08-17,Fair7,White Oud,WO,roll-on,3.5,1,180.00,180.00,paid,
 INV-0536,2026-08-17,Fair7,Good Girl,GooGir,roll-on,3.5,1,160.00,160.00,paid,
 INV-0535,2026-08-17,Fair7,Good Girl,GooGir,roll-on,3.5,1,180.00,180.00,paid,
+INV-0537,2026-08-17,Fair7,White Oud,WO,roll-on,3.5,1,180.00,180.00,paid,
+INV-0538,2026-08-17,Fair7,Vanila,Vanil,roll-on,3.5,1,150.00,150.00,paid,
+INV-0546,2026-08-17,Fair7,Vampire B.,VampB,roll-on,3.5,1,170.00,170.00,paid,
+INV-0546,2026-08-17,Fair7,Valentino,Valen,roll-on,3.5,1,220.00,220.00,paid,
+INV-0533,2026-08-16,Fair7,Ariana Grande thank you,AG-Thnk,roll-on,3.5,1,210.00,210.00,paid,
 INV-0532,2026-08-16,Fair7,Vampire B.,VampB,roll-on,3.5,1,180.00,180.00,paid,
-INV-0529,2026-08-16,Fair7,Fogg Spray,Fgg_SP,spray,6,1,250.00,250.00,paid,
-INV-0530,2026-08-16,Fair7,Fogg Spray,Fgg_SP,spray,6,6,250.00,1500.00,paid,
 INV-0531,2026-08-16,Fair7,Vanila,Vanil,roll-on,3.5,1,150.00,150.00,paid,
 INV-0531,2026-08-16,Fair7,Good Girl,GooGir,roll-on,3.5,1,160.00,160.00,paid,
-INV-0533,2026-08-16,Fair7,Ariana Grande thank you,AG-Thnk,roll-on,3.5,1,210.00,210.00,paid,
+INV-0530,2026-08-16,Fair7,Fogg Spray,Fgg_SP,spray,6,6,250.00,1500.00,paid,
+INV-0529,2026-08-16,Fair7,Fogg Spray,Fgg_SP,spray,6,1,250.00,250.00,paid,
 INV-0528,2026-08-11,Other,Vampire B.,VampB,roll-on,3.5,2,170.00,340.00,due,Azgor
 INV-0527,2026-08-10,Other,Nautica voyage Spray,NV_SP,spray,6,1,250.00,250.00,paid,Atik
 INV-0527,2026-08-10,Other,SRK Spray,SR_SP,spray,6,1,350.00,350.00,paid,Atik
 INV-0526,2026-08-10,Other,Armanis.w.y Spray,ArmWy_SP,spray,50,1,1350.00,1350.00,paid,Anabil
-INV-0525,2026-08-08,Other,Black Orchid,BLOr,roll-on,3.5,1,180.00,180.00,due,Rafin 
+INV-0525,2026-08-08,Other,Black Orchid,BLOr,roll-on,3.5,1,180.00,180.00,paid,Rafin 
 INV-0524,2026-08-07,Fair6,Burberry Her,BurH,roll-on,3.5,1,170.00,170.00,paid,
 INV-0523,2026-08-07,Other,Creed Aventus Spray,CreAve_SP,spray,6,1,300.00,300.00,paid,Sajjad
 INV-0522,2026-08-07,Other,Nautica voyage Spray,NV_SP,spray,6,1,270.00,270.00,paid,Sajjad 
 INV-0521,2026-07-28,Other,Fantasy Spray,Fant_SP,spray,6,1,270.00,270.00,paid,Anika
-INV-0520,2026-07-12,Other,Vampire B.,VampB,roll-on,6,1,250.00,250.00,paid,Hridoy frnd
 INV-0519,2026-07-12,Other,Vampire B.,VampB,roll-on,6,1,250.00,250.00,paid,Hridoy
-INV-0518,2026-07-11,Other,White Oud,WO,roll-on,6,1,160.00,160.00,paid,Mohim
+INV-0520,2026-07-12,Other,Vampire B.,VampB,roll-on,6,1,250.00,250.00,paid,Hridoy frnd
 INV-0517,2026-07-11,Other,Ameer Al oud,AmeOud,roll-on,6,1,140.00,140.00,paid,owne
-INV-0514,2026-07-09,Other,LOST Cherry Spray,LostChe_SP,spray,6,1,270.00,270.00,paid,Nafees
-INV-0515,2026-07-09,Other,Luxe Special Spray,LUXE1_SP,spray,6,1,330.00,330.00,paid,Nafees
+INV-0518,2026-07-11,Other,White Oud,WO,roll-on,6,1,160.00,160.00,paid,Mohim
 INV-0516,2026-07-09,Other,Burberry Her Spray,BurH_SP,spray,6,1,300.00,300.00,paid,Nafees
+INV-0515,2026-07-09,Other,Luxe Special Spray,LUXE1_SP,spray,6,1,330.00,330.00,paid,Nafees
+INV-0514,2026-07-09,Other,LOST Cherry Spray,LostChe_SP,spray,6,1,270.00,270.00,paid,Nafees
 INV-0513,2026-07-07,Other,Luxe Special Spray,LUXE1_SP,spray,6,1,300.00,300.00,paid,
 INV-0512,2026-07-07,Other,Luxe Special Spray,LUXE1_SP,spray,6,1,300.00,300.00,paid,
 INV-0511,2026-07-07,Other,Burberry Her Spray,BurH_SP,spray,6,1,260.00,260.00,paid,ony

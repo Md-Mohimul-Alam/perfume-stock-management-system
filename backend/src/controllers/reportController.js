@@ -98,7 +98,7 @@ exports.getInvestorProfitReport = async (req, res) => {
   }
 };
 
-// @desc    Get available cash (net profit + investor net contributions – settlements)
+// @desc    Get available cash (net profit + investor net – settlements)
 // @route   GET /api/reports/available-cash
 exports.getAvailableCash = async (req, res) => {
   try {

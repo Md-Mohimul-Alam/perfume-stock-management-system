@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import API from '../../api/axios';
-import { Plus, Eye, Search, Upload, X, CheckCircle, AlertCircle, Trash2 } from 'lucide-react';
+import { Plus, Eye, Search, Upload, X, CheckCircle, AlertCircle, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import toast from 'react-hot-toast';
 
@@ -11,6 +11,7 @@ const SalesList = () => {
   const [filter, setFilter] = useState({ channel: '', paymentStatus: '' });
   const [typeFilter, setTypeFilter] = useState('');
   const [search, setSearch] = useState('');
+  const [expandedRows, setExpandedRows] = useState({}); // track which invoices are expanded
 
   // Upload state
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -18,7 +19,7 @@ const SalesList = () => {
   const [uploading, setUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState(null);
 
-  // Details modal
+  // Details modal (still used for full view)
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedSale, setSelectedSale] = useState(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
@@ -77,10 +78,36 @@ const SalesList = () => {
 
   const filteredSales = applyFilters();
 
-  // Channel suggestions (predefined list, but users can type anything)
+  // Toggle expand row
+  const toggleRow = (invoiceNo) => {
+    setExpandedRows(prev => ({
+      ...prev,
+      [invoiceNo]: !prev[invoiceNo],
+    }));
+  };
+
+  // Channel suggestions
   const channelSuggestions = ['Fair1', 'Fair2', 'Fair3', 'Fair4', 'Fair5', 'August', 'September', 'October', 'November', 'December', 'Online', 'Other'];
   const paymentStatusOptions = ['paid', 'due'];
   const typeOptions = ['oil', 'perfume'];
+
+  // ---------- Flexible column finder ----------
+  const findColumn = (obj, possibleNames) => {
+    const keys = Object.keys(obj);
+    for (const name of possibleNames) {
+      // Remove all non‑alphanumeric chars and lowercase
+      const normalizedName = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const found = keys.find(k => {
+        const normalizedKey = k.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+        // Check exact match or if one contains the other
+        return normalizedKey === normalizedName ||
+               normalizedKey.includes(normalizedName) ||
+               normalizedName.includes(normalizedKey);
+      });
+      if (found) return found;
+    }
+    return null;
+  };
 
   // ---------- Upload ----------
   const handleFileChange = (e) => {
@@ -102,39 +129,38 @@ const SalesList = () => {
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
         const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
 
-        const findColumn = (obj, possibleNames) => {
-          const keys = Object.keys(obj);
-          for (const name of possibleNames) {
-            const found = keys.find(
-              k => k.trim().toLowerCase() === name.toLowerCase()
-            );
-            if (found) return found;
-          }
-          return null;
-        };
+        if (!rows.length) {
+          setUploadResult({ success: false, message: 'File is empty' });
+          setUploading(false);
+          return;
+        }
 
-        const firstRow = rows[0] || {};
+        const firstRow = rows[0];
         const foundColumns = Object.keys(firstRow).join(', ');
 
+        // ---------- Detect columns (flexible) ----------
         const skuCol = findColumn(firstRow, ['sku', 'sku code', 'product sku']);
         const sizeCol = findColumn(firstRow, ['size', 'sizeml', 'ml', 'size ml']);
-        const priceCol = findColumn(firstRow, ['unitprice', 'unit price', 'price', 'selling price', 'rate']);
-        const invoiceCol = findColumn(firstRow, ['invoice', 'invoice no', 'invoiceno']);
+        const priceCol = findColumn(firstRow, ['unitprice', 'unit price', 'price', 'selling price', 'rate', 'unit price (৳)']);
+        const totalCol = findColumn(firstRow, ['total', 'total price', 'total amount', 'amount', 'total (৳)']);
+        const invoiceCol = findColumn(firstRow, ['invoice', 'invoice no', 'invoiceno', 'invoice number']);
         const qtyCol = findColumn(firstRow, ['quantity', 'qty', 'units']);
-        const channelCol = findColumn(firstRow, ['channel', 'sales channel', 'fair']);
-        const dateCol = findColumn(firstRow, ['saledate', 'sale date', 'date']);
+        const channelCol = findColumn(firstRow, ['channel', 'sales channel', 'fair', 'store']);
+        const dateCol = findColumn(firstRow, ['saledate', 'sale date', 'date', 'transaction date']);
         const paymentCol = findColumn(firstRow, ['paymentstatus', 'payment status', 'status']);
         const notesCol = findColumn(firstRow, ['notes', 'note', 'remarks', 'comment']);
 
-        if (!skuCol || !sizeCol || !priceCol) {
+        // ---------- Validate required columns ----------
+        if (!skuCol || !sizeCol || (!priceCol && !totalCol)) {
           setUploadResult({
             success: false,
-            message: `Required columns: SKU, Size, Price (or UnitPrice). Found: ${foundColumns || 'none'}`,
+            message: `Required: SKU, Size, and either Price or Total. Found columns: ${foundColumns}`,
           });
           setUploading(false);
           return;
         }
 
+        // ---------- Build sales grouped by invoice ----------
         const salesMap = new Map();
         const timestamp = Date.now();
 
@@ -142,21 +168,29 @@ const SalesList = () => {
           const row = rows[idx];
           const sku = String(row[skuCol]).trim();
           const sizeMl = parseFloat(row[sizeCol]);
-          let unitPrice = parseFloat(row[priceCol]);
-          if (isNaN(unitPrice) && priceCol) {
-            const altPrice = findColumn(row, ['unitprice', 'unit price', 'price', 'selling price', 'rate']);
-            if (altPrice) unitPrice = parseFloat(row[altPrice]);
-          }
           const quantity = qtyCol ? parseInt(row[qtyCol]) || 1 : 1;
+
+          // Get unit price – either from Price column or derived from Total
+          let unitPrice = NaN;
+          if (priceCol) {
+            unitPrice = parseFloat(row[priceCol]);
+          }
+          if ((isNaN(unitPrice) || unitPrice <= 0) && totalCol) {
+            const totalVal = parseFloat(row[totalCol]);
+            if (!isNaN(totalVal) && quantity > 0) {
+              unitPrice = totalVal / quantity;
+            }
+          }
+          if (isNaN(unitPrice) || unitPrice <= 0) {
+            continue; // skip invalid rows
+          }
+
           const channel = channelCol ? String(row[channelCol]).trim() : 'Other';
           const saleDate = dateCol ? row[dateCol] : '';
           const paymentStatus = paymentCol ? String(row[paymentCol]).toLowerCase().trim() : 'paid';
           const notes = notesCol ? String(row[notesCol]).trim() : '';
 
-          if (!sku || isNaN(sizeMl) || isNaN(unitPrice) || unitPrice <= 0) {
-            continue;
-          }
-
+          // Determine invoice number
           let invoice;
           if (invoiceCol) {
             invoice = String(row[invoiceCol]).trim();
@@ -165,42 +199,34 @@ const SalesList = () => {
             invoice = `SALE-${timestamp}-${String(idx + 1).padStart(3, '0')}`;
           }
 
-          if (invoiceCol) {
-            if (!salesMap.has(invoice)) {
-              salesMap.set(invoice, {
-                invoiceNo: invoice,
-                channel: channel || 'Other',
-                saleDate: saleDate || '',
-                paymentStatus: paymentStatus || 'paid',
-                items: [],
-                notes: notes || '',
-              });
-            }
-            const sale = salesMap.get(invoice);
-            sale.items.push({ sku, sizeMl, quantity, unitPrice });
-          } else {
-            const sale = {
+          // Group by invoice
+          if (!salesMap.has(invoice)) {
+            salesMap.set(invoice, {
               invoiceNo: invoice,
               channel: channel || 'Other',
               saleDate: saleDate || '',
               paymentStatus: paymentStatus || 'paid',
-              items: [{ sku, sizeMl, quantity, unitPrice }],
+              items: [],
               notes: notes || '',
-            };
-            salesMap.set(invoice, sale);
+            });
           }
+          const sale = salesMap.get(invoice);
+          sale.items.push({ sku, sizeMl, quantity, unitPrice });
         }
 
+        // Convert map to array
         const salesArray = Array.from(salesMap.values()).filter(s => s.items.length > 0);
+
         if (!salesArray.length) {
           setUploadResult({
             success: false,
-            message: `No valid rows. Ensure SKU, Size, Price are present and valid. Found columns: ${foundColumns}`,
+            message: `No valid rows. Ensure SKU, Size, and Price/Total are valid. Found: ${foundColumns}`,
           });
           setUploading(false);
           return;
         }
 
+        // Call backend bulk endpoint
         const response = await API.post('/sales/bulk', { sales: salesArray });
         setUploadResult({ success: true, data: response.data });
         fetchSales();
@@ -218,7 +244,7 @@ const SalesList = () => {
     }
   };
 
-  // ---------- View Details (with product fetching) ----------
+  // ---------- View Details (full modal) ----------
   const handleViewDetails = async (saleId) => {
     setDetailsLoading(true);
     setShowDetailsModal(true);
@@ -337,7 +363,6 @@ const SalesList = () => {
           </div>
         </div>
 
-        {/* Channel filter – now a combobox with datalist */}
         <div className="min-w-[150px]">
           <label className="block text-sm font-medium text-gray-700 mb-1">Channel</label>
           <input
@@ -406,53 +431,105 @@ const SalesList = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total (৳)</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Payment</th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Actions</th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Expand</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {filteredSales.map((s) => (
-                <tr key={s._id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 font-medium">{s.invoiceNo}</td>
-                  <td className="px-6 py-4">{new Date(s.saleDate).toLocaleDateString()}</td>
-                  <td className="px-6 py-4">{s.channel}</td>
-                  <td className="px-6 py-4 font-semibold">৳{s.totalAmount.toFixed(2)}</td>
-                  <td className="px-6 py-4">
-                    <select
-                      value={s.paymentStatus}
-                      onChange={(e) => updatePaymentStatus(s._id, e.target.value)}
-                      disabled={updatingStatus === s._id}
-                      className={`px-2 py-1 rounded-full text-xs font-medium border-0 focus:ring-2 focus:ring-brand-secondary outline-none cursor-pointer ${
-                        s.paymentStatus === 'paid'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}
-                    >
-                      <option value="paid">Paid</option>
-                      <option value="due">Due</option>
-                    </select>
-                  </td>
-                  <td className="px-6 py-4 text-center">
-                    <div className="flex justify-center gap-2">
-                      <button
-                        onClick={() => handleViewDetails(s._id)}
-                        className="text-blue-600 hover:text-blue-800"
-                        title="View Details"
-                      >
-                        <Eye size={18} />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteClick(s)}
-                        className="text-red-600 hover:text-red-800"
-                        title="Delete"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {filteredSales.map((s) => {
+                const isExpanded = expandedRows[s.invoiceNo];
+                return (
+                  <>
+                    {/* Main row */}
+                    <tr key={s._id} className="hover:bg-gray-50 cursor-pointer" onClick={() => toggleRow(s.invoiceNo)}>
+                      <td className="px-6 py-4 font-medium">{s.invoiceNo}</td>
+                      <td className="px-6 py-4">{new Date(s.saleDate).toLocaleDateString()}</td>
+                      <td className="px-6 py-4">{s.channel}</td>
+                      <td className="px-6 py-4 font-semibold">৳{s.totalAmount.toFixed(2)}</td>
+                      <td className="px-6 py-4">
+                        <select
+                          value={s.paymentStatus}
+                          onChange={(e) => updatePaymentStatus(s._id, e.target.value)}
+                          disabled={updatingStatus === s._id}
+                          onClick={(e) => e.stopPropagation()} // prevent row toggle
+                          className={`px-2 py-1 rounded-full text-xs font-medium border-0 focus:ring-2 focus:ring-brand-secondary outline-none cursor-pointer ${
+                            s.paymentStatus === 'paid'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}
+                        >
+                          <option value="paid">Paid</option>
+                          <option value="due">Due</option>
+                        </select>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <div className="flex justify-center gap-2" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            onClick={() => handleViewDetails(s._id)}
+                            className="text-blue-600 hover:text-blue-800"
+                            title="View Details"
+                          >
+                            <Eye size={18} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteClick(s)}
+                            className="text-red-600 hover:text-red-800"
+                            title="Delete"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <span className="text-gray-400 hover:text-gray-600 transition">
+                          {isExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
+                        </span>
+                      </td>
+                    </tr>
+
+                    {/* Expanded row – shows items */}
+                    {isExpanded && (
+                      <tr className="bg-gray-50">
+                        <td colSpan="7" className="px-6 py-4">
+                          <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200 text-sm">
+                              <thead className="bg-gray-100">
+                                <tr>
+                                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
+                                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Size (ml)</th>
+                                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Qty</th>
+                                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Unit Price</th>
+                                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-gray-200">
+                                {s.items.map((item, idx) => {
+                                  const product = item.product || { name: 'Unknown' };
+                                  return (
+                                    <tr key={idx}>
+                                      <td className="px-4 py-2">{product.name}</td>
+                                      <td className="px-4 py-2">{item.sizeMl}</td>
+                                      <td className="px-4 py-2">{item.quantity}</td>
+                                      <td className="px-4 py-2">৳{item.unitPrice.toFixed(2)}</td>
+                                      <td className="px-4 py-2 font-semibold">৳{item.totalPrice.toFixed(2)}</td>
+                                    </tr>
+                                  );
+                                })}
+                                <tr className="font-bold bg-gray-100">
+                                  <td colSpan="4" className="px-4 py-2 text-right">Grand Total</td>
+                                  <td className="px-4 py-2">৳{s.totalAmount.toFixed(2)}</td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </>
+                );
+              })}
               {filteredSales.length === 0 && (
                 <tr>
-                  <td colSpan="6" className="text-center py-8 text-gray-500">No sales found</td>
+                  <td colSpan="7" className="text-center py-8 text-gray-500">No sales found</td>
                 </tr>
               )}
             </tbody>
@@ -460,7 +537,7 @@ const SalesList = () => {
         </div>
       )}
 
-      {/* ---------- Delete Confirmation Modal ---------- */}
+      {/* ---------- Delete Modal ---------- */}
       {showDeleteModal && saleToDelete && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
@@ -505,7 +582,7 @@ const SalesList = () => {
             </button>
             <h2 className="text-2xl font-bold mb-2">Bulk Upload Sales</h2>
             <p className="text-gray-500 text-sm mb-4">
-              Upload CSV/Excel with columns: <strong>SKU, Size, Price</strong> (or UnitPrice).
+              Upload CSV/Excel with columns: <strong>SKU, Size, Price</strong> (or UnitPrice) <strong>or Total</strong>.
               <br />
               Optional: <strong>Invoice, Quantity, Channel, SaleDate, PaymentStatus, Notes</strong>.
               <br />
