@@ -156,6 +156,25 @@ const Sidebar = ({
           <span className={linkTextClass}>Reports</span>
         </NavLink>
 
+        {/* Wastage section */}
+        <NavLink
+          to="/wastage"
+          className={({ isActive }) => `${linkClass} ${isActive ? activeClass : ''}`}
+          onClick={handleLinkClick}
+        >
+          <span className={iconClass}>🗑️</span>
+          <span className={linkTextClass}>Wastage History</span>
+        </NavLink>
+
+        <NavLink
+          to="/wastage/new"
+          className={({ isActive }) => `${linkClass} ${isActive ? activeClass : ''} ${!collapsed ? 'ml-6' : ''} text-sm`}
+          onClick={handleLinkClick}
+        >
+          <span className={iconClass}>➕</span>
+          <span className={linkTextClass}>Record Wastage</span>
+        </NavLink>
+
         {user?.role === 'admin' && (
           <NavLink
             to="/register"

@@ -18,6 +18,8 @@ import {
   ShoppingCart,
   Award,
   Clock,
+  Trash2,
+  X,
 } from 'lucide-react';
 import API from '../api/axios';
 import toast from 'react-hot-toast';
@@ -46,138 +48,173 @@ const Dashboard = () => {
   const [recentExpenses, setRecentExpenses] = useState([]);
   const [recentPurchases, setRecentPurchases] = useState([]);
 
+  // Wastage modal state
+  const [showWastageModal, setShowWastageModal] = useState(false);
+  const [wastageAmount, setWastageAmount] = useState('');
+  const [wastageDescription, setWastageDescription] = useState('');
+  const [submittingWastage, setSubmittingWastage] = useState(false);
+
   // Fixed costs (adjust as needed)
   const fixedCosts = 10600 + 246 + 127;
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      setLoading(true);
-      try {
-        const [
-          materialsRes,
-          bottlesWithSalesRes,
-          productsRes,
-          salesRes,
-          expensesRes,
-          purchasesRes,
-        ] = await Promise.all([
-          API.get('/inventory/materials'),
-          API.get('/inventory/bottles/with-sales'),
-          API.get('/products'),
-          API.get('/sales'),
-          API.get('/expenses'),
-          API.get('/purchases'),
-        ]);
+  // ---------- Data fetching (extracted for reuse) ----------
+  const fetchDashboardData = async () => {
+    setLoading(true);
+    try {
+      const [
+        materialsRes,
+        bottlesWithSalesRes,
+        productsRes,
+        salesRes,
+        expensesRes,
+        purchasesRes,
+      ] = await Promise.all([
+        API.get('/inventory/materials'),
+        API.get('/inventory/bottles/with-sales'),
+        API.get('/products'),
+        API.get('/sales'),
+        API.get('/expenses'),
+        API.get('/purchases'),
+      ]);
 
-        const allSales = salesRes?.data || [];
-        const allExpenses = expensesRes?.data || [];
-        const allPurchases = purchasesRes?.data || [];
-        const products = productsRes?.data || [];
-        const materials = materialsRes?.data || [];
-        const bottleData = bottlesWithSalesRes?.data || [];
+      const allSales = salesRes?.data || [];
+      const allExpenses = expensesRes?.data || [];
+      const allPurchases = purchasesRes?.data || [];
+      const products = productsRes?.data || [];
+      const materials = materialsRes?.data || [];
+      const bottleData = bottlesWithSalesRes?.data || [];
 
-        setBottles(bottleData);
+      setBottles(bottleData);
 
-        // --- Due sales ---
-        const dueSales = allSales.filter(s => s.paymentStatus === 'due');
-        const dueCount = dueSales.length;
-        const dueAmount = dueSales.reduce((sum, s) => sum + (parseFloat(s.totalAmount) || 0), 0);
+      // Due sales
+      const dueSales = allSales.filter(s => s.paymentStatus === 'due');
+      const dueCount = dueSales.length;
+      const dueAmount = dueSales.reduce((sum, s) => sum + (parseFloat(s.totalAmount) || 0), 0);
 
-        // --- All-time totals ---
-        const totalRevenue = allSales.reduce((sum, s) => sum + (parseFloat(s.totalAmount) || 0), 0);
-        const totalExpenses = allExpenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
-        const totalPurchases = allPurchases.reduce((sum, p) => sum + (parseFloat(p.totalAmount) || 0), 0);
+      // Totals
+      const totalRevenue = allSales.reduce((sum, s) => sum + (parseFloat(s.totalAmount) || 0), 0);
+      const totalExpenses = allExpenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+      const totalPurchases = allPurchases.reduce((sum, p) => sum + (parseFloat(p.totalAmount) || 0), 0);
 
-        // --- Raw Material Stock Value ---
-        let rawMaterialStockValue = 0;
-        materials.forEach(m => {
-          const stock = parseFloat(m.currentStockMl) || 0;
-          const avgCost = parseFloat(m.avgCostPerMl) || 0;
-          rawMaterialStockValue += stock * avgCost;
-        });
+      // Stock values
+      let rawMaterialStockValue = 0;
+      materials.forEach(m => {
+        const stock = parseFloat(m.currentStockMl) || 0;
+        const avgCost = parseFloat(m.avgCostPerMl) || 0;
+        rawMaterialStockValue += stock * avgCost;
+      });
 
-        // --- Bottle Stock Value ---
-        let bottleStockValue = 0;
-        bottleData.forEach(b => {
-          const stock = parseFloat(b.currentStock) || 0;
-          const avgCost = parseFloat(b.avgCostPerUnit) || 0;
-          bottleStockValue += stock * avgCost;
-        });
+      let bottleStockValue = 0;
+      bottleData.forEach(b => {
+        const stock = parseFloat(b.currentStock) || 0;
+        const avgCost = parseFloat(b.avgCostPerUnit) || 0;
+        bottleStockValue += stock * avgCost;
+      });
 
-        const totalInventoryValue = rawMaterialStockValue + bottleStockValue;
+      const totalInventoryValue = rawMaterialStockValue + bottleStockValue;
+      const netProfit = (totalRevenue - dueAmount) - totalExpenses - totalPurchases - fixedCosts;
 
-        // --- Available Cash = revenue from paid sales - expenses - purchases - fixed costs
-        const netProfit = (totalRevenue - dueAmount) - totalExpenses - totalPurchases - fixedCosts;
+      // Sales by product type
+      let oilSold = 0;
+      let perfumeSold = 0;
+      const productSalesMap = {};
 
-        // --- Sales by product type ---
-        let oilSold = 0;
-        let perfumeSold = 0;
-        const productSalesMap = {};
+      for (const sale of allSales) {
+        if (!sale.items || !sale.items.length) continue;
+        for (const item of sale.items) {
+          const product = item.product;
+          if (!product) continue;
+          if (product.type === 'roll-on') oilSold += (item.quantity || 0);
+          else if (product.type === 'spray') perfumeSold += (item.quantity || 0);
 
-        for (const sale of allSales) {
-          if (!sale.items || !sale.items.length) continue;
-          for (const item of sale.items) {
-            const product = item.product;
-            if (!product) continue;
-            if (product.type === 'roll-on') oilSold += (item.quantity || 0);
-            else if (product.type === 'spray') perfumeSold += (item.quantity || 0);
-
-            const productId = product._id;
-            if (!productSalesMap[productId]) {
-              productSalesMap[productId] = {
-                productId,
-                totalSold: 0,
-                totalRevenue: 0,
-                productName: product.name,
-                sku: product.sku,
-              };
-            }
-            productSalesMap[productId].totalSold += (item.quantity || 0);
-            productSalesMap[productId].totalRevenue += (item.quantity || 0) * (item.unitPrice || 0);
+          const productId = product._id;
+          if (!productSalesMap[productId]) {
+            productSalesMap[productId] = {
+              productId,
+              totalSold: 0,
+              totalRevenue: 0,
+              productName: product.name,
+              sku: product.sku,
+            };
           }
+          productSalesMap[productId].totalSold += (item.quantity || 0);
+          productSalesMap[productId].totalRevenue += (item.quantity || 0) * (item.unitPrice || 0);
         }
-
-        const sortedProducts = Object.values(productSalesMap)
-          .sort((a, b) => b.totalSold - a.totalSold)
-          .slice(0, 5);
-        setTopProducts(sortedProducts);
-
-        const recentExp = [...allExpenses]
-          .sort((a, b) => new Date(b.date) - new Date(a.date))
-          .slice(0, 5);
-
-        const recentPur = [...allPurchases]
-          .sort((a, b) => new Date(b.purchaseDate) - new Date(a.purchaseDate))
-          .slice(0, 5);
-
-        // --- Update state ---
-        setStats({
-          materials: materials.length,
-          bottles: bottleData.length,
-          products: products.length,
-          salesCount: allSales.length,
-          totalRevenue,
-          totalExpenses,
-          totalPurchases,
-          netProfit,
-          rawMaterialStockValue,
-          bottleStockValue,
-          totalInventoryValue,
-          dueCount,
-          dueAmount,
-        });
-        setSalesTypeCounts({ oil: oilSold, perfume: perfumeSold });
-        setRecentExpenses(recentExp);
-        setRecentPurchases(recentPur);
-      } catch (error) {
-        toast.error('Failed to load dashboard');
-        console.error('Dashboard error:', error);
-      } finally {
-        setLoading(false);
       }
-    };
-    fetchStats();
+
+      const sortedProducts = Object.values(productSalesMap)
+        .sort((a, b) => b.totalSold - a.totalSold)
+        .slice(0, 5);
+      setTopProducts(sortedProducts);
+
+      const recentExp = [...allExpenses]
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .slice(0, 5);
+
+      const recentPur = [...allPurchases]
+        .sort((a, b) => new Date(b.purchaseDate) - new Date(a.purchaseDate))
+        .slice(0, 5);
+
+      setStats({
+        materials: materials.length,
+        bottles: bottleData.length,
+        products: products.length,
+        salesCount: allSales.length,
+        totalRevenue,
+        totalExpenses,
+        totalPurchases,
+        netProfit,
+        rawMaterialStockValue,
+        bottleStockValue,
+        totalInventoryValue,
+        dueCount,
+        dueAmount,
+      });
+      setSalesTypeCounts({ oil: oilSold, perfume: perfumeSold });
+      setRecentExpenses(recentExp);
+      setRecentPurchases(recentPur);
+    } catch (error) {
+      toast.error('Failed to load dashboard');
+      console.error('Dashboard error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load data on mount
+  useEffect(() => {
+    fetchDashboardData();
   }, []);
+
+  // ----- Wastage Handler -----
+  const handleWastageSubmit = async (e) => {
+    e.preventDefault();
+    if (!wastageAmount || parseFloat(wastageAmount) <= 0) {
+      toast.error('Please enter a valid amount');
+      return;
+    }
+    setSubmittingWastage(true);
+    try {
+      await API.post('/expenses', {
+        type: 'regular',
+        category: 'Wastage',
+        amount: parseFloat(wastageAmount),
+        date: new Date().toISOString().split('T')[0],
+        description: wastageDescription || 'Wastage recorded',
+        reference: 'Wastage',
+      });
+      toast.success('Wastage recorded successfully');
+      setShowWastageModal(false);
+      setWastageAmount('');
+      setWastageDescription('');
+      // Refresh dashboard data
+      await fetchDashboardData();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to record wastage');
+    } finally {
+      setSubmittingWastage(false);
+    }
+  };
 
   // --- Main stats cards (6 cards) ---
   const mainCards = [
@@ -327,6 +364,13 @@ const Dashboard = () => {
             <Wallet size={18} />
             Add Expense
           </Link>
+          <button
+            onClick={() => setShowWastageModal(true)}
+            className="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 sm:px-5 py-2 rounded-lg shadow-md hover:shadow-lg transition shadow-red-500/30 flex items-center gap-2 text-sm sm:text-base"
+          >
+            <Trash2 size={18} />
+            Record Wastage
+          </button>
         </div>
       </div>
 
@@ -598,6 +642,65 @@ const Dashboard = () => {
             </div>
           </div>
         </>
+      )}
+
+      {/* ---------- Wastage Modal ---------- */}
+      {showWastageModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
+            <button
+              onClick={() => setShowWastageModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+            >
+              <X size={24} />
+            </button>
+            <h2 className="text-2xl font-bold mb-2 text-gray-800">Record Wastage</h2>
+            <p className="text-gray-500 text-sm mb-4">
+              Enter the amount and description of the wastage. This will be added as an expense and will reduce your available cash.
+            </p>
+            <form onSubmit={handleWastageSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Amount (৳) *</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  value={wastageAmount}
+                  onChange={(e) => setWastageAmount(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"
+                  placeholder="Enter amount"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <input
+                  type="text"
+                  value={wastageDescription}
+                  onChange={(e) => setWastageDescription(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"
+                  placeholder="Optional description"
+                />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="submit"
+                  disabled={submittingWastage}
+                  className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 disabled:opacity-50 transition"
+                >
+                  {submittingWastage ? 'Recording...' : 'Record Wastage'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowWastageModal(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -19,6 +19,8 @@ import NewPurchase from './pages/Purchases/NewPurchase';
 import PurchaseList from './pages/Purchases/PurchaseList';
 import Investors from './pages/Investors/Investors';
 import Reports from './pages/Reports/Reports';
+import WastageList from './pages/Wastage/WastageList';
+import WastageForm from './pages/Wastage/WastageForm';
 
 function App() {
   return (
@@ -48,6 +50,8 @@ function App() {
             <Route path="expenses" element={<ExpensePage />} />
             <Route path="investors" element={<Investors />} /> 
             <Route path="reports" element={<Reports />} />
+            <Route path="wastage" element={<WastageList />} />
+            <Route path="wastage/new" element={<WastageForm />} />
           </Route>
         </Routes>
       </AuthProvider>
