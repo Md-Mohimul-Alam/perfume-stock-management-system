@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import API from '../../api/axios';
 import { Plus, Eye, Search, Upload, X, CheckCircle, AlertCircle, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
@@ -53,7 +53,8 @@ const SalesList = () => {
     setFilter({ ...filter, [e.target.name]: e.target.value });
   };
 
-  const applyFilters = () => {
+  // ---------- Filter + Sort ----------
+  const filteredAndSortedSales = useMemo(() => {
     let filtered = sales;
     if (filter.channel) {
       filtered = filtered.filter(s => s.channel === filter.channel);
@@ -73,10 +74,10 @@ const SalesList = () => {
         s.items.some(item => item.product?.type === mappedType)
       );
     }
-    return filtered;
-  };
 
-  const filteredSales = applyFilters();
+    // Sort by saleDate descending (newest first)
+    return filtered.sort((a, b) => new Date(b.saleDate) - new Date(a.saleDate));
+  }, [sales, filter, search, typeFilter]);
 
   // Toggle expand row
   const toggleRow = (invoiceNo) => {
@@ -95,11 +96,9 @@ const SalesList = () => {
   const findColumn = (obj, possibleNames) => {
     const keys = Object.keys(obj);
     for (const name of possibleNames) {
-      // Remove all non‑alphanumeric chars and lowercase
       const normalizedName = name.toLowerCase().replace(/[^a-z0-9]/g, '');
       const found = keys.find(k => {
         const normalizedKey = k.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-        // Check exact match or if one contains the other
         return normalizedKey === normalizedName ||
                normalizedKey.includes(normalizedName) ||
                normalizedName.includes(normalizedKey);
@@ -138,7 +137,6 @@ const SalesList = () => {
         const firstRow = rows[0];
         const foundColumns = Object.keys(firstRow).join(', ');
 
-        // ---------- Detect columns (flexible) ----------
         const skuCol = findColumn(firstRow, ['sku', 'sku code', 'product sku']);
         const sizeCol = findColumn(firstRow, ['size', 'sizeml', 'ml', 'size ml']);
         const priceCol = findColumn(firstRow, ['unitprice', 'unit price', 'price', 'selling price', 'rate', 'unit price (৳)']);
@@ -150,7 +148,6 @@ const SalesList = () => {
         const paymentCol = findColumn(firstRow, ['paymentstatus', 'payment status', 'status']);
         const notesCol = findColumn(firstRow, ['notes', 'note', 'remarks', 'comment']);
 
-        // ---------- Validate required columns ----------
         if (!skuCol || !sizeCol || (!priceCol && !totalCol)) {
           setUploadResult({
             success: false,
@@ -160,7 +157,6 @@ const SalesList = () => {
           return;
         }
 
-        // ---------- Build sales grouped by invoice ----------
         const salesMap = new Map();
         const timestamp = Date.now();
 
@@ -170,7 +166,6 @@ const SalesList = () => {
           const sizeMl = parseFloat(row[sizeCol]);
           const quantity = qtyCol ? parseInt(row[qtyCol]) || 1 : 1;
 
-          // Get unit price – either from Price column or derived from Total
           let unitPrice = NaN;
           if (priceCol) {
             unitPrice = parseFloat(row[priceCol]);
@@ -182,7 +177,7 @@ const SalesList = () => {
             }
           }
           if (isNaN(unitPrice) || unitPrice <= 0) {
-            continue; // skip invalid rows
+            continue;
           }
 
           const channel = channelCol ? String(row[channelCol]).trim() : 'Other';
@@ -190,7 +185,6 @@ const SalesList = () => {
           const paymentStatus = paymentCol ? String(row[paymentCol]).toLowerCase().trim() : 'paid';
           const notes = notesCol ? String(row[notesCol]).trim() : '';
 
-          // Determine invoice number
           let invoice;
           if (invoiceCol) {
             invoice = String(row[invoiceCol]).trim();
@@ -199,7 +193,6 @@ const SalesList = () => {
             invoice = `SALE-${timestamp}-${String(idx + 1).padStart(3, '0')}`;
           }
 
-          // Group by invoice
           if (!salesMap.has(invoice)) {
             salesMap.set(invoice, {
               invoiceNo: invoice,
@@ -214,7 +207,6 @@ const SalesList = () => {
           sale.items.push({ sku, sizeMl, quantity, unitPrice });
         }
 
-        // Convert map to array
         const salesArray = Array.from(salesMap.values()).filter(s => s.items.length > 0);
 
         if (!salesArray.length) {
@@ -226,7 +218,6 @@ const SalesList = () => {
           return;
         }
 
-        // Call backend bulk endpoint
         const response = await API.post('/sales/bulk', { sales: salesArray });
         setUploadResult({ success: true, data: response.data });
         fetchSales();
@@ -244,7 +235,7 @@ const SalesList = () => {
     }
   };
 
-  // ---------- View Details (full modal) ----------
+  // ---------- View Details ----------
   const handleViewDetails = async (saleId) => {
     setDetailsLoading(true);
     setShowDetailsModal(true);
@@ -435,12 +426,12 @@ const SalesList = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {filteredSales.map((s) => {
+              {filteredAndSortedSales.map((s) => {
                 const isExpanded = expandedRows[s.invoiceNo];
                 return (
-                  <>
+                  <React.Fragment key={s._id}>
                     {/* Main row */}
-                    <tr key={s._id} className="hover:bg-gray-50 cursor-pointer" onClick={() => toggleRow(s.invoiceNo)}>
+                    <tr className="hover:bg-gray-50 cursor-pointer" onClick={() => toggleRow(s.invoiceNo)}>
                       <td className="px-6 py-4 font-medium">{s.invoiceNo}</td>
                       <td className="px-6 py-4">{new Date(s.saleDate).toLocaleDateString()}</td>
                       <td className="px-6 py-4">{s.channel}</td>
@@ -450,7 +441,7 @@ const SalesList = () => {
                           value={s.paymentStatus}
                           onChange={(e) => updatePaymentStatus(s._id, e.target.value)}
                           disabled={updatingStatus === s._id}
-                          onClick={(e) => e.stopPropagation()} // prevent row toggle
+                          onClick={(e) => e.stopPropagation()}
                           className={`px-2 py-1 rounded-full text-xs font-medium border-0 focus:ring-2 focus:ring-brand-secondary outline-none cursor-pointer ${
                             s.paymentStatus === 'paid'
                               ? 'bg-green-100 text-green-800'
@@ -524,10 +515,10 @@ const SalesList = () => {
                         </td>
                       </tr>
                     )}
-                  </>
+                  </React.Fragment>
                 );
               })}
-              {filteredSales.length === 0 && (
+              {filteredAndSortedSales.length === 0 && (
                 <tr>
                   <td colSpan="7" className="text-center py-8 text-gray-500">No sales found</td>
                 </tr>
@@ -537,7 +528,7 @@ const SalesList = () => {
         </div>
       )}
 
-      {/* ---------- Delete Modal ---------- */}
+      {/* Delete Modal */}
       {showDeleteModal && saleToDelete && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
@@ -566,7 +557,7 @@ const SalesList = () => {
         </div>
       )}
 
-      {/* ---------- Upload Modal ---------- */}
+      {/* Upload Modal */}
       {showUploadModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 relative">
@@ -663,7 +654,7 @@ const SalesList = () => {
         </div>
       )}
 
-      {/* ---------- Details Modal ---------- */}
+      {/* Details Modal */}
       {showDetailsModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 relative">
