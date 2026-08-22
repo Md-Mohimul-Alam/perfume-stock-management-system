@@ -1,55 +1,60 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, LogOut, User } from 'lucide-react';
 
-const Sidebar = ({ 
-  closeDrawer, 
-  isDrawer = false, 
-  collapsed = false, 
-  onToggleCollapse 
+const Sidebar = ({
+  closeDrawer,
+  isDrawer = false,
+  collapsed = false,
+  onToggleCollapse,
 }) => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   const linkClass =
-    'flex items-center px-4 py-2 text-gray-700 hover:bg-gray-200 rounded transition-colors duration-150';
-  const activeClass = 'bg-gray-200 font-semibold text-blue-600';
+    'flex items-center px-4 py-2.5 text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all duration-200 group relative';
+  const activeClass = 'bg-indigo-50 text-indigo-700 font-medium shadow-sm';
 
   const handleLinkClick = () => {
     if (isDrawer && closeDrawer) closeDrawer();
   };
 
-  const linkTextClass = collapsed ? 'hidden' : 'ml-3';
-  const iconClass = 'flex-shrink-0';
+  const linkTextClass = collapsed ? 'hidden' : 'ml-3 text-sm';
+  const iconClass = 'flex-shrink-0 w-5 h-5';
 
   return (
-    <div className="h-full flex flex-col bg-white transition-all duration-300">
-      {/* Logo & close button (drawer only) */}
-      <div className={`flex items-center ${isDrawer ? 'justify-between' : 'justify-center'} px-4 py-3 border-b border-gray-200`}>
+    <div className="h-full flex flex-col bg-white border-r border-gray-100 shadow-sm transition-all duration-300">
+      {/* Logo */}
+      <div
+        className={`flex items-center ${isDrawer ? 'justify-between' : 'justify-center'} px-4 py-4 border-b border-gray-100`}
+      >
         {!collapsed || isDrawer ? (
-          <div className="flex items-center">
-            <img src="/logo.jpg" alt="LuxePerfume Logo" className="h-10 w-10" />
+          <div className="flex items-center gap-2">
+            <img src="/logo.jpg" alt="LuxePerfume Logo" className="h-10 w-10 rounded-full object-cover border border-indigo-100" />
             {!collapsed && !isDrawer && (
-              <span className="ml-2 text-lg font-bold text-blue-800">LuxePerfume</span>
+              <span className="text-lg font-serif font-bold text-indigo-800 tracking-wide">LuxePerfume</span>
             )}
           </div>
         ) : (
-          <img src="/logo.jpg" alt="LuxePerfume Logo" className="h-10 w-10" />
+          <img src="/logo.jpg" alt="LuxePerfume Logo" className="h-10 w-10 rounded-full object-cover border border-indigo-100" />
         )}
         {isDrawer && (
           <button
             onClick={closeDrawer}
-            className="p-1 rounded hover:bg-gray-100"
+            className="p-1 rounded-lg hover:bg-gray-100 transition"
             aria-label="Close sidebar"
           >
-            <X size={24} />
+            <X size={22} className="text-gray-500" />
           </button>
         )}
       </div>
 
-      <nav className="flex-1 overflow-y-auto mt-4 space-y-1 px-2">
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
         <NavLink
           to="/"
-          className={({ isActive }) => `${linkClass} ${isActive ? activeClass : ''}`}
+          className={({ isActive }) =>
+            `${linkClass} ${isActive ? activeClass : ''}`
+          }
           end
           onClick={handleLinkClick}
         >
@@ -59,7 +64,9 @@ const Sidebar = ({
 
         <NavLink
           to="/inventory/materials"
-          className={({ isActive }) => `${linkClass} ${isActive ? activeClass : ''}`}
+          className={({ isActive }) =>
+            `${linkClass} ${isActive ? activeClass : ''}`
+          }
           onClick={handleLinkClick}
         >
           <span className={iconClass}>🧴</span>
@@ -68,7 +75,9 @@ const Sidebar = ({
 
         <NavLink
           to="/inventory/bottles"
-          className={({ isActive }) => `${linkClass} ${isActive ? activeClass : ''}`}
+          className={({ isActive }) =>
+            `${linkClass} ${isActive ? activeClass : ''}`
+          }
           onClick={handleLinkClick}
         >
           <span className={iconClass}>🧪</span>
@@ -77,7 +86,9 @@ const Sidebar = ({
 
         <NavLink
           to="/production/batches"
-          className={({ isActive }) => `${linkClass} ${isActive ? activeClass : ''} ${!collapsed ? 'ml-6' : ''} text-sm`}
+          className={({ isActive }) =>
+            `${linkClass} ${isActive ? activeClass : ''} ${!collapsed ? 'pl-9' : 'pl-4'}`
+          }
           onClick={handleLinkClick}
         >
           <span className={iconClass}>📋</span>
@@ -86,7 +97,9 @@ const Sidebar = ({
 
         <NavLink
           to="/products"
-          className={({ isActive }) => `${linkClass} ${isActive ? activeClass : ''}`}
+          className={({ isActive }) =>
+            `${linkClass} ${isActive ? activeClass : ''}`
+          }
           onClick={handleLinkClick}
         >
           <span className={iconClass}>✨</span>
@@ -95,7 +108,9 @@ const Sidebar = ({
 
         <NavLink
           to="/products/new"
-          className={({ isActive }) => `${linkClass} ${isActive ? activeClass : ''} ${!collapsed ? 'ml-6' : ''} text-sm`}
+          className={({ isActive }) =>
+            `${linkClass} ${isActive ? activeClass : ''} ${!collapsed ? 'pl-9' : 'pl-4'}`
+          }
           onClick={handleLinkClick}
         >
           <span className={iconClass}>➕</span>
@@ -104,7 +119,9 @@ const Sidebar = ({
 
         <NavLink
           to="/sales"
-          className={({ isActive }) => `${linkClass} ${isActive ? activeClass : ''}`}
+          className={({ isActive }) =>
+            `${linkClass} ${isActive ? activeClass : ''}`
+          }
           onClick={handleLinkClick}
         >
           <span className={iconClass}>💰</span>
@@ -113,7 +130,9 @@ const Sidebar = ({
 
         <NavLink
           to="/sales/new"
-          className={({ isActive }) => `${linkClass} ${isActive ? activeClass : ''} ${!collapsed ? 'ml-6' : ''} text-sm`}
+          className={({ isActive }) =>
+            `${linkClass} ${isActive ? activeClass : ''} ${!collapsed ? 'pl-9' : 'pl-4'}`
+          }
           onClick={handleLinkClick}
         >
           <span className={iconClass}>➕</span>
@@ -122,7 +141,9 @@ const Sidebar = ({
 
         <NavLink
           to="/purchases"
-          className={({ isActive }) => `${linkClass} ${isActive ? activeClass : ''}`}
+          className={({ isActive }) =>
+            `${linkClass} ${isActive ? activeClass : ''}`
+          }
           onClick={handleLinkClick}
         >
           <span className={iconClass}>📦</span>
@@ -131,7 +152,9 @@ const Sidebar = ({
 
         <NavLink
           to="/expenses"
-          className={({ isActive }) => `${linkClass} ${isActive ? activeClass : ''}`}
+          className={({ isActive }) =>
+            `${linkClass} ${isActive ? activeClass : ''}`
+          }
           onClick={handleLinkClick}
         >
           <span className={iconClass}>🧾</span>
@@ -140,7 +163,9 @@ const Sidebar = ({
 
         <NavLink
           to="/investors"
-          className={({ isActive }) => `${linkClass} ${isActive ? activeClass : ''}`}
+          className={({ isActive }) =>
+            `${linkClass} ${isActive ? activeClass : ''}`
+          }
           onClick={handleLinkClick}
         >
           <span className={iconClass}>👥</span>
@@ -149,7 +174,9 @@ const Sidebar = ({
 
         <NavLink
           to="/reports"
-          className={({ isActive }) => `${linkClass} ${isActive ? activeClass : ''}`}
+          className={({ isActive }) =>
+            `${linkClass} ${isActive ? activeClass : ''}`
+          }
           onClick={handleLinkClick}
         >
           <span className={iconClass}>📈</span>
@@ -157,9 +184,12 @@ const Sidebar = ({
         </NavLink>
 
         {/* Wastage section */}
+        <div className="my-2 border-t border-gray-100" />
         <NavLink
           to="/wastage"
-          className={({ isActive }) => `${linkClass} ${isActive ? activeClass : ''}`}
+          className={({ isActive }) =>
+            `${linkClass} ${isActive ? activeClass : ''}`
+          }
           onClick={handleLinkClick}
         >
           <span className={iconClass}>🗑️</span>
@@ -168,7 +198,9 @@ const Sidebar = ({
 
         <NavLink
           to="/wastage/new"
-          className={({ isActive }) => `${linkClass} ${isActive ? activeClass : ''} ${!collapsed ? 'ml-6' : ''} text-sm`}
+          className={({ isActive }) =>
+            `${linkClass} ${isActive ? activeClass : ''} ${!collapsed ? 'pl-9' : 'pl-4'}`
+          }
           onClick={handleLinkClick}
         >
           <span className={iconClass}>➕</span>
@@ -176,29 +208,54 @@ const Sidebar = ({
         </NavLink>
 
         {user?.role === 'admin' && (
-          <NavLink
-            to="/register"
-            className={({ isActive }) => `${linkClass} ${isActive ? activeClass : ''}`}
-            onClick={handleLinkClick}
-          >
-            <span className={iconClass}>👤</span>
-            <span className={linkTextClass}>Register User</span>
-          </NavLink>
+          <>
+            <div className="my-2 border-t border-gray-100" />
+            <NavLink
+              to="/register"
+              className={({ isActive }) =>
+                `${linkClass} ${isActive ? activeClass : ''}`
+              }
+              onClick={handleLinkClick}
+            >
+              <span className={iconClass}>👤</span>
+              <span className={linkTextClass}>Register User</span>
+            </NavLink>
+          </>
         )}
       </nav>
 
-      {/* Toggle button – only visible on desktop (not in drawer) */}
-      {!isDrawer && onToggleCollapse && (
-        <div className="border-t border-gray-200 p-2">
+      {/* Bottom section: user profile & toggle */}
+      <div className="border-t border-gray-100 p-3 space-y-2">
+        {user && !collapsed && (
+          <div className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-gray-50 transition">
+            <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-semibold">
+              {user.name?.charAt(0) || 'U'}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-700 truncate">{user.name}</p>
+              <p className="text-xs text-gray-400 truncate">{user.role || 'Staff'}</p>
+            </div>
+            <button
+              onClick={logout}
+              className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition"
+              title="Logout"
+            >
+              <LogOut size={16} />
+            </button>
+          </div>
+        )}
+
+        {!isDrawer && onToggleCollapse && (
           <button
             onClick={onToggleCollapse}
-            className="w-full flex items-center justify-center py-2 text-gray-500 hover:bg-gray-100 rounded transition"
+            className="w-full flex items-center justify-center py-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
-            {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+            {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+            {!collapsed && <span className="ml-2 text-xs font-medium">Collapse</span>}
           </button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
