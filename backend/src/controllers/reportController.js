@@ -4,6 +4,7 @@ const Sale = require('../models/Sale');
 const Expense = require('../models/Expense');
 const Purchase = require('../models/Purchase');
 const Investor = require('../models/Investor');
+const Transaction = require('../models/Transaction'); // 👈 ADD THIS
 const { calculateProfit, distributeProfit } = require('../services/profitService');
 
 // @desc    Get current inventory summary
@@ -96,26 +97,54 @@ exports.getInvestorProfitReport = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-// @desc    Get available cash (net profit)
+
+// @desc    Get available cash (net profit + investor net contributions – settlements)
 // @route   GET /api/reports/available-cash
 exports.getAvailableCash = async (req, res) => {
   try {
-    // Fetch all data – same as Dashboard
-    const allSales = await Sale.find();
-    const allExpenses = await Expense.find();
-    const allPurchases = await Purchase.find();
+    const [allSales, allExpenses, allPurchases, allInvestors, allSettlements] = await Promise.all([
+      Sale.find(),
+      Expense.find(),
+      Purchase.find(),
+      Investor.find(),
+      Transaction.find({ type: 'cash_out', category: 'Investor Settlement' }),
+    ]);
 
-    // Calculate totals
-    const totalRevenue = allSales.reduce((sum, s) => sum + (s.totalAmount || 0), 0);
+    // Paid revenue (exclude due sales)
+    let totalRevenue = 0;
+    let dueAmount = 0;
+    allSales.forEach(sale => {
+      const amount = sale.totalAmount || 0;
+      totalRevenue += amount;
+      if (sale.paymentStatus === 'due') dueAmount += amount;
+    });
+    const paidRevenue = totalRevenue - dueAmount;
+
+    // Expenses and purchases
     const totalExpenses = allExpenses.reduce((sum, e) => sum + (e.amount || 0), 0);
     const totalPurchases = allPurchases.reduce((sum, p) => sum + (p.totalAmount || 0), 0);
 
-    // Fixed deductions (hardcoded in Dashboard)
-    const deductions = 10600 + 246 + 127;
+    // Investor net contributions
+    let totalInvested = 0;
+    let totalWithdrawn = 0;
+    allInvestors.forEach(inv => {
+      inv.contributions.forEach(c => {
+        if (c.type === 'investment') totalInvested += c.amount;
+        else totalWithdrawn += c.amount;
+      });
+    });
+    const investorNet = totalInvested - totalWithdrawn;
 
-    const netProfit = totalRevenue - totalExpenses - totalPurchases - deductions;
+    // Total settlements (investor payouts)
+    const totalSettlements = allSettlements.reduce((sum, t) => sum + t.amount, 0);
 
-    res.json({ availableCash: netProfit });
+    // Net profit from operations (no fixed costs)
+    const netProfit = paidRevenue - totalExpenses - totalPurchases;
+
+    // Available cash = net profit + investor net – settlements
+    const availableCash = netProfit + investorNet - totalSettlements;
+
+    res.json({ availableCash });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
