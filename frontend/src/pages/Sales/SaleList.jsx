@@ -75,10 +75,14 @@ const SalesList = () => {
       );
     }
 
-    // Sort by saleDate ascending (oldest first)
-    return filtered.sort((a, b) => new Date(a.saleDate) - new Date(b.saleDate));
+    // Sort by invoice number descending (numeric part)
+    return filtered.sort((a, b) => {
+      const numA = parseInt(a.invoiceNo.replace(/\D/g, '')) || 0;
+      const numB = parseInt(b.invoiceNo.replace(/\D/g, '')) || 0;
+      return numB - numA;
+    });
   }, [sales, filter, search, typeFilter]);
-
+  
   // Toggle expand row
   const toggleRow = (invoiceNo) => {
     setExpandedRows(prev => ({
