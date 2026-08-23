@@ -4,7 +4,8 @@ import API from '../../api/axios';
 import {
   Plus, Search, Eye, Edit, Trash2,
   Package, Droplet, Filter, Calendar,
-  X, CheckCircle, AlertCircle, Upload
+  X, CheckCircle, AlertCircle, Upload,
+  PlusCircle, MinusCircle
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import toast from 'react-hot-toast';
@@ -18,11 +19,18 @@ const PurchaseList = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedPurchase, setSelectedPurchase] = useState(null);
 
-  // Edit state
+  // ---------- Edit state (with items) ----------
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingPurchase, setEditingPurchase] = useState(null);
-  const [editForm, setEditForm] = useState({ supplier: '', purchaseDate: '', notes: '' });
+  const [editForm, setEditForm] = useState({
+    supplier: '',
+    purchaseDate: '',
+    notes: '',
+    items: [] // each item: { _id, itemType, itemId, quantity, costPerUnit, totalCost, itemName? }
+  });
   const [editLoading, setEditLoading] = useState(false);
+  const [allMaterials, setAllMaterials] = useState([]);
+  const [allBottles, setAllBottles] = useState([]);
 
   // Upload state
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -77,24 +85,117 @@ const PurchaseList = () => {
     }
   };
 
-  // ----- EDIT HANDLERS -----
-  const openEditModal = (purchase) => {
+  // ---------- ENHANCED EDIT HANDLERS ----------
+  const openEditModal = async (purchase) => {
+    // Fetch all materials and bottles for dropdowns
+    try {
+      const [materialsRes, bottlesRes] = await Promise.all([
+        API.get('/inventory/materials'),
+        API.get('/inventory/bottles')
+      ]);
+      setAllMaterials(materialsRes.data);
+      setAllBottles(bottlesRes.data);
+    } catch (err) {
+      toast.error('Failed to load inventory for item selection');
+    }
+
     setEditingPurchase(purchase);
     setEditForm({
       supplier: purchase.supplier || '',
       purchaseDate: new Date(purchase.purchaseDate).toISOString().split('T')[0],
       notes: purchase.notes || '',
+      items: purchase.items.map(item => ({
+        _id: item._id,
+        itemType: item.itemType,
+        itemId: item.item?._id || item.item,
+        quantity: item.quantity,
+        costPerUnit: item.costPerUnit,
+        totalCost: item.totalCost,
+        // store display name for convenience (not needed for submit)
+      }))
     });
     setShowEditModal(true);
+  };
+
+  // Add a new empty item row
+  const addEditItem = () => {
+    setEditForm(prev => ({
+      ...prev,
+      items: [
+        ...prev.items,
+        {
+          _id: null,
+          itemType: 'RawMaterial',
+          itemId: '',
+          quantity: 1,
+          costPerUnit: 0,
+          totalCost: 0,
+        }
+      ]
+    }));
+  };
+
+  // Remove an item row
+  const removeEditItem = (index) => {
+    setEditForm(prev => ({
+      ...prev,
+      items: prev.items.filter((_, i) => i !== index)
+    }));
+  };
+
+  // Update item field
+  const updateEditItem = (index, field, value) => {
+    const newItems = [...editForm.items];
+    const item = newItems[index];
+
+    if (field === 'itemType') {
+      item.itemType = value;
+      item.itemId = '';
+      item.costPerUnit = 0;
+      item.totalCost = 0;
+    } else if (field === 'itemId') {
+      item.itemId = value;
+      // Optionally auto-fill cost? We'll leave it manual.
+    } else if (field === 'quantity' || field === 'costPerUnit') {
+      item[field] = parseFloat(value) || 0;
+      item.totalCost = item.quantity * item.costPerUnit;
+    }
+    setEditForm(prev => ({ ...prev, items: newItems }));
   };
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     if (!editingPurchase) return;
+
+    // Validate items: all must have itemId, quantity>0, costPerUnit>0
+    for (let i = 0; i < editForm.items.length; i++) {
+      const item = editForm.items[i];
+      if (!item.itemId) {
+        toast.error(`Row ${i+1}: Please select a valid item.`);
+        return;
+      }
+      if (item.quantity <= 0 || item.costPerUnit <= 0) {
+        toast.error(`Row ${i+1}: Quantity and cost must be positive.`);
+        return;
+      }
+    }
+
     setEditLoading(true);
     try {
-      await API.put(`/purchases/${editingPurchase._id}`, editForm);
-      toast.success('Purchase updated');
+      const payload = {
+        supplier: editForm.supplier,
+        purchaseDate: editForm.purchaseDate,
+        notes: editForm.notes,
+        items: editForm.items.map(item => ({
+          itemType: item.itemType,
+          item: item.itemId,
+          quantity: item.quantity,
+          costPerUnit: item.costPerUnit,
+          totalCost: item.quantity * item.costPerUnit,
+        }))
+      };
+      await API.put(`/purchases/${editingPurchase._id}`, payload);
+      toast.success('Purchase updated successfully');
       setShowEditModal(false);
       fetchPurchases();
     } catch (error) {
@@ -116,7 +217,7 @@ const PurchaseList = () => {
     }
   };
 
-  // ----- UPLOAD HANDLERS -----
+  // ----- UPLOAD HANDLERS (unchanged) -----
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) setUploadFile(file);
@@ -301,6 +402,17 @@ const PurchaseList = () => {
 
   const filteredPurchases = getFilteredPurchases();
   const suppliers = [...new Set(purchases.map(p => p.supplier).filter(Boolean))];
+
+  // ----- Helper to get item name in edit modal -----
+  const getItemDisplayName = (itemType, itemId) => {
+    if (itemType === 'RawMaterial') {
+      const mat = allMaterials.find(m => m._id === itemId);
+      return mat ? mat.name : 'Unknown';
+    } else {
+      const bot = allBottles.find(b => b._id === itemId);
+      return bot ? `${bot.sizeMl}ml (${bot.type})` : 'Unknown';
+    }
+  };
 
   // ----- RENDER -----
   return (
@@ -499,7 +611,7 @@ const PurchaseList = () => {
         </div>
       )}
 
-      {/* ---------- Details Modal (FIXED) ---------- */}
+      {/* ---------- Details Modal ---------- */}
       {showDetailsModal && selectedPurchase && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 relative">
@@ -549,7 +661,6 @@ const PurchaseList = () => {
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {selectedPurchase.items.map((item, idx) => {
-                    // ✅ FIX: Display bottles by size/type, not by name
                     const itemName = item.item?.sizeMl
                       ? `${item.item.sizeMl}ml (${item.item.type})`
                       : (item.item?.name || item.item?.sku || 'Unknown');
@@ -577,10 +688,10 @@ const PurchaseList = () => {
         </div>
       )}
 
-      {/* ---------- Edit Modal ---------- */}
+      {/* ---------- ENHANCED EDIT MODAL (with item editing) ---------- */}
       {showEditModal && editingPurchase && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 relative">
             <button
               onClick={() => setShowEditModal(false)}
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
@@ -589,45 +700,151 @@ const PurchaseList = () => {
             </button>
             <h2 className="text-2xl font-bold mb-2">Edit Purchase</h2>
             <p className="text-gray-500 text-sm mb-4">
-              You can only edit supplier, date, and notes. To change items, delete and create a new purchase.
+              Update supplier, date, notes, and items. Changing items will adjust stock accordingly.
             </p>
+
             <form onSubmit={handleEditSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Invoice</label>
-                <input
-                  type="text"
-                  value={editingPurchase.invoiceNo}
-                  disabled
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
-                />
+              {/* Metadata fields */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Invoice</label>
+                  <input
+                    type="text"
+                    value={editingPurchase.invoiceNo}
+                    disabled
+                    className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Supplier</label>
+                  <input
+                    type="text"
+                    value={editForm.supplier}
+                    onChange={(e) => setEditForm({ ...editForm, supplier: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Purchase Date</label>
+                  <input
+                    type="date"
+                    value={editForm.purchaseDate}
+                    onChange={(e) => setEditForm({ ...editForm, purchaseDate: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                  <input
+                    type="text"
+                    value={editForm.notes}
+                    onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                  />
+                </div>
               </div>
+
+              {/* Items section */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Supplier</label>
-                <input
-                  type="text"
-                  value={editForm.supplier}
-                  onChange={(e) => setEditForm({ ...editForm, supplier: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
-                />
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700">Items</label>
+                  <button
+                    type="button"
+                    onClick={addEditItem}
+                    className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
+                  >
+                    <PlusCircle size={16} /> Add Item
+                  </button>
+                </div>
+                <div className="overflow-x-auto border rounded-lg">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Item (SKU/Name)</th>
+                        <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Qty</th>
+                        <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Cost/Unit</th>
+                        <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Total</th>
+                        <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {editForm.items.map((item, index) => {
+                        // Build options for itemType dropdown
+                        const options = item.itemType === 'RawMaterial'
+                          ? allMaterials.map(m => ({ value: m._id, label: m.name || m.sku || 'Unknown' }))
+                          : allBottles.map(b => ({ value: b._id, label: b.sizeMl ? `${b.sizeMl}ml Bottle` : (b.name || b.sku || 'Unknown') }));
+                        return (
+                          <tr key={index}>
+                            <td className="px-3 py-2">
+                              <select
+                                value={item.itemType}
+                                onChange={(e) => updateEditItem(index, 'itemType', e.target.value)}
+                                className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-amber-500"
+                              >
+                                <option value="RawMaterial">Oil</option>
+                                <option value="Bottle">Bottle</option>
+                              </select>
+                            </td>
+                            <td className="px-3 py-2">
+                              <select
+                                value={item.itemId}
+                                onChange={(e) => updateEditItem(index, 'itemId', e.target.value)}
+                                className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-amber-500"
+                              >
+                                <option value="">Select {item.itemType === 'RawMaterial' ? 'Oil' : 'Bottle'}</option>
+                                {options.map(opt => (
+                                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                ))}
+                              </select>
+                            </td>
+                            <td className="px-3 py-2">
+                              <input
+                                type="number"
+                                value={item.quantity}
+                                onChange={(e) => updateEditItem(index, 'quantity', e.target.value)}
+                                min="0.01"
+                                step="0.01"
+                                className="w-20 px-2 py-1 border border-gray-300 rounded text-sm text-right focus:ring-2 focus:ring-amber-500"
+                              />
+                            </td>
+                            <td className="px-3 py-2">
+                              <input
+                                type="number"
+                                value={item.costPerUnit}
+                                onChange={(e) => updateEditItem(index, 'costPerUnit', e.target.value)}
+                                min="0.01"
+                                step="0.01"
+                                className="w-24 px-2 py-1 border border-gray-300 rounded text-sm text-right focus:ring-2 focus:ring-amber-500"
+                              />
+                            </td>
+                            <td className="px-3 py-2 text-right font-semibold">
+                              ৳{(item.quantity * item.costPerUnit).toFixed(2)}
+                            </td>
+                            <td className="px-3 py-2 text-center">
+                              <button
+                                type="button"
+                                onClick={() => removeEditItem(index)}
+                                className="text-red-500 hover:text-red-700"
+                              >
+                                <MinusCircle size={18} />
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                      {editForm.items.length === 0 && (
+                        <tr>
+                          <td colSpan="6" className="text-center py-4 text-gray-400 text-sm">
+                            No items added. Click "Add Item" to include items.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Purchase Date</label>
-                <input
-                  type="date"
-                  value={editForm.purchaseDate}
-                  onChange={(e) => setEditForm({ ...editForm, purchaseDate: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                <input
-                  type="text"
-                  value={editForm.notes}
-                  onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
-                />
-              </div>
+
               <div className="flex gap-3 pt-2">
                 <button
                   type="submit"
@@ -649,7 +866,7 @@ const PurchaseList = () => {
         </div>
       )}
 
-      {/* ---------- Upload Modal ---------- */}
+      {/* ---------- Upload Modal (unchanged) ---------- */}
       {showUploadModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 relative">

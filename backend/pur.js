@@ -2,22 +2,18 @@ const mongoose = require('mongoose');
 const path = require('path');
 require('dotenv').config();
 
-// ----- Helper: load model with fallback paths -----
-function loadModel(modelName) {
+function loadModel(name) {
   const paths = [
-    path.join(__dirname, 'src/models', modelName),
-    path.join(__dirname, 'models', modelName),
-    path.join(__dirname, '../src/models', modelName),
+    path.join(__dirname, 'src/models', name),
+    path.join(__dirname, 'models', name),
+    path.join(__dirname, '../src/models', name),
   ];
   for (const p of paths) {
-    try {
-      return require(p);
-    } catch (e) {}
+    try { return require(p); } catch {}
   }
-  throw new Error(`Cannot find model "${modelName}"`);
+  throw new Error(`Cannot find model "${name}"`);
 }
 
-// ----- Load models -----
 let Purchase, RawMaterial, Bottle;
 try {
   Purchase = loadModel('Purchase');
@@ -31,41 +27,33 @@ try {
 
 const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI;
 if (!MONGO_URI) {
-  console.error('❌ MONGO_URI not set in .env');
+  console.error('❌ MONGO_URI not set');
   process.exit(1);
 }
 
-function maskUri(uri) {
-  try {
-    const url = new URL(uri);
-    if (url.password) url.password = '****';
-    return url.toString();
-  } catch { return uri; }
-}
+function maskUri(uri) { /* ... */ }
+
 console.log(`🔗 Connecting to: ${maskUri(MONGO_URI)}`);
 
-// ----- Helper: rebuild one entity (raw material or bottle) -----
-async function rebuildEntity(Model, itemType, idField, purchaseKey) {
+// ----- Rebuild from purchases only -----
+async function rebuildEntity(Model, itemType) {
   const entityName = Model.modelName;
-  console.log(`\n🔄 Rebuilding ${entityName} stock...`);
+  console.log(`\n🔄 Rebuilding ${entityName} from purchases...`);
 
-  // 1. Fetch all purchases
   const purchases = await Purchase.find().lean();
   console.log(`   📦 Found ${purchases.length} purchase records`);
 
-  // 2. Group items by entity ID
-  const map = {};
+  // Map: entityId -> array of purchase entries
+  const purchaseMap = {};
   for (const purchase of purchases) {
     const invoiceNo = purchase.invoiceNo;
     const supplier = purchase.supplier || '';
     const purchaseDate = purchase.purchaseDate || new Date();
-
     for (const item of purchase.items) {
       if (item.itemType !== itemType) continue;
       const entityId = item.item.toString();
-      if (!map[entityId]) map[entityId] = [];
-
-      map[entityId].push({
+      if (!purchaseMap[entityId]) purchaseMap[entityId] = [];
+      purchaseMap[entityId].push({
         quantity: item.quantity,
         costPerUnit: item.costPerUnit,
         totalCost: item.totalCost,
@@ -76,25 +64,22 @@ async function rebuildEntity(Model, itemType, idField, purchaseKey) {
     }
   }
 
-  const ids = Object.keys(map);
+  const ids = Object.keys(purchaseMap);
   console.log(`   🔍 Found ${ids.length} ${entityName} types with purchase history`);
 
   let updated = 0;
   let totalEntries = 0;
 
-  // 3. Process each entity
   for (const entityId of ids) {
-    const entries = map[entityId];
+    const entries = purchaseMap[entityId];
     const entity = await Model.findById(entityId);
     if (!entity) {
       console.warn(`   ⚠️ ${entityName} ${entityId} not found – skipping`);
       continue;
     }
 
-    // Clear existing purchases
+    // Clear and rebuild purchases array
     entity.purchases = [];
-
-    // Add new entries
     for (const entry of entries) {
       if (itemType === 'RawMaterial') {
         entity.purchases.push({
@@ -117,7 +102,7 @@ async function rebuildEntity(Model, itemType, idField, purchaseKey) {
       }
     }
 
-    // Recalculate stock and average cost
+    // Calculate total quantity and average cost from purchases only
     let totalQty = 0;
     let totalCostSum = 0;
     for (const p of entity.purchases) {
@@ -126,6 +111,7 @@ async function rebuildEntity(Model, itemType, idField, purchaseKey) {
       totalCostSum += p.totalCost;
     }
 
+    // Set stock to total purchased quantity
     if (itemType === 'RawMaterial') {
       entity.currentStockMl = totalQty;
       entity.avgCostPerMl = totalQty > 0 ? totalCostSum / totalQty : 0;
@@ -138,26 +124,29 @@ async function rebuildEntity(Model, itemType, idField, purchaseKey) {
     await entity.save();
     updated++;
     totalEntries += entity.purchases.length;
-    console.log(`   ✅ ${entity.name || entity.sizeMl + 'ml'} – ${entity.purchases.length} entries, stock: ${totalQty}`);
+    console.log(`   ✅ ${entity.name || entity.sizeMl + 'ml'} – purchases: ${entity.purchases.length}, stock: ${totalQty}`);
   }
 
-  // 4. Reset entities with no purchases
+  // Reset entities with no purchases to zero
   const allEntities = await Model.find({});
   let zeroed = 0;
   for (const e of allEntities) {
-    const stock = itemType === 'RawMaterial' ? e.currentStockMl : e.currentStock;
-    if (e.purchases.length === 0 && stock > 0) {
-      console.warn(`   ⚠️ ${e.name || e.sizeMl + 'ml'} has stock ${stock} but no purchases – setting to 0.`);
-      if (itemType === 'RawMaterial') {
-        e.currentStockMl = 0;
-        e.avgCostPerMl = 0;
-      } else {
-        e.currentStock = 0;
-        e.avgCostPerUnit = 0;
-        e.totalPurchased = 0;
+    const entityId = e._id.toString();
+    if (!purchaseMap[entityId]) {
+      if (e.purchases.length > 0 || (itemType === 'RawMaterial' ? e.currentStockMl : e.currentStock) !== 0) {
+        console.warn(`   ⚠️ ${e.name || e.sizeMl + 'ml'} has no purchases – resetting to 0`);
+        if (itemType === 'RawMaterial') {
+          e.currentStockMl = 0;
+          e.avgCostPerMl = 0;
+        } else {
+          e.currentStock = 0;
+          e.avgCostPerUnit = 0;
+          e.totalPurchased = 0;
+        }
+        e.purchases = [];
+        await e.save();
+        zeroed++;
       }
-      await e.save();
-      zeroed++;
     }
   }
   if (zeroed) console.log(`   📌 Reset ${zeroed} entities with no purchase history.`);
@@ -169,16 +158,16 @@ async function rebuildEntity(Model, itemType, idField, purchaseKey) {
 // ----- Main -----
 async function rebuildAll() {
   try {
-    await mongoose.connect(MONGO_URI);
+    await mongoose.connect(MONGO_URI, {
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    });
     console.log('✅ Connected to MongoDB');
 
-    // Rebuild Raw Materials
-    await rebuildEntity(RawMaterial, 'RawMaterial', 'material', 'quantityMl');
+    await rebuildEntity(RawMaterial, 'RawMaterial');
+    await rebuildEntity(Bottle, 'Bottle');
 
-    // Rebuild Bottles
-    await rebuildEntity(Bottle, 'Bottle', 'bottle', 'quantity');
-
-    console.log('\n🎉 All stock rebuild complete!');
+    console.log('\n🎉 Stock rebuild from purchases complete!');
     await mongoose.disconnect();
     console.log('🔌 Disconnected');
   } catch (error) {
