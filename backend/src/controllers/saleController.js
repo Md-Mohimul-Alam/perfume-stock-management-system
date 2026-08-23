@@ -159,32 +159,43 @@ exports.updatePayment = async (req, res) => {
   }
 };
 
-// =============================================
-// Bulk create sales from CSV/Excel
-// =============================================
 // @desc    Bulk create sales from CSV/Excel
 // @route   POST /api/sales/bulk
 exports.bulkCreateSales = async (req, res) => {
   try {
-    const { sales } = req.body; // array of sale objects
+    const { sales } = req.body;
     if (!sales || !sales.length) {
       return res.status(400).json({ message: 'No sales provided' });
     }
 
+    // 1. Extract all invoice numbers from request
+    const invoiceNos = sales.map(s => s.invoiceNo).filter(Boolean);
+
+    // 2. Find which already exist in the database
+    const existingSales = await Sale.find({ invoiceNo: { $in: invoiceNos } }, 'invoiceNo').lean();
+    const existingSet = new Set(existingSales.map(s => s.invoiceNo));
+
+    // 3. Separate new sales from duplicates
+    const newSales = sales.filter(s => !existingSet.has(s.invoiceNo));
+    const duplicateInvoices = sales.filter(s => existingSet.has(s.invoiceNo));
+
     const errors = [];
     const created = [];
 
-    for (const saleData of sales) {
+    // 4. Report duplicates as errors
+    for (const sale of duplicateInvoices) {
+      errors.push({
+        saleData: sale,
+        error: `Invoice ${sale.invoiceNo} already exists`
+      });
+    }
+
+    // 5. Process only new sales
+    for (const saleData of newSales) {
       try {
         const { invoiceNo, channel, items, saleDate, paymentStatus, notes } = saleData;
         if (!invoiceNo || !channel || !items || !items.length) {
           errors.push({ saleData, error: 'Missing required fields: invoiceNo, channel, items' });
-          continue;
-        }
-
-        const existing = await Sale.findOne({ invoiceNo });
-        if (existing) {
-          errors.push({ saleData, error: `Invoice ${invoiceNo} already exists` });
           continue;
         }
 
@@ -237,6 +248,7 @@ exports.bulkCreateSales = async (req, res) => {
           notes: notes || '',
         });
 
+        // Deduct stock
         for (const item of processedItems) {
           const { productRef, sizeVariant, quantity } = item;
           await deductBottle(sizeVariant.bottle, quantity, 'sale', sale);

@@ -124,23 +124,143 @@ exports.getPurchaseById = async (req, res) => {
   }
 };
 
-// @desc    Update purchase (supplier, date, notes only)
+// @desc    Update purchase (supplier, date, notes, and items)
 // @route   PUT /api/purchases/:id
 exports.updatePurchase = async (req, res) => {
-  try {
-    const { supplier, purchaseDate, notes } = req.body;
-    const purchase = await Purchase.findById(req.params.id);
-    if (!purchase) return res.status(404).json({ message: 'Purchase not found' });
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
-    // Only allow updating these fields – items are immutable
+  try {
+    const { supplier, purchaseDate, notes, items } = req.body;
+    const purchase = await Purchase.findById(req.params.id).session(session);
+    if (!purchase) {
+      await session.abortTransaction();
+      return res.status(404).json({ message: 'Purchase not found' });
+    }
+
+    // ---------- If items are provided, replace them ----------
+    if (items && Array.isArray(items)) {
+      // 1. Reverse old stock for each item
+      for (const oldItem of purchase.items) {
+        const { itemType, item: itemId, quantity, costPerUnit, totalCost } = oldItem;
+        if (itemType === 'RawMaterial') {
+          const material = await RawMaterial.findById(itemId).session(session);
+          if (material) {
+            // Remove the purchase entry by invoice number
+            const idx = material.purchases.findIndex(p => p.invoiceNo === purchase.invoiceNo);
+            if (idx !== -1) {
+              material.purchases.splice(idx, 1);
+              const totalQty = material.purchases.reduce((sum, p) => sum + p.quantityMl, 0);
+              const totalCostSum = material.purchases.reduce((sum, p) => sum + p.totalCost, 0);
+              material.avgCostPerMl = totalQty > 0 ? totalCostSum / totalQty : 0;
+              material.currentStockMl -= quantity;
+              await material.save({ session });
+            } else {
+              // fallback: just subtract
+              material.currentStockMl -= quantity;
+              await material.save({ session });
+            }
+          }
+        } else if (itemType === 'Bottle') {
+          const bottle = await Bottle.findById(itemId).session(session);
+          if (bottle) {
+            const idx = bottle.purchases.findIndex(p => p.invoiceNo === purchase.invoiceNo);
+            if (idx !== -1) {
+              bottle.purchases.splice(idx, 1);
+              const totalQty = bottle.purchases.reduce((sum, p) => sum + p.quantity, 0);
+              const totalCostSum = bottle.purchases.reduce((sum, p) => sum + p.totalCost, 0);
+              bottle.avgCostPerUnit = totalQty > 0 ? totalCostSum / totalQty : 0;
+              bottle.currentStock -= quantity;
+              await bottle.save({ session });
+            } else {
+              bottle.currentStock -= quantity;
+              await bottle.save({ session });
+            }
+          }
+        }
+      }
+
+      // 2. Delete old InventoryLog entries for this purchase
+      await InventoryLog.deleteMany({ reference: purchase._id, reason: 'purchase' }).session(session);
+
+      // 3. Process new items
+      const processedItems = [];
+      let totalAmount = 0;
+
+      for (const itemData of items) {
+        const { itemType, item: itemId, quantity, costPerUnit } = itemData;
+        if (!itemType || !itemId || !quantity || quantity <= 0 || !costPerUnit || costPerUnit <= 0) {
+          throw new Error(`Invalid item data: ${JSON.stringify(itemData)}`);
+        }
+
+        const totalCost = quantity * costPerUnit;
+        totalAmount += totalCost;
+
+        let itemRef;
+        if (itemType === 'RawMaterial') {
+          itemRef = await RawMaterial.findById(itemId).session(session);
+          if (!itemRef) throw new Error(`Material ${itemId} not found`);
+          itemRef.addPurchase(quantity, costPerUnit, totalCost, purchase.supplier, purchase.invoiceNo);
+          await itemRef.save({ session });
+          await InventoryLog.create([{
+            material: itemId,
+            changeQuantity: quantity,
+            reason: 'purchase',
+            reference: purchase._id,
+            refModel: 'Purchase',
+            notes: `Purchase invoice ${purchase.invoiceNo}`,
+          }], { session });
+        } else {
+          itemRef = await Bottle.findById(itemId).session(session);
+          if (!itemRef) throw new Error(`Bottle ${itemId} not found`);
+          itemRef.addPurchase(quantity, costPerUnit, totalCost, purchase.supplier, purchase.invoiceNo);
+          await itemRef.save({ session });
+          await InventoryLog.create([{
+            bottle: itemId,
+            changeQuantity: quantity,
+            reason: 'purchase',
+            reference: purchase._id,
+            refModel: 'Purchase',
+            notes: `Purchase invoice ${purchase.invoiceNo}`,
+          }], { session });
+        }
+
+        processedItems.push({
+          itemType,
+          item: itemId,
+          quantity,
+          costPerUnit,
+          totalCost,
+        });
+      }
+
+      // 4. Update purchase with new items and total
+      purchase.items = processedItems;
+      purchase.totalAmount = totalAmount;
+
+      // 5. Update the associated transaction amount
+      await Transaction.updateOne(
+        { reference: purchase._id, refModel: 'Purchase' },
+        { amount: totalAmount, description: `Purchase ${purchase.invoiceNo}` }
+      ).session(session);
+    }
+
+    // ---------- Update metadata (always) ----------
     if (supplier !== undefined) purchase.supplier = supplier;
     if (purchaseDate) purchase.purchaseDate = new Date(purchaseDate);
     if (notes !== undefined) purchase.notes = notes;
 
-    await purchase.save();
-    res.json(purchase);
+    await purchase.save({ session });
+    await session.commitTransaction();
+
+    // Return updated purchase with populated items
+    const updated = await Purchase.findById(purchase._id).populate('items.item', 'name sku sizeMl type');
+    res.json(updated);
   } catch (error) {
+    await session.abortTransaction();
     res.status(500).json({ message: error.message });
+  } finally {
+    session.endSession();
   }
 };
 
