@@ -94,7 +94,7 @@ exports.createSale = async (req, res) => {
   }
 };
 
-// @desc    Get all sales (with filters) – now populates description
+// @desc    Get all sales (with filters) – populates description
 // @route   GET /api/sales
 exports.getSales = async (req, res) => {
   try {
@@ -108,7 +108,7 @@ exports.getSales = async (req, res) => {
       if (endDate) filter.saleDate.$lte = new Date(endDate);
     }
     const sales = await Sale.find(filter)
-      .populate('items.product', 'name sku type description')   // ✅ includes description
+      .populate('items.product', 'name sku type description')
       .sort('-saleDate');
     res.json(sales);
   } catch (error) {
@@ -116,12 +116,12 @@ exports.getSales = async (req, res) => {
   }
 };
 
-// @desc    Get single sale – now populates description
+// @desc    Get single sale – populates description
 // @route   GET /api/sales/:id
 exports.getSaleById = async (req, res) => {
   try {
     const sale = await Sale.findById(req.params.id)
-      .populate('items.product', 'name sku type description');  // ✅ includes description
+      .populate('items.product', 'name sku type description');
     if (!sale) return res.status(404).json({ message: 'Sale not found' });
     res.json(sale);
   } catch (error) {
@@ -159,6 +159,9 @@ exports.updatePayment = async (req, res) => {
   }
 };
 
+// ============================================================
+// ✅ UPDATED bulkCreateSales with trimming and duplicate check
+// ============================================================
 // @desc    Bulk create sales from CSV/Excel
 // @route   POST /api/sales/bulk
 exports.bulkCreateSales = async (req, res) => {
@@ -168,37 +171,40 @@ exports.bulkCreateSales = async (req, res) => {
       return res.status(400).json({ message: 'No sales provided' });
     }
 
-    // 1. Extract all invoice numbers from request
-    const invoiceNos = sales.map(s => s.invoiceNo).filter(Boolean);
+    // 1️⃣ Extract all invoice numbers, trimming any leading/trailing spaces
+    const invoiceNos = sales.map(s => s.invoiceNo?.trim()).filter(Boolean);
 
-    // 2. Find which already exist in the database
+    // 2️⃣ Query the database for any that already exist (exact match)
     const existingSales = await Sale.find({ invoiceNo: { $in: invoiceNos } }, 'invoiceNo').lean();
     const existingSet = new Set(existingSales.map(s => s.invoiceNo));
 
-    // 3. Separate new sales from duplicates
-    const newSales = sales.filter(s => !existingSet.has(s.invoiceNo));
-    const duplicateInvoices = sales.filter(s => existingSet.has(s.invoiceNo));
+    // 3️⃣ Separate new sales from duplicates (trim each invoice when comparing)
+    const newSales = sales.filter(s => !existingSet.has(s.invoiceNo?.trim()));
+    const duplicateSales = sales.filter(s => existingSet.has(s.invoiceNo?.trim()));
 
     const errors = [];
     const created = [];
 
-    // 4. Report duplicates as errors
-    for (const sale of duplicateInvoices) {
+    // 4️⃣ Report duplicates as errors
+    for (const sale of duplicateSales) {
       errors.push({
         saleData: sale,
-        error: `Invoice ${sale.invoiceNo} already exists`
+        error: `Invoice ${sale.invoiceNo?.trim()} already exists`
       });
     }
 
-    // 5. Process only new sales
+    // 5️⃣ Process only brand‑new sales
     for (const saleData of newSales) {
       try {
-        const { invoiceNo, channel, items, saleDate, paymentStatus, notes } = saleData;
+        const invoiceNo = saleData.invoiceNo?.trim();
+        const { channel, items, saleDate, paymentStatus, notes } = saleData;
+
         if (!invoiceNo || !channel || !items || !items.length) {
           errors.push({ saleData, error: 'Missing required fields: invoiceNo, channel, items' });
           continue;
         }
 
+        // Process items
         const processedItems = [];
         let totalAmount = 0;
 
@@ -232,6 +238,7 @@ exports.bulkCreateSales = async (req, res) => {
 
         if (processedItems.length === 0) continue;
 
+        // Create the sale
         const sale = await Sale.create({
           invoiceNo,
           channel,
