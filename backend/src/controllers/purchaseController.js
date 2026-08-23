@@ -139,25 +139,22 @@ exports.updatePurchase = async (req, res) => {
 
     // ---------- If items are provided, adjust stock by delta ----------
     if (items && Array.isArray(items)) {
-      // Build a map of old items by (itemType + itemId)
       const oldMap = new Map();
       purchase.items.forEach(old => {
         const key = `${old.itemType}_${old.item}`;
         oldMap.set(key, old);
       });
 
-      // Build a map of new items (for quick lookup)
       const newMap = new Map();
       items.forEach(item => {
         const key = `${item.itemType}_${item.item}`;
         newMap.set(key, item);
       });
 
-      // We'll collect processed items and total amount
       const processedItems = [];
       let totalAmount = 0;
 
-      // ---------- Process each item in the new list ----------
+      // ---------- Process each new item ----------
       for (const newItem of items) {
         const { itemType, item: itemId, quantity, costPerUnit } = newItem;
         if (!itemType || !itemId || quantity <= 0 || costPerUnit <= 0) {
@@ -171,24 +168,21 @@ exports.updatePurchase = async (req, res) => {
 
         if (oldItem) {
           oldQuantity = oldItem.quantity;
-          delta = oldQuantity - quantity; // positive if reducing, negative if increasing
+          delta = oldQuantity - quantity; // positive = reduction, negative = increase
         } else {
-          // New item added – treat as increase from 0
-          delta = -quantity;
+          delta = -quantity; // new item → stock increase
         }
 
-        // ---------- Apply stock change ----------
         let itemRef;
         if (itemType === 'RawMaterial') {
           itemRef = await RawMaterial.findById(itemId).session(session);
           if (!itemRef) throw new Error(`Raw material ${itemId} not found`);
 
-          // Check if we can reduce stock (delta > 0)
           if (delta > 0) {
             if (itemRef.currentStockMl < delta) {
               await session.abortTransaction();
               return res.status(400).json({
-                message: `Cannot reduce quantity by ${delta}ml: only ${itemRef.currentStockMl}ml available in stock.`
+                message: `Cannot reduce quantity by ${delta}ml: only ${itemRef.currentStockMl}ml available.`
               });
             }
             itemRef.currentStockMl -= delta;
@@ -203,29 +197,27 @@ exports.updatePurchase = async (req, res) => {
             purchaseEntry.costPerUnit = costPerUnit;
             purchaseEntry.totalCost = quantity * costPerUnit;
           } else {
-            // Shouldn't happen if old item existed, but for new items we add
             itemRef.purchases.push({
               invoiceNo: purchase.invoiceNo,
               supplier: purchase.supplier,
               quantityMl: quantity,
-              costPerUnit: costPerUnit,
+              costPerUnit,
               totalCost: quantity * costPerUnit,
               purchaseDate: purchase.purchaseDate,
             });
           }
 
-          // Recalculate average cost
+          // Recalculate avg cost
           const totalQty = itemRef.purchases.reduce((sum, p) => sum + p.quantityMl, 0);
           const totalCost = itemRef.purchases.reduce((sum, p) => sum + p.totalCost, 0);
           itemRef.avgCostPerMl = totalQty > 0 ? totalCost / totalQty : 0;
           await itemRef.save({ session });
 
-          // Log inventory change only if delta !== 0
           if (delta !== 0) {
             await InventoryLog.create([{
               material: itemId,
-              changeQuantity: -delta, // negative delta means increase, positive means decrease
-              reason: 'purchase_edit',
+              changeQuantity: -delta,
+              reason: 'adjustment',               // <-- CHANGED HERE
               reference: purchase._id,
               refModel: 'Purchase',
               notes: `Purchase ${purchase.invoiceNo} edit: ${delta > 0 ? 'removed' : 'added'} ${Math.abs(delta)}ml`,
@@ -240,7 +232,7 @@ exports.updatePurchase = async (req, res) => {
             if (itemRef.currentStock < delta) {
               await session.abortTransaction();
               return res.status(400).json({
-                message: `Cannot reduce bottle quantity by ${delta}: only ${itemRef.currentStock} available in stock.`
+                message: `Cannot reduce bottle quantity by ${delta}: only ${itemRef.currentStock} available.`
               });
             }
             itemRef.currentStock -= delta;
@@ -257,8 +249,8 @@ exports.updatePurchase = async (req, res) => {
             itemRef.purchases.push({
               invoiceNo: purchase.invoiceNo,
               supplier: purchase.supplier,
-              quantity: quantity,
-              costPerUnit: costPerUnit,
+              quantity,
+              costPerUnit,
               totalCost: quantity * costPerUnit,
               purchaseDate: purchase.purchaseDate,
             });
@@ -273,7 +265,7 @@ exports.updatePurchase = async (req, res) => {
             await InventoryLog.create([{
               bottle: itemId,
               changeQuantity: -delta,
-              reason: 'purchase_edit',
+              reason: 'adjustment',               // <-- CHANGED HERE
               reference: purchase._id,
               refModel: 'Purchase',
               notes: `Purchase ${purchase.invoiceNo} edit: ${delta > 0 ? 'removed' : 'added'} ${Math.abs(delta)} units`,
@@ -293,10 +285,9 @@ exports.updatePurchase = async (req, res) => {
         });
       }
 
-      // ---------- Handle items removed from the new list ----------
+      // ---------- Handle removed items ----------
       for (const [key, oldItem] of oldMap) {
         if (!newMap.has(key)) {
-          // This item was completely removed – we need to reverse its entire quantity
           const { itemType, item: itemId, quantity: oldQty } = oldItem;
           if (itemType === 'RawMaterial') {
             const material = await RawMaterial.findById(itemId).session(session);
@@ -304,14 +295,12 @@ exports.updatePurchase = async (req, res) => {
               if (material.currentStockMl < oldQty) {
                 await session.abortTransaction();
                 return res.status(400).json({
-                  message: `Cannot remove item: material stock (${material.currentStockMl}ml) is less than purchase quantity (${oldQty}ml).`
+                  message: `Cannot remove material: stock (${material.currentStockMl}ml) is less than purchase quantity (${oldQty}ml).`
                 });
               }
               material.currentStockMl -= oldQty;
-              // Remove purchase entry
               const idx = material.purchases.findIndex(p => p.invoiceNo === purchase.invoiceNo);
               if (idx !== -1) material.purchases.splice(idx, 1);
-              // Recalc avg
               const totalQty = material.purchases.reduce((sum, p) => sum + p.quantityMl, 0);
               const totalCost = material.purchases.reduce((sum, p) => sum + p.totalCost, 0);
               material.avgCostPerMl = totalQty > 0 ? totalCost / totalQty : 0;
@@ -319,7 +308,7 @@ exports.updatePurchase = async (req, res) => {
               await InventoryLog.create([{
                 material: itemId,
                 changeQuantity: -oldQty,
-                reason: 'purchase_edit',
+                reason: 'adjustment',             // <-- CHANGED HERE
                 reference: purchase._id,
                 refModel: 'Purchase',
                 notes: `Purchase ${purchase.invoiceNo} edit: removed item entirely`,
@@ -344,7 +333,7 @@ exports.updatePurchase = async (req, res) => {
               await InventoryLog.create([{
                 bottle: itemId,
                 changeQuantity: -oldQty,
-                reason: 'purchase_edit',
+                reason: 'adjustment',             // <-- CHANGED HERE
                 reference: purchase._id,
                 refModel: 'Purchase',
                 notes: `Purchase ${purchase.invoiceNo} edit: removed item entirely`,
@@ -365,7 +354,7 @@ exports.updatePurchase = async (req, res) => {
       ).session(session);
     }
 
-    // ---------- Update metadata (always) ----------
+    // ---------- Update metadata ----------
     if (supplier !== undefined) purchase.supplier = supplier;
     if (purchaseDate) purchase.purchaseDate = new Date(purchaseDate);
     if (notes !== undefined) purchase.notes = notes;
