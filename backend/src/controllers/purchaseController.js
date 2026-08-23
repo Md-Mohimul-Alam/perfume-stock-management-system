@@ -123,6 +123,7 @@ exports.getPurchaseById = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 // @desc    Update purchase (supplier, date, notes, and items)
 // @route   PUT /api/purchases/:id
 exports.updatePurchase = async (req, res) => {
@@ -217,7 +218,7 @@ exports.updatePurchase = async (req, res) => {
             await InventoryLog.create([{
               material: itemId,
               changeQuantity: -delta,
-              reason: 'adjustment',               // <-- CHANGED HERE
+              reason: 'purchase',                         // <-- CHANGED HERE
               reference: purchase._id,
               refModel: 'Purchase',
               notes: `Purchase ${purchase.invoiceNo} edit: ${delta > 0 ? 'removed' : 'added'} ${Math.abs(delta)}ml`,
@@ -265,7 +266,7 @@ exports.updatePurchase = async (req, res) => {
             await InventoryLog.create([{
               bottle: itemId,
               changeQuantity: -delta,
-              reason: 'adjustment',               // <-- CHANGED HERE
+              reason: 'purchase',                         // <-- CHANGED HERE
               reference: purchase._id,
               refModel: 'Purchase',
               notes: `Purchase ${purchase.invoiceNo} edit: ${delta > 0 ? 'removed' : 'added'} ${Math.abs(delta)} units`,
@@ -308,7 +309,7 @@ exports.updatePurchase = async (req, res) => {
               await InventoryLog.create([{
                 material: itemId,
                 changeQuantity: -oldQty,
-                reason: 'adjustment',             // <-- CHANGED HERE
+                reason: 'purchase',                         // <-- CHANGED HERE
                 reference: purchase._id,
                 refModel: 'Purchase',
                 notes: `Purchase ${purchase.invoiceNo} edit: removed item entirely`,
@@ -333,7 +334,7 @@ exports.updatePurchase = async (req, res) => {
               await InventoryLog.create([{
                 bottle: itemId,
                 changeQuantity: -oldQty,
-                reason: 'adjustment',             // <-- CHANGED HERE
+                reason: 'purchase',                         // <-- CHANGED HERE
                 reference: purchase._id,
                 refModel: 'Purchase',
                 notes: `Purchase ${purchase.invoiceNo} edit: removed item entirely`,
@@ -371,7 +372,6 @@ exports.updatePurchase = async (req, res) => {
     session.endSession();
   }
 };
-
 // @desc    Delete a purchase (reverses stock)
 // @route   DELETE /api/purchases/:id
 exports.deletePurchase = async (req, res) => {
