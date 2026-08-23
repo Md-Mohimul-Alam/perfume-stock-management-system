@@ -137,110 +137,152 @@ exports.updatePurchase = async (req, res) => {
       return res.status(404).json({ message: 'Purchase not found' });
     }
 
-    // ---------- If items are provided, replace them ----------
+    // ---------- If items are provided, adjust stock by delta ----------
     if (items && Array.isArray(items)) {
-      // 1. Reverse old stock for each item – with validation
-      for (const oldItem of purchase.items) {
-        const { itemType, item: itemId, quantity, costPerUnit, totalCost } = oldItem;
-        if (itemType === 'RawMaterial') {
-          const material = await RawMaterial.findById(itemId).session(session);
-          if (!material) {
-            await session.abortTransaction();
-            return res.status(404).json({ message: `Material ${itemId} not found` });
-          }
-          // --- CHECK SUFFICIENCY ---
-          if (material.currentStockMl < quantity) {
-            await session.abortTransaction();
-            return res.status(400).json({
-              message: `Cannot edit purchase: raw material stock (${material.currentStockMl}ml) is less than purchase quantity (${quantity}ml). Stock has been partially consumed.`
-            });
-          }
-          // Remove the purchase entry by invoice number
-          const idx = material.purchases.findIndex(p => p.invoiceNo === purchase.invoiceNo);
-          if (idx !== -1) {
-            material.purchases.splice(idx, 1);
-            const totalQty = material.purchases.reduce((sum, p) => sum + p.quantityMl, 0);
-            const totalCostSum = material.purchases.reduce((sum, p) => sum + p.totalCost, 0);
-            material.avgCostPerMl = totalQty > 0 ? totalCostSum / totalQty : 0;
-            material.currentStockMl -= quantity;
-            await material.save({ session });
-          } else {
-            // fallback: just subtract
-            material.currentStockMl -= quantity;
-            await material.save({ session });
-          }
-        } else if (itemType === 'Bottle') {
-          const bottle = await Bottle.findById(itemId).session(session);
-          if (!bottle) {
-            await session.abortTransaction();
-            return res.status(404).json({ message: `Bottle ${itemId} not found` });
-          }
-          // --- CHECK SUFFICIENCY ---
-          if (bottle.currentStock < quantity) {
-            await session.abortTransaction();
-            return res.status(400).json({
-              message: `Cannot edit purchase: bottle stock (${bottle.currentStock}) is less than purchase quantity (${quantity}). Stock has been partially consumed.`
-            });
-          }
-          const idx = bottle.purchases.findIndex(p => p.invoiceNo === purchase.invoiceNo);
-          if (idx !== -1) {
-            bottle.purchases.splice(idx, 1);
-            const totalQty = bottle.purchases.reduce((sum, p) => sum + p.quantity, 0);
-            const totalCostSum = bottle.purchases.reduce((sum, p) => sum + p.totalCost, 0);
-            bottle.avgCostPerUnit = totalQty > 0 ? totalCostSum / totalQty : 0;
-            bottle.currentStock -= quantity;
-            await bottle.save({ session });
-          } else {
-            bottle.currentStock -= quantity;
-            await bottle.save({ session });
-          }
-        }
-      }
+      // Build a map of old items by (itemType + itemId)
+      const oldMap = new Map();
+      purchase.items.forEach(old => {
+        const key = `${old.itemType}_${old.item}`;
+        oldMap.set(key, old);
+      });
 
-      // 2. Delete old InventoryLog entries for this purchase
-      await InventoryLog.deleteMany({ reference: purchase._id, reason: 'purchase' }).session(session);
+      // Build a map of new items (for quick lookup)
+      const newMap = new Map();
+      items.forEach(item => {
+        const key = `${item.itemType}_${item.item}`;
+        newMap.set(key, item);
+      });
 
-      // 3. Process new items
+      // We'll collect processed items and total amount
       const processedItems = [];
       let totalAmount = 0;
 
-      for (const itemData of items) {
-        const { itemType, item: itemId, quantity, costPerUnit } = itemData;
-        if (!itemType || !itemId || !quantity || quantity <= 0 || !costPerUnit || costPerUnit <= 0) {
-          throw new Error(`Invalid item data: ${JSON.stringify(itemData)}`);
+      // ---------- Process each item in the new list ----------
+      for (const newItem of items) {
+        const { itemType, item: itemId, quantity, costPerUnit } = newItem;
+        if (!itemType || !itemId || quantity <= 0 || costPerUnit <= 0) {
+          throw new Error(`Invalid item data: ${JSON.stringify(newItem)}`);
+        }
+
+        const key = `${itemType}_${itemId}`;
+        const oldItem = oldMap.get(key);
+        let delta = 0;
+        let oldQuantity = 0;
+
+        if (oldItem) {
+          oldQuantity = oldItem.quantity;
+          delta = oldQuantity - quantity; // positive if reducing, negative if increasing
+        } else {
+          // New item added – treat as increase from 0
+          delta = -quantity;
+        }
+
+        // ---------- Apply stock change ----------
+        let itemRef;
+        if (itemType === 'RawMaterial') {
+          itemRef = await RawMaterial.findById(itemId).session(session);
+          if (!itemRef) throw new Error(`Raw material ${itemId} not found`);
+
+          // Check if we can reduce stock (delta > 0)
+          if (delta > 0) {
+            if (itemRef.currentStockMl < delta) {
+              await session.abortTransaction();
+              return res.status(400).json({
+                message: `Cannot reduce quantity by ${delta}ml: only ${itemRef.currentStockMl}ml available in stock.`
+              });
+            }
+            itemRef.currentStockMl -= delta;
+          } else if (delta < 0) {
+            itemRef.currentStockMl += (-delta);
+          }
+
+          // Update or create purchase entry in material
+          const purchaseEntry = itemRef.purchases.find(p => p.invoiceNo === purchase.invoiceNo);
+          if (purchaseEntry) {
+            purchaseEntry.quantityMl = quantity;
+            purchaseEntry.costPerUnit = costPerUnit;
+            purchaseEntry.totalCost = quantity * costPerUnit;
+          } else {
+            // Shouldn't happen if old item existed, but for new items we add
+            itemRef.purchases.push({
+              invoiceNo: purchase.invoiceNo,
+              supplier: purchase.supplier,
+              quantityMl: quantity,
+              costPerUnit: costPerUnit,
+              totalCost: quantity * costPerUnit,
+              purchaseDate: purchase.purchaseDate,
+            });
+          }
+
+          // Recalculate average cost
+          const totalQty = itemRef.purchases.reduce((sum, p) => sum + p.quantityMl, 0);
+          const totalCost = itemRef.purchases.reduce((sum, p) => sum + p.totalCost, 0);
+          itemRef.avgCostPerMl = totalQty > 0 ? totalCost / totalQty : 0;
+          await itemRef.save({ session });
+
+          // Log inventory change only if delta !== 0
+          if (delta !== 0) {
+            await InventoryLog.create([{
+              material: itemId,
+              changeQuantity: -delta, // negative delta means increase, positive means decrease
+              reason: 'purchase_edit',
+              reference: purchase._id,
+              refModel: 'Purchase',
+              notes: `Purchase ${purchase.invoiceNo} edit: ${delta > 0 ? 'removed' : 'added'} ${Math.abs(delta)}ml`,
+            }], { session });
+          }
+
+        } else if (itemType === 'Bottle') {
+          itemRef = await Bottle.findById(itemId).session(session);
+          if (!itemRef) throw new Error(`Bottle ${itemId} not found`);
+
+          if (delta > 0) {
+            if (itemRef.currentStock < delta) {
+              await session.abortTransaction();
+              return res.status(400).json({
+                message: `Cannot reduce bottle quantity by ${delta}: only ${itemRef.currentStock} available in stock.`
+              });
+            }
+            itemRef.currentStock -= delta;
+          } else if (delta < 0) {
+            itemRef.currentStock += (-delta);
+          }
+
+          const purchaseEntry = itemRef.purchases.find(p => p.invoiceNo === purchase.invoiceNo);
+          if (purchaseEntry) {
+            purchaseEntry.quantity = quantity;
+            purchaseEntry.costPerUnit = costPerUnit;
+            purchaseEntry.totalCost = quantity * costPerUnit;
+          } else {
+            itemRef.purchases.push({
+              invoiceNo: purchase.invoiceNo,
+              supplier: purchase.supplier,
+              quantity: quantity,
+              costPerUnit: costPerUnit,
+              totalCost: quantity * costPerUnit,
+              purchaseDate: purchase.purchaseDate,
+            });
+          }
+
+          const totalQty = itemRef.purchases.reduce((sum, p) => sum + p.quantity, 0);
+          const totalCost = itemRef.purchases.reduce((sum, p) => sum + p.totalCost, 0);
+          itemRef.avgCostPerUnit = totalQty > 0 ? totalCost / totalQty : 0;
+          await itemRef.save({ session });
+
+          if (delta !== 0) {
+            await InventoryLog.create([{
+              bottle: itemId,
+              changeQuantity: -delta,
+              reason: 'purchase_edit',
+              reference: purchase._id,
+              refModel: 'Purchase',
+              notes: `Purchase ${purchase.invoiceNo} edit: ${delta > 0 ? 'removed' : 'added'} ${Math.abs(delta)} units`,
+            }], { session });
+          }
         }
 
         const totalCost = quantity * costPerUnit;
         totalAmount += totalCost;
-
-        let itemRef;
-        if (itemType === 'RawMaterial') {
-          itemRef = await RawMaterial.findById(itemId).session(session);
-          if (!itemRef) throw new Error(`Material ${itemId} not found`);
-          itemRef.addPurchase(quantity, costPerUnit, totalCost, purchase.supplier, purchase.invoiceNo);
-          await itemRef.save({ session });
-          await InventoryLog.create([{
-            material: itemId,
-            changeQuantity: quantity,
-            reason: 'purchase',
-            reference: purchase._id,
-            refModel: 'Purchase',
-            notes: `Purchase invoice ${purchase.invoiceNo}`,
-          }], { session });
-        } else {
-          itemRef = await Bottle.findById(itemId).session(session);
-          if (!itemRef) throw new Error(`Bottle ${itemId} not found`);
-          itemRef.addPurchase(quantity, costPerUnit, totalCost, purchase.supplier, purchase.invoiceNo);
-          await itemRef.save({ session });
-          await InventoryLog.create([{
-            bottle: itemId,
-            changeQuantity: quantity,
-            reason: 'purchase',
-            reference: purchase._id,
-            refModel: 'Purchase',
-            notes: `Purchase invoice ${purchase.invoiceNo}`,
-          }], { session });
-        }
 
         processedItems.push({
           itemType,
@@ -251,11 +293,72 @@ exports.updatePurchase = async (req, res) => {
         });
       }
 
-      // 4. Update purchase with new items and total
+      // ---------- Handle items removed from the new list ----------
+      for (const [key, oldItem] of oldMap) {
+        if (!newMap.has(key)) {
+          // This item was completely removed – we need to reverse its entire quantity
+          const { itemType, item: itemId, quantity: oldQty } = oldItem;
+          if (itemType === 'RawMaterial') {
+            const material = await RawMaterial.findById(itemId).session(session);
+            if (material) {
+              if (material.currentStockMl < oldQty) {
+                await session.abortTransaction();
+                return res.status(400).json({
+                  message: `Cannot remove item: material stock (${material.currentStockMl}ml) is less than purchase quantity (${oldQty}ml).`
+                });
+              }
+              material.currentStockMl -= oldQty;
+              // Remove purchase entry
+              const idx = material.purchases.findIndex(p => p.invoiceNo === purchase.invoiceNo);
+              if (idx !== -1) material.purchases.splice(idx, 1);
+              // Recalc avg
+              const totalQty = material.purchases.reduce((sum, p) => sum + p.quantityMl, 0);
+              const totalCost = material.purchases.reduce((sum, p) => sum + p.totalCost, 0);
+              material.avgCostPerMl = totalQty > 0 ? totalCost / totalQty : 0;
+              await material.save({ session });
+              await InventoryLog.create([{
+                material: itemId,
+                changeQuantity: -oldQty,
+                reason: 'purchase_edit',
+                reference: purchase._id,
+                refModel: 'Purchase',
+                notes: `Purchase ${purchase.invoiceNo} edit: removed item entirely`,
+              }], { session });
+            }
+          } else if (itemType === 'Bottle') {
+            const bottle = await Bottle.findById(itemId).session(session);
+            if (bottle) {
+              if (bottle.currentStock < oldQty) {
+                await session.abortTransaction();
+                return res.status(400).json({
+                  message: `Cannot remove bottle: stock (${bottle.currentStock}) is less than purchase quantity (${oldQty}).`
+                });
+              }
+              bottle.currentStock -= oldQty;
+              const idx = bottle.purchases.findIndex(p => p.invoiceNo === purchase.invoiceNo);
+              if (idx !== -1) bottle.purchases.splice(idx, 1);
+              const totalQty = bottle.purchases.reduce((sum, p) => sum + p.quantity, 0);
+              const totalCost = bottle.purchases.reduce((sum, p) => sum + p.totalCost, 0);
+              bottle.avgCostPerUnit = totalQty > 0 ? totalCost / totalQty : 0;
+              await bottle.save({ session });
+              await InventoryLog.create([{
+                bottle: itemId,
+                changeQuantity: -oldQty,
+                reason: 'purchase_edit',
+                reference: purchase._id,
+                refModel: 'Purchase',
+                notes: `Purchase ${purchase.invoiceNo} edit: removed item entirely`,
+              }], { session });
+            }
+          }
+        }
+      }
+
+      // Update purchase items and total
       purchase.items = processedItems;
       purchase.totalAmount = totalAmount;
 
-      // 5. Update the associated transaction amount
+      // Update transaction amount
       await Transaction.updateOne(
         { reference: purchase._id, refModel: 'Purchase' },
         { amount: totalAmount, description: `Purchase ${purchase.invoiceNo}` }
@@ -270,7 +373,6 @@ exports.updatePurchase = async (req, res) => {
     await purchase.save({ session });
     await session.commitTransaction();
 
-    // Return updated purchase with populated items
     const updated = await Purchase.findById(purchase._id).populate('items.item', 'name sku sizeMl type');
     res.json(updated);
   } catch (error) {
