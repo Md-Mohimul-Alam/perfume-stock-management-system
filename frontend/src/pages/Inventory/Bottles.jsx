@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import API from '../../api/axios';
 import { Plus, Upload, X, CheckCircle, AlertCircle, Pencil, Trash2, DollarSign } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import toast from 'react-hot-toast';
 
 const Bottles = () => {
   // ---------- State ----------
@@ -19,9 +20,15 @@ const Bottles = () => {
   const [submitting, setSubmitting] = useState(false);
   const [modalError, setModalError] = useState('');
 
-  // Edit modal
+  // Edit modal – enhanced
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingBottle, setEditingBottle] = useState(null);
+  const [editForm, setEditForm] = useState({
+    sizeMl: '',
+    type: 'spray',
+    currentStock: 0,
+    avgCostPerUnit: 0,
+  });
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [editError, setEditError] = useState('');
 
@@ -67,6 +74,7 @@ const Bottles = () => {
       setBottles(formatted);
     } catch (error) {
       console.error('Failed to fetch bottles with sales', error);
+      toast.error('Failed to load bottles');
     } finally {
       setLoading(false);
     }
@@ -84,6 +92,7 @@ const Bottles = () => {
         currentStock: Number(newBottle.currentStock) || 0,
         avgCostPerUnit: Number(newBottle.avgCostPerUnit) || 0,
       });
+      toast.success('Bottle added successfully');
       setShowAddModal(false);
       fetchBottlesWithSales();
       setNewBottle({ sizeMl: '', type: 'spray', currentStock: 0, avgCostPerUnit: 0 });
@@ -96,12 +105,12 @@ const Bottles = () => {
 
   // ---------- Edit ----------
   const handleEditClick = (bottle) => {
-    setEditingBottle({
-      ...bottle,
+    setEditingBottle(bottle);
+    setEditForm({
+      sizeMl: bottle.sizeMl,
+      type: bottle.type,
       currentStock: Number(bottle.currentStock) || 0,
       avgCostPerUnit: Number(bottle.avgCostPerUnit) || 0,
-      totalPurchased: Number(bottle.totalPurchased) || 0,
-      sold: Number(bottle.sold) || 0,
     });
     setEditError('');
     setShowEditModal(true);
@@ -114,11 +123,12 @@ const Bottles = () => {
     setEditError('');
     try {
       await API.put(`/inventory/bottles/${editingBottle._id}`, {
-        sizeMl: editingBottle.sizeMl,
-        type: editingBottle.type,
-        currentStock: Number(editingBottle.currentStock) || 0,
-        avgCostPerUnit: Number(editingBottle.avgCostPerUnit) || 0,
+        sizeMl: parseFloat(editForm.sizeMl),
+        type: editForm.type,
+        currentStock: Number(editForm.currentStock) || 0,
+        avgCostPerUnit: Number(editForm.avgCostPerUnit) || 0,
       });
+      toast.success('Bottle updated successfully');
       setShowEditModal(false);
       fetchBottlesWithSales();
     } catch (err) {
@@ -138,10 +148,11 @@ const Bottles = () => {
   const handleDeleteConfirm = async () => {
     try {
       await API.delete(`/inventory/bottles/${deletingId}`);
+      toast.success('Bottle deleted');
       setShowDeleteConfirm(false);
       fetchBottlesWithSales();
     } catch (err) {
-      alert(err.response?.data?.message || 'Delete failed');
+      toast.error(err.response?.data?.message || 'Delete failed');
     } finally {
       setDeletingId(null);
       setDeletingSize('');
@@ -176,6 +187,7 @@ const Bottles = () => {
         supplier: supplier.trim() || undefined,
         invoiceNo: invoiceNo.trim() || undefined,
       });
+      toast.success('Purchase recorded');
       setShowPurchaseModal(false);
       fetchBottlesWithSales();
     } catch (err) {
@@ -278,6 +290,7 @@ const Bottles = () => {
         setUploadResult({ success: true, data: response.data });
         fetchBottlesWithSales();
         setFile(null);
+        toast.success('Bottles uploaded successfully');
         setTimeout(() => setShowUploadModal(false), 3000);
       };
       reader.readAsArrayBuffer(file);
@@ -325,9 +338,9 @@ const Bottles = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total Stock</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Sold</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Available Stock</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Per Unit Cost (৳)</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total Value (৳)</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Available</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Per Unit Cost</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total Value</th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Actions</th>
               </tr>
             </thead>
@@ -337,7 +350,6 @@ const Bottles = () => {
                 const sold = b.sold || 0;
                 const available = totalPurchased - sold;
                 const unitCost = b.avgCostPerUnit || 0;
-                // ✅ FIXED: Total Value = Total Stock × Per Unit Cost (cost of all stock ever purchased)
                 const totalValue = totalPurchased * unitCost;
 
                 return (
@@ -406,7 +418,7 @@ const Bottles = () => {
         </div>
       )}
 
-      {/* ---------- Add Modal ---------- */}
+      {/* ---------- Add Modal (unchanged) ---------- */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
@@ -475,7 +487,7 @@ const Bottles = () => {
         </div>
       )}
 
-      {/* ---------- Edit Modal ---------- */}
+      {/* ---------- ENHANCED Edit Modal ---------- */}
       {showEditModal && editingBottle && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
@@ -488,37 +500,43 @@ const Bottles = () => {
             <h2 className="text-2xl font-bold mb-4">Edit Bottle</h2>
             <form onSubmit={handleEditSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Size (ml)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Size (ml) *</label>
                 <input
                   type="number"
                   step="0.1"
-                  value={editingBottle.sizeMl}
-                  onChange={(e) => setEditingBottle({ ...editingBottle, sizeMl: parseFloat(e.target.value) })}
+                  min="0.1"
+                  value={editForm.sizeMl}
+                  onChange={(e) => setEditForm({ ...editForm, sizeMl: e.target.value })}
                   className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Type *</label>
                 <select
-                  value={editingBottle.type}
-                  onChange={(e) => setEditingBottle({ ...editingBottle, type: e.target.value })}
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none"
+                  value={editForm.type}
+                  onChange={(e) => setEditForm({ ...editForm, type: e.target.value })}
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none bg-white"
                 >
                   <option value="spray">Spray</option>
                   <option value="roll-on">Roll‑on</option>
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Current Stock (Inventory)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Current Stock <span className="text-gray-400 text-xs">(manual override)</span>
+                </label>
                 <input
                   type="number"
                   step="1"
                   min="0"
-                  value={editingBottle.currentStock}
-                  onChange={(e) => setEditingBottle({ ...editingBottle, currentStock: e.target.value })}
+                  value={editForm.currentStock}
+                  onChange={(e) => setEditForm({ ...editForm, currentStock: e.target.value })}
                   className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none"
                 />
+                <p className="text-xs text-gray-400 mt-1">
+                  This will override the calculated stock. Usually stock is updated via purchases and sales.
+                </p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Per Unit Cost (৳)</label>
@@ -526,12 +544,13 @@ const Bottles = () => {
                   type="number"
                   step="0.01"
                   min="0"
-                  value={editingBottle.avgCostPerUnit}
-                  onChange={(e) => setEditingBottle({ ...editingBottle, avgCostPerUnit: e.target.value })}
+                  value={editForm.avgCostPerUnit}
+                  onChange={(e) => setEditForm({ ...editForm, avgCostPerUnit: e.target.value })}
                   className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none"
                 />
               </div>
 
+              {/* Summary (read‑only) */}
               <div className="border-t pt-4 mt-2">
                 <p className="text-sm text-gray-500 mb-2">Stock & Sales Summary (read‑only)</p>
                 <div className="grid grid-cols-2 gap-2 text-sm">
@@ -553,13 +572,22 @@ const Bottles = () => {
               </div>
 
               {editError && <p className="text-red-500 text-sm">{editError}</p>}
-              <button
-                type="submit"
-                disabled={editSubmitting}
-                className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
-              >
-                {editSubmitting ? 'Updating...' : 'Update'}
-              </button>
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="submit"
+                  disabled={editSubmitting}
+                  className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {editSubmitting ? 'Updating...' : 'Update Bottle'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="flex-1 border border-gray-300 py-2 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+              </div>
             </form>
           </div>
         </div>
@@ -591,7 +619,7 @@ const Bottles = () => {
         </div>
       )}
 
-      {/* ---------- Upload Modal ---------- */}
+      {/* ---------- Upload Modal (unchanged) ---------- */}
       {showUploadModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
@@ -609,7 +637,7 @@ const Bottles = () => {
             <p className="text-gray-500 text-sm mb-4">
               Upload CSV/Excel with columns: <strong>Size</strong> (e.g., "3.5ml Role") and optional <strong>Type</strong> (spray or roll‑on).
               <br />
-              Optional columns: <strong>Stock</strong> (initial quantity) and <strong>Per Unit Cost (৳)</strong> (average cost per unit).
+              Optional columns: <strong>Stock</strong> (initial quantity) and <strong>Per Unit Cost (৳)</strong>.
               <br />
               If Type is missing, it will be inferred from the Size text.
             </p>
@@ -686,7 +714,7 @@ const Bottles = () => {
         </div>
       )}
 
-      {/* ---------- Purchase Modal ---------- */}
+      {/* ---------- Purchase Modal (unchanged) ---------- */}
       {showPurchaseModal && purchaseBottle && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">

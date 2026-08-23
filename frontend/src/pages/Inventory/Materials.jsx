@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import API from '../../api/axios';
 import { Plus, Upload, X, CheckCircle, AlertCircle, Pencil, Trash2, Droplet, FlaskRound, Package } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import toast from 'react-hot-toast';
 
 const Materials = () => {
   // ---------- State ----------
@@ -20,9 +21,14 @@ const Materials = () => {
   const [submitting, setSubmitting] = useState(false);
   const [modalError, setModalError] = useState('');
 
-  // Edit modal
+  // Edit modal – enhanced
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingMaterial, setEditingMaterial] = useState(null);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    sku: '',
+    type: 'oil',
+  });
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [editError, setEditError] = useState('');
 
@@ -61,7 +67,7 @@ const Materials = () => {
         productMap[p._id] = p;
       });
 
-      // Helper: parse blendComponents string into array of { name, percentage }
+      // Helper: parse blendComponents
       const parseBlendComponents = (product) => {
         const comps = product.blendComponents;
         if (!comps) return [];
@@ -84,7 +90,7 @@ const Materials = () => {
         return parsed;
       };
 
-      // Build a map from material name to _id (case‑insensitive)
+      // Build material name -> id map
       const materialNameMap = {};
       materialsData.forEach(m => {
         materialNameMap[m.name.toLowerCase()] = m._id;
@@ -132,14 +138,12 @@ const Materials = () => {
         }
       }
 
-      // ✅ FIX: availableOil = currentStockMl (remaining stock)
-      // usedOil is kept for information
       const updatedMaterials = materialsData.map(m => {
         const used = usageMap[m._id] || 0;
         return {
           ...m,
           usedOil: used,
-          availableOil: m.currentStockMl || 0, // ✅ corrected
+          availableOil: m.currentStockMl || 0,
         };
       });
       setMaterials(updatedMaterials);
@@ -147,9 +151,8 @@ const Materials = () => {
       // Compute summary (only oils)
       const oilMaterials = updatedMaterials.filter(m => m.type === 'oil');
       const totalOilStock = oilMaterials.reduce((sum, m) => sum + (m.currentStockMl || 0), 0);
-      const totalAvailable = totalOilStock; // available = stock (since it's already net)
+      const totalAvailable = totalOilStock;
 
-      // Breakdown roll-on vs spray (informational)
       let usedRollOn = 0;
       let usedSpray = 0;
       for (const sale of sales) {
@@ -193,18 +196,20 @@ const Materials = () => {
 
     } catch (error) {
       console.error('Failed to fetch data', error);
+      toast.error('Failed to load materials');
     } finally {
       setLoading(false);
     }
   };
 
-  // ---------- CRUD functions ----------
+  // ---------- CRUD ----------
   const handleAddSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     setModalError('');
     try {
       await API.post('/inventory/materials', newMaterial);
+      toast.success('Material added');
       setShowAddModal(false);
       fetchMaterialsAndSummary();
       setNewMaterial({ name: '', sku: '', type: 'oil' });
@@ -216,7 +221,12 @@ const Materials = () => {
   };
 
   const handleEditClick = (material) => {
-    setEditingMaterial({ ...material });
+    setEditingMaterial(material);
+    setEditForm({
+      name: material.name,
+      sku: material.sku,
+      type: material.type,
+    });
     setEditError('');
     setShowEditModal(true);
   };
@@ -228,10 +238,11 @@ const Materials = () => {
     setEditError('');
     try {
       await API.put(`/inventory/materials/${editingMaterial._id}`, {
-        name: editingMaterial.name,
-        sku: editingMaterial.sku,
-        type: editingMaterial.type,
+        name: editForm.name.trim(),
+        sku: editForm.sku.trim(),
+        type: editForm.type,
       });
+      toast.success('Material updated');
       setShowEditModal(false);
       fetchMaterialsAndSummary();
     } catch (err) {
@@ -250,10 +261,11 @@ const Materials = () => {
   const handleDeleteConfirm = async () => {
     try {
       await API.delete(`/inventory/materials/${deletingId}`);
+      toast.success('Material deleted');
       setShowDeleteConfirm(false);
       fetchMaterialsAndSummary();
     } catch (err) {
-      alert(err.response?.data?.message || 'Delete failed');
+      toast.error(err.response?.data?.message || 'Delete failed');
     } finally {
       setDeletingId(null);
       setDeletingName('');
@@ -341,6 +353,7 @@ const Materials = () => {
         setUploadResult({ success: true, data: response.data });
         fetchMaterialsAndSummary();
         setFile(null);
+        toast.success('Materials imported');
         setTimeout(() => setShowUploadModal(false), 3000);
       };
       reader.readAsArrayBuffer(file);
@@ -376,7 +389,7 @@ const Materials = () => {
         </div>
       </div>
 
-      {/* ---- Oil Summary Cards ---- */}
+      {/* Oil Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-white rounded-2xl shadow-sm border border-amber-200 p-4">
           <p className="text-xs text-gray-500 uppercase tracking-wider flex items-center gap-1">
@@ -432,7 +445,7 @@ const Materials = () => {
                 const totalPrice = (m.currentStockMl || 0) * perMlCost;
                 const totalPurchaseCost = m.totalPurchaseCost || 0;
                 const used = m.usedOil || 0;
-                const available = m.availableOil || 0; // now equals currentStockMl
+                const available = m.availableOil || 0;
                 return (
                   <tr key={m._id}>
                     <td className="px-6 py-4">{m.name}</td>
@@ -475,7 +488,7 @@ const Materials = () => {
         </div>
       )}
 
-      {/* ---------- Modals (unchanged) ---------- */}
+      {/* ---------- Add Modal (unchanged) ---------- */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
@@ -488,7 +501,7 @@ const Materials = () => {
             <h2 className="text-2xl font-bold mb-4">Add Raw Material</h2>
             <form onSubmit={handleAddSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
                 <input
                   type="text"
                   value={newMaterial.name}
@@ -498,7 +511,7 @@ const Materials = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">SKU</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">SKU *</label>
                 <input
                   type="text"
                   value={newMaterial.sku}
@@ -532,6 +545,7 @@ const Materials = () => {
         </div>
       )}
 
+      {/* ---------- ENHANCED Edit Modal ---------- */}
       {showEditModal && editingMaterial && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
@@ -544,21 +558,21 @@ const Materials = () => {
             <h2 className="text-2xl font-bold mb-4">Edit Material</h2>
             <form onSubmit={handleEditSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
                 <input
                   type="text"
-                  value={editingMaterial.name}
-                  onChange={(e) => setEditingMaterial({ ...editingMaterial, name: e.target.value })}
+                  value={editForm.name}
+                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
                   className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">SKU</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">SKU *</label>
                 <input
                   type="text"
-                  value={editingMaterial.sku}
-                  onChange={(e) => setEditingMaterial({ ...editingMaterial, sku: e.target.value })}
+                  value={editForm.sku}
+                  onChange={(e) => setEditForm({ ...editForm, sku: e.target.value })}
                   className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none"
                   required
                 />
@@ -566,8 +580,8 @@ const Materials = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
                 <select
-                  value={editingMaterial.type}
-                  onChange={(e) => setEditingMaterial({ ...editingMaterial, type: e.target.value })}
+                  value={editForm.type}
+                  onChange={(e) => setEditForm({ ...editForm, type: e.target.value })}
                   className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none"
                 >
                   <option value="oil">Oil</option>
@@ -575,6 +589,8 @@ const Materials = () => {
                   <option value="fixative">Fixative</option>
                 </select>
               </div>
+
+              {/* Read‑only inventory summary */}
               <div className="border-t pt-4 mt-2">
                 <p className="text-sm text-gray-500 mb-2">Inventory Details (read‑only)</p>
                 <div className="grid grid-cols-2 gap-2 text-sm">
@@ -595,19 +611,30 @@ const Materials = () => {
                 </div>
                 <p className="text-xs text-gray-400 mt-2">* Stock and cost are updated via purchases and usage.</p>
               </div>
+
               {editError && <p className="text-red-500 text-sm">{editError}</p>}
-              <button
-                type="submit"
-                disabled={editSubmitting}
-                className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
-              >
-                {editSubmitting ? 'Updating...' : 'Update'}
-              </button>
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="submit"
+                  disabled={editSubmitting}
+                  className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {editSubmitting ? 'Updating...' : 'Update Material'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="flex-1 border border-gray-300 py-2 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+              </div>
             </form>
           </div>
         </div>
       )}
 
+      {/* ---------- Delete Confirmation ---------- */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
@@ -633,6 +660,7 @@ const Materials = () => {
         </div>
       )}
 
+      {/* ---------- Upload Modal (unchanged) ---------- */}
       {showUploadModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 relative">
