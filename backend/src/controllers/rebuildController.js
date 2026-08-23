@@ -252,7 +252,7 @@ exports.rebuildStock = async (req, res) => {
     // ====== 1. Rebuild Raw Materials and Bottles from purchases and sales ======
     console.log('🔄 Rebuilding stock from purchases and sales...');
 
-    // 1a. Aggregate purchases
+    // 1a. Aggregate purchases (both materials and bottles)
     const purchases = await Purchase.find().lean();
     const purchaseQty = {};
     const purchaseCost = {};
@@ -260,15 +260,15 @@ exports.rebuildStock = async (req, res) => {
     for (const purchase of purchases) {
       for (const item of purchase.items) {
         const entityId = item.item.toString();
-        const qty = item.quantity;
-        const totalCost = item.totalCost;
         if (!purchaseQty[entityId]) purchaseQty[entityId] = 0;
-        purchaseQty[entityId] += qty;
+        purchaseQty[entityId] += item.quantity;
         if (!purchaseCost[entityId]) purchaseCost[entityId] = { totalCost: 0, totalQty: 0 };
-        purchaseCost[entityId].totalCost += totalCost;
-        purchaseCost[entityId].totalQty += qty;
+        purchaseCost[entityId].totalCost += item.totalCost;
+        purchaseCost[entityId].totalQty += item.quantity;
       }
     }
+
+    console.log(`📦 Total purchased entities: ${Object.keys(purchaseQty).length}`);
 
     // 1b. Aggregate consumption from sales
     const sales = await Sale.find().populate('items.product');
@@ -348,11 +348,13 @@ exports.rebuildStock = async (req, res) => {
         mat.currentStockMl = netStock;
         mat.avgCostPerMl = avgCost;
         await mat.save();
+        console.log(`✅ Material ${mat.name}: stock ${netStock}ml (purchased ${purchased}, consumed ${consumed})`);
       }
     }
 
     // 1d. Update Bottles
     const allBottles = await Bottle.find();
+    let bottleUpdatedCount = 0;
     for (const bottle of allBottles) {
       const id = bottle._id.toString();
       const purchased = purchaseQty[id] || 0;
@@ -366,15 +368,31 @@ exports.rebuildStock = async (req, res) => {
         avgCost = costData.totalCost / costData.totalQty;
       }
 
-      if (bottle.currentStock !== netStock || bottle.avgCostPerUnit !== avgCost) {
+      let needsUpdate = false;
+      if (bottle.currentStock !== netStock) {
         bottle.currentStock = netStock;
+        needsUpdate = true;
+      }
+      if (bottle.avgCostPerUnit !== avgCost) {
         bottle.avgCostPerUnit = avgCost;
+        needsUpdate = true;
+      }
+      // totalPurchased may not exist in schema; set only if defined in the model
+      if (bottle.totalPurchased !== undefined && bottle.totalPurchased !== purchased) {
         bottle.totalPurchased = purchased;
+        needsUpdate = true;
+      }
+
+      if (needsUpdate) {
         await bottle.save();
+        bottleUpdatedCount++;
+        console.log(`🍾 Bottle ${bottle.sku || bottle._id}: stock ${netStock} (purchased ${purchased}, consumed ${consumed})`);
+      } else {
+        console.log(`⏭️ Bottle ${bottle.sku || bottle._id}: unchanged (stock ${bottle.currentStock})`);
       }
     }
 
-    console.log('✅ Stock rebuilt successfully.');
+    console.log(`✅ Bottles updated: ${bottleUpdatedCount} out of ${allBottles.length}`);
 
     // ====== 2. Apply exact product blends ======
     await applyExactBlends();
@@ -383,7 +401,7 @@ exports.rebuildStock = async (req, res) => {
     res.json({
       message: 'Stock rebuilt and product blends updated successfully',
       updatedMaterials: allMaterials.filter(m => m.currentStockMl !== undefined).length,
-      updatedBottles: allBottles.filter(b => b.currentStock !== undefined).length,
+      updatedBottles: bottleUpdatedCount,
     });
   } catch (error) {
     console.error('Rebuild stock error:', error);
