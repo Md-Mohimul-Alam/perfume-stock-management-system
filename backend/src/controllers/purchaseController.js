@@ -123,7 +123,6 @@ exports.getPurchaseById = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
 // @desc    Update purchase (supplier, date, notes, and items)
 // @route   PUT /api/purchases/:id
 exports.updatePurchase = async (req, res) => {
@@ -140,42 +139,60 @@ exports.updatePurchase = async (req, res) => {
 
     // ---------- If items are provided, replace them ----------
     if (items && Array.isArray(items)) {
-      // 1. Reverse old stock for each item
+      // 1. Reverse old stock for each item – with validation
       for (const oldItem of purchase.items) {
         const { itemType, item: itemId, quantity, costPerUnit, totalCost } = oldItem;
         if (itemType === 'RawMaterial') {
           const material = await RawMaterial.findById(itemId).session(session);
-          if (material) {
-            // Remove the purchase entry by invoice number
-            const idx = material.purchases.findIndex(p => p.invoiceNo === purchase.invoiceNo);
-            if (idx !== -1) {
-              material.purchases.splice(idx, 1);
-              const totalQty = material.purchases.reduce((sum, p) => sum + p.quantityMl, 0);
-              const totalCostSum = material.purchases.reduce((sum, p) => sum + p.totalCost, 0);
-              material.avgCostPerMl = totalQty > 0 ? totalCostSum / totalQty : 0;
-              material.currentStockMl -= quantity;
-              await material.save({ session });
-            } else {
-              // fallback: just subtract
-              material.currentStockMl -= quantity;
-              await material.save({ session });
-            }
+          if (!material) {
+            await session.abortTransaction();
+            return res.status(404).json({ message: `Material ${itemId} not found` });
+          }
+          // --- CHECK SUFFICIENCY ---
+          if (material.currentStockMl < quantity) {
+            await session.abortTransaction();
+            return res.status(400).json({
+              message: `Cannot edit purchase: raw material stock (${material.currentStockMl}ml) is less than purchase quantity (${quantity}ml). Stock has been partially consumed.`
+            });
+          }
+          // Remove the purchase entry by invoice number
+          const idx = material.purchases.findIndex(p => p.invoiceNo === purchase.invoiceNo);
+          if (idx !== -1) {
+            material.purchases.splice(idx, 1);
+            const totalQty = material.purchases.reduce((sum, p) => sum + p.quantityMl, 0);
+            const totalCostSum = material.purchases.reduce((sum, p) => sum + p.totalCost, 0);
+            material.avgCostPerMl = totalQty > 0 ? totalCostSum / totalQty : 0;
+            material.currentStockMl -= quantity;
+            await material.save({ session });
+          } else {
+            // fallback: just subtract
+            material.currentStockMl -= quantity;
+            await material.save({ session });
           }
         } else if (itemType === 'Bottle') {
           const bottle = await Bottle.findById(itemId).session(session);
-          if (bottle) {
-            const idx = bottle.purchases.findIndex(p => p.invoiceNo === purchase.invoiceNo);
-            if (idx !== -1) {
-              bottle.purchases.splice(idx, 1);
-              const totalQty = bottle.purchases.reduce((sum, p) => sum + p.quantity, 0);
-              const totalCostSum = bottle.purchases.reduce((sum, p) => sum + p.totalCost, 0);
-              bottle.avgCostPerUnit = totalQty > 0 ? totalCostSum / totalQty : 0;
-              bottle.currentStock -= quantity;
-              await bottle.save({ session });
-            } else {
-              bottle.currentStock -= quantity;
-              await bottle.save({ session });
-            }
+          if (!bottle) {
+            await session.abortTransaction();
+            return res.status(404).json({ message: `Bottle ${itemId} not found` });
+          }
+          // --- CHECK SUFFICIENCY ---
+          if (bottle.currentStock < quantity) {
+            await session.abortTransaction();
+            return res.status(400).json({
+              message: `Cannot edit purchase: bottle stock (${bottle.currentStock}) is less than purchase quantity (${quantity}). Stock has been partially consumed.`
+            });
+          }
+          const idx = bottle.purchases.findIndex(p => p.invoiceNo === purchase.invoiceNo);
+          if (idx !== -1) {
+            bottle.purchases.splice(idx, 1);
+            const totalQty = bottle.purchases.reduce((sum, p) => sum + p.quantity, 0);
+            const totalCostSum = bottle.purchases.reduce((sum, p) => sum + p.totalCost, 0);
+            bottle.avgCostPerUnit = totalQty > 0 ? totalCostSum / totalQty : 0;
+            bottle.currentStock -= quantity;
+            await bottle.save({ session });
+          } else {
+            bottle.currentStock -= quantity;
+            await bottle.save({ session });
           }
         }
       }
@@ -276,7 +293,7 @@ exports.deletePurchase = async (req, res) => {
       return res.status(404).json({ message: 'Purchase not found' });
     }
 
-    // 1. Reverse stock for each item
+    // 1. Reverse stock for each item – with validation
     for (const item of purchase.items) {
       const { itemType, item: itemId, quantity, costPerUnit, totalCost } = item;
       if (itemType === 'RawMaterial') {
@@ -284,6 +301,13 @@ exports.deletePurchase = async (req, res) => {
         if (!material) {
           await session.abortTransaction();
           return res.status(404).json({ message: `Material ${itemId} not found` });
+        }
+        // --- CHECK SUFFICIENCY ---
+        if (material.currentStockMl < quantity) {
+          await session.abortTransaction();
+          return res.status(400).json({
+            message: `Cannot delete purchase: raw material stock (${material.currentStockMl}ml) is less than purchase quantity (${quantity}ml). Stock has been partially consumed.`
+          });
         }
         // Remove the purchase entry by invoice number
         const purchaseEntryIndex = material.purchases.findIndex(p => p.invoiceNo === purchase.invoiceNo);
@@ -311,6 +335,13 @@ exports.deletePurchase = async (req, res) => {
         if (!bottle) {
           await session.abortTransaction();
           return res.status(404).json({ message: `Bottle ${itemId} not found` });
+        }
+        // --- CHECK SUFFICIENCY ---
+        if (bottle.currentStock < quantity) {
+          await session.abortTransaction();
+          return res.status(400).json({
+            message: `Cannot delete purchase: bottle stock (${bottle.currentStock}) is less than purchase quantity (${quantity}). Stock has been partially consumed.`
+          });
         }
         // Remove purchase entry by invoice
         const purchaseEntryIndex = bottle.purchases.findIndex(p => p.invoiceNo === purchase.invoiceNo);
@@ -348,7 +379,6 @@ exports.deletePurchase = async (req, res) => {
     session.endSession();
   }
 };
-
 // @desc    Bulk create purchases from sheet
 // @route   POST /api/purchases/bulk
 exports.bulkCreatePurchases = async (req, res) => {
