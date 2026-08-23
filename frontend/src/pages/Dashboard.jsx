@@ -20,6 +20,7 @@ import {
   Clock,
   Trash2,
   RefreshCw,
+  RotateCw, // 👈 added for rebuild button
 } from 'lucide-react';
 import API from '../api/axios';
 import toast from 'react-hot-toast';
@@ -28,6 +29,7 @@ const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [rebuilding, setRebuilding] = useState(false); // 👈 rebuild state
   const [stats, setStats] = useState({
     materials: 0,
     bottles: 0,
@@ -48,7 +50,7 @@ const Dashboard = () => {
   const [bottles, setBottles] = useState([]);
   const [recentExpenses, setRecentExpenses] = useState([]);
   const [recentPurchases, setRecentPurchases] = useState([]);
-  const [settlementsTotal, setSettlementsTotal] = useState(0); // 👈 NEW
+  const [settlementsTotal, setSettlementsTotal] = useState(0);
 
   const fetchDashboardData = async () => {
     setLoading(true);
@@ -61,7 +63,7 @@ const Dashboard = () => {
         expensesRes,
         purchasesRes,
         cashRes,
-        settlementsRes, // 👈 NEW
+        settlementsRes,
       ] = await Promise.all([
         API.get('/inventory/materials'),
         API.get('/inventory/bottles/with-sales'),
@@ -70,7 +72,7 @@ const Dashboard = () => {
         API.get('/expenses'),
         API.get('/purchases'),
         API.get('/reports/available-cash'),
-        API.get('/investors/settlements'), // 👈 new endpoint
+        API.get('/investors/settlements'),
       ]);
 
       const allSales = salesRes?.data || [];
@@ -175,6 +177,27 @@ const Dashboard = () => {
       console.error('Dashboard error:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 👇 Rebuild Stock handler
+  const handleRebuild = async () => {
+    if (user?.role !== 'admin') {
+      toast.error('Only admins can rebuild stock');
+      return;
+    }
+    if (!window.confirm('Rebuild stock from purchases and sales? This will recalculate all stock levels.')) return;
+    setRebuilding(true);
+    try {
+      const response = await API.post('/admin/rebuild-stock');
+      toast.success(response.data.message || 'Stock rebuilt successfully');
+      // Refresh dashboard data after rebuild
+      await fetchDashboardData();
+    } catch (error) {
+      console.error('Rebuild error:', error);
+      toast.error(error.response?.data?.message || 'Failed to rebuild stock');
+    } finally {
+      setRebuilding(false);
     }
   };
 
@@ -302,7 +325,6 @@ const Dashboard = () => {
       color: 'text-amber-600',
       bg: 'bg-amber-50/50',
     },
-    // 👇 NEW SETTLEMENTS CARD
     { 
       label: 'Settlements', 
       value: `৳${settlementsTotal.toFixed(2)}`, 
@@ -356,12 +378,23 @@ const Dashboard = () => {
               <Trash2 size={18} />
               <span>Record Wastage</span>
             </button>
+            {/* 👇 Rebuild Button (admin only) */}
+            {user?.role === 'admin' && (
+              <button
+                onClick={handleRebuild}
+                disabled={rebuilding}
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-4 py-2.5 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 shadow-purple-500/25 text-sm font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <RotateCw size={18} className={rebuilding ? 'animate-spin' : ''} />
+                <span>{rebuilding ? 'Rebuilding...' : 'Rebuild Stock'}</span>
+              </button>
+            )}
             {/* Refresh Button */}
             <button
               onClick={fetchDashboardData}
-              className="inline-flex items-center gap-2 bg-gray-200 text-gray-700 px-4 py-2 rounded-xl hover:bg-gray-300 transition text-sm font-medium"
+              className="inline-flex items-center gap-2 bg-gray-200 text-gray-700 px-4 py-2.5 rounded-xl hover:bg-gray-300 transition text-sm font-medium"
             >
-              <RefreshCw size={18} />
+              <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
               Refresh
             </button>
           </div>

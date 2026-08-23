@@ -6,6 +6,10 @@ const { notFound, errorHandler } = require('./middlewares/errorMiddleware');
 const path = require('path');
 const fs = require('fs');
 
+// 👇 Add cron for scheduled rebuild (optional)
+const cron = require('node-cron');
+const { rebuildStock } = require('./controllers/rebuildController');
+
 dotenv.config();
 connectDB();
 
@@ -28,7 +32,7 @@ app.use(cors({
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],  // ← add PATCH
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
@@ -41,7 +45,6 @@ if (!fs.existsSync(uploadDir)) {
   console.log('✅ Uploads directory created');
 }
 
-// ✅ FIX: Add CORS headers for static files to prevent OpaqueResponseBlocking
 app.use('/uploads', (req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
@@ -69,8 +72,29 @@ app.use('/api/investors', require('./routes/investorRoutes'));
 app.use('/api/reports', require('./routes/reportRoutes'));
 app.use('/api/upload', require('./routes/uploadRoutes'));
 
+// ========== 👇 NEW: Admin routes ==========
+app.use('/api/admin', require('./routes/adminRoutes'));
+
 // ------------------- Error handling -------------------
 app.use(notFound);
 app.use(errorHandler);
+
+// ========== 👇 OPTIONAL: Scheduled stock rebuild (runs daily at 2 AM) ==========
+// Uncomment the lines below to enable automatic daily rebuilds
+/*
+cron.schedule('0 2 * * *', async () => {
+  console.log('⏰ Running scheduled stock rebuild...');
+  try {
+    const req = { body: {}, user: { role: 'admin' } };
+    const res = {
+      json: (data) => console.log('✅ Rebuild complete:', data),
+      status: () => ({ json: () => {} }),
+    };
+    await rebuildStock(req, res);
+  } catch (error) {
+    console.error('❌ Scheduled rebuild failed:', error);
+  }
+});
+*/
 
 module.exports = app;

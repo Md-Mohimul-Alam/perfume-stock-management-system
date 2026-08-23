@@ -1,0 +1,106 @@
+name,sku,type,isActive,3.5ml_price,6ml_price,15ml_price,30ml_price,50ml_price,100ml_price
+Ahsas al Arabia,AhsAra,roll-on,true,150,250,650,1250,,
+Ahsas al Arabia Spray,AhsAra_SP,spray,true,,300,700,1000,1300,1700
+Ameer Al oud,AmeOud,roll-on,true,150,250,650,1250,,
+Ameer Al oud Spray,AmeOud_SP,spray,true,,300,700,1000,1300,1700
+Aqua DI Gio,AquGio,roll-on,true,180,280,750,1500,,
+Aqua DI Gio Spray,AquGio_SP,spray,true,,330,780,1050,1300,1650
+Ariana Grande Cloud,AGC,roll-on,true,170,330,770,1350,,
+Ariana Grande Cloud Spray,AGC_SP,spray,true,,350,800,1500,1700,2200
+Ariana Grande thank you,AG-Thnk,roll-on,true,210,350,800,1400,,
+Ariana Grande thank you Spray,AG-Thnk_SP,spray,true,,370,830,1430,1600,2000
+Armanis.w.y,ArmWy,roll-on,true,150,250,700,1400,,
+Armanis.w.y Spray,ArmWy_SP,spray,true,,300,700,1100,1500,1900
+Baccarat rouge,BacRou,roll-on,true,180,280,750,1500,,
+Baccarat rouge Spray,BacRou_SP,spray,true,,330,780,1050,1300,1650
+Black Orchid,BLOr,roll-on,true,180,330,700,1300,,
+Black Orchid Spray,BLOr_SP,spray,true,,350,800,1400,1650,2000
+Blue berry,BluBer,roll-on,true,150,250,650,1250,,
+Blue berry Spray,BluBer_SP,spray,true,,300,700,1000,1300,1700
+Blue de Chanel,BluCha,roll-on,true,1300,1650,180,280,,
+Blue de Chanel Spray,BluCha_SP,spray,true,,330,780,330,780,1050
+Burberry Her,BurH,roll-on,true,180,280,750,1500,,
+Burberry Her Spray,BurH_SP,spray,true,,330,780,1050,1300,1650
+CK-1,CK1,roll-on,true,150,250,650,1250,,
+CK-1 Spray,CK1_SP,spray,true,,300,700,1000,1300,1700
+Chanel chance,ChaCha,roll-on,true,180,280,750,1500,,
+Chanel chance Spray,ChaCha_SP,spray,true,,330,780,1050,1300,1650
+Chocolate,CoCo,roll-on,true,150,250,650,1250,,
+Chocolate Spray,CoCo_SP,spray,true,,300,700,1000,1300,1700
+Creed Aventus,CreAve,roll-on,true,150,250,650,1250,,
+Creed Aventus Spray,CreAve_SP,spray,true,,300,700,1000,1300,1700
+Creed absolute,CreAbs,roll-on,true,230,400,950,1950,,
+Creed absolute Spray,CreAbs_SP,spray,true,,450,1000,1800,2800,4000
+Davidoff Cool Water,DavCoo,roll-on,true,150,250,650,1250,,
+Davidoff Cool Water Spray,DavCoo_SP,spray,true,,300,700,1000,1300,1700
+Dior Sauvage,DioSau,roll-on,true,180,300,750,1500,,
+Dior Sauvage Spray,DioSau_SP,spray,true,,330,800,1100,1400,1800
+Diptyque tam dao,DipTam,roll-on,true,200,300,800,1450,,
+Diptyque tam dao Spray,DipTam_SP,spray,true,,350,850,1500,1900,2500
+Dunhil desire,DunDes,roll-on,true,150,250,650,1250,,
+Dunhil desire Spray,DunDes_SP,spray,true,,300,700,1000,1300,1700
+Dunhill Icon,DunIco_2,roll-on,true,112,192,480,960,,
+Dunhill Icon,DunIco,roll-on,true,200,300,750,1450,,
+Dunhill Icon Spray,DunIco_2_SP,spray,true,,240,600,1200,2000,4000
+Dunhill Icon Spray,DunIco_SP,spray,true,,350,850,1550,1850,2200
+Fantasy,Fant,roll-on,true,150,250,650,1250,,
+Fantasy,Fant_2,roll-on,true,112,192,480,960,,
+Fantasy Spray,Fant_SP,spray,true,,300,700,1000,1300,1700
+Fantasy Spray,Fant_2_SP,spray,true,,240,600,1200,2000,4000
+Fogg,Fgg,roll-on,true,150,250,650,1250,,
+Fogg Spray,Fgg_SP,spray,true,,300,700,1000,1300,1700
+Good Girl,GooGir,roll-on,true,180,280,750,1500,,
+Good Girl Spray,GooGir_SP,spray,true,,330,780,1050,1300,1650
+Gucci Flora,GucFla,roll-on,true,180,270,700,1000,,
+Gucci Flora Spray,GucFla_SP,spray,true,,330,800,1400,1900,2300
+Hawas For Him,HFH,roll-on,true,180,280,750,1500,,
+Hawas For Him Spray,HFH_SP,spray,true,,330,780,1050,1300,1650
+Hawas Ice,HI,roll-on,true,150,250,600,1000,,
+Hawas Ice Spray,HI_SP,spray,true,,270,600,900,1050,1300
+LOST Cherry,LostChe,roll-on,true,150,250,650,1250,,
+LOST Cherry Spray,LostChe_SP,spray,true,,300,700,1000,1300,1700
+Luxe Special,LUXE1,roll-on,true,220,350,800,1500,,
+Luxe Special Spray,LUXE1_SP,spray,true,,370,850,1600,3000,4500
+Miss Dior,MisDio,roll-on,true,180,280,750,1500,,
+Miss Dior Spray,MisDio_SP,spray,true,,330,780,1050,1300,1650
+Nautica voyage,NV,roll-on,true,180,270,670,1250,,
+Nautica voyage Spray,NV_SP,spray,true,,300,720,1350,1700,2500
+Paris Hilton,ParHil,roll-on,true,150,250,650,1250,,
+Paris Hilton Spray,ParHil_SP,spray,true,,300,700,1000,1300,1700
+Prada Candy,PRCn,roll-on,true,180,280,750,1500,,
+Prada Candy Spray,PRCn_SP,spray,true,,330,780,1050,1300,1650
+Pure Seduction,PuSD,roll-on,true,180,280,750,1500,,
+Pure Seduction Spray,PuSD_SP,spray,true,,330,780,1050,1300,1650
+Red Tobaco,RedTob,roll-on,true,150,250,650,1250,,
+Red Tobaco Spray,RedTob_SP,spray,true,,300,700,1000,1300,1700
+Rose,Rose,roll-on,true,150,250,650,1250,,
+Rose Spray,Rose_SP,spray,true,,300,700,1000,1300,1700
+SRK,SR2,roll-on,true,112,192,480,960,,
+SRK,SR,roll-on,true,220,400,780,1550,,
+SRK Spray,SR2_SP,spray,true,,240,600,1200,2000,4000
+SRK Spray,SR_SP,spray,true,,380,900,1600,1900,2800
+Sultan (al-haramain),SUL,roll-on,true,220,380,800,1500,,
+TubeRose,TubRos,roll-on,true,150,250,650,1250,,
+TubeRose Spray,TubRos_SP,spray,true,,300,700,1000,1300,1700
+Ultra male,UltMal,roll-on,true,150,250,650,1250,,
+Ultra male Spray,UltMal_SP,spray,true,,300,700,1000,1300,1700
+Valentino,Valen,roll-on,true,220,380,700,1300,,
+Valentino Spray,Valen_SP,spray,true,,400,900,1200,1500,1900
+Vampire B.,VampB,roll-on,true,200,300,800,1650,,
+Vampire B. Spray,VampB_SP,spray,true,,350,850,1500,1900,2200
+Vanila,Vanil,roll-on,true,150,250,650,1250,,
+Vanila Spray,Vanil_SP,spray,true,,300,700,1000,1300,1700
+Versace EROS,VerEros,roll-on,true,150,250,650,1250,,
+Versace EROS Spray,VerEros_SP,spray,true,,300,700,1000,1300,1700
+Versace Eros Flame,VrEf,roll-on,true,210,350,850,1400,,
+Versace Eros Flame Spray,VrEf_SP,spray,true,,370,870,1450,1600,2500
+White Oud,WO,roll-on,true,180,280,750,1500,,
+White Oud Spray,WO_SP,spray,true,,330,780,1050,1300,1650
+kacha beli,KacBel,roll-on,true,150,250,650,1250,,
+kacha beli Spray,KacBel_SP,spray,true,,300,700,1000,1300,1700
+lacoste White,LaW,roll-on,true,150,250,600,1150,,
+lacoste White Spray,LaW_SP,spray,true,,280,700,1250,1450,1900
+le male elixir,LeME,roll-on,true,180,300,750,1100,,
+le male elixir Spray,LeME__SP,spray,true,,330,800,1100,1500,2000
+victoriya secret,VicSec,roll-on,true,180,280,750,1500,,
+victoriya secret Spray,VicSec_SP,spray,true,,750,1500,1050,1300,1650
