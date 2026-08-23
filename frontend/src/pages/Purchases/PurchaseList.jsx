@@ -19,14 +19,14 @@ const PurchaseList = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedPurchase, setSelectedPurchase] = useState(null);
 
-  // ---------- Edit state (with items) ----------
+  // ---------- Edit state ----------
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingPurchase, setEditingPurchase] = useState(null);
   const [editForm, setEditForm] = useState({
     supplier: '',
     purchaseDate: '',
     notes: '',
-    items: [] // each item: { _id, itemType, itemId, quantity, costPerUnit, totalCost, itemName? }
+    items: []
   });
   const [editLoading, setEditLoading] = useState(false);
   const [allMaterials, setAllMaterials] = useState([]);
@@ -85,9 +85,8 @@ const PurchaseList = () => {
     }
   };
 
-  // ---------- ENHANCED EDIT HANDLERS ----------
+  // ---------- EDIT HANDLERS ----------
   const openEditModal = async (purchase) => {
-    // Fetch all materials and bottles for dropdowns
     try {
       const [materialsRes, bottlesRes] = await Promise.all([
         API.get('/inventory/materials'),
@@ -111,13 +110,11 @@ const PurchaseList = () => {
         quantity: item.quantity,
         costPerUnit: item.costPerUnit,
         totalCost: item.totalCost,
-        // store display name for convenience (not needed for submit)
       }))
     });
     setShowEditModal(true);
   };
 
-  // Add a new empty item row
   const addEditItem = () => {
     setEditForm(prev => ({
       ...prev,
@@ -135,7 +132,6 @@ const PurchaseList = () => {
     }));
   };
 
-  // Remove an item row
   const removeEditItem = (index) => {
     setEditForm(prev => ({
       ...prev,
@@ -143,7 +139,6 @@ const PurchaseList = () => {
     }));
   };
 
-  // Update item field
   const updateEditItem = (index, field, value) => {
     const newItems = [...editForm.items];
     const item = newItems[index];
@@ -155,7 +150,6 @@ const PurchaseList = () => {
       item.totalCost = 0;
     } else if (field === 'itemId') {
       item.itemId = value;
-      // Optionally auto-fill cost? We'll leave it manual.
     } else if (field === 'quantity' || field === 'costPerUnit') {
       item[field] = parseFloat(value) || 0;
       item.totalCost = item.quantity * item.costPerUnit;
@@ -167,7 +161,6 @@ const PurchaseList = () => {
     e.preventDefault();
     if (!editingPurchase) return;
 
-    // Validate items: all must have itemId, quantity>0, costPerUnit>0
     for (let i = 0; i < editForm.items.length; i++) {
       const item = editForm.items[i];
       if (!item.itemId) {
@@ -205,7 +198,7 @@ const PurchaseList = () => {
     }
   };
 
-  // ----- DELETE HANDLER -----
+  // ----- DELETE -----
   const handleDelete = async (id, invoiceNo) => {
     if (!window.confirm(`Delete purchase ${invoiceNo}? This will reverse stock.`)) return;
     try {
@@ -217,7 +210,7 @@ const PurchaseList = () => {
     }
   };
 
-  // ----- UPLOAD HANDLERS (unchanged) -----
+  // ----- UPLOAD (optimised with caching) -----
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) setUploadFile(file);
@@ -278,8 +271,19 @@ const PurchaseList = () => {
           return;
         }
 
+        // ---------- CACHE all materials and bottles ----------
+        const [allMats, allBots] = await Promise.all([
+          API.get('/inventory/materials'),
+          API.get('/inventory/bottles')
+        ]);
+        const materialMap = {};
+        allMats.data.forEach(m => { materialMap[m.sku] = m._id; });
+        const bottleMap = {};
+        allBots.data.forEach(b => { bottleMap[b.sku] = b._id; });
+
         const purchasesMap = new Map();
         const timestamp = Date.now();
+        const errors = [];
 
         for (let idx = 0; idx < rows.length; idx++) {
           const row = rows[idx];
@@ -301,19 +305,19 @@ const PurchaseList = () => {
             const costPerUnit = parseFloat(row[requiredCols.costPerUnit]);
 
             if (!sku || isNaN(quantity) || quantity <= 0 || isNaN(costPerUnit) || costPerUnit <= 0) {
-              throw new Error(`Row ${idx+1}: Invalid SKU, quantity, or cost`);
+              errors.push(`Row ${idx+1}: Invalid SKU, quantity, or cost`);
+              continue;
             }
 
             let itemId = null;
             if (itemType === 'RawMaterial') {
-              const material = await API.get(`/inventory/materials?sku=${sku}`).then(res => res.data[0]);
-              if (material) itemId = material._id;
+              itemId = materialMap[sku];
             } else {
-              const bottle = await API.get(`/inventory/bottles?sku=${sku}`).then(res => res.data[0]);
-              if (bottle) itemId = bottle._id;
+              itemId = bottleMap[sku];
             }
             if (!itemId) {
-              throw new Error(`Row ${idx+1}: Item not found for SKU "${sku}"`);
+              errors.push(`Row ${idx+1}: Item not found for SKU "${sku}"`);
+              continue;
             }
 
             const totalCost = quantity * costPerUnit;
@@ -342,21 +346,26 @@ const PurchaseList = () => {
               totalCost,
             });
           } catch (err) {
-            setUploadResult({ success: false, message: err.message });
-            setUploading(false);
-            return;
+            errors.push(`Row ${idx+1}: ${err.message}`);
           }
         }
 
         const purchasesArray = Array.from(purchasesMap.values()).filter(p => p.items.length > 0);
         if (!purchasesArray.length) {
-          setUploadResult({ success: false, message: 'No valid rows found' });
+          setUploadResult({
+            success: false,
+            message: `No valid rows. Errors: ${errors.join('; ')}`,
+          });
           setUploading(false);
           return;
         }
 
         const response = await API.post('/purchases/bulk', { purchases: purchasesArray });
-        setUploadResult({ success: true, data: response.data });
+        setUploadResult({
+          success: true,
+          data: response.data,
+          errors: errors,
+        });
         fetchPurchases();
         setUploadFile(null);
         setTimeout(() => setShowUploadModal(false), 3000);
@@ -403,7 +412,7 @@ const PurchaseList = () => {
   const filteredPurchases = getFilteredPurchases();
   const suppliers = [...new Set(purchases.map(p => p.supplier).filter(Boolean))];
 
-  // ----- Helper to get item name in edit modal -----
+  // ----- Helper for edit modal -----
   const getItemDisplayName = (itemType, itemId) => {
     if (itemType === 'RawMaterial') {
       const mat = allMaterials.find(m => m._id === itemId);
@@ -688,7 +697,7 @@ const PurchaseList = () => {
         </div>
       )}
 
-      {/* ---------- ENHANCED EDIT MODAL (with item editing) ---------- */}
+      {/* ---------- EDIT MODAL ---------- */}
       {showEditModal && editingPurchase && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 relative">
@@ -704,7 +713,6 @@ const PurchaseList = () => {
             </p>
 
             <form onSubmit={handleEditSubmit} className="space-y-4">
-              {/* Metadata fields */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Invoice</label>
@@ -744,7 +752,6 @@ const PurchaseList = () => {
                 </div>
               </div>
 
-              {/* Items section */}
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="block text-sm font-medium text-gray-700">Items</label>
@@ -761,7 +768,7 @@ const PurchaseList = () => {
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Item (SKU/Name)</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Item</th>
                         <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Qty</th>
                         <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Cost/Unit</th>
                         <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Total</th>
@@ -770,7 +777,6 @@ const PurchaseList = () => {
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                       {editForm.items.map((item, index) => {
-                        // Build options for itemType dropdown
                         const options = item.itemType === 'RawMaterial'
                           ? allMaterials.map(m => ({ value: m._id, label: m.name || m.sku || 'Unknown' }))
                           : allBottles.map(b => ({ value: b._id, label: b.sizeMl ? `${b.sizeMl}ml Bottle` : (b.name || b.sku || 'Unknown') }));
@@ -866,7 +872,7 @@ const PurchaseList = () => {
         </div>
       )}
 
-      {/* ---------- Upload Modal (unchanged) ---------- */}
+      {/* ---------- Upload Modal ---------- */}
       {showUploadModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 relative">

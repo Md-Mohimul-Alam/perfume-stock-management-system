@@ -63,15 +63,40 @@ const NewPurchase = () => {
     }
   };
 
-  // Auto-generate invoice number
+  // Auto-generate invoice number – find the highest PUR-* invoice
   useEffect(() => {
-    if (!form.invoiceNo) {
-      const now = new Date();
-      const prefix = 'PUR-' + now.getFullYear().toString().slice(-2) +
-                     String(now.getMonth()+1).padStart(2,'0') +
-                     String(now.getDate()).padStart(2,'0') + '-';
-      setForm(prev => ({ ...prev, invoiceNo: prefix + '001' }));
-    }
+    const generateInvoice = async () => {
+      if (!form.invoiceNo) {
+        try {
+          const { data } = await API.get('/purchases');
+          const purInvoices = data
+            .map(p => p.invoiceNo)
+            .filter(inv => inv.startsWith('PUR-'))
+            .sort();
+          if (purInvoices.length > 0) {
+            const last = purInvoices[purInvoices.length - 1];
+            const match = last.match(/PUR-(\d+)-(\d+)$/);
+            if (match) {
+              const prefix = match[1];
+              let num = parseInt(match[2]) + 1;
+              // Ensure 3 digits
+              const nextNum = String(num).padStart(3, '0');
+              setForm(prev => ({ ...prev, invoiceNo: `PUR-${prefix}-${nextNum}` }));
+              return;
+            }
+          }
+        } catch (e) {
+          // fallback
+        }
+        // Default
+        const now = new Date();
+        const prefix = now.getFullYear().toString().slice(-2) +
+                       String(now.getMonth()+1).padStart(2,'0') +
+                       String(now.getDate()).padStart(2,'0');
+        setForm(prev => ({ ...prev, invoiceNo: `PUR-${prefix}-001` }));
+      }
+    };
+    generateInvoice();
   }, []);
 
   // ----- Quick‑add handlers -----
@@ -91,11 +116,13 @@ const NewPurchase = () => {
     try {
       let response;
       let newItemId;
+      let newItemData;
 
       if (quickAddType === 'RawMaterial') {
         if (!newMaterialData.name.trim() || !newMaterialData.sku.trim()) {
           throw new Error('Name and SKU are required');
         }
+        // Check if already exists locally
         const existing = materials.find(m => m.sku === newMaterialData.sku.trim());
         if (existing) {
           throw new Error(`SKU "${newMaterialData.sku}" already exists`);
@@ -106,6 +133,7 @@ const NewPurchase = () => {
           type: newMaterialData.type,
         });
         newItemId = response.data._id;
+        newItemData = response.data;
         toast.success('Raw material created');
       } else {
         const size = parseFloat(newBottleData.sizeMl);
@@ -121,10 +149,18 @@ const NewPurchase = () => {
           type: newBottleData.type,
         });
         newItemId = response.data._id;
+        newItemData = response.data;
         toast.success('Bottle created');
       }
 
-      await fetchItems();
+      // Update local state without full re‑fetch
+      if (quickAddType === 'RawMaterial') {
+        setMaterials(prev => [...prev, newItemData]);
+      } else {
+        setBottles(prev => [...prev, newItemData]);
+      }
+
+      // Set the new item as selected
       setNewItem(prev => ({ ...prev, itemId: newItemId }));
       setShowQuickAdd(false);
     } catch (error) {
@@ -143,6 +179,15 @@ const NewPurchase = () => {
     }
     if (quantity <= 0 || costPerUnit <= 0) {
       toast.error('Quantity and cost must be positive');
+      return;
+    }
+
+    // Check for duplicate item in the current purchase
+    const duplicate = form.items.some(
+      item => item.item === itemId && item.itemType === itemType
+    );
+    if (duplicate) {
+      toast.error('This item is already added. Please edit the existing entry or add a different item.');
       return;
     }
 
