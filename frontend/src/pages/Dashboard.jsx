@@ -606,7 +606,7 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Available Bottles Inventory Table */}
+          {/* Available Bottles Inventory Table 
           <div>
             <h2 className="text-base sm:text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
               <FlaskRound size={18} className="text-cyan-500" />
@@ -673,6 +673,7 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
+          */}
         </>
       )}
     </div>

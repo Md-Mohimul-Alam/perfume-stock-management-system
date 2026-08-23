@@ -2,10 +2,27 @@ const mongoose = require('mongoose');
 const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
-const Sale = require('./src/models/Sale');
-const Product = require('./src/models/Product');
 
-const MONGO_URI = process.env.MONGO_URI;
+// ----- Helper: load model with fallback paths -----
+function loadModel(modelName) {
+  const paths = [
+    path.join(__dirname, 'src/models', modelName),
+    path.join(__dirname, 'models', modelName),
+    path.join(__dirname, '../src/models', modelName),
+  ];
+  for (const p of paths) {
+    try {
+      return require(p);
+    } catch (e) {}
+  }
+  throw new Error(`Cannot find model "${modelName}"`);
+}
+
+// ----- Load models -----
+const Sale = loadModel('Sale');
+const Product = loadModel('Product');
+
+const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI;
 if (!MONGO_URI) {
   console.error('❌ MONGO_URI not set');
   process.exit(1);
@@ -27,7 +44,6 @@ console.log(`💾 Output file: ${outputFile}`);
 function escapeCSV(value) {
   if (value == null) return '';
   const str = String(value);
-  // If contains comma, newline, or double-quote, wrap in quotes
   if (str.includes(',') || str.includes('"') || str.includes('\n')) {
     return `"${str.replace(/"/g, '""')}"`;
   }
@@ -37,7 +53,10 @@ function escapeCSV(value) {
 // ---------- Main export ----------
 async function exportSales() {
   try {
-    await mongoose.connect(MONGO_URI);
+    await mongoose.connect(MONGO_URI, {
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    });
     console.log('✅ Connected to MongoDB');
 
     // Build filter

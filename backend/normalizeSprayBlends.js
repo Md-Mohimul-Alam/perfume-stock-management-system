@@ -2,22 +2,24 @@ const mongoose = require('mongoose');
 const path = require('path');
 require('dotenv').config();
 
-// ----- Load models -----
-let Product, RawMaterial;
-try {
-  Product = require('./src/models/Product');
-  RawMaterial = require('./src/models/RawMaterial');
-  console.log('✅ Loaded models from ./src/models');
-} catch (e) {
-  try {
-    Product = require('../models/Product');
-    RawMaterial = require('../models/RawMaterial');
-    console.log('✅ Loaded models from ./models');
-  } catch (e2) {
-    console.error('❌ Cannot find models.');
-    process.exit(1);
+// ----- Helper: load model -----
+function loadModel(name) {
+  const paths = [
+    path.join(__dirname, 'src/models', name),
+    path.join(__dirname, 'models', name),
+    path.join(__dirname, '../src/models', name),
+  ];
+  for (const p of paths) {
+    try { return require(p); } catch {}
   }
+  throw new Error(`Model ${name} not found`);
 }
+
+const Product = loadModel('Product');
+const RawMaterial = loadModel('RawMaterial');
+const Purchase = loadModel('Purchase');
+const Transaction = loadModel('Transaction');
+const InventoryLog = loadModel('InventoryLog');
 
 const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI;
 if (!MONGO_URI) {
@@ -25,139 +27,195 @@ if (!MONGO_URI) {
   process.exit(1);
 }
 
-function maskUri(uri) {
+// ----- Configuration -----
+// Set to true to actually add purchase records for missing fixatives
+const APPLY_FIX = process.argv.includes('--apply');
+// Amount to add for each fixative (ml) if stock is zero
+const FIXATIVE_ADD_ML = 100;
+
+async function fixZeroStockBlends() {
   try {
-    const url = new URL(uri);
-    if (url.password) url.password = '****';
-    return url.toString();
-  } catch { return uri; }
-}
-
-console.log(`🔗 Connecting to: ${maskUri(MONGO_URI)}`);
-
-// ----- Helper to find material by name (case‑insensitive) -----
-async function findMaterialByName(name) {
-  const materials = await RawMaterial.find({ name: { $regex: new RegExp(`^${name}$`, 'i') } });
-  if (materials.length === 0) {
-    throw new Error(`Material "${name}" not found`);
-  }
-  return materials[0];
-}
-
-async function setSizeBasedSprayBlends() {
-  try {
-    await mongoose.connect(MONGO_URI);
+    await mongoose.connect(MONGO_URI, {
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    });
     console.log('✅ Connected to MongoDB');
 
-    // 1. Fetch all oil materials (to identify oil components)
-    const oilMaterials = await RawMaterial.find({ type: 'oil' });
-    const oilIdSet = new Set(oilMaterials.map(m => m._id.toString()));
+    // 1. Load all materials and check stock
+    const materials = await RawMaterial.find();
+    const stockMap = {};
+    materials.forEach(m => {
+      stockMap[m._id.toString()] = m.currentStockMl || 0;
+    });
 
-    // 2. Find the required others
-    let ethanol, isoE, galaxolide, ambroxan;
-    try {
-      ethanol = await findMaterialByName('Ethanol');
-      isoE = await findMaterialByName('Iso E Super');
-      galaxolide = await findMaterialByName('Galaxolide');
-      ambroxan = await findMaterialByName('Ambroxan');
-    } catch (err) {
-      console.error('❌ Missing required material:', err.message);
-      console.error('   Ensure Ethanol, Iso E Super, Galaxolide, Ambroxan exist.');
-      process.exit(1);
+    // 2. Identify fixatives that are commonly used: Iso E Super (Iso), Galaxolide (Glx), Ambroxan (Ambx)
+    const fixativeSkus = ['Iso', 'Glx', 'Ambx'];
+    const fixatives = materials.filter(m => fixativeSkus.includes(m.sku));
+    const zeroFixatives = fixatives.filter(m => (m.currentStockMl || 0) === 0);
+
+    // 3. If fixatives have zero stock and we are applying fixes, add purchase records
+    if (APPLY_FIX && zeroFixatives.length) {
+      console.log(`🔧 Adding ${FIXATIVE_ADD_ML} ml for each missing fixative...`);
+      const session = await mongoose.startSession();
+      session.startTransaction();
+      try {
+        for (const mat of zeroFixatives) {
+          const costPerMl = mat.avgCostPerMl || (mat.sku === 'Iso' ? 4 : mat.sku === 'Glx' ? 5 : 12);
+          const totalCost = FIXATIVE_ADD_ML * costPerMl;
+          const invoiceNo = `PUR-FIX-${Date.now()}-${mat.sku}`;
+
+          const purchase = new Purchase({
+            invoiceNo,
+            supplier: 'System Adjustment',
+            purchaseDate: new Date(),
+            items: [{
+              itemType: 'RawMaterial',
+              item: mat._id,
+              quantity: FIXATIVE_ADD_ML,
+              costPerUnit: costPerMl,
+              totalCost: totalCost,
+            }],
+            totalAmount: totalCost,
+            notes: `Auto-fix: added ${FIXATIVE_ADD_ML} ml of ${mat.name}`,
+          });
+          await purchase.save({ session });
+
+          mat.addPurchase(FIXATIVE_ADD_ML, costPerMl, totalCost, 'System Adjustment', invoiceNo);
+          await mat.save({ session });
+
+          await InventoryLog.create([{
+            material: mat._id,
+            changeQuantity: FIXATIVE_ADD_ML,
+            reason: 'adjustment',
+            reference: purchase._id,
+            refModel: 'Purchase',
+            notes: `Auto-fix: added ${FIXATIVE_ADD_ML} ml`,
+          }], { session });
+
+          await Transaction.create([{
+            type: 'cash_out',
+            amount: totalCost,
+            category: 'Purchase',
+            reference: purchase._id,
+            refModel: 'Purchase',
+            description: `Auto-fix purchase for ${mat.name}`,
+          }], { session });
+
+          console.log(`✅ Added ${FIXATIVE_ADD_ML} ml of ${mat.name} (${mat.sku})`);
+        }
+        await session.commitTransaction();
+        console.log('✅ Fixatives added successfully.');
+      } catch (error) {
+        await session.abortTransaction();
+        console.error('❌ Transaction failed:', error.message);
+      } finally {
+        session.endSession();
+      }
+    } else if (zeroFixatives.length && !APPLY_FIX) {
+      console.log(`⚠️ Fixatives with zero stock: ${zeroFixatives.map(m => m.name).join(', ')}`);
+      console.log('   To add stock, run: node fixZeroStockBlends.js --apply');
     }
 
-    // 3. Fetch all active spray products
+    // 4. Now adjust blends to remove any zero-stock fixatives
     const products = await Product.find({ type: 'spray', isActive: true });
-    console.log(`📦 Found ${products.length} active spray products`);
-
-    // 4. Define groups
-    const groups = {
-      small: {   // 6ml, 15ml
-        oilTarget: 35,
-        others: [
-          { material: ethanol, percentage: 62 },
-          { material: isoE, percentage: 1 },
-          { material: galaxolide, percentage: 1 },
-          { material: ambroxan, percentage: 1 },
-        ],
-      },
-      large: {   // 30ml, 50ml, 100ml
-        oilTarget: 55,
-        others: [
-          { material: ethanol, percentage: 42 },
-          { material: isoE, percentage: 1 },
-          { material: galaxolide, percentage: 1 },
-          { material: ambroxan, percentage: 1 },
-        ],
-      },
-    };
-
-    let updatedCount = 0;
-    let skippedCount = 0;
+    console.log(`📦 Found ${products.length} active spray products.`);
+    let updated = 0;
+    let skipped = 0;
 
     for (const product of products) {
-      // Determine group based on sizes
-      const sizes = product.sizes.map(s => s.sizeMl);
-      const hasLarge = sizes.some(s => [30, 50, 100].includes(s));
-      const group = hasLarge ? groups.large : groups.small;
+      if (!product.blendComponents || product.blendComponents.length === 0) continue;
 
-      // Extract oil components (those whose material is in the oil set)
-      const oilComps = product.blendComponents.filter(comp => {
-        const matId = comp.material?._id || comp.material;
-        return matId && oilIdSet.has(matId.toString());
+      // Get current components
+      let components = product.blendComponents.map(c => {
+        const matId = c.material?._id?.toString() || c.material?.toString();
+        return { matId, percentage: c.percentage };
       });
 
-      if (oilComps.length === 0) {
-        console.log(`⏭️ Skipping ${product.name} – no oil components`);
-        skippedCount++;
-        continue;
+      // Identify fixative components (those with zero stock)
+      const fixativeIds = zeroFixatives.map(m => m._id.toString());
+      let hasZeroFixative = false;
+      const newComponents = [];
+
+      for (const comp of components) {
+        if (fixativeIds.includes(comp.matId)) {
+          hasZeroFixative = true;
+          // Instead of removing, we could add its percentage to ethanol
+          // We'll later redistribute to ethanol
+          continue; // skip this component
+        }
+        newComponents.push(comp);
       }
 
-      // Calculate current oil total
-      const currentOilTotal = oilComps.reduce((sum, c) => sum + c.percentage, 0);
-      if (currentOilTotal === 0) {
-        console.log(`⏭️ Skipping ${product.name} – oil total is 0`);
-        skippedCount++;
+      if (!hasZeroFixative) continue; // no change needed
+
+      // Recalculate percentages: we need to keep total 100%
+      // We removed fixatives, so we need to add their percentages to ethanol
+      // Find ethanol component
+      const ethanol = await RawMaterial.findOne({ type: 'ethanol' });
+      if (!ethanol) {
+        console.warn(`⚠️ No ethanol found, cannot redistribute fixative percentages for ${product.name}`);
+        skipped++;
         continue;
       }
+      const ethanolId = ethanol._id.toString();
 
-      // Scale oil components to the target oil percentage
-      const targetOil = group.oilTarget;
-      const scale = targetOil / currentOilTotal;
-      const newOilComps = oilComps.map(comp => ({
-        material: comp.material,
-        percentage: parseFloat((comp.percentage * scale).toFixed(2)),
+      // Sum the percentages of removed fixatives
+      const removedTotal = components
+        .filter(c => fixativeIds.includes(c.matId))
+        .reduce((sum, c) => sum + c.percentage, 0);
+
+      if (removedTotal === 0) continue;
+
+      // Find ethanol component in newComponents
+      let ethanolComp = newComponents.find(c => c.matId === ethanolId);
+      if (ethanolComp) {
+        ethanolComp.percentage += removedTotal;
+        // Round to 2 decimals
+        ethanolComp.percentage = parseFloat(ethanolComp.percentage.toFixed(2));
+      } else {
+        // If ethanol was not in blend, add it
+        newComponents.push({ matId: ethanolId, percentage: removedTotal });
+      }
+
+      // Ensure total is 100% (adjust the largest component if rounding)
+      const total = newComponents.reduce((sum, c) => sum + c.percentage, 0);
+      if (Math.abs(total - 100) > 0.01) {
+        // Find the largest component and adjust
+        const maxComp = newComponents.reduce((a, b) => (a.percentage > b.percentage) ? a : b);
+        maxComp.percentage += (100 - total);
+        maxComp.percentage = parseFloat(maxComp.percentage.toFixed(2));
+      }
+
+      // Update product blend
+      product.blendComponents = newComponents.map(c => ({
+        material: c.matId,
+        percentage: c.percentage,
       }));
-
-      // Build others from group definition
-      const others = group.others.map(o => ({
-        material: o.material._id,
-        percentage: o.percentage,
-      }));
-
-      // Combine
-      product.blendComponents = [
-        ...newOilComps,
-        ...others,
-      ];
 
       await product.save();
-      updatedCount++;
-      const groupName = hasLarge ? 'large (55%)' : 'small (35%)';
-      console.log(`✅ Updated ${product.name} – group: ${groupName}, oil: ${newOilComps.map(c => `${c.percentage}%`).join(', ')}, others: ${others.map(o => `${o.percentage}%`).join(', ')}`);
+      updated++;
+      console.log(`✅ Updated ${product.name} – removed zero-stock fixatives`);
     }
 
-    console.log(`\n🎉 Done!`);
-    console.log(`   ✅ Updated ${updatedCount} products`);
-    console.log(`   ⏭️ Skipped ${skippedCount} products`);
+    console.log(`\n📊 Summary:`);
+    console.log(`   ✅ Products updated: ${updated}`);
+    console.log(`   ⏭️ Skipped: ${skipped}`);
+
+    // Also check primary oils for zero stock (optional warning)
+    const oilIds = materials.filter(m => m.type === 'oil' && (m.currentStockMl || 0) === 0).map(m => m._id.toString());
+    if (oilIds.length) {
+      const oilNames = materials.filter(m => oilIds.includes(m._id.toString())).map(m => m.name).join(', ');
+      console.log(`\n⚠️ Oils with zero stock: ${oilNames}`);
+      console.log('   These may be used as primary oils in roll-on or spray products.');
+      console.log('   Please add purchase records for them or adjust product blends.');
+    }
 
     await mongoose.disconnect();
     console.log('🔌 Disconnected');
   } catch (error) {
     console.error('❌ Error:', error.message);
-    console.error(error.stack);
     process.exit(1);
   }
 }
 
-setSizeBasedSprayBlends();
+fixZeroStockBlends();
