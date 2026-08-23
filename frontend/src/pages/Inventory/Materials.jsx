@@ -132,13 +132,14 @@ const Materials = () => {
         }
       }
 
-      // Update materials: availableOil = stock - usedOil
+      // ✅ FIX: availableOil = currentStockMl (remaining stock)
+      // usedOil is kept for information
       const updatedMaterials = materialsData.map(m => {
         const used = usageMap[m._id] || 0;
         return {
           ...m,
           usedOil: used,
-          availableOil: (m.currentStockMl || 0) - used,
+          availableOil: m.currentStockMl || 0, // ✅ corrected
         };
       });
       setMaterials(updatedMaterials);
@@ -146,7 +147,7 @@ const Materials = () => {
       // Compute summary (only oils)
       const oilMaterials = updatedMaterials.filter(m => m.type === 'oil');
       const totalOilStock = oilMaterials.reduce((sum, m) => sum + (m.currentStockMl || 0), 0);
-      const totalAvailable = oilMaterials.reduce((sum, m) => sum + m.availableOil, 0);
+      const totalAvailable = totalOilStock; // available = stock (since it's already net)
 
       // Breakdown roll-on vs spray (informational)
       let usedRollOn = 0;
@@ -431,7 +432,7 @@ const Materials = () => {
                 const totalPrice = (m.currentStockMl || 0) * perMlCost;
                 const totalPurchaseCost = m.totalPurchaseCost || 0;
                 const used = m.usedOil || 0;
-                const available = m.availableOil || 0;
+                const available = m.availableOil || 0; // now equals currentStockMl
                 return (
                   <tr key={m._id}>
                     <td className="px-6 py-4">{m.name}</td>
@@ -474,7 +475,7 @@ const Materials = () => {
         </div>
       )}
 
-      {/* ---------- Modals ---------- */}
+      {/* ---------- Modals (unchanged) ---------- */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">

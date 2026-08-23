@@ -673,25 +673,6 @@ async function deductBottle(bottleId, quantity, saleId) {
   });
 }
 
-async function deductBottle(bottleId, quantity, saleId) {
-  if (!bottleId || quantity <= 0) return;
-  const bottle = await Bottle.findById(bottleId);
-  if (!bottle) {
-    console.warn(`⚠️ Bottle ${bottleId} not found – skipping.`);
-    return;
-  }
-  bottle.currentStock -= quantity;
-  await bottle.save();
-  await InventoryLog.create({
-    bottle: bottleId,
-    changeQuantity: -quantity,
-    reason: 'sale',
-    reference: saleId,
-    refModel: 'Sale',
-    notes: `Sale deduction of ${quantity} bottles`,
-  });
-}
-
 // ----- Main -----
 async function pushSales() {
   try {
