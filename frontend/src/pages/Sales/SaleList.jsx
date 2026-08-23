@@ -75,8 +75,8 @@ const SalesList = () => {
       );
     }
 
-    // Sort by saleDate descending (newest first)
-    return filtered.sort((a, b) => new Date(b.saleDate) - new Date(a.saleDate));
+    // Sort by saleDate ascending (oldest first)
+    return filtered.sort((a, b) => new Date(a.saleDate) - new Date(b.saleDate));
   }, [sales, filter, search, typeFilter]);
 
   // Toggle expand row
