@@ -5,6 +5,7 @@ const InventoryLog = require('../models/InventoryLog');
 const { deductRawMaterial, deductBottle } = require('../services/inventoryService');
 const { generateInvoiceNo } = require('../utils/generateInvoice');
 
+
 // @desc    Create a sale (auto-deduct stock) – with sequential invoice numbers
 // @route   POST /api/sales
 exports.createSale = async (req, res) => {
@@ -12,8 +13,10 @@ exports.createSale = async (req, res) => {
     const { channel, items, saleDate, paymentStatus, notes } = req.body;
     let totalAmount = 0;
 
-    // ---------- Get next invoice number ----------
-    const lastSale = await Sale.findOne().sort({ createdAt: -1 });
+    // ---------- Get the highest invoice number ----------
+    // Instead of using creation date, we sort by invoiceNo descending
+    // and pick the largest numeric part.
+    const lastSale = await Sale.findOne({}, { invoiceNo: 1 }).sort({ invoiceNo: -1 }).lean();
     let nextNumber = 1;
     if (lastSale && lastSale.invoiceNo) {
       const match = lastSale.invoiceNo.match(/(\d+)$/);
@@ -93,7 +96,6 @@ exports.createSale = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
 // @desc    Get all sales (with filters) – populates description
 // @route   GET /api/sales
 exports.getSales = async (req, res) => {
