@@ -351,6 +351,15 @@ exports.bulkAddStockToBottles = async (req, res) => {
           // optionally we could keep avg cost unchanged
         }
         await bottle.save();
+
+        // ✅ CREATE INVENTORY LOG
+        await InventoryLog.create({
+          bottle: bottle._id,
+          changeQuantity: quantity,
+          reason: 'production',
+          notes: `Bulk added ${quantity} bottles (${sizeMl}ml, ${type})`,
+        });
+
         updated.push(bottle);
       } catch (err) {
         errors.push({ item, error: err.message });

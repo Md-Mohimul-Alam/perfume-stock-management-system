@@ -630,7 +630,13 @@ async function deductRawMaterial(materialId, mlUsed, saleId) {
     console.warn(`⚠️ Raw material ${materialId} not found – skipping.`);
     return;
   }
-  material.currentStockMl -= mlUsed;
+  const newStock = material.currentStockMl - mlUsed;
+  if (newStock < 0) {
+    console.warn(`⚠️ ${material.name} stock would go to ${newStock} – setting to 0.`);
+    material.currentStockMl = 0;
+  } else {
+    material.currentStockMl = newStock;
+  }
   await material.save();
   await InventoryLog.create({
     material: materialId,
@@ -639,6 +645,31 @@ async function deductRawMaterial(materialId, mlUsed, saleId) {
     reference: saleId,
     refModel: 'Sale',
     notes: `Sale deduction of ${mlUsed}ml`,
+  });
+}
+
+async function deductBottle(bottleId, quantity, saleId) {
+  if (!bottleId || quantity <= 0) return;
+  const bottle = await Bottle.findById(bottleId);
+  if (!bottle) {
+    console.warn(`⚠️ Bottle ${bottleId} not found – skipping.`);
+    return;
+  }
+  const newStock = bottle.currentStock - quantity;
+  if (newStock < 0) {
+    console.warn(`⚠️ Bottle ${bottle.sizeMl}ml stock would go to ${newStock} – setting to 0.`);
+    bottle.currentStock = 0;
+  } else {
+    bottle.currentStock = newStock;
+  }
+  await bottle.save();
+  await InventoryLog.create({
+    bottle: bottleId,
+    changeQuantity: -quantity,
+    reason: 'sale',
+    reference: saleId,
+    refModel: 'Sale',
+    notes: `Sale deduction of ${quantity} bottles`,
   });
 }
 

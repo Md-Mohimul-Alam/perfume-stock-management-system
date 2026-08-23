@@ -2,9 +2,11 @@ const Sale = require('../models/Sale');
 const Product = require('../models/Product');
 const Transaction = require('../models/Transaction');
 const InventoryLog = require('../models/InventoryLog');
+const Bottle = require('../models/Bottle');
+const RawMaterial = require('../models/RawMaterial');
 const { deductRawMaterial, deductBottle } = require('../services/inventoryService');
 const { generateInvoiceNo } = require('../utils/generateInvoice');
-
+const mongoose = require('mongoose');
 
 // @desc    Create a sale (auto-deduct stock) – with sequential invoice numbers
 // @route   POST /api/sales
@@ -14,8 +16,6 @@ exports.createSale = async (req, res) => {
     let totalAmount = 0;
 
     // ---------- Get the highest invoice number ----------
-    // Instead of using creation date, we sort by invoiceNo descending
-    // and pick the largest numeric part.
     const lastSale = await Sale.findOne({}, { invoiceNo: 1 }).sort({ invoiceNo: -1 }).lean();
     let nextNumber = 1;
     if (lastSale && lastSale.invoiceNo) {
@@ -96,6 +96,7 @@ exports.createSale = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 // @desc    Get all sales (with filters) – populates description
 // @route   GET /api/sales
 exports.getSales = async (req, res) => {
@@ -298,19 +299,95 @@ exports.bulkCreateSales = async (req, res) => {
   }
 };
 
-// @desc    Delete a sale (permanently)
+// @desc    Delete a sale (permanently) – reverses stock
 // @route   DELETE /api/sales/:id
 exports.deleteSale = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
-    const sale = await Sale.findById(req.params.id);
-    if (!sale) return res.status(404).json({ message: 'Sale not found' });
+    const sale = await Sale.findById(req.params.id).populate('items.product');
+    if (!sale) {
+      await session.abortTransaction();
+      return res.status(404).json({ message: 'Sale not found' });
+    }
 
-    await InventoryLog.deleteMany({ reference: sale._id, refModel: 'Sale' });
-    await Transaction.deleteMany({ reference: sale._id, refModel: 'Sale' });
-    await sale.deleteOne();
+    // 1. Reverse stock for each item
+    for (const item of sale.items) {
+      const product = item.product;
+      if (!product) continue;
+      const sizeVariant = product.sizes.find(s => s.sizeMl === item.sizeMl);
+      if (!sizeVariant) continue;
 
-    res.json({ message: 'Sale deleted successfully' });
+      // Reverse bottles
+      const bottle = await Bottle.findById(sizeVariant.bottle).session(session);
+      if (bottle) {
+        bottle.currentStock += item.quantity;
+        await bottle.save({ session });
+        await InventoryLog.create([{
+          bottle: bottle._id,
+          changeQuantity: item.quantity,
+          reason: 'adjustment',
+          reference: sale._id,
+          refModel: 'Sale',
+          notes: `Reversal of sale ${sale.invoiceNo} – bottle restocked`,
+        }], { session });
+      }
+
+      // Reverse raw materials
+      if (product.type === 'roll-on') {
+        if (product.baseOil) {
+          const oilMlUsed = sizeVariant.oilMlUsed || sizeVariant.sizeMl;
+          const totalMl = oilMlUsed * item.quantity;
+          const material = await RawMaterial.findById(product.baseOil).session(session);
+          if (material) {
+            material.currentStockMl += totalMl;
+            await material.save({ session });
+            await InventoryLog.create([{
+              material: material._id,
+              changeQuantity: totalMl,
+              reason: 'adjustment',
+              reference: sale._id,
+              refModel: 'Sale',
+              notes: `Reversal of sale ${sale.invoiceNo} – raw material restocked`,
+            }], { session });
+          }
+        }
+      } else {
+        // spray type – blend components
+        if (product.blendComponents && product.blendComponents.length) {
+          for (const comp of product.blendComponents) {
+            if (comp.material) {
+              const mlUsed = (sizeVariant.sizeMl * comp.percentage / 100) * item.quantity;
+              const material = await RawMaterial.findById(comp.material).session(session);
+              if (material) {
+                material.currentStockMl += mlUsed;
+                await material.save({ session });
+                await InventoryLog.create([{
+                  material: material._id,
+                  changeQuantity: mlUsed,
+                  reason: 'adjustment',
+                  reference: sale._id,
+                  refModel: 'Sale',
+                  notes: `Reversal of sale ${sale.invoiceNo} – raw material restocked`,
+                }], { session });
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // 2. Delete associated records
+    await InventoryLog.deleteMany({ reference: sale._id, refModel: 'Sale' }).session(session);
+    await Transaction.deleteMany({ reference: sale._id, refModel: 'Sale' }).session(session);
+    await sale.deleteOne({ session });
+
+    await session.commitTransaction();
+    res.json({ message: 'Sale deleted and stock reversed' });
   } catch (error) {
+    await session.abortTransaction();
     res.status(500).json({ message: error.message });
+  } finally {
+    session.endSession();
   }
 };
