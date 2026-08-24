@@ -21,7 +21,7 @@ const Materials = () => {
   const [submitting, setSubmitting] = useState(false);
   const [modalError, setModalError] = useState('');
 
-  // Edit modal – enhanced
+  // Edit modal
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingMaterial, setEditingMaterial] = useState(null);
   const [editForm, setEditForm] = useState({
@@ -138,7 +138,16 @@ const Materials = () => {
         }
       }
 
+      // ✅ Preserve backend values for virtual rows
       const updatedMaterials = materialsData.map(m => {
+        // Virtual rows have special _id values – keep their backend values
+        if (m._id === 'SR_SP_VIRTUAL' || m._id === 'LUXE1_VIRTUAL') {
+          return {
+            ...m,
+            usedOil: m.usedOil || 0,
+            availableOil: m.availableOil || 0,
+          };
+        }
         const used = usageMap[m._id] || 0;
         return {
           ...m,
@@ -488,7 +497,7 @@ const Materials = () => {
         </div>
       )}
 
-      {/* ---------- Add Modal (unchanged) ---------- */}
+      {/* ---------- Add Modal ---------- */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
@@ -545,7 +554,7 @@ const Materials = () => {
         </div>
       )}
 
-      {/* ---------- ENHANCED Edit Modal ---------- */}
+      {/* ---------- Edit Modal ---------- */}
       {showEditModal && editingMaterial && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
@@ -590,7 +599,7 @@ const Materials = () => {
                 </select>
               </div>
 
-              {/* Read‑only inventory summary */}
+              {/* Read-only inventory summary */}
               <div className="border-t pt-4 mt-2">
                 <p className="text-sm text-gray-500 mb-2">Inventory Details (read‑only)</p>
                 <div className="grid grid-cols-2 gap-2 text-sm">
@@ -660,7 +669,7 @@ const Materials = () => {
         </div>
       )}
 
-      {/* ---------- Upload Modal (unchanged) ---------- */}
+      {/* ---------- Upload Modal ---------- */}
       {showUploadModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 relative">
