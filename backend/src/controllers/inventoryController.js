@@ -48,7 +48,38 @@ exports.getMaterials = async (req, res) => {
     usageMap.SR_SP = Math.round(usageMap.SR_SP * 100) / 100;
     usageMap.LUXE1_SP = Math.round(usageMap.LUXE1_SP * 100) / 100;
 
-    // 3. Virtual rows
+    // 3. Define blends and fetch component costs
+    const srComponents = [
+      { sku: 'DunIco', percentage: 60 },
+      { sku: 'DipTam', percentage: 40 },
+    ];
+    const luxeComponents = [
+      { sku: 'GucFla', percentage: 50 },
+      { sku: 'CreAve', percentage: 50 },
+    ];
+
+    // Build a map of SKU -> material
+    const matMap = {};
+    materials.forEach(m => { matMap[m.sku] = m; });
+
+    // Helper to compute blended cost per ml
+    const computeBlendedCost = (components) => {
+      let totalWeight = 0;
+      let weightedCost = 0;
+      for (const comp of components) {
+        const mat = matMap[comp.sku];
+        if (mat) {
+          weightedCost += mat.avgCostPerMl * comp.percentage;
+          totalWeight += comp.percentage;
+        }
+      }
+      return totalWeight > 0 ? weightedCost / totalWeight : 0;
+    };
+
+    const srCost = computeBlendedCost(srComponents);
+    const luxeCost = computeBlendedCost(luxeComponents);
+
+    // 4. Virtual rows with computed costs
     const virtualMaterials = [
       {
         _id: 'SR_SP_VIRTUAL',
@@ -56,8 +87,8 @@ exports.getMaterials = async (req, res) => {
         sku: 'SR_SP',
         type: 'oil',
         currentStockMl: 0,
-        avgCostPerMl: 0,
-        totalPurchaseCost: 0,
+        avgCostPerMl: srCost,
+        totalPurchaseCost: usageMap.SR_SP * srCost,
         usedOil: usageMap.SR_SP,
         availableOil: 0,
       },
@@ -67,8 +98,8 @@ exports.getMaterials = async (req, res) => {
         sku: 'LUXE1',
         type: 'oil',
         currentStockMl: 0,
-        avgCostPerMl: 0,
-        totalPurchaseCost: 0,
+        avgCostPerMl: luxeCost,
+        totalPurchaseCost: usageMap.LUXE1_SP * luxeCost,
         usedOil: usageMap.LUXE1_SP,
         availableOil: 0,
       },
