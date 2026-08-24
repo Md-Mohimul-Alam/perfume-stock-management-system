@@ -17,93 +17,99 @@ exports.getMaterials = async (req, res) => {
       return { ...obj, totalPurchaseCost };
     });
 
-    // 2. Compute oil usage for SR_SP and LUXE1_SP (populate + loop)
-    const sales = await Sale.find().populate('items.product');
-    const usageMap = { SR_SP: 0, LUXE1_SP: 0 };
-    const sprayRules = { '6': 40, '15': 40, '30': 40, '50': 55, '100': 55 };
+    // 2. Build material map for cost lookup
+    const matMap = {};
+    materials.forEach(m => { matMap[m.sku] = m; });
 
+    // 3. Compute oil usage and blended cost for special sprays from actual product blends
+    const sales = await Sale.find().populate('items.product');
+    const usageMap = {};
+    const costMap = {};
+
+    // Helper: get oil percentage from product's blendComponents
+    function getOilPercentage(product) {
+      if (!product.blendComponents || product.blendComponents.length === 0) return 0;
+      let totalOil = 0;
+      for (const comp of product.blendComponents) {
+        const matId = comp.material?._id?.toString() || comp.material?.toString();
+        const material = materials.find(m => m._id.toString() === matId);
+        if (material && material.type === 'oil') {
+          totalOil += comp.percentage;
+        }
+      }
+      return totalOil;
+    }
+
+    // Helper: compute weighted average cost of oil components only
+    function computeOilBlendCost(product) {
+      if (!product.blendComponents || product.blendComponents.length === 0) return 0;
+      let totalWeight = 0;
+      let weightedCost = 0;
+      for (const comp of product.blendComponents) {
+        const matId = comp.material?._id?.toString() || comp.material?.toString();
+        const material = materials.find(m => m._id.toString() === matId);
+        if (material && material.type === 'oil') {
+          weightedCost += material.avgCostPerMl * comp.percentage;
+          totalWeight += comp.percentage;
+        }
+      }
+      return totalWeight > 0 ? weightedCost / totalWeight : 0;
+    }
+
+    // Process sales
     for (const sale of sales) {
       if (!sale.items) continue;
       for (const item of sale.items) {
         const product = item.product;
         if (!product) continue;
         const sku = product.sku ? product.sku.trim() : '';
+        // Only process special spray SKUs
         if (sku !== 'SR_SP' && sku !== 'LUXE1_SP') continue;
 
         const sizeMl = item.sizeMl || 0;
         const qty = item.quantity || 0;
-        const sizes = product.sizes || [];
-        const maxSize = sizes.length > 0 ? Math.max(...sizes.map(s => s.sizeMl)) : sizeMl;
-        let oilPct = 45;
-        for (const [max, pct] of Object.entries(sprayRules)) {
-          if (maxSize <= parseInt(max)) { oilPct = pct; break; }
-        }
+        const oilPct = getOilPercentage(product);
+        if (oilPct === 0) continue;
 
         const totalOilMl = (sizeMl * (oilPct / 100)) * qty;
-        usageMap[sku] = (usageMap[sku] || 0) + totalOilMl;
+        if (!usageMap[sku]) usageMap[sku] = 0;
+        usageMap[sku] += totalOilMl;
+
+        // Compute cost only once per product
+        if (!costMap[sku]) {
+          costMap[sku] = computeOilBlendCost(product);
+        }
       }
     }
 
-    // Round to 2 decimals
-    usageMap.SR_SP = Math.round(usageMap.SR_SP * 100) / 100;
-    usageMap.LUXE1_SP = Math.round(usageMap.LUXE1_SP * 100) / 100;
+    // Round usage to 2 decimals
+    for (const sku in usageMap) {
+      usageMap[sku] = Math.round(usageMap[sku] * 100) / 100;
+    }
 
-    // 3. Define blends and fetch component costs
-    const srComponents = [
-      { sku: 'DunIco', percentage: 52 },
-      { sku: 'DipTam', percentage: 48 },
-    ];
-    const luxeComponents = [
-      { sku: 'GucFla', percentage: 28 },
-      { sku: 'CreAve', percentage: 73 },
-    ];
-
-    // Build a map of SKU -> material
-    const matMap = {};
-    materials.forEach(m => { matMap[m.sku] = m; });
-
-    // Helper to compute blended cost per ml
-    const computeBlendedCost = (components) => {
-      let totalWeight = 0;
-      let weightedCost = 0;
-      for (const comp of components) {
-        const mat = matMap[comp.sku];
-        if (mat) {
-          weightedCost += mat.avgCostPerMl * comp.percentage;
-          totalWeight += comp.percentage;
-        }
-      }
-      return totalWeight > 0 ? weightedCost / totalWeight : 0;
+    // 4. Build virtual material rows
+    const virtualMaterials = [];
+    const specialSKUs = ['SR_SP', 'LUXE1_SP'];
+    const nameMap = {
+      'SR_SP': 'SRK Spray',
+      'LUXE1_SP': 'Luxe Special',
     };
 
-    const srCost = computeBlendedCost(srComponents);
-    const luxeCost = computeBlendedCost(luxeComponents);
-
-    // 4. Virtual rows with computed costs
-    const virtualMaterials = [
-      {
-        _id: 'SR_SP_VIRTUAL',
-        name: 'SRK Spray',
-        sku: 'SR_SP',
+    for (const sku of specialSKUs) {
+      const used = usageMap[sku] || 0;
+      const cost = costMap[sku] || 0;
+      virtualMaterials.push({
+        _id: `${sku}_VIRTUAL`,
+        name: nameMap[sku] || sku,
+        sku: sku,
         type: 'oil',
         currentStockMl: 0,
-        avgCostPerMl: srCost,
-        totalPurchaseCost: usageMap.SR_SP * srCost,
-        usedOil: usageMap.SR_SP,
+        avgCostPerMl: cost,
+        totalPurchaseCost: used * cost,
+        usedOil: used,
         availableOil: 0,
-      },
-      {
-        _id: 'LUXE1_VIRTUAL',
-        name: 'Luxe Special',
-        sku: 'LUXE1_SP',
-        type: 'oil',
-        currentStockMl: 0,
-        avgCostPerMl: luxeCost,
-        totalPurchaseCost: usageMap.LUXE1_SP * luxeCost,
-        usedOil: usageMap.LUXE1_SP,
-        availableOil: 0,
-      },
-    ];
+      });
+    }
 
     const allMaterials = [...result, ...virtualMaterials];
     res.json(allMaterials);
