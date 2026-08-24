@@ -20,7 +20,7 @@ exports.getMaterials = async (req, res) => {
     // 2. Compute oil usage for SR_SP and LUXE1_SP (populate + loop)
     const sales = await Sale.find().populate('items.product');
     const usageMap = { SR_SP: 0, LUXE1_SP: 0 };
-    const sprayRules = { '6': 40, '15': 40, '30': 40, '50': 47, '100': 55 };
+    const sprayRules = { '6': 40, '15': 40, '30': 40, '50': 55, '100': 55 };
 
     for (const sale of sales) {
       if (!sale.items) continue;
