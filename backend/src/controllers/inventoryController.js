@@ -50,8 +50,8 @@ exports.getMaterials = async (req, res) => {
 
     // 3. Define blends and fetch component costs
     const srComponents = [
-      { sku: 'DunIco', percentage: 55 },
-      { sku: 'DipTam', percentage: 45 },
+      { sku: 'DunIco', percentage: 52 },
+      { sku: 'DipTam', percentage: 48 },
     ];
     const luxeComponents = [
       { sku: 'GucFla', percentage: 32 },

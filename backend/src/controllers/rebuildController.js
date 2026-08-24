@@ -93,8 +93,8 @@ async function applyExactBlends() {
   const specialSprays = {
     'SR_SP': {
       oilComponents: [
-        { sku: 'DunIco', percentage: 55 },
-        { sku: 'DipTam', percentage: 45 },
+        { sku: 'DunIco', percentage: 52 },
+        { sku: 'DipTam', percentage: 48 },
       ],
       ethanol: 52,
       iso: 1,
