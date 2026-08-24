@@ -81,9 +81,9 @@ async function applyExactBlends() {
   const products = await Product.find({ isActive: true });
   console.log(`📦 Applying blends to ${products.length} active products.`);
 
-  // Blend rules based on the chart
+  // ✅ CORRECTED blend rules (matching user's chart)
   const sprayRules = {
-    '6': { oil: 35, ethanol: 62, iso: 1, glx: 1, ambx: 1 },
+    '6': { oil: 45, ethanol: 52, iso: 1, glx: 1, ambx: 1 },
     '15': { oil: 45, ethanol: 52, iso: 1, glx: 1, ambx: 1 },
     '30': { oil: 45, ethanol: 52, iso: 1, glx: 1, ambx: 1 },
     '50': { oil: 50, ethanol: 47, iso: 1, glx: 1, ambx: 1 },
@@ -142,23 +142,19 @@ async function applyExactBlends() {
       }
 
       if (product.type === 'spray') {
-        // Check special blend first
-        let blendConfig = specialSprays[product.sku];
+        // Determine size rule (based on max size)
+        const maxSize = Math.max(...product.sizes.map(s => s.sizeMl));
         let sizeRule = null;
-
-        if (!blendConfig) {
-          const maxSize = Math.max(...product.sizes.map(s => s.sizeMl));
-          for (const [size, rule] of Object.entries(sprayRules)) {
-            if (maxSize <= parseInt(size)) {
-              sizeRule = rule;
-              break;
-            }
+        for (const [size, rule] of Object.entries(sprayRules)) {
+          if (maxSize <= parseInt(size)) {
+            sizeRule = rule;
+            break;
           }
-          if (!sizeRule) {
-            console.warn(`⚠️ No blend rule for ${product.name} (SKU: ${product.sku})`);
-            skipped++;
-            continue;
-          }
+        }
+        if (!sizeRule) {
+          console.warn(`⚠️ No blend rule for ${product.name} (SKU: ${product.sku})`);
+          skipped++;
+          continue;
         }
 
         let oilComps = [];
@@ -167,27 +163,41 @@ async function applyExactBlends() {
         const glxMat = matMap['Glx'];
         const ambxMat = matMap['Ambx'];
 
+        // Check if special blend
+        const blendConfig = specialSprays[product.sku];
+
         if (blendConfig) {
-          // Special blend: multiple oils
+          // ---------- SPECIAL SPRAY ----------
+          // Oil total percentage from sizeRule
+          const oilTotalPct = sizeRule.oil;
+
+          // Build oil components: each oil component's percentage is (its share of oil) * oilTotalPct / 100
           for (const comp of blendConfig.oilComponents) {
             const mat = matMap[comp.sku];
             if (!mat) {
               console.warn(`⚠️ Material ${comp.sku} not found for special blend ${product.sku}`);
-              skipped++;
               continue;
             }
-            oilComps.push({ material: mat._id, percentage: comp.percentage });
+            const pct = (comp.percentage / 100) * oilTotalPct;
+            oilComps.push({ material: mat._id, percentage: parseFloat(pct.toFixed(2)) });
           }
-          const ethPct = blendConfig.ethanol;
-          const isoPct = blendConfig.iso;
-          const glxPct = blendConfig.glx;
-          const ambxPct = blendConfig.ambx;
-          if (ethanolMat) oilComps.push({ material: ethanolMat._id, percentage: ethPct });
-          if (isoMat) oilComps.push({ material: isoMat._id, percentage: isoPct });
-          if (glxMat) oilComps.push({ material: glxMat._id, percentage: glxPct });
-          if (ambxMat) oilComps.push({ material: ambxMat._id, percentage: ambxPct });
+
+          // Add ethanol and fixatives – these are already percentages of total blend
+          if (ethanolMat) oilComps.push({ material: ethanolMat._id, percentage: blendConfig.ethanol });
+          if (isoMat) oilComps.push({ material: isoMat._id, percentage: blendConfig.iso });
+          if (glxMat) oilComps.push({ material: glxMat._id, percentage: blendConfig.glx });
+          if (ambxMat) oilComps.push({ material: ambxMat._id, percentage: blendConfig.ambx });
+
+          // Normalise to 100% (floating point safety)
+          const total = oilComps.reduce((sum, c) => sum + c.percentage, 0);
+          if (Math.abs(total - 100) > 0.01) {
+            const diff = 100 - total;
+            oilComps[0].percentage += diff;
+            oilComps[0].percentage = parseFloat(oilComps[0].percentage.toFixed(2));
+          }
+
         } else {
-          // Standard spray
+          // ---------- STANDARD SPRAY ----------
           const oilSku = product.sku.replace('_SP', '');
           let oilMat = matMap[oilSku];
           if (!oilMat) {
@@ -199,6 +209,7 @@ async function applyExactBlends() {
             skipped++;
             continue;
           }
+
           oilComps = [
             { material: oilMat._id, percentage: sizeRule.oil },
           ];
@@ -206,16 +217,17 @@ async function applyExactBlends() {
           if (isoMat) oilComps.push({ material: isoMat._id, percentage: sizeRule.iso });
           if (glxMat) oilComps.push({ material: glxMat._id, percentage: sizeRule.glx });
           if (ambxMat) oilComps.push({ material: ambxMat._id, percentage: sizeRule.ambx });
+
+          // Normalise (should already be 100% but safe)
+          const total = oilComps.reduce((sum, c) => sum + c.percentage, 0);
+          if (Math.abs(total - 100) > 0.01) {
+            const diff = 100 - total;
+            oilComps[0].percentage += diff;
+            oilComps[0].percentage = parseFloat(oilComps[0].percentage.toFixed(2));
+          }
         }
 
-        // Ensure total 100%
-        const total = oilComps.reduce((sum, c) => sum + c.percentage, 0);
-        if (Math.abs(total - 100) > 0.01) {
-          const diff = 100 - total;
-          oilComps[0].percentage += diff;
-          oilComps[0].percentage = parseFloat(oilComps[0].percentage.toFixed(2));
-        }
-
+        // Compare with current and update if needed
         const current = product.blendComponents || [];
         const isCorrect = current.length === oilComps.length &&
           current.every((c, i) => {
