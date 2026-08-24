@@ -26,8 +26,8 @@ exports.getMaterials = async (req, res) => {
     const srProduct = await Product.findOne({ sku: 'SR_SP' });
     const luxeProduct = await Product.findOne({ sku: 'LUXE1_SP' });
     const targetProductIds = [];
-    if (srProduct) targetProductIds.push(srProduct._id);
-    if (luxeProduct) targetProductIds.push(luxeProduct._id);
+    if (srProduct) targetProductIds.push({ id: srProduct._id, key: 'SR_SP' });
+    if (luxeProduct) targetProductIds.push({ id: luxeProduct._id, key: 'LUXE1_SP' });
 
     // 4. Compute usage from sales
     const sales = await Sale.find().populate('items.product');
@@ -42,14 +42,15 @@ exports.getMaterials = async (req, res) => {
         const product = item.product;
         if (!product) continue;
 
-        // Check if this product is one of our target products (by ID)
-        let targetSku = null;
-        if (srProduct && product._id.toString() === srProduct._id.toString()) {
-          targetSku = 'SR_SP';
-        } else if (luxeProduct && product._id.toString() === luxeProduct._id.toString()) {
-          targetSku = 'LUXE1_SP';
+        // Find matching target product by ID
+        let targetKey = null;
+        for (const target of targetProductIds) {
+          if (product._id.toString() === target.id.toString()) {
+            targetKey = target.key;
+            break;
+          }
         }
-        if (!targetSku) continue;
+        if (!targetKey) continue;
 
         const sizeMl = item.sizeMl || 0;
         const qty = item.quantity || 0;
@@ -68,7 +69,7 @@ exports.getMaterials = async (req, res) => {
         }
 
         const totalOilMl = (sizeMl * (oilPct / 100)) * qty;
-        usageMap[targetSku] = (usageMap[targetSku] || 0) + totalOilMl;
+        usageMap[targetKey] = (usageMap[targetKey] || 0) + totalOilMl;
       }
     }
 
@@ -105,10 +106,6 @@ exports.getMaterials = async (req, res) => {
     res.status(500).json({ message: error.message, stack: error.stack });
   }
 };
-// ----------------------------------------------------------------------
-// The rest of the controller – all other functions remain unchanged
-// ----------------------------------------------------------------------
-
 // @desc    Get single raw material
 // @route   GET /api/inventory/materials/:id
 exports.getMaterialById = async (req, res) => {
