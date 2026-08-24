@@ -8,7 +8,7 @@ const Product = require('../models/Product');    // ✅ Added
 // @route   GET /api/inventory/materials
 exports.getMaterials = async (req, res) => {
   try {
-    // 1. Real raw materials
+    // 1. Real materials
     const materials = await RawMaterial.find();
     const result = materials.map(m => {
       const totalPurchaseCost = (m.purchases || []).reduce((sum, p) => sum + (p.totalCost || 0), 0);
@@ -17,71 +17,36 @@ exports.getMaterials = async (req, res) => {
       return { ...obj, totalPurchaseCost };
     });
 
-    // 2. Aggregation for virtual oils (SR_SP and LUXE1_SP)
-    const usageAgg = await Sale.aggregate([
-      { $unwind: "$items" },
-      {
-        $lookup: {
-          from: "products",
-          localField: "items.product",
-          foreignField: "_id",
-          as: "product"
-        }
-      },
-      { $unwind: "$product" },
-      {
-        $match: {
-          "product.sku": { $in: ["SR_SP", "LUXE1_SP"] }
-        }
-      },
-      {
-        $group: {
-          _id: "$product.sku",
-          totalOilMl: {
-            $sum: {
-              $multiply: [
-                "$items.quantity",
-                {
-                  $let: {
-                    vars: {
-                      maxSize: { $max: "$product.sizes.sizeMl" },
-                      sizeMl: "$items.sizeMl"
-                    },
-                    in: {
-                      $multiply: [
-                        "$$sizeMl",
-                        {
-                          $divide: [
-                            {
-                              $switch: {
-                                branches: [
-                                  { case: { $lte: [ "$$maxSize", 6 ] }, then: 45 },
-                                  { case: { $lte: [ "$$maxSize", 15 ] }, then: 45 },
-                                  { case: { $lte: [ "$$maxSize", 30 ] }, then: 45 },
-                                  { case: { $lte: [ "$$maxSize", 50 ] }, then: 50 },
-                                  { case: { $lte: [ "$$maxSize", 100 ] }, then: 55 }
-                                ],
-                                default: 45
-                              }
-                            },
-                            100
-                          ]
-                        }
-                      ]
-                    }
-                  }
-                }
-              ]
-            }
-          }
-        }
-      }
-    ]);
-
+    // 2. Compute oil usage for SR_SP and LUXE1_SP (populate + loop)
+    const sales = await Sale.find().populate('items.product');
     const usageMap = { SR_SP: 0, LUXE1_SP: 0 };
-    usageAgg.forEach(item => {
-      usageMap[item._id] = Math.round(item.totalOilMl * 100) / 100;
-    });
+    const sprayRules = { '6': 45, '15': 45, '30': 45, '50': 50, '100': 55 };
+
+    for (const sale of sales) {
+      if (!sale.items) continue;
+      for (const item of sale.items) {
+        const product = item.product;
+        if (!product) continue;
+        const sku = product.sku ? product.sku.trim() : '';
+        if (sku !== 'SR_SP' && sku !== 'LUXE1_SP') continue;
+
+        const sizeMl = item.sizeMl || 0;
+        const qty = item.quantity || 0;
+        const sizes = product.sizes || [];
+        const maxSize = sizes.length > 0 ? Math.max(...sizes.map(s => s.sizeMl)) : sizeMl;
+        let oilPct = 45;
+        for (const [max, pct] of Object.entries(sprayRules)) {
+          if (maxSize <= parseInt(max)) { oilPct = pct; break; }
+        }
+
+        const totalOilMl = (sizeMl * (oilPct / 100)) * qty;
+        usageMap[sku] = (usageMap[sku] || 0) + totalOilMl;
+      }
+    }
+
+    // Round to 2 decimals
+    usageMap.SR_SP = Math.round(usageMap.SR_SP * 100) / 100;
+    usageMap.LUXE1_SP = Math.round(usageMap.LUXE1_SP * 100) / 100;
 
     // 3. Virtual rows
     const virtualMaterials = [
@@ -93,18 +58,18 @@ exports.getMaterials = async (req, res) => {
         currentStockMl: 0,
         avgCostPerMl: 0,
         totalPurchaseCost: 0,
-        usedOil: usageMap['SR_SP'] || 0,
+        usedOil: usageMap.SR_SP,
         availableOil: 0,
       },
       {
         _id: 'LUXE1_VIRTUAL',
-        name: 'Luxe Special Spray',
-        sku: 'LUXE1_SP',
+        name: 'Luxe Special',
+        sku: 'LUXE1',
         type: 'oil',
         currentStockMl: 0,
         avgCostPerMl: 0,
         totalPurchaseCost: 0,
-        usedOil: usageMap['LUXE1_SP'] || 0,
+        usedOil: usageMap.LUXE1_SP,
         availableOil: 0,
       },
     ];
