@@ -22,7 +22,14 @@ exports.getMaterials = async (req, res) => {
       };
     });
 
-    // 3. Compute usage for SR_SP and LUXE1_SP from sales
+    // 3. Get product IDs for SR_SP and LUXE1_SP (to match sales)
+    const srProduct = await Product.findOne({ sku: 'SR_SP' });
+    const luxeProduct = await Product.findOne({ sku: 'LUXE1_SP' });
+    const targetProductIds = [];
+    if (srProduct) targetProductIds.push(srProduct._id);
+    if (luxeProduct) targetProductIds.push(luxeProduct._id);
+
+    // 4. Compute usage from sales
     const sales = await Sale.find().populate('items.product');
     const usageMap = {
       'SR_SP': 0,
@@ -34,20 +41,21 @@ exports.getMaterials = async (req, res) => {
       for (const item of sale.items) {
         const product = item.product;
         if (!product) continue;
-        const sku = product.sku;
-        if (sku !== 'SR_SP' && sku !== 'LUXE1_SP') continue;
+
+        // Check if this product is one of our target products (by ID)
+        let targetSku = null;
+        if (srProduct && product._id.toString() === srProduct._id.toString()) {
+          targetSku = 'SR_SP';
+        } else if (luxeProduct && product._id.toString() === luxeProduct._id.toString()) {
+          targetSku = 'LUXE1_SP';
+        }
+        if (!targetSku) continue;
 
         const sizeMl = item.sizeMl || 0;
         const qty = item.quantity || 0;
 
-        // Determine oil percentage using same rules as applyExactBlends
-        const sprayRules = {
-          '6': 45,
-          '15': 45,
-          '30': 45,
-          '50': 50,
-          '100': 55,
-        };
+        // Determine oil percentage using spray rules
+        const sprayRules = { '6': 45, '15': 45, '30': 45, '50': 50, '100': 55 };
         const maxSize = product.sizes.length > 0
           ? Math.max(...product.sizes.map(s => s.sizeMl))
           : sizeMl;
@@ -60,11 +68,11 @@ exports.getMaterials = async (req, res) => {
         }
 
         const totalOilMl = (sizeMl * (oilPct / 100)) * qty;
-        usageMap[sku] = (usageMap[sku] || 0) + totalOilMl;
+        usageMap[targetSku] = (usageMap[targetSku] || 0) + totalOilMl;
       }
     }
 
-    // 4. Add virtual entries with computed usage
+    // 5. Add virtual entries with computed usage
     const virtualMaterials = [
       {
         _id: 'SR_SP_VIRTUAL',
@@ -90,16 +98,13 @@ exports.getMaterials = async (req, res) => {
       },
     ];
 
-    // 5. Combine real + virtual
     const allMaterials = [...result, ...virtualMaterials];
-
     res.json(allMaterials);
   } catch (error) {
     console.error('Error in getMaterials:', error);
     res.status(500).json({ message: error.message, stack: error.stack });
   }
 };
-
 // ----------------------------------------------------------------------
 // The rest of the controller – all other functions remain unchanged
 // ----------------------------------------------------------------------
