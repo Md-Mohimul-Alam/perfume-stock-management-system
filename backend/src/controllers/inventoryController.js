@@ -1,8 +1,8 @@
 const RawMaterial = require('../models/RawMaterial');
 const Bottle = require('../models/Bottle');
 const InventoryLog = require('../models/InventoryLog');
-// Optional: import Product if you want to check references before delete
-// const Product = require('../models/Product');
+const Sale = require('../models/Sale');        // ✅ ADDED
+const Product = require('../models/Product');  // ✅ ADDED
 
 // @desc    Get all raw materials with stock and total purchase cost
 // @route   GET /api/inventory/materials
@@ -10,7 +10,7 @@ exports.getMaterials = async (req, res) => {
   try {
     // 1. Fetch all real materials
     const materials = await RawMaterial.find();
-    
+
     // 2. Map to add totalPurchaseCost
     const result = materials.map(m => {
       const totalPurchaseCost = (m.purchases || []).reduce((sum, p) => sum + (p.totalCost || 0), 0);
@@ -23,7 +23,6 @@ exports.getMaterials = async (req, res) => {
     });
 
     // 3. Compute usage for SR_SP and LUXE1_SP from sales
-    //    We'll compute total oil used (all oils combined) per product.
     const sales = await Sale.find().populate('items.product');
     const usageMap = {
       'SR_SP': 0,
@@ -41,30 +40,7 @@ exports.getMaterials = async (req, res) => {
         const sizeMl = item.sizeMl || 0;
         const qty = item.quantity || 0;
 
-        // Get size variant to ensure we have the correct bottle size
-        const sizeVariant = product.sizes.find(s => s.sizeMl === sizeMl);
-        if (!sizeVariant) continue;
-
-        // Compute total oil used from blend components
-        let totalOilPct = 0;
-        if (product.blendComponents && product.blendComponents.length > 0) {
-          // Sum the percentages of oil components
-          // We'll assume all components except ethanol and fixatives are oils.
-          // We can identify them by material type if we populate, but to avoid extra queries,
-          // we rely on the fact that in our system, oils are the first components.
-          // Safer: we can fetch the material types, but that's heavy.
-          // Instead, we use the total oil percentage from the blend rules, as we know the rules.
-          // But to be generic, we can compute oil total as 100 - (ethanol + iso + glx + ambx) if they exist.
-          // However, we can simply look at the percentages and sum them, but we need to know which are oils.
-          // We know that for our sprays, the oil components are the ones that are not ethanol/fixatives.
-          // So we can compute total oil by subtracting known fixative percentages.
-          // We'll use the sprayRules object directly to get oil percentage for the product's max size.
-          // That's simpler and matches the blend logic.
-          // We'll compute the oil percentage based on the product's max size.
-        }
-
-        // Instead of complex logic, use the same sprayRules as in applyExactBlends.
-        // Determine the oil percentage for this product's size.
+        // Determine oil percentage using same rules as applyExactBlends
         const sprayRules = {
           '6': 45,
           '15': 45,
@@ -72,22 +48,16 @@ exports.getMaterials = async (req, res) => {
           '50': 50,
           '100': 55,
         };
-        // Determine which rule applies based on the product's maximum size
-        // (since the blend is set per product, not per size, we use max size).
         const maxSize = product.sizes.length > 0
           ? Math.max(...product.sizes.map(s => s.sizeMl))
-          : sizeMl; // fallback to current size
-        let oilPct = 45; // default
+          : sizeMl;
+        let oilPct = 45;
         for (const [max, pct] of Object.entries(sprayRules)) {
           if (maxSize <= parseInt(max)) {
             oilPct = pct;
             break;
           }
         }
-        // But if product is special, we already have its blendComponents,
-        // but we can still use the rule because the special blend's oil total is the same as standard for that size.
-        // For SR_SP and LUXE1_SP, the oil total percentages are the same as standard sprays of that size.
-        // So the rule works.
 
         const totalOilMl = (sizeMl * (oilPct / 100)) * qty;
         usageMap[sku] = (usageMap[sku] || 0) + totalOilMl;
@@ -129,6 +99,10 @@ exports.getMaterials = async (req, res) => {
     res.status(500).json({ message: error.message, stack: error.stack });
   }
 };
+
+// ----------------------------------------------------------------------
+// The rest of the controller remains unchanged (getMaterialById, etc.)
+// ----------------------------------------------------------------------
 
 // @desc    Get single raw material
 // @route   GET /api/inventory/materials/:id
@@ -178,21 +152,6 @@ exports.deleteMaterial = async (req, res) => {
   try {
     const material = await RawMaterial.findById(req.params.id);
     if (!material) return res.status(404).json({ message: 'Material not found' });
-
-    // Optional: check if material is used in products before deleting
-    // const Product = require('../models/Product');
-    // const usedInProducts = await Product.findOne({
-    //   $or: [
-    //     { baseOil: req.params.id },
-    //     { 'blendComponents.material': req.params.id }
-    //   ]
-    // });
-    // if (usedInProducts) {
-    //   return res.status(400).json({
-    //     message: 'Cannot delete: material is used in one or more products'
-    //   });
-    // }
-
     await material.deleteOne();
     res.json({ message: 'Material deleted successfully' });
   } catch (error) {
@@ -204,7 +163,6 @@ exports.deleteMaterial = async (req, res) => {
 // @route   GET /api/inventory/bottles
 exports.getBottles = async (req, res) => {
   try {
-    // ✅ Keep excluding purchases for performance
     const bottles = await Bottle.find().select('-purchases');
     res.json(bottles);
   } catch (error) {
@@ -249,16 +207,6 @@ exports.deleteBottle = async (req, res) => {
   try {
     const bottle = await Bottle.findById(req.params.id);
     if (!bottle) return res.status(404).json({ message: 'Bottle not found' });
-
-    // Optional: check if bottle is used in products before deleting
-    // const Product = require('../models/Product');
-    // const usedInProducts = await Product.findOne({ 'sizes.bottle': req.params.id });
-    // if (usedInProducts) {
-    //   return res.status(400).json({
-    //     message: 'Cannot delete: bottle is used in one or more products'
-    //   });
-    // }
-
     await bottle.deleteOne();
     res.json({ message: 'Bottle deleted successfully' });
   } catch (error) {
@@ -285,7 +233,7 @@ exports.getLogs = async (req, res) => {
 // @route   POST /api/inventory/materials/bulk
 exports.bulkCreateMaterials = async (req, res) => {
   try {
-    const { items } = req.body; // array of { name, sku, type }
+    const { items } = req.body;
     if (!items || !items.length) {
       return res.status(400).json({ message: 'No items provided' });
     }
@@ -323,10 +271,9 @@ exports.bulkCreateMaterials = async (req, res) => {
 
 // @desc    Bulk create bottles from Excel/CSV
 // @route   POST /api/inventory/bottles/bulk
-
 exports.bulkCreateBottles = async (req, res) => {
   try {
-    const { items } = req.body; // array of { sizeMl, type, currentStock?, avgCostPerUnit? }
+    const { items } = req.body;
     if (!items || !items.length) {
       return res.status(400).json({ message: 'No items provided' });
     }
@@ -371,7 +318,7 @@ exports.bulkCreateBottles = async (req, res) => {
 // @route   POST /api/inventory/materials/import
 exports.importMaterialsWithPurchases = async (req, res) => {
   try {
-    const { items } = req.body; // array of { name, sku, type, purchases: [{ quantityMl, costPerMl, totalCost, supplier?, invoiceNo? }] }
+    const { items } = req.body;
     if (!items || !items.length) {
       return res.status(400).json({ message: 'No items provided' });
     }
@@ -386,15 +333,12 @@ exports.importMaterialsWithPurchases = async (req, res) => {
           errors.push({ item, error: 'Missing name, sku, or type' });
           continue;
         }
-        // Check duplicate SKU
         const existing = await RawMaterial.findOne({ sku });
         if (existing) {
           errors.push({ item, error: `SKU '${sku}' already exists` });
           continue;
         }
-        // Create material with no purchases yet
         const material = new RawMaterial({ name, sku, type, currentStockMl: 0, avgCostPerMl: 0 });
-        // Add each purchase
         for (const p of purchases) {
           if (!p.quantityMl || !p.costPerMl) continue;
           const totalCost = p.quantityMl * p.costPerMl;
@@ -416,11 +360,12 @@ exports.importMaterialsWithPurchases = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 // @desc    Bulk add stock to bottles (e.g., from production)
 // @route   POST /api/inventory/bottles/bulk-add-stock
 exports.bulkAddStockToBottles = async (req, res) => {
   try {
-    const { items } = req.body; // array of { sizeMl, type, quantity, costPerUnit? }
+    const { items } = req.body;
     if (!items || !items.length) {
       return res.status(400).json({ message: 'No items provided' });
     }
@@ -440,18 +385,14 @@ exports.bulkAddStockToBottles = async (req, res) => {
           errors.push({ item, error: `Bottle ${sizeMl}ml (${type}) not found` });
           continue;
         }
-        // Add stock – if costPerUnit provided, treat as purchase; otherwise just add stock without changing average cost?
         if (costPerUnit !== undefined && costPerUnit > 0) {
           const totalCost = quantity * costPerUnit;
           bottle.addPurchase(quantity, costPerUnit, totalCost, 'Production', 'BATCH-PROD');
         } else {
-          // Just increase stock without changing avg cost (production from raw materials)
           bottle.currentStock += quantity;
-          // optionally we could keep avg cost unchanged
         }
         await bottle.save();
 
-        // ✅ CREATE INVENTORY LOG
         await InventoryLog.create({
           bottle: bottle._id,
           changeQuantity: quantity,
@@ -474,6 +415,7 @@ exports.bulkAddStockToBottles = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 // @desc    Record a purchase for a specific bottle
 // @route   POST /api/inventory/bottles/:id/purchase
 exports.addBottlePurchase = async (req, res) => {
@@ -493,7 +435,6 @@ exports.addBottlePurchase = async (req, res) => {
     bottle.addPurchase(quantity, costPerUnit, totalCost, supplier || '', invoiceNo || '');
     await bottle.save();
 
-    // Create an inventory log entry for this purchase
     await InventoryLog.create({
       bottle: bottle._id,
       changeQuantity: quantity,
@@ -506,4 +447,3 @@ exports.addBottlePurchase = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
