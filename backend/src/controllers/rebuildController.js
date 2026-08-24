@@ -84,8 +84,8 @@ async function applyExactBlends() {
   // ✅ CORRECTED blend rules (matching user's chart)
   const sprayRules = {
     '6': { oil: 40, ethanol: 57, iso: 1, glx: 1, ambx: 1 },
-    '15': { oil: 45, ethanol: 52, iso: 1, glx: 1, ambx: 1 },
-    '30': { oil: 45, ethanol: 52, iso: 1, glx: 1, ambx: 1 },
+    '15': { oil: 40, ethanol: 57, iso: 1, glx: 1, ambx: 1 },
+    '30': { oil: 40, ethanol: 57, iso: 1, glx: 1, ambx: 1 },
     '50': { oil: 50, ethanol: 47, iso: 1, glx: 1, ambx: 1 },
     '100': { oil: 55, ethanol: 42, iso: 1, glx: 1, ambx: 1 },
   };
