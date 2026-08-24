@@ -10,70 +10,82 @@ exports.getMaterials = async (req, res) => {
   try {
     // 1. Fetch all real materials
     const materials = await RawMaterial.find();
-
-    // 2. Map to add totalPurchaseCost
     const result = materials.map(m => {
       const totalPurchaseCost = (m.purchases || []).reduce((sum, p) => sum + (p.totalCost || 0), 0);
       const obj = m.toObject();
       delete obj.purchases;
-      return {
-        ...obj,
-        totalPurchaseCost,
-      };
+      return { ...obj, totalPurchaseCost };
     });
 
-    // 3. Get product IDs for SR_SP and LUXE1_SP (to match sales)
-    const srProduct = await Product.findOne({ sku: 'SR_SP' });
-    const luxeProduct = await Product.findOne({ sku: 'LUXE1_SP' });
-    const targetProductIds = [];
-    if (srProduct) targetProductIds.push({ id: srProduct._id, key: 'SR_SP' });
-    if (luxeProduct) targetProductIds.push({ id: luxeProduct._id, key: 'LUXE1_SP' });
+    // 2. Compute oil usage for SR_SP and LUXE1_SP using aggregation
+    const sprayRules = { '6': 45, '15': 45, '30': 45, '50': 50, '100': 55 };
 
-    // 4. Compute usage from sales
-    const sales = await Sale.find().populate('items.product');
-    const usageMap = {
-      'SR_SP': 0,
-      'LUXE1_SP': 0,
-    };
-
-    for (const sale of sales) {
-      if (!sale.items) continue;
-      for (const item of sale.items) {
-        const product = item.product;
-        if (!product) continue;
-
-        // Find matching target product by ID
-        let targetKey = null;
-        for (const target of targetProductIds) {
-          if (product._id.toString() === target.id.toString()) {
-            targetKey = target.key;
-            break;
+    const usageAgg = await Sale.aggregate([
+      { $unwind: "$items" },
+      {
+        $lookup: {
+          from: "products",
+          localField: "items.product",
+          foreignField: "_id",
+          as: "product"
+        }
+      },
+      { $unwind: "$product" },
+      {
+        $match: {
+          "product.sku": { $in: ["SR_SP", "LUXE1_SP"] }
+        }
+      },
+      {
+        $group: {
+          _id: "$product.sku",
+          totalOilMl: {
+            $sum: {
+              $multiply: [
+                "$items.quantity",
+                {
+                  $let: {
+                    vars: {
+                      maxSize: { $max: "$product.sizes.sizeMl" },
+                      sizeMl: "$items.sizeMl"
+                    },
+                    in: {
+                      $multiply: [
+                        "$$sizeMl",
+                        {
+                          $divide: [
+                            {
+                              $switch: {
+                                branches: [
+                                  { case: { $lte: [ "$$maxSize", 6 ] }, then: 45 },
+                                  { case: { $lte: [ "$$maxSize", 15 ] }, then: 45 },
+                                  { case: { $lte: [ "$$maxSize", 30 ] }, then: 45 },
+                                  { case: { $lte: [ "$$maxSize", 50 ] }, then: 50 },
+                                  { case: { $lte: [ "$$maxSize", 100 ] }, then: 55 }
+                                ],
+                                default: 45
+                              }
+                            },
+                            100
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
           }
         }
-        if (!targetKey) continue;
-
-        const sizeMl = item.sizeMl || 0;
-        const qty = item.quantity || 0;
-
-        // Determine oil percentage using spray rules
-        const sprayRules = { '6': 45, '15': 45, '30': 45, '50': 50, '100': 55 };
-        const maxSize = product.sizes.length > 0
-          ? Math.max(...product.sizes.map(s => s.sizeMl))
-          : sizeMl;
-        let oilPct = 45;
-        for (const [max, pct] of Object.entries(sprayRules)) {
-          if (maxSize <= parseInt(max)) {
-            oilPct = pct;
-            break;
-          }
-        }
-
-        const totalOilMl = (sizeMl * (oilPct / 100)) * qty;
-        usageMap[targetKey] = (usageMap[targetKey] || 0) + totalOilMl;
       }
-    }
+    ]);
 
-    // 5. Add virtual entries with computed usage
+    const usageMap = { SR_SP: 0, LUXE1_SP: 0 };
+    usageAgg.forEach(item => {
+      usageMap[item._id] = Math.round(item.totalOilMl * 100) / 100;
+    });
+
+    // 3. Add virtual entries
     const virtualMaterials = [
       {
         _id: 'SR_SP_VIRTUAL',
