@@ -54,8 +54,8 @@ exports.getMaterials = async (req, res) => {
       { sku: 'DipTam', percentage: 40 },
     ];
     const luxeComponents = [
-      { sku: 'GucFla', percentage: 50 },
-      { sku: 'CreAve', percentage: 50 },
+      { sku: 'GucFla', percentage: 32 },
+      { sku: 'CreAve', percentage: 68 },
     ];
 
     // Build a map of SKU -> material

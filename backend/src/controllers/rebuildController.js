@@ -103,8 +103,8 @@ async function applyExactBlends() {
     },
     'LUXE1_SP': {
       oilComponents: [
-        { sku: 'GucFla', percentage: 50 },
-        { sku: 'CreAve', percentage: 50 },
+        { sku: 'GucFla', percentage: 32 },
+        { sku: 'CreAve', percentage: 68 },
       ],
       ethanol: 52,
       iso: 1,
