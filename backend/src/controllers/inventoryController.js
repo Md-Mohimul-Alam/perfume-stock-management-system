@@ -8,14 +8,12 @@ const InventoryLog = require('../models/InventoryLog');
 // @route   GET /api/inventory/materials
 exports.getMaterials = async (req, res) => {
   try {
-    // Fetch all materials, including the purchases array
+    // 1. Fetch all real materials
     const materials = await RawMaterial.find();
-
-    // Map each material to add totalPurchaseCost
+    
+    // 2. Map to add totalPurchaseCost
     const result = materials.map(m => {
-      // Compute sum of totalCost from purchases (if purchases array exists)
       const totalPurchaseCost = (m.purchases || []).reduce((sum, p) => sum + (p.totalCost || 0), 0);
-      // Convert to plain object and remove purchases for cleaner response
       const obj = m.toObject();
       delete obj.purchases;
       return {
@@ -24,7 +22,76 @@ exports.getMaterials = async (req, res) => {
       };
     });
 
-    res.json(result);
+    // 3. Compute usage for SR_SP and LUXE1 from sales
+    //    We'll aggregate sales that sold products with these SKUs.
+    const sales = await Sale.find().populate('items.product');
+    const usageMap = {
+      'SR_SP': 0,
+      'LUXE1_SP': 0,
+    };
+
+    for (const sale of sales) {
+      for (const item of sale.items) {
+        const product = item.product;
+        if (!product) continue;
+        const sku = product.sku;
+        if (sku === 'SR_SP' || sku === 'LUXE1_SP') {
+          const sizeMl = item.sizeMl;
+          const qty = item.quantity;
+          // Find the size variant to get the oil percentage
+          const sizeVariant = product.sizes.find(s => s.sizeMl === sizeMl);
+          if (!sizeVariant) continue;
+          // Get the total oil percentage for that size (from sprayRules)
+          // We'll use the same rules as in applyExactBlends
+          const sprayRules = {
+            '6': 45, '15': 45, '30': 45, '50': 50, '100': 55
+          };
+          // Determine max size for the product to pick rule (same as in rebuild)
+          const maxSize = Math.max(...product.sizes.map(s => s.sizeMl));
+          let oilPct = 45; // default
+          for (const [size, pct] of Object.entries(sprayRules)) {
+            if (maxSize <= parseInt(size)) {
+              oilPct = pct;
+              break;
+            }
+          }
+          // Total oil used in ml for this sale item
+          const totalOilMl = (sizeMl * (oilPct / 100)) * qty;
+          usageMap[sku] = (usageMap[sku] || 0) + totalOilMl;
+        }
+      }
+    }
+
+    // 4. Add virtual entries for SR_SP and LUXE1
+    const virtualMaterials = [
+      {
+        name: 'SRK Spray',
+        sku: 'SR_SP',
+        type: 'oil',
+        currentStockMl: 0,
+        avgCostPerMl: 0,
+        totalPurchaseCost: 0,
+        usedOil: usageMap['SR_SP'] || 0,
+        availableOil: 0,
+        _id: null, // mark as virtual
+      },
+      {
+        name: 'Luxe Special',
+        sku: 'LUXE1',
+        type: 'oil',
+        currentStockMl: 0,
+        avgCostPerMl: 0,
+        totalPurchaseCost: 0,
+        usedOil: usageMap['LUXE1_SP'] || 0,
+        availableOil: 0,
+        _id: null,
+      }
+    ];
+
+    // 5. Combine real + virtual
+    const allMaterials = [...result, ...virtualMaterials];
+
+    res.json(allMaterials);
   } catch (error) {
     console.error('Error in getMaterials:', error);
     res.status(500).json({ message: error.message });
