@@ -8,7 +8,7 @@ const Product = require('../models/Product');    // ✅ Added
 // @route   GET /api/inventory/materials
 exports.getMaterials = async (req, res) => {
   try {
-    // 1. Fetch all real materials
+    // 1. Real materials
     const materials = await RawMaterial.find();
     const result = materials.map(m => {
       const totalPurchaseCost = (m.purchases || []).reduce((sum, p) => sum + (p.totalCost || 0), 0);
@@ -17,9 +17,7 @@ exports.getMaterials = async (req, res) => {
       return { ...obj, totalPurchaseCost };
     });
 
-    // 2. Compute oil usage for SR_SP and LUXE1_SP using aggregation
-    const sprayRules = { '6': 45, '15': 45, '30': 45, '50': 50, '100': 55 };
-
+    // 2. Aggregation for SR_SP and LUXE1_SP oil usage
     const usageAgg = await Sale.aggregate([
       { $unwind: "$items" },
       {
@@ -85,7 +83,7 @@ exports.getMaterials = async (req, res) => {
       usageMap[item._id] = Math.round(item.totalOilMl * 100) / 100;
     });
 
-    // 3. Add virtual entries
+    // 3. Virtual entries
     const virtualMaterials = [
       {
         _id: 'SR_SP_VIRTUAL',
