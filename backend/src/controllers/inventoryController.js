@@ -98,8 +98,8 @@ exports.getMaterials = async (req, res) => {
       },
       {
         _id: 'LUXE1_VIRTUAL',
-        name: 'Luxe Special',
-        sku: 'LUXE1',
+        name: 'Luxe Special Spray',
+        sku: 'LUXE1_SP',
         type: 'oil',
         currentStockMl: 0,
         avgCostPerMl: 0,
