@@ -1,8 +1,8 @@
 const RawMaterial = require('../models/RawMaterial');
 const Bottle = require('../models/Bottle');
 const InventoryLog = require('../models/InventoryLog');
-const Sale = require('../models/Sale');        // ✅ ADDED
-const Product = require('../models/Product');  // ✅ ADDED
+const Sale = require('../models/Sale');          // ✅ Added
+const Product = require('../models/Product');    // ✅ Added
 
 // @desc    Get all raw materials with stock and total purchase cost
 // @route   GET /api/inventory/materials
@@ -101,7 +101,7 @@ exports.getMaterials = async (req, res) => {
 };
 
 // ----------------------------------------------------------------------
-// The rest of the controller remains unchanged (getMaterialById, etc.)
+// The rest of the controller – all other functions remain unchanged
 // ----------------------------------------------------------------------
 
 // @desc    Get single raw material
