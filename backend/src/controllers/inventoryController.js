@@ -22,8 +22,8 @@ exports.getMaterials = async (req, res) => {
       };
     });
 
-    // 3. Compute usage for SR_SP and LUXE1 from sales
-    //    We'll aggregate sales that sold products with these SKUs.
+    // 3. Compute usage for SR_SP and LUXE1_SP from sales
+    //    We'll compute total oil used (all oils combined) per product.
     const sales = await Sale.find().populate('items.product');
     const usageMap = {
       'SR_SP': 0,
@@ -31,40 +31,73 @@ exports.getMaterials = async (req, res) => {
     };
 
     for (const sale of sales) {
+      if (!sale.items) continue;
       for (const item of sale.items) {
         const product = item.product;
         if (!product) continue;
         const sku = product.sku;
-        if (sku === 'SR_SP' || sku === 'LUXE1_SP') {
-          const sizeMl = item.sizeMl;
-          const qty = item.quantity;
-          // Find the size variant to get the oil percentage
-          const sizeVariant = product.sizes.find(s => s.sizeMl === sizeMl);
-          if (!sizeVariant) continue;
-          // Get the total oil percentage for that size (from sprayRules)
-          // We'll use the same rules as in applyExactBlends
-          const sprayRules = {
-            '6': 45, '15': 45, '30': 45, '50': 50, '100': 55
-          };
-          // Determine max size for the product to pick rule (same as in rebuild)
-          const maxSize = Math.max(...product.sizes.map(s => s.sizeMl));
-          let oilPct = 45; // default
-          for (const [size, pct] of Object.entries(sprayRules)) {
-            if (maxSize <= parseInt(size)) {
-              oilPct = pct;
-              break;
-            }
-          }
-          // Total oil used in ml for this sale item
-          const totalOilMl = (sizeMl * (oilPct / 100)) * qty;
-          usageMap[sku] = (usageMap[sku] || 0) + totalOilMl;
+        if (sku !== 'SR_SP' && sku !== 'LUXE1_SP') continue;
+
+        const sizeMl = item.sizeMl || 0;
+        const qty = item.quantity || 0;
+
+        // Get size variant to ensure we have the correct bottle size
+        const sizeVariant = product.sizes.find(s => s.sizeMl === sizeMl);
+        if (!sizeVariant) continue;
+
+        // Compute total oil used from blend components
+        let totalOilPct = 0;
+        if (product.blendComponents && product.blendComponents.length > 0) {
+          // Sum the percentages of oil components
+          // We'll assume all components except ethanol and fixatives are oils.
+          // We can identify them by material type if we populate, but to avoid extra queries,
+          // we rely on the fact that in our system, oils are the first components.
+          // Safer: we can fetch the material types, but that's heavy.
+          // Instead, we use the total oil percentage from the blend rules, as we know the rules.
+          // But to be generic, we can compute oil total as 100 - (ethanol + iso + glx + ambx) if they exist.
+          // However, we can simply look at the percentages and sum them, but we need to know which are oils.
+          // We know that for our sprays, the oil components are the ones that are not ethanol/fixatives.
+          // So we can compute total oil by subtracting known fixative percentages.
+          // We'll use the sprayRules object directly to get oil percentage for the product's max size.
+          // That's simpler and matches the blend logic.
+          // We'll compute the oil percentage based on the product's max size.
         }
+
+        // Instead of complex logic, use the same sprayRules as in applyExactBlends.
+        // Determine the oil percentage for this product's size.
+        const sprayRules = {
+          '6': 45,
+          '15': 45,
+          '30': 45,
+          '50': 50,
+          '100': 55,
+        };
+        // Determine which rule applies based on the product's maximum size
+        // (since the blend is set per product, not per size, we use max size).
+        const maxSize = product.sizes.length > 0
+          ? Math.max(...product.sizes.map(s => s.sizeMl))
+          : sizeMl; // fallback to current size
+        let oilPct = 45; // default
+        for (const [max, pct] of Object.entries(sprayRules)) {
+          if (maxSize <= parseInt(max)) {
+            oilPct = pct;
+            break;
+          }
+        }
+        // But if product is special, we already have its blendComponents,
+        // but we can still use the rule because the special blend's oil total is the same as standard for that size.
+        // For SR_SP and LUXE1_SP, the oil total percentages are the same as standard sprays of that size.
+        // So the rule works.
+
+        const totalOilMl = (sizeMl * (oilPct / 100)) * qty;
+        usageMap[sku] = (usageMap[sku] || 0) + totalOilMl;
       }
     }
 
-    // 4. Add virtual entries for SR_SP and LUXE1
+    // 4. Add virtual entries with computed usage
     const virtualMaterials = [
       {
+        _id: 'SR_SP_VIRTUAL',
         name: 'SRK Spray',
         sku: 'SR_SP',
         type: 'oil',
@@ -73,9 +106,9 @@ exports.getMaterials = async (req, res) => {
         totalPurchaseCost: 0,
         usedOil: usageMap['SR_SP'] || 0,
         availableOil: 0,
-        _id: null, // mark as virtual
       },
       {
+        _id: 'LUXE1_VIRTUAL',
         name: 'Luxe Special',
         sku: 'LUXE1',
         type: 'oil',
@@ -84,8 +117,7 @@ exports.getMaterials = async (req, res) => {
         totalPurchaseCost: 0,
         usedOil: usageMap['LUXE1_SP'] || 0,
         availableOil: 0,
-        _id: null,
-      }
+      },
     ];
 
     // 5. Combine real + virtual
@@ -94,7 +126,7 @@ exports.getMaterials = async (req, res) => {
     res.json(allMaterials);
   } catch (error) {
     console.error('Error in getMaterials:', error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: error.message, stack: error.stack });
   }
 };
 
