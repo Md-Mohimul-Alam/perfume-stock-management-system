@@ -363,42 +363,42 @@ const Dashboard = () => {
           </div>
         ) : (
           <>
-            {/* ====== MAIN STATS CARDS (fixed alignment) ====== */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-3 sm:gap-4">
-              {mainCards.map((card, idx) => (
-                <div
-                  key={idx}
-                  className={`bg-white rounded-2xl border ${card.border} hover:shadow-xl transition-all duration-300 hover:-translate-y-1 p-3 sm:p-4 stat-card flex flex-col h-full`}
-                >
-                  {/* Icon + Value row – vertically centered */}
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className={`p-1.5 sm:p-2 rounded-xl ${card.bg} flex-shrink-0`}>
-                      <card.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${card.color}`} />
-                    </div>
-                    <span className="text-base sm:text-lg md:text-xl font-bold text-gray-800 stat-value">
-                      {card.value}
-                    </span>
-                  </div>
-
-                  {/* Title */}
-                  <p className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {card.title}
-                  </p>
-
-                  {/* Link – pushed to bottom with mt-auto */}
-                  <Link
-                    to={card.link}
-                    className="mt-auto pt-1.5 text-[10px] sm:text-xs text-indigo-600 hover:text-indigo-800 inline-flex items-center gap-1 group"
+            {/* ====== MAIN STATS CARDS (overflow fixed) ====== */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-3 sm:gap-4">
+                {mainCards.map((card, idx) => (
+                  <div
+                    key={idx}
+                    className={`bg-white rounded-2xl border ${card.border} hover:shadow-xl transition-all duration-300 hover:-translate-y-1 p-3 sm:p-4 stat-card flex flex-col h-full min-w-0`}
                   >
-                    {card.linkText}
-                    <ArrowUpRight
-                      size={12}
-                      className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"
-                    />
-                  </Link>
-                </div>
-              ))}
-            </div>
+                    {/* Icon + Value row – with truncation */}
+                    <div className="flex items-center justify-between gap-2 mb-1.5">
+                      <div className={`p-1.5 sm:p-2 rounded-xl ${card.bg} flex-shrink-0`}>
+                        <card.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${card.color}`} />
+                      </div>
+                      <span className="text-sm sm:text-base lg:text-lg xl:text-xl font-bold text-gray-800 stat-value truncate text-right min-w-0">
+                        {card.value}
+                      </span>
+                    </div>
+
+                    {/* Title */}
+                    <p className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider truncate">
+                      {card.title}
+                    </p>
+
+                    {/* Link – pushed to bottom */}
+                    <Link
+                      to={card.link}
+                      className="mt-auto pt-1.5 text-[10px] sm:text-xs text-indigo-600 hover:text-indigo-800 inline-flex items-center gap-1 group"
+                    >
+                      {card.linkText}
+                      <ArrowUpRight
+                        size={12}
+                        className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"
+                      />
+                    </Link>
+                  </div>
+                ))}
+              </div>
 
             {/* ====== OVERALL SUMMARY (unchanged) ====== */}
             <div>
