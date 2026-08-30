@@ -1,22 +1,32 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useNotifications } from '../context/NotificationContext';
 import {
   Package, FlaskRound, DollarSign, TrendingUp, ShoppingBag,
   Sparkles, Droplet, SprayCan, BarChart3, Wallet,
   Calendar, ArrowUpRight, Layers, ShoppingCart, Award,
   Clock, Trash2, RefreshCw, RotateCw, AlertCircle,
-  PlusCircle, List, FileText, Users,
+  PlusCircle, FileText, Users,
 } from 'lucide-react';
 import API from '../api/axios';
 import toast from 'react-hot-toast';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
-// ---------- NEW: Recharts for revenue chart ----------
+// ✅ FIX: Import Recharts components
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
 } from 'recharts';
 
-// ---------- Responsive styles (same as before) ----------
+// ---------- Responsive styles ----------
 const responsiveStyles = `
   @media (min-width: 1920px) {
     .dashboard-container { max-width: 1800px; padding: 2rem 2.5rem; }
@@ -32,13 +42,69 @@ const responsiveStyles = `
   @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 `;
 
+// ---------- Recent Activity Component ----------
+const RecentActivity = ({ activities }) => {
+  const getIcon = (type) => {
+    switch (type) {
+      case 'sale': return <ShoppingBag className="w-4 h-4 text-blue-500" />;
+      case 'purchase': return <ShoppingCart className="w-4 h-4 text-orange-500" />;
+      case 'expense': return <Wallet className="w-4 h-4 text-rose-500" />;
+      case 'wastage': return <Trash2 className="w-4 h-4 text-red-500" />;
+      default: return <TrendingUp className="w-4 h-4 text-gray-500" />;
+    }
+  };
+
+  const getLink = (activity) => {
+    switch (activity.type) {
+      case 'sale': return `/sales/${activity.id}`;
+      case 'purchase': return `/purchases/${activity.id}`;
+      case 'expense': return `/expenses`;
+      case 'wastage': return `/wastage`;
+      default: return '#';
+    }
+  };
+
+  if (!activities || activities.length === 0) {
+    return <p className="text-gray-400 text-sm text-center py-4">No recent activity</p>;
+  }
+
+  return (
+    <div className="space-y-2">
+      {activities.slice(0, 10).map((item, idx) => (
+        <Link
+          key={idx}
+          to={getLink(item)}
+          className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg transition"
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="p-1.5 rounded-full bg-gray-100 flex-shrink-0">
+              {getIcon(item.type)}
+            </div>
+            <div className="truncate">
+              <p className="text-sm font-medium text-gray-700 truncate">{item.title}</p>
+              <p className="text-xs text-gray-400 truncate">{item.time}</p>
+            </div>
+          </div>
+          {item.amount !== undefined && (
+            <span className="text-sm font-semibold whitespace-nowrap ml-2">
+              {item.amount > 0 ? '+' : ''}৳{item.amount.toFixed(2)}
+            </span>
+          )}
+        </Link>
+      ))}
+    </div>
+  );
+};
+
+// ---------- Main Dashboard Component ----------
 const Dashboard = () => {
   const { user } = useAuth();
+  const { setNotifications } = useNotifications();
   const navigate = useNavigate();
+  const dashboardRef = useRef(null);
+
   const [loading, setLoading] = useState(true);
   const [rebuilding, setRebuilding] = useState(false);
-
-  // ---------- Stats state ----------
   const [stats, setStats] = useState({
     materials: 0,
     bottles: 0,
@@ -62,12 +128,44 @@ const Dashboard = () => {
   const [recentPurchases, setRecentPurchases] = useState([]);
   const [settlementsTotal, setSettlementsTotal] = useState(0);
   const [lowStockItems, setLowStockItems] = useState({ materials: [], bottles: [] });
-
-  // ---------- NEW: chart data & due sales for notifications ----------
   const [chartData, setChartData] = useState([]);
   const [dueSales, setDueSales] = useState([]);
+  const [recentActivities, setRecentActivities] = useState([]);
 
-  // ---------- Fetch data (enhanced to compute chart & due) ----------
+  // ---------- Build notifications ----------
+  const buildNotifications = (lowMat, lowBot, dueSalesList) => {
+    const notifs = [];
+    lowMat.forEach(m => {
+      notifs.push({
+        type: 'warning',
+        message: `Material "${m.name}" low (${m.currentStockMl} ml)`,
+        link: '/inventory/materials',
+        time: 'Just now',
+        read: false,
+      });
+    });
+    lowBot.forEach(b => {
+      notifs.push({
+        type: 'warning',
+        message: `Bottle ${b.sizeMl}ml (${b.type}) low (${b.currentStock} pcs)`,
+        link: '/inventory/bottles',
+        time: 'Just now',
+        read: false,
+      });
+    });
+    dueSalesList.forEach(s => {
+      notifs.push({
+        type: 'due',
+        message: `Due payment ৳${s.totalAmount.toFixed(2)} - ${s.invoiceNo}`,
+        link: `/sales/${s._id}`,
+        time: 'Pending',
+        read: false,
+      });
+    });
+    return notifs;
+  };
+
+  // ---------- Fetch data ----------
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
@@ -102,16 +200,20 @@ const Dashboard = () => {
       setBottles(bottleData);
       setSettlementsTotal(settlementsRes.data?.total || 0);
 
-      // ---------- Low stock alerts ----------
+      // Low stock alerts
       const lowMat = materialsData.filter(m => (m.currentStockMl || 0) < 100);
       const lowBot = bottleData.filter(b => (b.currentStock || 0) < 10);
       setLowStockItems({ materials: lowMat, bottles: lowBot });
 
-      // ---------- Due sales ----------
+      // Due sales
       const dueSalesList = allSales.filter(s => s.paymentStatus === 'due');
       setDueSales(dueSalesList);
       const dueCount = dueSalesList.length;
       const dueAmount = dueSalesList.reduce((sum, s) => sum + (parseFloat(s.totalAmount) || 0), 0);
+
+      // Build notifications and update context
+      const notifs = buildNotifications(lowMat, lowBot, dueSalesList);
+      setNotifications(notifs);
 
       const totalRevenue = allSales.reduce((sum, s) => sum + (parseFloat(s.totalAmount) || 0), 0);
       const totalExpenses = allExpenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
@@ -134,7 +236,6 @@ const Dashboard = () => {
       const totalInventoryValue = rawMaterialStockValue + bottleStockValue;
       const availableCash = cashRes.data?.availableCash || 0;
 
-      // ---------- Sales by product type ----------
       let oilSold = 0;
       let perfumeSold = 0;
       const productSalesMap = {};
@@ -167,19 +268,50 @@ const Dashboard = () => {
         .slice(0, 5);
       setTopProducts(sortedProducts);
 
-      // ---------- Recent sales (5) ----------
+      // Recent 5 sales
       const recentSalesData = [...allSales]
         .sort((a, b) => new Date(b.saleDate) - new Date(a.saleDate))
         .slice(0, 5);
       setRecentSales(recentSalesData);
 
-      // ---------- Recent purchases (5) ----------
       const recentPur = [...allPurchases]
         .sort((a, b) => new Date(b.purchaseDate) - new Date(a.purchaseDate))
         .slice(0, 5);
       setRecentPurchases(recentPur);
 
-      // ---------- Stats ----------
+      // Build recent activities (combine sales, purchases, expenses, wastage)
+      const activities = [];
+      allSales.slice(0, 5).forEach(s => {
+        activities.push({
+          type: 'sale',
+          id: s._id,
+          title: `Sale ${s.invoiceNo} - ${s.channel}`,
+          time: new Date(s.saleDate).toLocaleDateString(),
+          amount: s.totalAmount,
+        });
+      });
+      allPurchases.slice(0, 5).forEach(p => {
+        activities.push({
+          type: 'purchase',
+          id: p._id,
+          title: `Purchase ${p.invoiceNo}${p.supplier ? ' - ' + p.supplier : ''}`,
+          time: new Date(p.purchaseDate).toLocaleDateString(),
+          amount: p.totalAmount,
+        });
+      });
+      allExpenses.slice(0, 5).forEach(e => {
+        activities.push({
+          type: 'expense',
+          id: e._id,
+          title: `Expense - ${e.category}${e.description ? ': ' + e.description : ''}`,
+          time: new Date(e.date).toLocaleDateString(),
+          amount: e.amount,
+        });
+      });
+      // Sort by time (most recent first)
+      activities.sort((a, b) => new Date(b.time) - new Date(a.time));
+      setRecentActivities(activities);
+
       setStats({
         materials: materialsData.length,
         bottles: bottleData.length,
@@ -197,7 +329,7 @@ const Dashboard = () => {
       });
       setSalesTypeCounts({ oil: oilSold, perfume: perfumeSold });
 
-      // ---------- Build chart data (last 30 days) ----------
+      // Chart data (last 30 days)
       const days = {};
       const now = new Date();
       for (let i = 29; i >= 0; i--) {
@@ -223,7 +355,7 @@ const Dashboard = () => {
     }
   };
 
-  // ---------- Rebuild stock (unchanged) ----------
+  // ---------- Rebuild stock ----------
   const handleRebuild = async () => {
     if (user?.role !== 'admin') {
       toast.error('Only admins can rebuild stock');
@@ -243,11 +375,36 @@ const Dashboard = () => {
     }
   };
 
+  // ---------- Export PDF ----------
+  const exportDashboardPDF = async () => {
+    const element = document.getElementById('dashboard-content');
+    if (!element) return;
+    toast.loading('Generating PDF...', { id: 'pdf-export' });
+    try {
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#f8fafc',
+        logging: false,
+      });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgWidth = 210;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      pdf.save('dashboard-report.pdf');
+      toast.success('PDF exported successfully!', { id: 'pdf-export' });
+    } catch (error) {
+      console.error('PDF export error:', error);
+      toast.error('Failed to generate PDF', { id: 'pdf-export' });
+    }
+  };
+
   useEffect(() => {
     fetchDashboardData();
   }, []);
 
-  // ---------- Memoized cards (unchanged) ----------
+  // ---------- Memoized cards ----------
   const mainCards = useMemo(() => [
     { title: 'Raw Materials', value: stats.materials, icon: Package, color: 'text-amber-600', bg: 'bg-amber-50/80', border: 'border-amber-200/50', link: '/inventory/materials', linkText: 'Manage →' },
     { title: 'Bottle Types', value: stats.bottles, icon: FlaskRound, color: 'text-indigo-600', bg: 'bg-indigo-50/80', border: 'border-indigo-200/50', link: '/inventory/bottles', linkText: 'View →' },
@@ -276,9 +433,9 @@ const Dashboard = () => {
   return (
     <>
       <style>{responsiveStyles}</style>
-      <div className="dashboard-container p-4 sm:p-6 space-y-6">
+      <div id="dashboard-content" className="dashboard-container p-4 sm:p-6 space-y-6">
 
-        {/* ====== HEADER (unchanged) ====== */}
+        {/* Header */}
         <div className="relative overflow-hidden rounded-2xl bg-white/70 backdrop-blur-sm border border-gray-200/60 shadow-lg p-4 sm:p-6 lg:p-8">
           <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 via-purple-500/5 to-amber-500/5" />
           <div className="relative flex flex-wrap items-center justify-between gap-4">
@@ -292,6 +449,12 @@ const Dashboard = () => {
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
+              <button
+                onClick={exportDashboardPDF}
+                className="inline-flex items-center gap-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-xl hover:bg-gray-200 transition text-sm font-medium"
+              >
+                <FileText size={18} /> Export PDF
+              </button>
               <button onClick={fetchDashboardData} className="inline-flex items-center gap-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-xl hover:bg-gray-200 transition text-sm font-medium">
                 <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
                 Refresh
@@ -305,7 +468,7 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Low Stock Alert (unchanged) */}
+          {/* Low Stock Alert */}
           {(lowStockItems.materials.length > 0 || lowStockItems.bottles.length > 0) && (
             <div className="relative mt-4 bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-3 text-sm">
               <AlertCircle size={20} className="text-amber-600 flex-shrink-0 mt-0.5" />
@@ -323,7 +486,7 @@ const Dashboard = () => {
           )}
         </div>
 
-        {/* ====== QUICK ACTIONS (unchanged) ====== */}
+        {/* Quick Actions */}
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
           <Link to="/sales/new" className="bg-indigo-50 hover:bg-indigo-100 rounded-xl p-3 text-center transition border border-indigo-200/50 group">
             <PlusCircle size={24} className="mx-auto text-indigo-600 group-hover:scale-110 transition-transform" />
@@ -352,7 +515,6 @@ const Dashboard = () => {
         </div>
 
         {loading ? (
-          // Skeleton loading (unchanged)
           <div className="space-y-6">
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-3 sm:gap-4">
               {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
@@ -363,44 +525,42 @@ const Dashboard = () => {
           </div>
         ) : (
           <>
-            {/* ====== MAIN STATS CARDS (overflow fixed) ====== */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-3 sm:gap-4">
-                {mainCards.map((card, idx) => (
-                  <div
-                    key={idx}
-                    className={`bg-white rounded-2xl border ${card.border} hover:shadow-xl transition-all duration-300 hover:-translate-y-1 p-3 sm:p-4 stat-card flex flex-col h-full min-w-0`}
-                  >
-                    {/* Icon + Value row – with truncation */}
-                    <div className="flex items-center justify-between gap-2 mb-1.5">
-                      <div className={`p-1.5 sm:p-2 rounded-xl ${card.bg} flex-shrink-0`}>
-                        <card.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${card.color}`} />
-                      </div>
-                      <span className="text-sm sm:text-base lg:text-lg xl:text-xl font-bold text-gray-800 stat-value truncate text-right min-w-0">
-                        {card.value}
-                      </span>
+            {/* Main Stats Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-3 sm:gap-4 lg:gap-5 xl:gap-6">
+              {mainCards.map((card, idx) => (
+                <div
+                  key={idx}
+                  className={`bg-white rounded-2xl border ${card.border} hover:shadow-xl transition-all duration-300 hover:-translate-y-1 p-3 sm:p-4 lg:p-5 xl:p-6 stat-card flex flex-col h-full min-w-0 min-h-[110px] sm:min-h-[120px]`}
+                >
+                  <div className="flex items-center justify-between gap-2 sm:gap-3 mb-1.5 sm:mb-2">
+                    <div className={`p-1.5 sm:p-2 lg:p-2.5 xl:p-3 rounded-xl ${card.bg} flex-shrink-0`}>
+                      <card.icon className={`w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 xl:w-7 xl:h-7 ${card.color}`} />
                     </div>
-
-                    {/* Title */}
-                    <p className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider truncate">
-                      {card.title}
-                    </p>
-
-                    {/* Link – pushed to bottom */}
-                    <Link
-                      to={card.link}
-                      className="mt-auto pt-1.5 text-[10px] sm:text-xs text-indigo-600 hover:text-indigo-800 inline-flex items-center gap-1 group"
+                    <span
+                      className="text-sm sm:text-lg lg:text-xl xl:text-2xl 2xl:text-3xl font-bold text-gray-800 stat-value truncate text-right min-w-0 max-w-full overflow-hidden text-ellipsis"
+                      title={typeof card.value === 'string' ? card.value : card.value?.toString() || ''}
                     >
-                      {card.linkText}
-                      <ArrowUpRight
-                        size={12}
-                        className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"
-                      />
-                    </Link>
+                      {card.value}
+                    </span>
                   </div>
-                ))}
-              </div>
+                  <p className="text-[10px] sm:text-xs lg:text-sm font-medium text-gray-500 uppercase tracking-wider truncate">
+                    {card.title}
+                  </p>
+                  <Link
+                    to={card.link}
+                    className="mt-auto pt-1.5 sm:pt-2 text-[10px] sm:text-xs lg:text-sm text-indigo-600 hover:text-indigo-800 inline-flex items-center gap-1 group font-medium min-h-[28px]"
+                  >
+                    {card.linkText}
+                    <ArrowUpRight
+                      size={12}
+                      className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"
+                    />
+                  </Link>
+                </div>
+              ))}
+            </div>
 
-            {/* ====== OVERALL SUMMARY (unchanged) ====== */}
+            {/* Overall Summary */}
             <div>
               <h2 className="text-base sm:text-lg lg:text-xl font-semibold text-gray-700 mb-3 flex items-center gap-2">
                 <BarChart3 size={20} className="text-indigo-500" />
@@ -432,9 +592,40 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* ====== NEW: CHART + NOTIFICATIONS ====== */}
+            {/* Performance Metrics */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="bg-white rounded-2xl border border-gray-200 p-4">
+                <p className="text-xs text-gray-500 uppercase tracking-wider">Profit Margin</p>
+                <p className="text-2xl font-bold text-emerald-600">
+                  {stats.totalRevenue > 0 ? ((stats.totalRevenue - stats.totalExpenses - stats.totalPurchases) / stats.totalRevenue * 100).toFixed(1) : 0}%
+                </p>
+                <p className="text-xs text-gray-400">of revenue</p>
+              </div>
+              <div className="bg-white rounded-2xl border border-gray-200 p-4">
+                <p className="text-xs text-gray-500 uppercase tracking-wider">Inventory Turnover</p>
+                <p className="text-2xl font-bold text-blue-600">
+                  {stats.totalInventoryValue > 0 ? (stats.totalPurchases / stats.totalInventoryValue).toFixed(1) : 0}x
+                </p>
+                <p className="text-xs text-gray-400">purchases ÷ inventory</p>
+              </div>
+              <div className="bg-white rounded-2xl border border-gray-200 p-4">
+                <p className="text-xs text-gray-500 uppercase tracking-wider">Cash Conversion</p>
+                <p className="text-2xl font-bold text-purple-600">
+                  {stats.totalRevenue > 0 ? (stats.dueAmount / stats.totalRevenue * 100).toFixed(1) : 0}%
+                </p>
+                <p className="text-xs text-gray-400">due payments</p>
+              </div>
+              <div className="bg-white rounded-2xl border border-gray-200 p-4">
+                <p className="text-xs text-gray-500 uppercase tracking-wider">Avg. Sale Value</p>
+                <p className="text-2xl font-bold text-amber-600">
+                  {stats.salesCount > 0 ? (stats.totalRevenue / stats.salesCount).toFixed(2) : 0}
+                </p>
+                <p className="text-xs text-gray-400">per transaction</p>
+              </div>
+            </div>
+
+            {/* Chart & Recent Activity */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Revenue Chart */}
               <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-200/60 shadow-sm p-4 sm:p-5">
                 <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                   <TrendingUp size={16} className="text-amber-500" />
@@ -463,61 +654,21 @@ const Dashboard = () => {
                 )}
               </div>
 
-              {/* Notifications Panel */}
               <div className="lg:col-span-1">
                 <div className="bg-white rounded-2xl border border-gray-200/60 shadow-sm overflow-hidden">
                   <div className="p-4 border-b border-gray-200 font-semibold flex items-center gap-2">
-                    <AlertCircle size={18} className="text-amber-500" />
-                    Notifications
-                    <span className="ml-auto text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">
-                      {lowStockItems.materials.length + lowStockItems.bottles.length + dueSales.length}
-                    </span>
+                    <Clock size={18} className="text-gray-500" />
+                    Recent Activity
                   </div>
-                  <div className="divide-y divide-gray-100 max-h-64 overflow-y-auto">
-                    {/* Low stock materials */}
-                    {lowStockItems.materials.map((m) => (
-                      <Link key={`mat-${m._id}`} to="/inventory/materials" className="block p-3 hover:bg-gray-50 transition flex items-start gap-3">
-                        <div className="p-1.5 rounded-full bg-amber-100 text-amber-600">
-                          <Package size={16} />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm text-gray-700">Material "{m.name}" low ({m.currentStockMl} ml)</p>
-                        </div>
-                      </Link>
-                    ))}
-                    {/* Low stock bottles */}
-                    {lowStockItems.bottles.map((b) => (
-                      <Link key={`bottle-${b._id}`} to="/inventory/bottles" className="block p-3 hover:bg-gray-50 transition flex items-start gap-3">
-                        <div className="p-1.5 rounded-full bg-amber-100 text-amber-600">
-                          <FlaskRound size={16} />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm text-gray-700">Bottle {b.sizeMl}ml ({b.type}) low ({b.currentStock} pcs)</p>
-                        </div>
-                      </Link>
-                    ))}
-                    {/* Due sales */}
-                    {dueSales.map((sale) => (
-                      <Link key={`sale-${sale._id}`} to="/sales?paymentStatus=due" className="block p-3 hover:bg-gray-50 transition flex items-start gap-3">
-                        <div className="p-1.5 rounded-full bg-red-100 text-red-600">
-                          <DollarSign size={16} />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm text-gray-700">Due payment of ৳{sale.totalAmount.toFixed(2)} for {sale.invoiceNo}</p>
-                        </div>
-                      </Link>
-                    ))}
-                    {lowStockItems.materials.length === 0 && lowStockItems.bottles.length === 0 && dueSales.length === 0 && (
-                      <div className="p-4 text-center text-gray-400 text-sm">✅ All clear – no alerts</div>
-                    )}
+                  <div className="p-2">
+                    <RecentActivity activities={recentActivities} />
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* ====== TWO-COLUMN: Recent Sales & Purchases (unchanged) ====== */}
+            {/* Two-Column: Recent Sales & Recent Purchases */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Recent Sales */}
               <div className="bg-white rounded-2xl border border-gray-200/60 shadow-sm p-4 sm:p-5">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
@@ -551,7 +702,6 @@ const Dashboard = () => {
                 )}
               </div>
 
-              {/* Recent Purchases */}
               <div className="bg-white rounded-2xl border border-gray-200/60 shadow-sm p-4 sm:p-5">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
@@ -586,7 +736,7 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* ====== SALES BY TYPE & TOP PRODUCTS (unchanged) ====== */}
+            {/* Sales by Type & Top Products */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="bg-white rounded-2xl border border-gray-200/60 shadow-sm p-4 sm:p-5">
                 <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
@@ -638,7 +788,7 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* ====== BOTTLE INVENTORY TABLE (unchanged, uncommented) ====== */}
+            {/* Bottles Inventory Table */}
             <div>
               <h2 className="text-base sm:text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
                 <FlaskRound size={18} className="text-cyan-500" />

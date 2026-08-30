@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
+import { NotificationProvider } from './context/NotificationContext';
 import PrivateRoute from './components/PrivateRoute';
 import AdminRoute from './components/AdminRoute';
 import Layout from './components/Layout';
@@ -26,34 +27,36 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Toaster position="top-right" />
-        <Routes>
-          {/* Public routes */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+        <NotificationProvider>
+          <Toaster position="top-right" />
+          <Routes>
+            {/* Public routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
 
-          {/* Admin-only routes */}
-          <Route path="/admin/*" element={<AdminRoute><div>Admin area</div></AdminRoute>} />
+            {/* Admin-only routes */}
+            <Route path="/admin/*" element={<AdminRoute><div>Admin area</div></AdminRoute>} />
 
-          {/* Protected routes */}
-          <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
-            <Route index element={<Dashboard />} />
-            <Route path="inventory/materials" element={<Materials />} />
-            <Route path="inventory/bottles" element={<Bottles />} />
-            <Route path="production/batches" element={<Batches />} />
-            <Route path="products" element={<ProductList />} />
-            <Route path="products/new" element={<NewProduct />} />
-            <Route path="sales" element={<SaleList />} />
-            <Route path="sales/new" element={<NewSale />} />
-            <Route path="purchases" element={<PurchaseList />} />
-            <Route path="purchases/new" element={<NewPurchase />} />
-            <Route path="expenses" element={<ExpensePage />} />
-            <Route path="investors" element={<Investors />} /> 
-            <Route path="reports" element={<Reports />} />
-            <Route path="wastage" element={<WastageList />} />
-            <Route path="wastage/new" element={<WastageForm />} />
-          </Route>
-        </Routes>
+            {/* Protected routes */}
+            <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
+              <Route index element={<Dashboard />} />
+              <Route path="inventory/materials" element={<Materials />} />
+              <Route path="inventory/bottles" element={<Bottles />} />
+              <Route path="production/batches" element={<Batches />} />
+              <Route path="products" element={<ProductList />} />
+              <Route path="products/new" element={<NewProduct />} />
+              <Route path="sales" element={<SaleList />} />
+              <Route path="sales/new" element={<NewSale />} />
+              <Route path="purchases" element={<PurchaseList />} />
+              <Route path="purchases/new" element={<NewPurchase />} />
+              <Route path="expenses" element={<ExpensePage />} />
+              <Route path="investors" element={<Investors />} />
+              <Route path="reports" element={<Reports />} />
+              <Route path="wastage" element={<WastageList />} />
+              <Route path="wastage/new" element={<WastageForm />} />
+            </Route>
+          </Routes>
+        </NotificationProvider>
       </AuthProvider>
     </BrowserRouter>
   );

@@ -14,7 +14,7 @@ const Investors = () => {
   const [investors, setInvestors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [availableCash, setAvailableCash] = useState(0);
-  const [settlementsTotal, setSettlementsTotal] = useState(0); // 👈 NEW
+  const [settlementsTotal, setSettlementsTotal] = useState(0);
 
   // Add investor form
   const [showAddModal, setShowAddModal] = useState(false);
@@ -52,7 +52,7 @@ const Investors = () => {
       const [investorsRes, cashRes, settlementsRes] = await Promise.all([
         API.get('/investors'),
         API.get('/reports/available-cash'),
-        API.get('/investors/settlements'), // 👈 NEW
+        API.get('/investors/settlements'),
       ]);
 
       const data = investorsRes.data;
@@ -60,7 +60,6 @@ const Investors = () => {
       setAvailableCash(cashRes.data?.availableCash || 0);
       setSettlementsTotal(settlementsRes.data?.total || 0);
 
-      // Calculate summary
       let totalInvested = 0;
       let totalWithdrawn = 0;
       let totalNet = 0;
@@ -127,7 +126,7 @@ const Investors = () => {
       setShowContributionModal(false);
       setContribution({ amount: '', type: 'investment', date: new Date().toISOString().split('T')[0], notes: '' });
       setSelectedInvestor(null);
-      fetchInvestors(); // refresh all data (cash will update from backend)
+      fetchInvestors();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to add contribution');
     }
@@ -185,43 +184,42 @@ const Investors = () => {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">Investors</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Investors</h1>
           <p className="text-gray-500 text-sm">Manage partners and track contributions</p>
         </div>
         <button
           onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 bg-amber-600 text-white px-4 py-2.5 rounded-lg hover:bg-amber-700 transition shadow-md shadow-amber-500/30"
+          className="flex items-center gap-2 bg-amber-600 text-white px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg hover:bg-amber-700 transition shadow-md shadow-amber-500/30 text-sm"
         >
           <UserPlus size={18} /> Add Investor
         </button>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6"> {/* 👈 increased to 5 columns */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4">
-          <p className="text-xs text-gray-500 uppercase tracking-wider">Total Investors</p>
-          <p className="text-2xl font-bold text-amber-600">{summary.totalInvestors}</p>
+      {/* Summary Cards – responsive grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mb-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-3 sm:p-4">
+          <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider">Total Investors</p>
+          <p className="text-xl sm:text-2xl font-bold text-amber-600">{summary.totalInvestors}</p>
         </div>
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4">
-          <p className="text-xs text-gray-500 uppercase tracking-wider">Total Invested</p>
-          <p className="text-2xl font-bold text-emerald-600">{formatCurrency(summary.totalInvested)}</p>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-3 sm:p-4">
+          <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider">Total Invested</p>
+          <p className="text-xl sm:text-2xl font-bold text-emerald-600">{formatCurrency(summary.totalInvested)}</p>
         </div>
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4">
-          <p className="text-xs text-gray-500 uppercase tracking-wider">Total Withdrawn</p>
-          <p className="text-2xl font-bold text-rose-600">{formatCurrency(summary.totalWithdrawn)}</p>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-3 sm:p-4">
+          <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider">Total Withdrawn</p>
+          <p className="text-xl sm:text-2xl font-bold text-rose-600">{formatCurrency(summary.totalWithdrawn)}</p>
         </div>
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4">
-          <p className="text-xs text-gray-500 uppercase tracking-wider">Available Cash</p>
-          <p className="text-2xl font-bold text-indigo-600">{formatCurrency(availableCash)}</p>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-3 sm:p-4">
+          <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider">Available Cash</p>
+          <p className="text-xl sm:text-2xl font-bold text-indigo-600">{formatCurrency(availableCash)}</p>
         </div>
-        {/* 👇 NEW SETTLEMENTS CARD */}
-        <div className="bg-white rounded-2xl shadow-sm border border-rose-200 p-4">
-          <p className="text-xs text-gray-500 uppercase tracking-wider">Total Settlements</p>
-          <p className="text-2xl font-bold text-rose-600">{formatCurrency(settlementsTotal)}</p>
+        <div className="bg-white rounded-2xl shadow-sm border border-rose-200 p-3 sm:p-4">
+          <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider">Total Settlements</p>
+          <p className="text-xl sm:text-2xl font-bold text-rose-600">{formatCurrency(settlementsTotal)}</p>
         </div>
       </div>
 
@@ -238,14 +236,14 @@ const Investors = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Invested</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Withdrawn</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Share %</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Profit Share</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total Amount</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contributions</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                <th className="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Invested</th>
+                <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Withdrawn</th>
+                <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Share %</th>
+                <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Profit Share</th>
+                <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total Amount</th>
+                <th className="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contributions</th>
+                <th className="px-3 sm:px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -267,56 +265,56 @@ const Investors = () => {
 
                   return (
                     <tr key={investor._id} className="hover:bg-gray-50 transition">
-                      <td className="px-4 py-3 font-medium text-gray-800">{investor.name}</td>
-                      <td className="px-4 py-3 text-right text-emerald-600 font-semibold">
+                      <td className="px-3 sm:px-4 py-3 font-medium text-gray-800 text-sm">{investor.name}</td>
+                      <td className="px-3 sm:px-4 py-3 text-right text-emerald-600 font-semibold text-sm">
                         {formatCurrency(totalInvested)}
                       </td>
-                      <td className="px-4 py-3 text-right text-rose-600 font-semibold">
+                      <td className="px-3 sm:px-4 py-3 text-right text-rose-600 font-semibold text-sm">
                         {formatCurrency(totalWithdrawn)}
                       </td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-3 sm:px-4 py-3 text-right">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                           share > 0 ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'
                         }`}>
                           {share.toFixed(2)}%
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-right text-purple-600 font-semibold">
+                      <td className="px-3 sm:px-4 py-3 text-right text-purple-600 font-semibold text-sm">
                         {formatCurrency(profitShare)}
                       </td>
-                      <td className="px-4 py-3 text-right font-bold text-amber-600">
+                      <td className="px-3 sm:px-4 py-3 text-right font-bold text-amber-600 text-sm">
                         {formatCurrency(totalAmount)}
                       </td>
-                      <td className="px-4 py-3 text-left">
+                      <td className="px-3 sm:px-4 py-3 text-left">
                         {investor.contributions.length === 0 ? (
                           <span className="text-gray-400 text-xs">No contributions</span>
                         ) : (
                           <div className="space-y-1 max-h-32 overflow-y-auto">
                             {investor.contributions.map((c, idx) => (
-                              <div key={idx} className="text-xs flex items-center gap-2 border-b border-gray-100 pb-1 last:border-0">
+                              <div key={idx} className="text-xs flex flex-wrap items-center gap-1 sm:gap-2 border-b border-gray-100 pb-1 last:border-0">
                                 <span className="text-gray-500 whitespace-nowrap">{formatDate(c.date)}</span>
                                 <span className={`font-medium ${c.type === 'investment' ? 'text-emerald-600' : 'text-rose-600'}`}>
                                   {c.type === 'investment' ? '＋' : '－'}
                                 </span>
                                 <span className="font-mono font-medium">{formatCurrency(c.amount)}</span>
-                                {c.notes && <span className="text-gray-400 truncate max-w-[100px]">({c.notes})</span>}
+                                {c.notes && <span className="text-gray-400 truncate max-w-[80px] sm:max-w-[100px]">({c.notes})</span>}
                               </div>
                             ))}
                           </div>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-center">
-                        <div className="flex justify-center gap-2">
+                      <td className="px-3 sm:px-4 py-3 text-center">
+                        <div className="flex justify-center items-center gap-1 sm:gap-2">
                           <button
                             onClick={() => openContributionModal(investor)}
-                            className="text-blue-600 hover:text-blue-800 transition"
+                            className="text-blue-600 hover:text-blue-800 transition p-1"
                             title="Add Contribution"
                           >
                             <Wallet size={18} />
                           </button>
                           <button
                             onClick={() => openDeleteModal(investor)}
-                            className="text-rose-600 hover:text-rose-800 transition"
+                            className="text-rose-600 hover:text-rose-800 transition p-1"
                             title="Close Investor"
                           >
                             <Trash2 size={18} />
@@ -332,18 +330,17 @@ const Investors = () => {
         </div>
       )}
 
-      {/* ---------- Modals (unchanged) ---------- */}
-      {/* Add Investor Modal */}
+      {/* ---------- Add Investor Modal – responsive ---------- */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-4 sm:p-6 relative">
             <button
               onClick={() => setShowAddModal(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+              className="absolute top-3 right-3 sm:top-4 sm:right-4 text-gray-400 hover:text-gray-600"
             >
               <X size={24} />
             </button>
-            <h2 className="text-2xl font-bold mb-4">Add New Investor</h2>
+            <h2 className="text-xl sm:text-2xl font-bold mb-4">Add New Investor</h2>
             <form onSubmit={handleAddInvestor} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
@@ -351,7 +348,7 @@ const Investors = () => {
                   type="text"
                   value={newInvestor.name}
                   onChange={(e) => setNewInvestor({ ...newInvestor, name: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-sm"
                   placeholder="e.g., John Doe"
                   required
                 />
@@ -364,21 +361,21 @@ const Investors = () => {
                   min="0"
                   value={newInvestor.initialInvestment}
                   onChange={(e) => setNewInvestor({ ...newInvestor, initialInvestment: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-sm"
                   placeholder="0.00"
                 />
               </div>
-              <div className="flex gap-3 pt-4">
+              <div className="flex flex-col sm:flex-row gap-3 pt-4">
                 <button
                   type="submit"
-                  className="flex-1 bg-amber-600 text-white py-2 rounded-lg hover:bg-amber-700 transition"
+                  className="w-full sm:flex-1 bg-amber-600 text-white py-2 rounded-lg hover:bg-amber-700 transition text-sm"
                 >
                   Add Investor
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  className="w-full sm:flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
                 >
                   Cancel
                 </button>
@@ -388,21 +385,21 @@ const Investors = () => {
         </div>
       )}
 
-      {/* Contribution Modal */}
+      {/* ---------- Contribution Modal – responsive ---------- */}
       {showContributionModal && selectedInvestor && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-4 sm:p-6 relative">
             <button
               onClick={() => {
                 setShowContributionModal(false);
                 setSelectedInvestor(null);
                 setContribution({ amount: '', type: 'investment', date: new Date().toISOString().split('T')[0], notes: '' });
               }}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+              className="absolute top-3 right-3 sm:top-4 sm:right-4 text-gray-400 hover:text-gray-600"
             >
               <X size={24} />
             </button>
-            <h2 className="text-2xl font-bold mb-2">Add Contribution</h2>
+            <h2 className="text-xl sm:text-2xl font-bold mb-2">Add Contribution</h2>
             <p className="text-sm text-gray-500 mb-4">For: <span className="font-semibold text-gray-700">{selectedInvestor.name}</span></p>
             <form onSubmit={handleAddContribution} className="space-y-4">
               <div>
@@ -410,7 +407,7 @@ const Investors = () => {
                 <select
                   value={contribution.type}
                   onChange={(e) => setContribution({ ...contribution, type: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none bg-white"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none bg-white text-sm"
                 >
                   <option value="investment">Investment</option>
                   <option value="withdrawal">Withdrawal</option>
@@ -424,7 +421,7 @@ const Investors = () => {
                   min="0.01"
                   value={contribution.amount}
                   onChange={(e) => setContribution({ ...contribution, amount: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-sm"
                   placeholder="0.00"
                   required
                 />
@@ -435,7 +432,7 @@ const Investors = () => {
                   type="date"
                   value={contribution.date}
                   onChange={(e) => setContribution({ ...contribution, date: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-sm"
                 />
               </div>
               <div>
@@ -444,14 +441,14 @@ const Investors = () => {
                   type="text"
                   value={contribution.notes}
                   onChange={(e) => setContribution({ ...contribution, notes: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-sm"
                   placeholder="e.g., Monthly investment"
                 />
               </div>
-              <div className="flex gap-3 pt-4">
+              <div className="flex flex-col sm:flex-row gap-3 pt-4">
                 <button
                   type="submit"
-                  className="flex-1 bg-amber-600 text-white py-2 rounded-lg hover:bg-amber-700 transition"
+                  className="w-full sm:flex-1 bg-amber-600 text-white py-2 rounded-lg hover:bg-amber-700 transition text-sm"
                 >
                   Add Contribution
                 </button>
@@ -462,7 +459,7 @@ const Investors = () => {
                     setSelectedInvestor(null);
                     setContribution({ amount: '', type: 'investment', date: new Date().toISOString().split('T')[0], notes: '' });
                   }}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  className="w-full sm:flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
                 >
                   Cancel
                 </button>
@@ -472,7 +469,7 @@ const Investors = () => {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
+      {/* ---------- Delete Confirmation Modal – responsive ---------- */}
       {showDeleteModal && investorToDelete && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
@@ -482,10 +479,10 @@ const Investors = () => {
               <br />
               This action cannot be undone.
             </p>
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <button
                 onClick={handleDeleteInvestor}
-                className="flex-1 bg-rose-600 text-white py-2 rounded-lg hover:bg-rose-700 transition"
+                className="w-full sm:flex-1 bg-rose-600 text-white py-2 rounded-lg hover:bg-rose-700 transition text-sm"
               >
                 Yes, Close
               </button>
@@ -494,10 +491,10 @@ const Investors = () => {
                   setShowDeleteModal(false);
                   setInvestorToDelete(null);
                 }}
-                className="flex-1 border border-gray-300 py-2 rounded-lg hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
+                className="w-full sm:flex-1 border border-gray-300 py-2 rounded-lg hover:bg-gray-50 text-sm"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>

@@ -42,7 +42,7 @@ const ProductList = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
 
-  // ---------- Edit Modal State ----------
+  // Edit Modal State
   const [showEditModal, setShowEditModal] = useState(false);
   const [productToEdit, setProductToEdit] = useState(null);
   const [editForm, setEditForm] = useState({
@@ -53,14 +53,14 @@ const ProductList = () => {
     bestFor: '',
     notes: '',
     isBestseller: false,
-    sizes: [], // { _id, sizeMl, sellingPrice, image, bottleId }
+    sizes: [],
     baseOil: '',
     blendComponents: [],
   });
   const [editLoading, setEditLoading] = useState(false);
   const [fetchingProduct, setFetchingProduct] = useState(false);
 
-  // ---------- Bulk Upload State ----------
+  // Bulk Upload State
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploadFile, setUploadFile] = useState(null);
   const [uploading, setUploading] = useState(false);
@@ -238,7 +238,6 @@ const ProductList = () => {
           bottle: s.bottleId,
           sellingPrice: s.sellingPrice,
           image: s.image || '',
-          // These will be recalculated by the pre-save hook
           oilMlUsed: 0,
           ethanolMlUsed: 0,
           fixativeMlUsed: 0,
@@ -260,7 +259,7 @@ const ProductList = () => {
     }
   };
 
-  // ---------- Bulk Upload Handlers (unchanged) ----------
+  // ---------- Bulk Upload Handlers ----------
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -427,27 +426,27 @@ const ProductList = () => {
 
   // ---------- Render ----------
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">Products</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Products</h1>
           <p className="text-gray-500 text-sm">Manage your product catalog</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <button
             onClick={() => {
               setShowUploadModal(true);
               setUploadResult(null);
               setUploadFile(null);
             }}
-            className="flex items-center gap-2 bg-green-600 text-white px-4 py-2.5 rounded-lg hover:bg-green-700 transition shadow-md shadow-green-500/30"
+            className="flex items-center gap-2 bg-green-600 text-white px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg hover:bg-green-700 transition shadow-md shadow-green-500/30 text-sm"
           >
             <Upload size={18} /> Bulk Upload
           </button>
           <Link
             to="/products/new"
-            className="flex items-center gap-2 bg-amber-600 text-white px-4 py-2.5 rounded-lg hover:bg-amber-700 transition shadow-md shadow-amber-500/30"
+            className="flex items-center gap-2 bg-amber-600 text-white px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg hover:bg-amber-700 transition shadow-md shadow-amber-500/30 text-sm"
           >
             <Plus size={18} /> Add Product
           </Link>
@@ -455,8 +454,8 @@ const ProductList = () => {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 mb-6 flex flex-wrap items-end gap-4">
-        <div className="flex-1 min-w-[200px]">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-3 sm:p-4 mb-6 flex flex-wrap items-end gap-3 sm:gap-4">
+        <div className="flex-1 min-w-[180px] sm:min-w-[200px]">
           <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
@@ -465,17 +464,17 @@ const ProductList = () => {
               placeholder="Name or SKU"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-sm"
             />
           </div>
         </div>
 
-        <div className="min-w-[150px]">
+        <div className="min-w-[140px] sm:min-w-[150px]">
           <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none bg-white"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none bg-white text-sm"
           >
             <option value="all">All Types</option>
             <option value="spray">Spray</option>
@@ -483,12 +482,12 @@ const ProductList = () => {
           </select>
         </div>
 
-        <div className="min-w-[150px]">
+        <div className="min-w-[140px] sm:min-w-[150px]">
           <label className="block text-sm font-medium text-gray-700 mb-1">Intensity</label>
           <select
             value={filterIntensity}
             onChange={(e) => setFilterIntensity(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none bg-white"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none bg-white text-sm"
           >
             <option value="all">All</option>
             <option value="light">Light</option>
@@ -499,7 +498,7 @@ const ProductList = () => {
 
         <button
           onClick={() => { setSearch(''); setFilterType('all'); setFilterIntensity('all'); }}
-          className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+          className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm whitespace-nowrap"
         >
           Clear
         </button>
@@ -518,15 +517,15 @@ const ProductList = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Intensity</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Best For</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Bestseller</th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
+                <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Intensity</th>
+                <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Best For</th>
+                <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
+                <th className="px-4 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Bestseller</th>
+                <th className="px-4 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -537,25 +536,25 @@ const ProductList = () => {
               ) : (
                 filteredProducts.map((p) => (
                   <tr key={p._id} className="hover:bg-gray-50 transition">
-                    <td className="px-6 py-4 font-medium text-gray-800">{p.name}</td>
-                    <td className="px-6 py-4 text-gray-600">{p.sku}</td>
-                    <td className="px-6 py-4 capitalize">{p.type || '-'}</td>
-                    <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">{p.description || '-'}</td>
-                    <td className="px-6 py-4 capitalize">{p.intensity || 'medium'}</td>
-                    <td className="px-6 py-4 text-sm">{p.bestFor?.join(', ') || 'all'}</td>
-                    <td className="px-6 py-4 text-sm">{p.notes?.join(', ') || '-'}</td>
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-4 sm:px-6 py-3 sm:py-4 font-medium text-gray-800 text-sm">{p.name}</td>
+                    <td className="px-4 sm:px-6 py-3 sm:py-4 text-gray-600 text-sm">{p.sku}</td>
+                    <td className="px-4 sm:px-6 py-3 sm:py-4 capitalize text-sm">{p.type || '-'}</td>
+                    <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-gray-500 max-w-xs truncate">{p.description || '-'}</td>
+                    <td className="px-4 sm:px-6 py-3 sm:py-4 capitalize text-sm">{p.intensity || 'medium'}</td>
+                    <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm">{p.bestFor?.join(', ') || 'all'}</td>
+                    <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm">{p.notes?.join(', ') || '-'}</td>
+                    <td className="px-4 sm:px-6 py-3 sm:py-4 text-center">
                       {p.isBestseller ? (
                         <span className="px-2 py-1 bg-amber-100 text-amber-800 text-xs font-semibold rounded-full">★</span>
                       ) : (
                         <span className="text-gray-400">-</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-center">
-                      <div className="flex justify-center gap-2">
+                    <td className="px-4 sm:px-6 py-3 sm:py-4 text-center">
+                      <div className="flex justify-center items-center gap-1 sm:gap-2">
                         <button
                           onClick={() => openEditModal(p)}
-                          className="text-blue-600 hover:text-blue-800"
+                          className="text-blue-600 hover:text-blue-800 p-1"
                           title="Edit"
                         >
                           <Edit size={18} />
@@ -565,7 +564,7 @@ const ProductList = () => {
                             setProductToDelete(p);
                             setShowDeleteModal(true);
                           }}
-                          className="text-red-600 hover:text-red-800"
+                          className="text-red-600 hover:text-red-800 p-1"
                           title="Deactivate"
                         >
                           <Trash2 size={18} />
@@ -580,7 +579,7 @@ const ProductList = () => {
         </div>
       )}
 
-      {/* ---------- DELETE CONFIRMATION MODAL ---------- */}
+      {/* ---------- DELETE CONFIRMATION MODAL – responsive ---------- */}
       {showDeleteModal && productToDelete && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
@@ -590,16 +589,16 @@ const ProductList = () => {
               <br />
               <span className="text-sm text-gray-500">This will hide it from the storefront.</span>
             </p>
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <button
                 onClick={handleDelete}
-                className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700"
+                className="w-full sm:flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 text-sm"
               >
                 Deactivate
               </button>
               <button
                 onClick={() => { setShowDeleteModal(false); setProductToDelete(null); }}
-                className="flex-1 border border-gray-300 py-2 rounded-lg hover:bg-gray-50"
+                className="w-full sm:flex-1 border border-gray-300 py-2 rounded-lg hover:bg-gray-50 text-sm"
               >
                 Cancel
               </button>
@@ -608,21 +607,21 @@ const ProductList = () => {
         </div>
       )}
 
-      {/* ---------- EDIT MODAL (WITH RAW MATERIALS) ---------- */}
+      {/* ---------- EDIT MODAL – responsive ---------- */}
       {showEditModal && productToEdit && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 relative">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-4 sm:p-6 relative">
             <button
               onClick={() => {
                 setShowEditModal(false);
                 setProductToEdit(null);
               }}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+              className="absolute top-3 right-3 sm:top-4 sm:right-4 text-gray-400 hover:text-gray-600"
             >
               <X size={24} />
             </button>
 
-            <h2 className="text-2xl font-bold mb-1">Edit Product</h2>
+            <h2 className="text-xl sm:text-2xl font-bold mb-1">Edit Product</h2>
             <p className="text-gray-500 text-sm mb-4">
               Update details and size images for <span className="font-medium">{productToEdit.name}</span>
             </p>
@@ -634,7 +633,7 @@ const ProductList = () => {
             ) : (
               <form onSubmit={handleEditSubmit} className="space-y-4">
                 {/* Product Details */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Product Name *</label>
                     <input
@@ -642,7 +641,7 @@ const ProductList = () => {
                       name="name"
                       value={editForm.name}
                       onChange={handleEditChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-sm"
                       required
                     />
                   </div>
@@ -654,7 +653,7 @@ const ProductList = () => {
                       name="sku"
                       value={editForm.sku}
                       onChange={handleEditChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-sm"
                       required
                     />
                   </div>
@@ -665,7 +664,7 @@ const ProductList = () => {
                       name="intensity"
                       value={editForm.intensity}
                       onChange={handleEditChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none bg-white"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none bg-white text-sm"
                     >
                       <option value="light">Light</option>
                       <option value="medium">Medium</option>
@@ -687,14 +686,14 @@ const ProductList = () => {
                     </label>
                   </div>
 
-                  <div className="md:col-span-2">
+                  <div className="sm:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                     <textarea
                       name="description"
                       value={editForm.description}
                       onChange={handleEditChange}
                       rows="2"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-sm"
                     />
                   </div>
 
@@ -706,7 +705,7 @@ const ProductList = () => {
                       value={editForm.bestFor}
                       onChange={handleEditChange}
                       placeholder="e.g. Women, Men, Unisex"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-sm"
                     />
                     <p className="text-xs text-gray-400 mt-1">Comma-separated values</p>
                   </div>
@@ -719,13 +718,13 @@ const ProductList = () => {
                       value={editForm.notes}
                       onChange={handleEditChange}
                       placeholder="e.g. Floral, Woody, Fresh"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-sm"
                     />
                     <p className="text-xs text-gray-400 mt-1">Comma-separated values</p>
                   </div>
                 </div>
 
-                {/* ===== RAW MATERIALS (EDIT) ===== */}
+                {/* Raw Material Assignment */}
                 <div className="border-t border-gray-200 pt-4">
                   <h3 className="text-lg font-semibold text-gray-700 mb-3">Raw Material Assignment</h3>
                   {productToEdit.type === 'roll-on' ? (
@@ -735,7 +734,7 @@ const ProductList = () => {
                         name="baseOil"
                         value={editForm.baseOil}
                         onChange={handleEditChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none bg-white"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none bg-white text-sm"
                       >
                         <option value="">Select base oil</option>
                         {materials
@@ -767,7 +766,7 @@ const ProductList = () => {
                           <select
                             value={comp.material}
                             onChange={(e) => updateBlendComponentEdit(idx, 'material', e.target.value)}
-                            className="flex-1 min-w-[180px] px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none bg-white text-sm"
+                            className="flex-1 min-w-[160px] px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none bg-white text-sm"
                           >
                             <option value="">Select material</option>
                             {materials.map(m => (
@@ -807,7 +806,7 @@ const ProductList = () => {
                   )}
                 </div>
 
-                {/* Size Variants Table with Image Upload */}
+                {/* Size Variants Table */}
                 <div className="border-t border-gray-200 pt-4">
                   <h3 className="text-lg font-semibold text-gray-700 mb-3">Size Variants</h3>
                   <div className="overflow-x-auto">
@@ -822,7 +821,7 @@ const ProductList = () => {
                       <tbody className="divide-y divide-gray-200">
                         {editForm.sizes.map((size, index) => (
                           <tr key={size._id || index}>
-                            <td className="px-4 py-2">{size.sizeMl}</td>
+                            <td className="px-4 py-2 text-sm">{size.sizeMl}</td>
                             <td className="px-4 py-2">
                               <input
                                 type="number"
@@ -834,17 +833,17 @@ const ProductList = () => {
                                   updated[index].sellingPrice = parseFloat(e.target.value) || 0;
                                   setEditForm({ ...editForm, sizes: updated });
                                 }}
-                                className="w-24 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-amber-500 outline-none"
+                                className="w-24 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-amber-500 outline-none text-sm"
                               />
                             </td>
                             <td className="px-4 py-2">
-                              <div className="flex items-center gap-2">
+                              <div className="flex flex-wrap items-center gap-2">
                                 <input
                                   type="text"
                                   value={size.image || ''}
                                   onChange={(e) => handleSizeImageChange(index, e.target.value)}
                                   placeholder="Image URL or upload"
-                                  className="flex-1 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-amber-500 outline-none text-sm"
+                                  className="flex-1 min-w-[120px] px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-amber-500 outline-none text-sm"
                                 />
                                 <label className="cursor-pointer bg-amber-500 text-white px-3 py-1 rounded text-sm hover:bg-amber-600 transition whitespace-nowrap">
                                   Upload
@@ -869,7 +868,7 @@ const ProductList = () => {
                         ))}
                         {editForm.sizes.length === 0 && (
                           <tr>
-                            <td colSpan="3" className="text-center py-4 text-gray-400">No sizes available</td>
+                            <td colSpan="3" className="text-center py-4 text-gray-400 text-sm">No sizes available</td>
                           </tr>
                         )}
                       </tbody>
@@ -878,11 +877,11 @@ const ProductList = () => {
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-3 pt-4 border-t border-gray-200">
+                <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
                   <button
                     type="submit"
                     disabled={editLoading}
-                    className="flex-1 bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="w-full sm:flex-1 bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
                   >
                     {editLoading ? (
                       <>
@@ -900,7 +899,7 @@ const ProductList = () => {
                       setShowEditModal(false);
                       setProductToEdit(null);
                     }}
-                    className="px-6 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50"
+                    className="w-full sm:flex-1 px-6 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
                   >
                     Cancel
                   </button>
@@ -911,21 +910,21 @@ const ProductList = () => {
         </div>
       )}
 
-      {/* ---------- BULK UPLOAD MODAL (unchanged) ---------- */}
+      {/* ---------- BULK UPLOAD MODAL – responsive ---------- */}
       {showUploadModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 relative">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-4 sm:p-6 relative">
             <button
               onClick={() => {
                 setShowUploadModal(false);
                 setUploadResult(null);
                 setUploadFile(null);
               }}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+              className="absolute top-3 right-3 sm:top-4 sm:right-4 text-gray-400 hover:text-gray-600"
             >
               <X size={24} />
             </button>
-            <h2 className="text-2xl font-bold mb-2">Bulk Upload Products</h2>
+            <h2 className="text-xl sm:text-2xl font-bold mb-2">Bulk Upload Products</h2>
             <p className="text-gray-500 text-sm mb-4">
               Upload CSV/Excel with product data.
               <br />
@@ -950,7 +949,7 @@ const ProductList = () => {
                   type="file"
                   accept=".csv,.xlsx,.xls"
                   onChange={handleFileChange}
-                  className="w-full border rounded-lg p-2 cursor-pointer"
+                  className="w-full border rounded-lg p-2 cursor-pointer text-sm"
                   required
                 />
                 {uploadFile && (
@@ -962,7 +961,7 @@ const ProductList = () => {
 
               {uploadResult && (
                 <div
-                  className={`p-3 rounded-lg ${
+                  className={`p-3 rounded-lg text-sm ${
                     uploadResult.success ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
                   }`}
                 >
@@ -1014,11 +1013,11 @@ const ProductList = () => {
                 </div>
               )}
 
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   type="submit"
                   disabled={uploading || !uploadFile}
-                  className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full sm:flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                 >
                   {uploading ? 'Uploading...' : 'Upload'}
                 </button>
@@ -1029,7 +1028,7 @@ const ProductList = () => {
                     setUploadResult(null);
                     setUploadFile(null);
                   }}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  className="w-full sm:flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
                 >
                   Cancel
                 </button>
