@@ -4,7 +4,6 @@ import Navbar from './Navbar';
 import Sidebar from './Sidebar';
 import { useNotifications } from '../context/NotificationContext';
 
-// Custom style for ultra‑wide screens
 const layoutStyles = `
   @media (min-width: 1920px) {
     .main-content-container {
