@@ -8,69 +8,184 @@
   --color-brand-light: #faf8f5;
   --color-brand-dark: #2c2c2c;
   --color-brand-muted: #5a4e3c;
-
-  /* Extended dark palette (using Tailwind's dark: variants directly) */
 }
 
 @layer base {
+  /* Light mode default */
   body {
-    @apply bg-brand-light text-brand-dark font-sans antialiased transition-colors duration-200;
+    @apply bg-brand-light text-brand-dark font-sans antialiased;
   }
 
-  /* Dark mode overrides */
-  .dark body {
-    @apply bg-gray-900 text-gray-100;
+  /* Dark mode base – force full coverage */
+  .dark,
+  .dark body,
+  .dark #root {
+    background-color: #111827 !important; /* gray-900 */
+    color: #f3f4f6 !important; /* gray-100 */
   }
 
-  /* Card & container overrides */
+  /* ----- Overrides for all gray shades (bg) ----- */
   .dark .bg-white {
-    @apply bg-gray-800;
+    background-color: #1f2937 !important; /* gray-800 */
   }
   .dark .bg-gray-50 {
-    @apply bg-gray-800/80;
+    background-color: #1f2937 !important; /* gray-800 */
   }
   .dark .bg-gray-100 {
-    @apply bg-gray-700/60;
+    background-color: #374151 !important; /* gray-700 */
   }
-  .dark .border-gray-200 {
-    @apply border-gray-700;
+  .dark .bg-gray-200 {
+    background-color: #4b5563 !important; /* gray-600 */
   }
-  .dark .border-gray-100 {
-    @apply border-gray-800;
+  .dark .bg-gray-300 {
+    background-color: #6b7280 !important; /* gray-500 */
   }
-  .dark .shadow-sm {
-    @apply shadow-gray-800/30;
+  .dark .bg-gray-400 {
+    background-color: #9ca3af !important; /* gray-400 */
   }
-  .dark .shadow-lg {
-    @apply shadow-gray-900/40;
+  .dark .bg-gray-500 {
+    background-color: #d1d5db !important; /* gray-300 */
+  }
+  .dark .bg-gray-600 {
+    background-color: #e5e7eb !important; /* gray-200 */
+  }
+  .dark .bg-gray-700 {
+    background-color: #f3f4f6 !important; /* gray-100 */
+  }
+  .dark .bg-gray-800 {
+    background-color: #f9fafb !important; /* gray-50 */
+  }
+  .dark .bg-gray-900 {
+    background-color: #ffffff !important;
   }
 
-  /* Text colors */
+  /* ----- Text colors ----- */
+  .dark .text-gray-50 {
+    color: #f9fafb !important;
+  }
+  .dark .text-gray-100 {
+    color: #f3f4f6 !important;
+  }
+  .dark .text-gray-200 {
+    color: #e5e7eb !important;
+  }
+  .dark .text-gray-300 {
+    color: #d1d5db !important;
+  }
+  .dark .text-gray-400 {
+    color: #9ca3af !important;
+  }
   .dark .text-gray-500 {
-    @apply text-gray-400;
+    color: #6b7280 !important;
   }
   .dark .text-gray-600 {
-    @apply text-gray-300;
+    color: #4b5563 !important;
   }
   .dark .text-gray-700 {
-    @apply text-gray-200;
+    color: #374151 !important;
   }
   .dark .text-gray-800 {
-    @apply text-gray-100;
+    color: #1f2937 !important;
   }
   .dark .text-gray-900 {
-    @apply text-white;
+    color: #111827 !important;
   }
 
-  /* Hover & states */
+  /* ----- Border colors ----- */
+  .dark .border-gray-50 {
+    border-color: #f9fafb !important;
+  }
+  .dark .border-gray-100 {
+    border-color: #f3f4f6 !important;
+  }
+  .dark .border-gray-200 {
+    border-color: #e5e7eb !important;
+  }
+  .dark .border-gray-300 {
+    border-color: #d1d5db !important;
+  }
+  .dark .border-gray-400 {
+    border-color: #9ca3af !important;
+  }
+  .dark .border-gray-500 {
+    border-color: #6b7280 !important;
+  }
+  .dark .border-gray-600 {
+    border-color: #4b5563 !important;
+  }
+  .dark .border-gray-700 {
+    border-color: #374151 !important;
+  }
+  .dark .border-gray-800 {
+    border-color: #1f2937 !important;
+  }
+  .dark .border-gray-900 {
+    border-color: #111827 !important;
+  }
+
+  /* ----- Divide colors (for tables, etc.) ----- */
+  .dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]) {
+    border-color: #374151 !important;
+  }
+  .dark .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
+    border-color: #4b5563 !important;
+  }
+  .dark .divide-gray-300 > :not([hidden]) ~ :not([hidden]) {
+    border-color: #6b7280 !important;
+  }
+
+  /* ----- Shadows ----- */
+  .dark .shadow-sm {
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.5) !important;
+  }
+  .dark .shadow {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.5), 0 1px 2px -1px rgba(0, 0, 0, 0.5) !important;
+  }
+  .dark .shadow-md {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.5) !important;
+  }
+  .dark .shadow-lg {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.5) !important;
+  }
+  .dark .shadow-xl {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5) !important;
+  }
+  .dark .shadow-2xl {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+  }
+  .dark .shadow-inner {
+    box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.5) !important;
+  }
+
+  /* ----- Hover states ----- */
   .dark .hover\:bg-gray-50:hover {
-    @apply hover:bg-gray-700/50;
+    background-color: #374151 !important;
   }
   .dark .hover\:bg-gray-100:hover {
-    @apply hover:bg-gray-700/60;
+    background-color: #4b5563 !important;
+  }
+  .dark .hover\:bg-gray-200:hover {
+    background-color: #6b7280 !important;
+  }
+  .dark .hover\:text-gray-50:hover {
+    color: #f9fafb !important;
+  }
+  .dark .hover\:text-gray-100:hover {
+    color: #f3f4f6 !important;
+  }
+  .dark .hover\:text-gray-200:hover {
+    color: #e5e7eb !important;
   }
 
-  /* Form elements – basic overrides, you can add more */
+  /* ----- Focus rings ----- */
+  .dark .focus\:ring-gray-200:focus {
+    --tw-ring-color: #374151 !important;
+  }
+  .dark .focus\:ring-gray-300:focus {
+    --tw-ring-color: #4b5563 !important;
+  }
+
+  /* ----- Form elements (already present, but keeping them) ----- */
   .dark input,
   .dark select,
   .dark textarea {
@@ -86,23 +201,40 @@
     @apply text-gray-400;
   }
 
-  /* Specific brand colors – keep them consistent */
+  /* ----- Brand colors ----- */
   .dark .bg-brand-light {
-    @apply bg-gray-800;
+    background-color: #1f2937 !important;
   }
   .dark .text-brand-dark {
-    @apply text-gray-100;
+    color: #f3f4f6 !important;
   }
   .dark .text-brand-muted {
-    @apply text-gray-400;
+    color: #9ca3af !important;
   }
 
-  /* You can add more overrides as you style your components */
+  /* ----- Additional overrides for common components ----- */
+  .dark .bg-white\/80 {
+    background-color: rgba(31, 41, 55, 0.8) !important;
+  }
+  .dark .bg-black\/40 {
+    background-color: rgba(0, 0, 0, 0.7) !important;
+  }
+  .dark .backdrop-blur-sm {
+    backdrop-filter: blur(4px) !important;
+  }
 }
 
-/* Optional: smooth transition for theme change */
+/* Smooth transitions for theme change – limited to key properties */
+html,
+body,
+#root,
 * {
   transition-property: background-color, border-color, color, fill, stroke, box-shadow;
   transition-duration: 200ms;
   transition-timing-function: ease-in-out;
+}
+
+/* Optional: remove transition from elements that might cause flicker */
+.no-transition {
+  transition: none !important;
 }
