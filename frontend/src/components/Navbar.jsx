@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';   // ✅ import
+import { useTheme } from '../context/ThemeContext';
 import { useNavigate } from 'react-router-dom';
-import { Menu, LogOut, Bell, AlertCircle, Package, DollarSign, X, Sun, Moon } from 'lucide-react'; // ✅ added Sun, Moon
+import { Menu, LogOut, Bell, AlertCircle, Package, DollarSign, X, Sun, Moon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 // ====== Notification Bell Component (inline) ======
@@ -50,7 +50,7 @@ const NotificationBell = ({ notifications }) => {
           <div className="p-4 border-b border-gray-200 dark:border-gray-700 font-semibold flex items-center justify-between">
             <span className="text-gray-800 dark:text-gray-200">Notifications</span>
             {totalUnread > 0 && (
-              <button 
+              <button
                 className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline"
                 onClick={() => setIsOpen(false)}
               >
@@ -92,12 +92,17 @@ const NotificationBell = ({ notifications }) => {
 // ====== Main Navbar Component ======
 const Navbar = ({ onToggle, notifications = [] }) => {
   const { user, logout } = useAuth();
-  const { theme, toggleTheme } = useTheme();   // ✅ use theme
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  const handleToggleTheme = () => {
+    console.log('🔆 Theme button clicked. Current theme:', theme);
+    toggleTheme();
   };
 
   return (
@@ -133,7 +138,7 @@ const Navbar = ({ onToggle, notifications = [] }) => {
 
         {/* ✅ Theme Toggle Button */}
         <button
-          onClick={toggleTheme}
+          onClick={handleToggleTheme}
           className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition text-gray-600 dark:text-gray-300"
           aria-label="Toggle theme"
         >
