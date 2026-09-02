@@ -14,7 +14,6 @@ import toast from 'react-hot-toast';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 
-// ✅ FIX: Import Recharts components
 import {
   LineChart,
   Line,
@@ -37,6 +36,7 @@ const responsiveStyles = `
     .stat-value { font-size: 1.75rem !important; }
   }
   .skeleton { background: #f0f0f0; border-radius: 0.5rem; animation: pulse 1.5s ease-in-out infinite; }
+  .dark .skeleton { background: #374151; }
   @keyframes pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
   .badge-pulse { animation: blink 1.2s infinite; }
   @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
@@ -46,11 +46,11 @@ const responsiveStyles = `
 const RecentActivity = ({ activities }) => {
   const getIcon = (type) => {
     switch (type) {
-      case 'sale': return <ShoppingBag className="w-4 h-4 text-blue-500" />;
-      case 'purchase': return <ShoppingCart className="w-4 h-4 text-orange-500" />;
-      case 'expense': return <Wallet className="w-4 h-4 text-rose-500" />;
-      case 'wastage': return <Trash2 className="w-4 h-4 text-red-500" />;
-      default: return <TrendingUp className="w-4 h-4 text-gray-500" />;
+      case 'sale': return <ShoppingBag className="w-4 h-4 text-blue-500 dark:text-blue-400" />;
+      case 'purchase': return <ShoppingCart className="w-4 h-4 text-orange-500 dark:text-orange-400" />;
+      case 'expense': return <Wallet className="w-4 h-4 text-rose-500 dark:text-rose-400" />;
+      case 'wastage': return <Trash2 className="w-4 h-4 text-red-500 dark:text-red-400" />;
+      default: return <TrendingUp className="w-4 h-4 text-gray-500 dark:text-gray-400" />;
     }
   };
 
@@ -65,7 +65,7 @@ const RecentActivity = ({ activities }) => {
   };
 
   if (!activities || activities.length === 0) {
-    return <p className="text-gray-400 text-sm text-center py-4">No recent activity</p>;
+    return <p className="text-gray-400 dark:text-gray-500 text-sm text-center py-4">No recent activity</p>;
   }
 
   return (
@@ -74,19 +74,19 @@ const RecentActivity = ({ activities }) => {
         <Link
           key={idx}
           to={getLink(item)}
-          className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg transition"
+          className="flex items-center justify-between p-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition"
         >
           <div className="flex items-center gap-3 min-w-0">
-            <div className="p-1.5 rounded-full bg-gray-100 flex-shrink-0">
+            <div className="p-1.5 rounded-full bg-gray-100 dark:bg-gray-700 flex-shrink-0">
               {getIcon(item.type)}
             </div>
             <div className="truncate">
-              <p className="text-sm font-medium text-gray-700 truncate">{item.title}</p>
-              <p className="text-xs text-gray-400 truncate">{item.time}</p>
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-200 truncate">{item.title}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{item.time}</p>
             </div>
           </div>
           {item.amount !== undefined && (
-            <span className="text-sm font-semibold whitespace-nowrap ml-2">
+            <span className="text-sm font-semibold whitespace-nowrap ml-2 text-gray-800 dark:text-gray-200">
               {item.amount > 0 ? '+' : ''}৳{item.amount.toFixed(2)}
             </span>
           )}
@@ -189,7 +189,6 @@ const Dashboard = () => {
         API.get('/investors/settlements'),
       ]);
 
-      // ✅ Defensive: ensure all are arrays
       const allSales = Array.isArray(salesRes?.data) ? salesRes.data : [];
       const allExpenses = Array.isArray(expensesRes?.data) ? expensesRes.data : [];
       const allPurchases = Array.isArray(purchasesRes?.data) ? purchasesRes.data : [];
@@ -201,18 +200,15 @@ const Dashboard = () => {
       setBottles(bottleData);
       setSettlementsTotal(settlementsRes.data?.total || 0);
 
-      // Low stock alerts
       const lowMat = materialsData.filter(m => (m.currentStockMl || 0) < 100);
       const lowBot = bottleData.filter(b => (b.currentStock || 0) < 10);
       setLowStockItems({ materials: lowMat, bottles: lowBot });
 
-      // Due sales
       const dueSalesList = allSales.filter(s => s.paymentStatus === 'due');
       setDueSales(dueSalesList);
       const dueCount = dueSalesList.length;
       const dueAmount = dueSalesList.reduce((sum, s) => sum + (parseFloat(s.totalAmount) || 0), 0);
 
-      // Build notifications and update context
       const notifs = buildNotifications(lowMat, lowBot, dueSalesList);
       setNotifications(notifs);
 
@@ -269,7 +265,6 @@ const Dashboard = () => {
         .slice(0, 5);
       setTopProducts(sortedProducts);
 
-      // Recent 5 sales
       const recentSalesData = [...allSales]
         .sort((a, b) => new Date(b.saleDate) - new Date(a.saleDate))
         .slice(0, 5);
@@ -280,7 +275,6 @@ const Dashboard = () => {
         .slice(0, 5);
       setRecentPurchases(recentPur);
 
-      // Build recent activities (combine sales, purchases, expenses, wastage)
       const activities = [];
       allSales.slice(0, 5).forEach(s => {
         activities.push({
@@ -309,7 +303,6 @@ const Dashboard = () => {
           amount: e.amount,
         });
       });
-      // Sort by time (most recent first)
       activities.sort((a, b) => new Date(b.time) - new Date(a.time));
       setRecentActivities(activities);
 
@@ -330,7 +323,6 @@ const Dashboard = () => {
       });
       setSalesTypeCounts({ oil: oilSold, perfume: perfumeSold });
 
-      // Chart data (last 30 days)
       const days = {};
       const now = new Date();
       for (let i = 29; i >= 0; i--) {
@@ -407,27 +399,27 @@ const Dashboard = () => {
 
   // ---------- Memoized cards ----------
   const mainCards = useMemo(() => [
-    { title: 'Raw Materials', value: stats.materials, icon: Package, color: 'text-amber-600', bg: 'bg-amber-50/80', border: 'border-amber-200/50', link: '/inventory/materials', linkText: 'Manage →' },
-    { title: 'Bottle Types', value: stats.bottles, icon: FlaskRound, color: 'text-indigo-600', bg: 'bg-indigo-50/80', border: 'border-indigo-200/50', link: '/inventory/bottles', linkText: 'View →' },
-    { title: 'Total Products', value: stats.products, icon: Sparkles, color: 'text-purple-600', bg: 'bg-purple-50/80', border: 'border-purple-200/50', link: '/products', linkText: 'Browse →' },
-    { title: 'Total Sales', value: stats.salesCount, icon: ShoppingBag, color: 'text-blue-600', bg: 'bg-blue-50/80', border: 'border-blue-200/50', link: '/sales', linkText: 'View all →' },
-    { title: 'Raw Mat. Stock Value', value: `৳${stats.rawMaterialStockValue.toFixed(2)}`, icon: Layers, color: 'text-emerald-600', bg: 'bg-emerald-50/80', border: 'border-emerald-200/50', link: '/inventory/materials', linkText: 'View stock →' },
-    { title: 'Bottles Stock Value', value: `৳${stats.bottleStockValue.toFixed(2)}`, icon: Layers, color: 'text-cyan-600', bg: 'bg-cyan-50/80', border: 'border-cyan-200/50', link: '/inventory/bottles', linkText: 'View stock →' },
+    { title: 'Raw Materials', value: stats.materials, icon: Package, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50/80 dark:bg-amber-900/20', border: 'border-amber-200/50 dark:border-amber-800/30', link: '/inventory/materials', linkText: 'Manage →' },
+    { title: 'Bottle Types', value: stats.bottles, icon: FlaskRound, color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50/80 dark:bg-indigo-900/20', border: 'border-indigo-200/50 dark:border-indigo-800/30', link: '/inventory/bottles', linkText: 'View →' },
+    { title: 'Total Products', value: stats.products, icon: Sparkles, color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50/80 dark:bg-purple-900/20', border: 'border-purple-200/50 dark:border-purple-800/30', link: '/products', linkText: 'Browse →' },
+    { title: 'Total Sales', value: stats.salesCount, icon: ShoppingBag, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50/80 dark:bg-blue-900/20', border: 'border-blue-200/50 dark:border-blue-800/30', link: '/sales', linkText: 'View all →' },
+    { title: 'Raw Mat. Stock Value', value: `৳${stats.rawMaterialStockValue.toFixed(2)}`, icon: Layers, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50/80 dark:bg-emerald-900/20', border: 'border-emerald-200/50 dark:border-emerald-800/30', link: '/inventory/materials', linkText: 'View stock →' },
+    { title: 'Bottles Stock Value', value: `৳${stats.bottleStockValue.toFixed(2)}`, icon: Layers, color: 'text-cyan-600 dark:text-cyan-400', bg: 'bg-cyan-50/80 dark:bg-cyan-900/20', border: 'border-cyan-200/50 dark:border-cyan-800/30', link: '/inventory/bottles', linkText: 'View stock →' },
   ], [stats]);
 
   const overallSummary = useMemo(() => [
-    { label: 'Revenue', value: `৳${stats.totalRevenue.toFixed(2)}`, icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50/50' },
-    { label: 'Expenses', value: `৳${stats.totalExpenses.toFixed(2)}`, icon: Wallet, color: 'text-rose-600', bg: 'bg-rose-50/50' },
-    { label: 'Purchases', value: `৳${stats.totalPurchases.toFixed(2)}`, icon: ShoppingCart, color: 'text-orange-600', bg: 'bg-orange-50/50' },
-    { label: 'Due Payments', value: `৳${stats.dueAmount.toFixed(2)}`, icon: Clock, color: 'text-yellow-600', bg: 'bg-yellow-50/50', badge: `${stats.dueCount} due`, link: '/sales?paymentStatus=due', linkText: 'View due →' },
-    { label: 'Available Cash', value: `৳${stats.netProfit.toFixed(2)}`, icon: DollarSign, color: 'text-indigo-600', bg: 'bg-indigo-50/50', link: '/investors', linkText: 'View Investors →' },
-    { label: 'Inventory Value', value: `৳${stats.totalInventoryValue.toFixed(2)}`, icon: Layers, color: 'text-teal-600', bg: 'bg-teal-50/50' },
-    { label: 'Business Value', value: `৳${(stats.netProfit + stats.totalInventoryValue).toFixed(2)}`, icon: BarChart3, color: 'text-amber-600', bg: 'bg-amber-50/50' },
-    { label: 'Settlements', value: `৳${settlementsTotal.toFixed(2)}`, icon: Wallet, color: 'text-rose-600', bg: 'bg-rose-50/50' },
+    { label: 'Revenue', value: `৳${stats.totalRevenue.toFixed(2)}`, icon: TrendingUp, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50/50 dark:bg-emerald-900/20' },
+    { label: 'Expenses', value: `৳${stats.totalExpenses.toFixed(2)}`, icon: Wallet, color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-50/50 dark:bg-rose-900/20' },
+    { label: 'Purchases', value: `৳${stats.totalPurchases.toFixed(2)}`, icon: ShoppingCart, color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-50/50 dark:bg-orange-900/20' },
+    { label: 'Due Payments', value: `৳${stats.dueAmount.toFixed(2)}`, icon: Clock, color: 'text-yellow-600 dark:text-yellow-400', bg: 'bg-yellow-50/50 dark:bg-yellow-900/20', badge: `${stats.dueCount} due`, link: '/sales?paymentStatus=due', linkText: 'View due →' },
+    { label: 'Available Cash', value: `৳${stats.netProfit.toFixed(2)}`, icon: DollarSign, color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50/50 dark:bg-indigo-900/20', link: '/investors', linkText: 'View Investors →' },
+    { label: 'Inventory Value', value: `৳${stats.totalInventoryValue.toFixed(2)}`, icon: Layers, color: 'text-teal-600 dark:text-teal-400', bg: 'bg-teal-50/50 dark:bg-teal-900/20' },
+    { label: 'Business Value', value: `৳${(stats.netProfit + stats.totalInventoryValue).toFixed(2)}`, icon: BarChart3, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50/50 dark:bg-amber-900/20' },
+    { label: 'Settlements', value: `৳${settlementsTotal.toFixed(2)}`, icon: Wallet, color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-50/50 dark:bg-rose-900/20' },
   ], [stats, settlementsTotal]);
 
   const SkeletonCard = () => (
-    <div className="bg-white rounded-2xl border border-gray-200 p-4 skeleton h-28" />
+    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4 skeleton h-28" />
   );
 
   // ---------- Render ----------
@@ -437,31 +429,31 @@ const Dashboard = () => {
       <div id="dashboard-content" className="dashboard-container p-4 sm:p-6 space-y-6">
 
         {/* Header */}
-        <div className="relative overflow-hidden rounded-2xl bg-white/70 backdrop-blur-sm border border-gray-200/60 shadow-lg p-4 sm:p-6 lg:p-8">
+        <div className="relative overflow-hidden rounded-2xl bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm border border-gray-200/60 dark:border-gray-800/60 shadow-lg dark:shadow-gray-900/30 p-4 sm:p-6 lg:p-8">
           <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 via-purple-500/5 to-amber-500/5" />
           <div className="relative flex flex-wrap items-center justify-between gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 dark:text-gray-100">
                 Welcome back, <span className="bg-gradient-to-r from-indigo-600 to-amber-600 bg-clip-text text-transparent">{user?.name || 'Admin'}</span>
               </h1>
-              <p className="text-gray-500 text-sm mt-1 flex items-center gap-2">
-                <Calendar size={16} className="text-indigo-400" />
+              <p className="text-gray-500 dark:text-gray-400 text-sm mt-1 flex items-center gap-2">
+                <Calendar size={16} className="text-indigo-400 dark:text-indigo-300" />
                 {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={exportDashboardPDF}
-                className="inline-flex items-center gap-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-xl hover:bg-gray-200 transition text-sm font-medium"
+                className="inline-flex items-center gap-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition text-sm font-medium"
               >
                 <FileText size={18} /> Export PDF
               </button>
-              <button onClick={fetchDashboardData} className="inline-flex items-center gap-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-xl hover:bg-gray-200 transition text-sm font-medium">
+              <button onClick={fetchDashboardData} className="inline-flex items-center gap-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition text-sm font-medium">
                 <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
                 Refresh
               </button>
               {user?.role === 'admin' && (
-                <button onClick={handleRebuild} disabled={rebuilding} className="inline-flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-xl hover:bg-purple-700 transition disabled:opacity-60 text-sm font-medium">
+                <button onClick={handleRebuild} disabled={rebuilding} className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-xl transition disabled:opacity-60 text-sm font-medium">
                   <RotateCw size={18} className={rebuilding ? 'animate-spin' : ''} />
                   {rebuilding ? 'Rebuilding...' : 'Rebuild Stock'}
                 </button>
@@ -471,17 +463,17 @@ const Dashboard = () => {
 
           {/* Low Stock Alert */}
           {(lowStockItems.materials.length > 0 || lowStockItems.bottles.length > 0) && (
-            <div className="relative mt-4 bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-3 text-sm">
-              <AlertCircle size={20} className="text-amber-600 flex-shrink-0 mt-0.5" />
+            <div className="relative mt-4 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-xl p-3 flex items-start gap-3 text-sm">
+              <AlertCircle size={20} className="text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
               <div>
-                <span className="font-semibold text-amber-800">Low stock alert:</span>
+                <span className="font-semibold text-amber-800 dark:text-amber-300">Low stock alert:</span>
                 {lowStockItems.materials.length > 0 && (
-                  <span className="ml-2">{lowStockItems.materials.length} material(s) low</span>
+                  <span className="ml-2 text-amber-700 dark:text-amber-400">{lowStockItems.materials.length} material(s) low</span>
                 )}
                 {lowStockItems.bottles.length > 0 && (
-                  <span className="ml-2">{lowStockItems.bottles.length} bottle type(s) low</span>
+                  <span className="ml-2 text-amber-700 dark:text-amber-400">{lowStockItems.bottles.length} bottle type(s) low</span>
                 )}
-                <Link to="/inventory" className="ml-3 text-amber-700 underline hover:text-amber-900">View inventory</Link>
+                <Link to="/inventory" className="ml-3 text-amber-700 dark:text-amber-400 underline hover:text-amber-900 dark:hover:text-amber-300">View inventory</Link>
               </div>
             </div>
           )}
@@ -489,29 +481,29 @@ const Dashboard = () => {
 
         {/* Quick Actions */}
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
-          <Link to="/sales/new" className="bg-indigo-50 hover:bg-indigo-100 rounded-xl p-3 text-center transition border border-indigo-200/50 group">
-            <PlusCircle size={24} className="mx-auto text-indigo-600 group-hover:scale-110 transition-transform" />
-            <span className="text-xs font-medium text-gray-700 block mt-1">New Sale</span>
+          <Link to="/sales/new" className="bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-800/40 rounded-xl p-3 text-center transition border border-indigo-200/50 dark:border-indigo-800/30 group">
+            <PlusCircle size={24} className="mx-auto text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform" />
+            <span className="text-xs font-medium text-gray-700 dark:text-gray-300 block mt-1">New Sale</span>
           </Link>
-          <Link to="/expenses" className="bg-rose-50 hover:bg-rose-100 rounded-xl p-3 text-center transition border border-rose-200/50 group">
-            <Wallet size={24} className="mx-auto text-rose-600 group-hover:scale-110 transition-transform" />
-            <span className="text-xs font-medium text-gray-700 block mt-1">Add Expense</span>
+          <Link to="/expenses" className="bg-rose-50 dark:bg-rose-900/30 hover:bg-rose-100 dark:hover:bg-rose-800/40 rounded-xl p-3 text-center transition border border-rose-200/50 dark:border-rose-800/30 group">
+            <Wallet size={24} className="mx-auto text-rose-600 dark:text-rose-400 group-hover:scale-110 transition-transform" />
+            <span className="text-xs font-medium text-gray-700 dark:text-gray-300 block mt-1">Add Expense</span>
           </Link>
-          <button onClick={() => navigate('/wastage/new')} className="bg-red-50 hover:bg-red-100 rounded-xl p-3 text-center transition border border-red-200/50 group">
-            <Trash2 size={24} className="mx-auto text-red-600 group-hover:scale-110 transition-transform" />
-            <span className="text-xs font-medium text-gray-700 block mt-1">Wastage</span>
+          <button onClick={() => navigate('/wastage/new')} className="bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-800/40 rounded-xl p-3 text-center transition border border-red-200/50 dark:border-red-800/30 group">
+            <Trash2 size={24} className="mx-auto text-red-600 dark:text-red-400 group-hover:scale-110 transition-transform" />
+            <span className="text-xs font-medium text-gray-700 dark:text-gray-300 block mt-1">Wastage</span>
           </button>
-          <Link to="/purchases/new" className="bg-orange-50 hover:bg-orange-100 rounded-xl p-3 text-center transition border border-orange-200/50 group">
-            <ShoppingCart size={24} className="mx-auto text-orange-600 group-hover:scale-110 transition-transform" />
-            <span className="text-xs font-medium text-gray-700 block mt-1">New Purchase</span>
+          <Link to="/purchases/new" className="bg-orange-50 dark:bg-orange-900/30 hover:bg-orange-100 dark:hover:bg-orange-800/40 rounded-xl p-3 text-center transition border border-orange-200/50 dark:border-orange-800/30 group">
+            <ShoppingCart size={24} className="mx-auto text-orange-600 dark:text-orange-400 group-hover:scale-110 transition-transform" />
+            <span className="text-xs font-medium text-gray-700 dark:text-gray-300 block mt-1">New Purchase</span>
           </Link>
-          <Link to="/investors" className="bg-teal-50 hover:bg-teal-100 rounded-xl p-3 text-center transition border border-teal-200/50 group">
-            <Users size={24} className="mx-auto text-teal-600 group-hover:scale-110 transition-transform" />
-            <span className="text-xs font-medium text-gray-700 block mt-1">Investors</span>
+          <Link to="/investors" className="bg-teal-50 dark:bg-teal-900/30 hover:bg-teal-100 dark:hover:bg-teal-800/40 rounded-xl p-3 text-center transition border border-teal-200/50 dark:border-teal-800/30 group">
+            <Users size={24} className="mx-auto text-teal-600 dark:text-teal-400 group-hover:scale-110 transition-transform" />
+            <span className="text-xs font-medium text-gray-700 dark:text-gray-300 block mt-1">Investors</span>
           </Link>
-          <Link to="/reports" className="bg-gray-50 hover:bg-gray-100 rounded-xl p-3 text-center transition border border-gray-200/50 group">
-            <FileText size={24} className="mx-auto text-gray-600 group-hover:scale-110 transition-transform" />
-            <span className="text-xs font-medium text-gray-700 block mt-1">Reports</span>
+          <Link to="/reports" className="bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-xl p-3 text-center transition border border-gray-200/50 dark:border-gray-700/50 group">
+            <FileText size={24} className="mx-auto text-gray-600 dark:text-gray-400 group-hover:scale-110 transition-transform" />
+            <span className="text-xs font-medium text-gray-700 dark:text-gray-300 block mt-1">Reports</span>
           </Link>
         </div>
 
@@ -531,25 +523,25 @@ const Dashboard = () => {
               {mainCards.map((card, idx) => (
                 <div
                   key={idx}
-                  className={`bg-white rounded-2xl border ${card.border} hover:shadow-xl transition-all duration-300 hover:-translate-y-1 p-3 sm:p-4 lg:p-5 xl:p-6 stat-card flex flex-col h-full min-w-0 min-h-[110px] sm:min-h-[120px]`}
+                  className={`bg-white dark:bg-gray-800 rounded-2xl border ${card.border} hover:shadow-xl dark:hover:shadow-gray-800/30 transition-all duration-300 hover:-translate-y-1 p-3 sm:p-4 lg:p-5 xl:p-6 stat-card flex flex-col h-full min-w-0 min-h-[110px] sm:min-h-[120px]`}
                 >
                   <div className="flex items-center justify-between gap-2 sm:gap-3 mb-1.5 sm:mb-2">
                     <div className={`p-1.5 sm:p-2 lg:p-2.5 xl:p-3 rounded-xl ${card.bg} flex-shrink-0`}>
                       <card.icon className={`w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 xl:w-7 xl:h-7 ${card.color}`} />
                     </div>
                     <span
-                      className="text-sm sm:text-lg lg:text-xl xl:text-2xl 2xl:text-3xl font-bold text-gray-800 stat-value truncate text-right min-w-0 max-w-full overflow-hidden text-ellipsis"
+                      className="text-sm sm:text-lg lg:text-xl xl:text-2xl 2xl:text-3xl font-bold text-gray-800 dark:text-gray-100 stat-value truncate text-right min-w-0 max-w-full overflow-hidden text-ellipsis"
                       title={typeof card.value === 'string' ? card.value : card.value?.toString() || ''}
                     >
                       {card.value}
                     </span>
                   </div>
-                  <p className="text-[10px] sm:text-xs lg:text-sm font-medium text-gray-500 uppercase tracking-wider truncate">
+                  <p className="text-[10px] sm:text-xs lg:text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate">
                     {card.title}
                   </p>
                   <Link
                     to={card.link}
-                    className="mt-auto pt-1.5 sm:pt-2 text-[10px] sm:text-xs lg:text-sm text-indigo-600 hover:text-indigo-800 inline-flex items-center gap-1 group font-medium min-h-[28px]"
+                    className="mt-auto pt-1.5 sm:pt-2 text-[10px] sm:text-xs lg:text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 inline-flex items-center gap-1 group font-medium min-h-[28px]"
                   >
                     {card.linkText}
                     <ArrowUpRight
@@ -563,27 +555,27 @@ const Dashboard = () => {
 
             {/* Overall Summary */}
             <div>
-              <h2 className="text-base sm:text-lg lg:text-xl font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                <BarChart3 size={20} className="text-indigo-500" />
+              <h2 className="text-base sm:text-lg lg:text-xl font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                <BarChart3 size={20} className="text-indigo-500 dark:text-indigo-400" />
                 Financial Snapshot
               </h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-8 gap-3 sm:gap-4">
                 {overallSummary.map((item, idx) => (
-                  <div key={idx} className="bg-white rounded-2xl border border-gray-200/60 hover:shadow-md transition-all duration-200 p-3 sm:p-4 text-center relative hover:-translate-y-1">
+                  <div key={idx} className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200/60 dark:border-gray-700/60 hover:shadow-md dark:hover:shadow-gray-800/30 transition-all duration-200 p-3 sm:p-4 text-center relative hover:-translate-y-1">
                     <div className="flex items-center justify-center gap-1.5 mb-1">
                       <div className={`p-1.5 rounded-lg ${item.bg}`}>
                         <item.icon className={`w-3.5 h-3.5 ${item.color}`} />
                       </div>
-                      <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wider">{item.label}</p>
+                      <p className="text-[10px] text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">{item.label}</p>
                     </div>
                     <p className={`text-sm sm:text-base font-bold ${item.color}`}>{item.value}</p>
                     {item.badge && (
-                      <span className="absolute -top-1 -right-1 bg-yellow-100 text-yellow-800 text-[9px] font-bold px-1.5 py-0.5 rounded-full badge-pulse">
+                      <span className="absolute -top-1 -right-1 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 text-[9px] font-bold px-1.5 py-0.5 rounded-full badge-pulse">
                         {item.badge}
                       </span>
                     )}
                     {item.link && (
-                      <Link to={item.link} className="mt-1 text-[10px] text-indigo-600 hover:underline inline-flex items-center gap-1">
+                      <Link to={item.link} className="mt-1 text-[10px] text-indigo-600 dark:text-indigo-400 hover:underline inline-flex items-center gap-1">
                         {item.linkText || 'View →'}
                         <ArrowUpRight size={10} />
                       </Link>
@@ -595,52 +587,57 @@ const Dashboard = () => {
 
             {/* Performance Metrics */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="bg-white rounded-2xl border border-gray-200 p-4">
-                <p className="text-xs text-gray-500 uppercase tracking-wider">Profit Margin</p>
-                <p className="text-2xl font-bold text-emerald-600">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4">
+                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Profit Margin</p>
+                <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                   {stats.totalRevenue > 0 ? ((stats.totalRevenue - stats.totalExpenses - stats.totalPurchases) / stats.totalRevenue * 100).toFixed(1) : 0}%
                 </p>
-                <p className="text-xs text-gray-400">of revenue</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">of revenue</p>
               </div>
-              <div className="bg-white rounded-2xl border border-gray-200 p-4">
-                <p className="text-xs text-gray-500 uppercase tracking-wider">Inventory Turnover</p>
-                <p className="text-2xl font-bold text-blue-600">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4">
+                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Inventory Turnover</p>
+                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                   {stats.totalInventoryValue > 0 ? (stats.totalPurchases / stats.totalInventoryValue).toFixed(1) : 0}x
                 </p>
-                <p className="text-xs text-gray-400">purchases ÷ inventory</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">purchases ÷ inventory</p>
               </div>
-              <div className="bg-white rounded-2xl border border-gray-200 p-4">
-                <p className="text-xs text-gray-500 uppercase tracking-wider">Cash Conversion</p>
-                <p className="text-2xl font-bold text-purple-600">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4">
+                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cash Conversion</p>
+                <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                   {stats.totalRevenue > 0 ? (stats.dueAmount / stats.totalRevenue * 100).toFixed(1) : 0}%
                 </p>
-                <p className="text-xs text-gray-400">due payments</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">due payments</p>
               </div>
-              <div className="bg-white rounded-2xl border border-gray-200 p-4">
-                <p className="text-xs text-gray-500 uppercase tracking-wider">Avg. Sale Value</p>
-                <p className="text-2xl font-bold text-amber-600">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4">
+                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Avg. Sale Value</p>
+                <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
                   {stats.salesCount > 0 ? (stats.totalRevenue / stats.salesCount).toFixed(2) : 0}
                 </p>
-                <p className="text-xs text-gray-400">per transaction</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">per transaction</p>
               </div>
             </div>
 
             {/* Chart & Recent Activity */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-200/60 shadow-sm p-4 sm:p-5">
-                <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                  <TrendingUp size={16} className="text-amber-500" />
+              <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200/60 dark:border-gray-700/60 shadow-sm dark:shadow-gray-800/20 p-4 sm:p-5">
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                  <TrendingUp size={16} className="text-amber-500 dark:text-amber-400" />
                   Revenue Trend (Last 30 Days)
                 </h3>
                 {chartData.length === 0 ? (
-                  <p className="text-gray-400 text-sm text-center py-8">No revenue data available</p>
+                  <p className="text-gray-400 dark:text-gray-500 text-sm text-center py-8">No revenue data available</p>
                 ) : (
                   <ResponsiveContainer width="100%" height={300}>
                     <LineChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                      <XAxis dataKey="date" tick={{ fontSize: 10 }} />
-                      <YAxis tickFormatter={(val) => `৳${val}`} />
-                      <Tooltip formatter={(val) => `৳${val.toFixed(2)}`} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" className="dark:stroke-gray-700" />
+                      <XAxis dataKey="date" tick={{ fontSize: 10 }} className="dark:fill-gray-400" />
+                      <YAxis tickFormatter={(val) => `৳${val}`} className="dark:fill-gray-400" />
+                      <Tooltip
+                        formatter={(val) => `৳${val.toFixed(2)}`}
+                        contentStyle={{ backgroundColor: '#fff', borderColor: '#e5e7eb' }}
+                        itemStyle={{ color: '#374151' }}
+                        wrapperClassName="dark:bg-gray-800 dark:border-gray-700"
+                      />
                       <Legend />
                       <Line
                         type="monotone"
@@ -656,9 +653,9 @@ const Dashboard = () => {
               </div>
 
               <div className="lg:col-span-1">
-                <div className="bg-white rounded-2xl border border-gray-200/60 shadow-sm overflow-hidden">
-                  <div className="p-4 border-b border-gray-200 font-semibold flex items-center gap-2">
-                    <Clock size={18} className="text-gray-500" />
+                <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200/60 dark:border-gray-700/60 shadow-sm dark:shadow-gray-800/20 overflow-hidden">
+                  <div className="p-4 border-b border-gray-200 dark:border-gray-700 font-semibold flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                    <Clock size={18} className="text-gray-500 dark:text-gray-400" />
                     Recent Activity
                   </div>
                   <div className="p-2">
@@ -670,66 +667,66 @@ const Dashboard = () => {
 
             {/* Two-Column: Recent Sales & Recent Purchases */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-white rounded-2xl border border-gray-200/60 shadow-sm p-4 sm:p-5">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200/60 dark:border-gray-700/60 shadow-sm dark:shadow-gray-800/20 p-4 sm:p-5">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                    <ShoppingBag size={16} className="text-blue-500" />
+                  <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                    <ShoppingBag size={16} className="text-blue-500 dark:text-blue-400" />
                     Recent Sales
                   </h3>
-                  <Link to="/sales" className="text-xs text-indigo-600 hover:underline">View all →</Link>
+                  <Link to="/sales" className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline">View all →</Link>
                 </div>
                 {recentSales.length === 0 ? (
-                  <p className="text-gray-400 text-sm text-center py-4">No recent sales</p>
+                  <p className="text-gray-400 dark:text-gray-500 text-sm text-center py-4">No recent sales</p>
                 ) : (
                   <div className="space-y-2">
                     {recentSales.map((sale) => (
-                      <div key={sale._id} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg transition">
+                      <div key={sale._id} className="flex items-center justify-between p-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition">
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
-                            <DollarSign size={14} className="text-blue-500" />
+                          <div className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
+                            <DollarSign size={14} className="text-blue-500 dark:text-blue-400" />
                           </div>
                           <div className="truncate">
-                            <p className="text-sm font-medium text-gray-700 truncate">Invoice #{sale.invoiceNo}</p>
-                            <p className="text-xs text-gray-400 truncate">
+                            <p className="text-sm font-medium text-gray-700 dark:text-gray-200 truncate">Invoice #{sale.invoiceNo}</p>
+                            <p className="text-xs text-gray-400 dark:text-gray-500 truncate">
                               {new Date(sale.saleDate).toLocaleDateString()}
                               {sale.customer && ` • ${sale.customer}`}
                             </p>
                           </div>
                         </div>
-                        <span className="text-sm font-semibold text-blue-600 whitespace-nowrap ml-2">৳{sale.totalAmount?.toFixed(2) || '0.00'}</span>
+                        <span className="text-sm font-semibold text-blue-600 dark:text-blue-400 whitespace-nowrap ml-2">৳{sale.totalAmount?.toFixed(2) || '0.00'}</span>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
 
-              <div className="bg-white rounded-2xl border border-gray-200/60 shadow-sm p-4 sm:p-5">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200/60 dark:border-gray-700/60 shadow-sm dark:shadow-gray-800/20 p-4 sm:p-5">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                    <ShoppingCart size={16} className="text-orange-500" />
+                  <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                    <ShoppingCart size={16} className="text-orange-500 dark:text-orange-400" />
                     Recent Purchases
                   </h3>
-                  <Link to="/purchases" className="text-xs text-indigo-600 hover:underline">View all →</Link>
+                  <Link to="/purchases" className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline">View all →</Link>
                 </div>
                 {recentPurchases.length === 0 ? (
-                  <p className="text-gray-400 text-sm text-center py-4">No recent purchases</p>
+                  <p className="text-gray-400 dark:text-gray-500 text-sm text-center py-4">No recent purchases</p>
                 ) : (
                   <div className="space-y-2">
                     {recentPurchases.map((purchase) => (
-                      <div key={purchase._id} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg transition">
+                      <div key={purchase._id} className="flex items-center justify-between p-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition">
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center flex-shrink-0">
-                            <ShoppingCart size={14} className="text-orange-500" />
+                          <div className="w-8 h-8 rounded-full bg-orange-50 dark:bg-orange-900/30 flex items-center justify-center flex-shrink-0">
+                            <ShoppingCart size={14} className="text-orange-500 dark:text-orange-400" />
                           </div>
                           <div className="truncate">
-                            <p className="text-sm font-medium text-gray-700 truncate">{purchase.invoiceNo}</p>
-                            <p className="text-xs text-gray-400 truncate">
+                            <p className="text-sm font-medium text-gray-700 dark:text-gray-200 truncate">{purchase.invoiceNo}</p>
+                            <p className="text-xs text-gray-400 dark:text-gray-500 truncate">
                               {new Date(purchase.purchaseDate).toLocaleDateString()}
                               {purchase.supplier && ` • ${purchase.supplier}`}
                             </p>
                           </div>
                         </div>
-                        <span className="text-sm font-semibold text-orange-600 whitespace-nowrap ml-2">৳{purchase.totalAmount?.toFixed(2) || '0.00'}</span>
+                        <span className="text-sm font-semibold text-orange-600 dark:text-orange-400 whitespace-nowrap ml-2">৳{purchase.totalAmount?.toFixed(2) || '0.00'}</span>
                       </div>
                     ))}
                   </div>
@@ -739,48 +736,48 @@ const Dashboard = () => {
 
             {/* Sales by Type & Top Products */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-white rounded-2xl border border-gray-200/60 shadow-sm p-4 sm:p-5">
-                <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
-                  <BarChart3 size={16} className="text-indigo-500" />
+              <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200/60 dark:border-gray-700/60 shadow-sm dark:shadow-gray-800/20 p-4 sm:p-5">
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
+                  <BarChart3 size={16} className="text-indigo-500 dark:text-indigo-400" />
                   Sales by Product Type
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gradient-to-br from-amber-50 to-amber-100/50 rounded-xl p-4 text-center border border-amber-200/50">
-                    <Droplet className="w-8 h-8 text-amber-600 mx-auto mb-1" />
-                    <p className="text-2xl font-bold text-amber-700">{salesTypeCounts.oil}</p>
-                    <p className="text-xs text-gray-500 uppercase tracking-wider">Oil Units</p>
+                  <div className="bg-gradient-to-br from-amber-50 to-amber-100/50 dark:from-amber-900/30 dark:to-amber-800/20 rounded-xl p-4 text-center border border-amber-200/50 dark:border-amber-800/30">
+                    <Droplet className="w-8 h-8 text-amber-600 dark:text-amber-400 mx-auto mb-1" />
+                    <p className="text-2xl font-bold text-amber-700 dark:text-amber-300">{salesTypeCounts.oil}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Oil Units</p>
                   </div>
-                  <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl p-4 text-center border border-blue-200/50">
-                    <SprayCan className="w-8 h-8 text-blue-600 mx-auto mb-1" />
-                    <p className="text-2xl font-bold text-blue-700">{salesTypeCounts.perfume}</p>
-                    <p className="text-xs text-gray-500 uppercase tracking-wider">Perfume Units</p>
+                  <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-900/30 dark:to-blue-800/20 rounded-xl p-4 text-center border border-blue-200/50 dark:border-blue-800/30">
+                    <SprayCan className="w-8 h-8 text-blue-600 dark:text-blue-400 mx-auto mb-1" />
+                    <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{salesTypeCounts.perfume}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Perfume Units</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl border border-gray-200/60 shadow-sm p-4 sm:p-5">
-                <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
-                  <Award size={16} className="text-amber-500" />
+              <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200/60 dark:border-gray-700/60 shadow-sm dark:shadow-gray-800/20 p-4 sm:p-5">
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
+                  <Award size={16} className="text-amber-500 dark:text-amber-400" />
                   Top Selling Products
                 </h3>
                 {topProducts.length === 0 ? (
-                  <p className="text-gray-400 text-sm text-center py-4">No sales data yet</p>
+                  <p className="text-gray-400 dark:text-gray-500 text-sm text-center py-4">No sales data yet</p>
                 ) : (
                   <div className="space-y-2">
                     {topProducts.map((item, index) => (
-                      <div key={item.productId} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg transition">
+                      <div key={item.productId} className="flex items-center justify-between p-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition">
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-bold">
+                          <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 flex items-center justify-center text-xs font-bold">
                             {index + 1}
                           </div>
                           <div className="truncate">
-                            <p className="text-sm font-medium text-gray-700 truncate">{item.productName}</p>
-                            <p className="text-xs text-gray-400 truncate">SKU: {item.sku}</p>
+                            <p className="text-sm font-medium text-gray-700 dark:text-gray-200 truncate">{item.productName}</p>
+                            <p className="text-xs text-gray-400 dark:text-gray-500 truncate">SKU: {item.sku}</p>
                           </div>
                         </div>
                         <div className="text-right flex-shrink-0 ml-2">
-                          <p className="text-sm font-semibold text-amber-600">{item.totalSold} units</p>
-                          <p className="text-xs text-gray-500">৳{item.totalRevenue.toFixed(2)}</p>
+                          <p className="text-sm font-semibold text-amber-600 dark:text-amber-400">{item.totalSold} units</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">৳{item.totalRevenue.toFixed(2)}</p>
                         </div>
                       </div>
                     ))}
@@ -791,25 +788,25 @@ const Dashboard = () => {
 
             {/* Bottles Inventory Table */}
             <div>
-              <h2 className="text-base sm:text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                <FlaskRound size={18} className="text-cyan-500" />
+              <h2 className="text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                <FlaskRound size={18} className="text-cyan-500 dark:text-cyan-400" />
                 Available Bottles (Inventory)
               </h2>
-              <div className="bg-white rounded-2xl border border-gray-200/60 shadow-sm overflow-hidden">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200/60 dark:border-gray-700/60 shadow-sm dark:shadow-gray-800/20 overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50/50 sticky top-0">
+                  <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead className="bg-gray-50/50 dark:bg-gray-800/80 sticky top-0">
                       <tr>
-                        <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bottle</th>
-                        <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                        <th className="px-4 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                        <th className="px-4 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Sold</th>
-                        <th className="px-4 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Available</th>
-                        <th className="px-4 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Avg Cost</th>
-                        <th className="px-4 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total Value</th>
+                        <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Bottle</th>
+                        <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</th>
+                        <th className="px-4 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total</th>
+                        <th className="px-4 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Sold</th>
+                        <th className="px-4 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Available</th>
+                        <th className="px-4 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Avg Cost</th>
+                        <th className="px-4 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Value</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200">
+                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                       {bottles.map((bottle) => {
                         const totalPurchased = bottle.totalPurchased || 0;
                         const sold = bottle.sold || 0;
@@ -817,37 +814,37 @@ const Dashboard = () => {
                         const avgCost = parseFloat(bottle.avgCostPerUnit) || 0;
                         const totalValue = available * avgCost;
                         return (
-                          <tr key={bottle._id} className="hover:bg-gray-50/70 transition">
-                            <td className="px-4 sm:px-6 py-3 text-sm">{bottle.sizeMl} ml</td>
-                            <td className="px-4 sm:px-6 py-3 capitalize text-sm">{bottle.type}</td>
-                            <td className="px-4 sm:px-6 py-3 text-right font-medium text-sm">{totalPurchased}</td>
-                            <td className="px-4 sm:px-6 py-3 text-right text-rose-600 text-sm">{sold}</td>
-                            <td className="px-4 sm:px-6 py-3 text-right font-semibold text-emerald-600 text-sm">{available}</td>
-                            <td className="px-4 sm:px-6 py-3 text-right text-sm">৳{avgCost.toFixed(2)}</td>
-                            <td className="px-4 sm:px-6 py-3 text-right font-semibold text-cyan-600 text-sm">৳{totalValue.toFixed(2)}</td>
+                          <tr key={bottle._id} className="hover:bg-gray-50/70 dark:hover:bg-gray-700/50 transition">
+                            <td className="px-4 sm:px-6 py-3 text-sm text-gray-800 dark:text-gray-200">{bottle.sizeMl} ml</td>
+                            <td className="px-4 sm:px-6 py-3 capitalize text-sm text-gray-600 dark:text-gray-400">{bottle.type}</td>
+                            <td className="px-4 sm:px-6 py-3 text-right font-medium text-sm text-gray-800 dark:text-gray-200">{totalPurchased}</td>
+                            <td className="px-4 sm:px-6 py-3 text-right text-rose-600 dark:text-rose-400 text-sm">{sold}</td>
+                            <td className="px-4 sm:px-6 py-3 text-right font-semibold text-emerald-600 dark:text-emerald-400 text-sm">{available}</td>
+                            <td className="px-4 sm:px-6 py-3 text-right text-sm text-gray-700 dark:text-gray-300">৳{avgCost.toFixed(2)}</td>
+                            <td className="px-4 sm:px-6 py-3 text-right font-semibold text-cyan-600 dark:text-cyan-400 text-sm">৳{totalValue.toFixed(2)}</td>
                           </tr>
                         );
                       })}
                       {bottles.length === 0 && (
                         <tr>
-                          <td colSpan="7" className="text-center py-8 text-gray-400">No bottles found</td>
+                          <td colSpan="7" className="text-center py-8 text-gray-400 dark:text-gray-500">No bottles found</td>
                         </tr>
                       )}
                     </tbody>
-                    <tfoot className="bg-gray-50/50 font-semibold">
+                    <tfoot className="bg-gray-50/50 dark:bg-gray-800/80 font-semibold">
                       <tr>
-                        <td colSpan="2" className="px-4 sm:px-6 py-3 text-right text-sm">Total</td>
-                        <td className="px-4 sm:px-6 py-3 text-right text-sm">
+                        <td colSpan="2" className="px-4 sm:px-6 py-3 text-right text-sm text-gray-700 dark:text-gray-300">Total</td>
+                        <td className="px-4 sm:px-6 py-3 text-right text-sm text-gray-800 dark:text-gray-200">
                           {bottles.reduce((sum, b) => sum + (b.totalPurchased || 0), 0)}
                         </td>
-                        <td className="px-4 sm:px-6 py-3 text-right text-sm">
+                        <td className="px-4 sm:px-6 py-3 text-right text-sm text-gray-800 dark:text-gray-200">
                           {bottles.reduce((sum, b) => sum + (b.sold || 0), 0)}
                         </td>
-                        <td className="px-4 sm:px-6 py-3 text-right text-sm">
+                        <td className="px-4 sm:px-6 py-3 text-right text-sm text-gray-800 dark:text-gray-200">
                           {bottles.reduce((sum, b) => sum + Math.max(0, (b.totalPurchased || 0) - (b.sold || 0)), 0)}
                         </td>
-                        <td className="px-4 sm:px-6 py-3 text-right text-sm">-</td>
-                        <td className="px-4 sm:px-6 py-3 text-right text-cyan-600 text-sm">
+                        <td className="px-4 sm:px-6 py-3 text-right text-sm text-gray-500 dark:text-gray-400">-</td>
+                        <td className="px-4 sm:px-6 py-3 text-right text-cyan-600 dark:text-cyan-400 text-sm">
                           ৳{bottles.reduce((sum, b) => sum + (Math.max(0, (b.totalPurchased || 0) - (b.sold || 0)) * (parseFloat(b.avgCostPerUnit) || 0)), 0).toFixed(2)}
                         </td>
                       </tr>

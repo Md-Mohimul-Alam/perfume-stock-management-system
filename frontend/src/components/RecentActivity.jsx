@@ -6,11 +6,11 @@ import { ShoppingBag, ShoppingCart, Wallet, Trash2, TrendingUp } from 'lucide-re
 const RecentActivity = ({ activities }) => {
   const getIcon = (type) => {
     switch (type) {
-      case 'sale': return <ShoppingBag className="w-4 h-4 text-blue-500" />;
-      case 'purchase': return <ShoppingCart className="w-4 h-4 text-orange-500" />;
-      case 'expense': return <Wallet className="w-4 h-4 text-rose-500" />;
-      case 'wastage': return <Trash2 className="w-4 h-4 text-red-500" />;
-      default: return <TrendingUp className="w-4 h-4 text-gray-500" />;
+      case 'sale': return <ShoppingBag className="w-4 h-4 text-blue-500 dark:text-blue-400" />;
+      case 'purchase': return <ShoppingCart className="w-4 h-4 text-orange-500 dark:text-orange-400" />;
+      case 'expense': return <Wallet className="w-4 h-4 text-rose-500 dark:text-rose-400" />;
+      case 'wastage': return <Trash2 className="w-4 h-4 text-red-500 dark:text-red-400" />;
+      default: return <TrendingUp className="w-4 h-4 text-gray-500 dark:text-gray-400" />;
     }
   };
 
@@ -24,8 +24,8 @@ const RecentActivity = ({ activities }) => {
     }
   };
 
-  if (activities.length === 0) {
-    return <p className="text-gray-400 text-sm text-center py-4">No recent activity</p>;
+  if (!activities || activities.length === 0) {
+    return <p className="text-gray-400 dark:text-gray-500 text-sm text-center py-4">No recent activity</p>;
   }
 
   return (
@@ -34,20 +34,20 @@ const RecentActivity = ({ activities }) => {
         <Link
           key={idx}
           to={getLink(item)}
-          className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg transition"
+          className="flex items-center justify-between p-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition"
         >
           <div className="flex items-center gap-3 min-w-0">
-            <div className="p-1.5 rounded-full bg-gray-100 flex-shrink-0">
+            <div className="p-1.5 rounded-full bg-gray-100 dark:bg-gray-700 flex-shrink-0">
               {getIcon(item.type)}
             </div>
             <div className="truncate">
-              <p className="text-sm font-medium text-gray-700 truncate">{item.title}</p>
-              <p className="text-xs text-gray-400 truncate">{item.time}</p>
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-200 truncate">{item.title}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{item.time}</p>
             </div>
           </div>
-          {item.amount && (
-            <span className="text-sm font-semibold whitespace-nowrap ml-2">
-              {item.amount > 0 ? '+' : ''}${item.amount.toFixed(2)}
+          {item.amount !== undefined && (
+            <span className="text-sm font-semibold whitespace-nowrap ml-2 text-gray-800 dark:text-gray-200">
+              {item.amount > 0 ? '+' : ''}৳{item.amount.toFixed(2)}
             </span>
           )}
         </Link>

@@ -1,25 +1,108 @@
 @import "tailwindcss";
 
 @theme {
-  /* Brand colors */
+  /* Brand colors – light mode */
   --color-brand-primary: #b8860b;
   --color-brand-secondary: #d4a373;
   --color-brand-accent: #c47a3a;
   --color-brand-light: #faf8f5;
   --color-brand-dark: #2c2c2c;
   --color-brand-muted: #5a4e3c;
+
+  /* Extended dark palette (using Tailwind's dark: variants directly) */
 }
 
 @layer base {
   body {
-    @apply bg-brand-light text-brand-dark font-sans antialiased;
+    @apply bg-brand-light text-brand-dark font-sans antialiased transition-colors duration-200;
   }
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    @apply font-serif;
+
+  /* Dark mode overrides */
+  .dark body {
+    @apply bg-gray-900 text-gray-100;
   }
+
+  /* Card & container overrides */
+  .dark .bg-white {
+    @apply bg-gray-800;
+  }
+  .dark .bg-gray-50 {
+    @apply bg-gray-800/80;
+  }
+  .dark .bg-gray-100 {
+    @apply bg-gray-700/60;
+  }
+  .dark .border-gray-200 {
+    @apply border-gray-700;
+  }
+  .dark .border-gray-100 {
+    @apply border-gray-800;
+  }
+  .dark .shadow-sm {
+    @apply shadow-gray-800/30;
+  }
+  .dark .shadow-lg {
+    @apply shadow-gray-900/40;
+  }
+
+  /* Text colors */
+  .dark .text-gray-500 {
+    @apply text-gray-400;
+  }
+  .dark .text-gray-600 {
+    @apply text-gray-300;
+  }
+  .dark .text-gray-700 {
+    @apply text-gray-200;
+  }
+  .dark .text-gray-800 {
+    @apply text-gray-100;
+  }
+  .dark .text-gray-900 {
+    @apply text-white;
+  }
+
+  /* Hover & states */
+  .dark .hover\:bg-gray-50:hover {
+    @apply hover:bg-gray-700/50;
+  }
+  .dark .hover\:bg-gray-100:hover {
+    @apply hover:bg-gray-700/60;
+  }
+
+  /* Form elements – basic overrides, you can add more */
+  .dark input,
+  .dark select,
+  .dark textarea {
+    @apply bg-gray-700 border-gray-600 text-gray-100;
+  }
+  .dark input:focus,
+  .dark select:focus,
+  .dark textarea:focus {
+    @apply border-brand-primary ring-brand-primary/50;
+  }
+  .dark input::placeholder,
+  .dark textarea::placeholder {
+    @apply text-gray-400;
+  }
+
+  /* Specific brand colors – keep them consistent */
+  .dark .bg-brand-light {
+    @apply bg-gray-800;
+  }
+  .dark .text-brand-dark {
+    @apply text-gray-100;
+  }
+  .dark .text-brand-muted {
+    @apply text-gray-400;
+  }
+
+  /* You can add more overrides as you style your components */
+}
+
+/* Optional: smooth transition for theme change */
+* {
+  transition-property: background-color, border-color, color, fill, stroke, box-shadow;
+  transition-duration: 200ms;
+  transition-timing-function: ease-in-out;
 }
