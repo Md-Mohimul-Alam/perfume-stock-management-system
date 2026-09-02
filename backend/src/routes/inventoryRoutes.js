@@ -16,6 +16,7 @@ const {
   importMaterialsWithPurchases,
   bulkAddStockToBottles,
   addBottlePurchase,
+  stockOutMaterial,  // ✅ added missing import
 } = require('../controllers/inventoryController');
 const { getBottlesWithSales } = require('../controllers/bottleController');
 const { protect } = require('../middlewares/authMiddleware');
@@ -50,6 +51,8 @@ router.post('/bottles/bulk-add-stock', protect, bulkAddStockToBottles);
 
 router.get('/bottles/with-sales', protect, getBottlesWithSales);
 
-router.route('/materials/:id/stock-out').post(protect, stockOutMaterial);
+// ✅ Stock‑out route
+router.route('/materials/:id/stock-out')
+  .post(protect, stockOutMaterial);
 
 module.exports = router;
