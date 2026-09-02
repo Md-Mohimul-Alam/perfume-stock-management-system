@@ -16,7 +16,7 @@
     @apply bg-brand-light text-brand-dark font-sans antialiased;
   }
 
-  /* Dark mode base – force full coverage */
+  /* ----- Dark mode base ----- */
   .dark,
   .dark body,
   .dark #root {
@@ -24,7 +24,7 @@
     color: #f3f4f6 !important; /* gray-100 */
   }
 
-  /* ----- Overrides for all gray shades (bg) ----- */
+  /* ----- Backgrounds (light → dark) ----- */
   .dark .bg-white {
     background-color: #1f2937 !important; /* gray-800 */
   }
@@ -59,39 +59,39 @@
     background-color: #ffffff !important;
   }
 
-  /* ----- Text colors ----- */
+  /* ----- Text colors (dark → light in dark mode) ----- */
   .dark .text-gray-50 {
-    color: #f9fafb !important;
+    color: #111827 !important; /* darkest */
   }
   .dark .text-gray-100 {
-    color: #f3f4f6 !important;
-  }
-  .dark .text-gray-200 {
-    color: #e5e7eb !important;
-  }
-  .dark .text-gray-300 {
-    color: #d1d5db !important;
-  }
-  .dark .text-gray-400 {
-    color: #9ca3af !important;
-  }
-  .dark .text-gray-500 {
-    color: #6b7280 !important;
-  }
-  .dark .text-gray-600 {
-    color: #4b5563 !important;
-  }
-  .dark .text-gray-700 {
-    color: #374151 !important;
-  }
-  .dark .text-gray-800 {
     color: #1f2937 !important;
   }
+  .dark .text-gray-200 {
+    color: #374151 !important;
+  }
+  .dark .text-gray-300 {
+    color: #4b5563 !important;
+  }
+  .dark .text-gray-400 {
+    color: #6b7280 !important;
+  }
+  .dark .text-gray-500 {
+    color: #9ca3af !important;
+  }
+  .dark .text-gray-600 {
+    color: #d1d5db !important;
+  }
+  .dark .text-gray-700 {
+    color: #e5e7eb !important;
+  }
+  .dark .text-gray-800 {
+    color: #f3f4f6 !important;
+  }
   .dark .text-gray-900 {
-    color: #111827 !important;
+    color: #f9fafb !important; /* almost white */
   }
 
-  /* ----- Border colors ----- */
+  /* ----- Border colors (light → dark) ----- */
   .dark .border-gray-50 {
     border-color: #f9fafb !important;
   }
@@ -123,7 +123,7 @@
     border-color: #111827 !important;
   }
 
-  /* ----- Divide colors (for tables, etc.) ----- */
+  /* ----- Divide colors (tables) ----- */
   .dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]) {
     border-color: #374151 !important;
   }
@@ -134,30 +134,27 @@
     border-color: #6b7280 !important;
   }
 
-  /* ----- Shadows ----- */
+  /* ----- Shadows (darker) ----- */
   .dark .shadow-sm {
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.5) !important;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.6) !important;
   }
   .dark .shadow {
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.5), 0 1px 2px -1px rgba(0, 0, 0, 0.5) !important;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.6), 0 1px 2px -1px rgba(0, 0, 0, 0.5) !important;
   }
   .dark .shadow-md {
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.5) !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.6), 0 2px 4px -2px rgba(0, 0, 0, 0.5) !important;
   }
   .dark .shadow-lg {
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.5) !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.6), 0 4px 6px -4px rgba(0, 0, 0, 0.5) !important;
   }
   .dark .shadow-xl {
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5) !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.5) !important;
   }
   .dark .shadow-2xl {
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
-  }
-  .dark .shadow-inner {
-    box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.5) !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6) !important;
   }
 
-  /* ----- Hover states ----- */
+  /* ----- Hover states (light → dark) ----- */
   .dark .hover\:bg-gray-50:hover {
     background-color: #374151 !important;
   }
@@ -168,13 +165,34 @@
     background-color: #6b7280 !important;
   }
   .dark .hover\:text-gray-50:hover {
-    color: #f9fafb !important;
+    color: #111827 !important;
   }
   .dark .hover\:text-gray-100:hover {
-    color: #f3f4f6 !important;
+    color: #1f2937 !important;
   }
   .dark .hover\:text-gray-200:hover {
+    color: #374151 !important;
+  }
+  .dark .hover\:text-gray-300:hover {
+    color: #4b5563 !important;
+  }
+  .dark .hover\:text-gray-400:hover {
+    color: #6b7280 !important;
+  }
+  .dark .hover\:text-gray-500:hover {
+    color: #9ca3af !important;
+  }
+  .dark .hover\:text-gray-600:hover {
+    color: #d1d5db !important;
+  }
+  .dark .hover\:text-gray-700:hover {
     color: #e5e7eb !important;
+  }
+  .dark .hover\:text-gray-800:hover {
+    color: #f3f4f6 !important;
+  }
+  .dark .hover\:text-gray-900:hover {
+    color: #f9fafb !important;
   }
 
   /* ----- Focus rings ----- */
@@ -185,7 +203,7 @@
     --tw-ring-color: #4b5563 !important;
   }
 
-  /* ----- Form elements (already present, but keeping them) ----- */
+  /* ----- Form elements ----- */
   .dark input,
   .dark select,
   .dark textarea {
@@ -212,9 +230,9 @@
     color: #9ca3af !important;
   }
 
-  /* ----- Additional overrides for common components ----- */
+  /* ----- Additional overrides ----- */
   .dark .bg-white\/80 {
-    background-color: rgba(31, 41, 55, 0.8) !important;
+    background-color: rgba(31, 41, 55, 0.85) !important;
   }
   .dark .bg-black\/40 {
     background-color: rgba(0, 0, 0, 0.7) !important;
@@ -222,9 +240,35 @@
   .dark .backdrop-blur-sm {
     backdrop-filter: blur(4px) !important;
   }
+
+  /* ----- Links ----- */
+  .dark a:not([class*="text-"]) {
+    color: #60a5fa !important; /* blue-400 */
+  }
+  .dark a:hover {
+    color: #93bbfc !important; /* blue-300 */
+  }
+
+  /* ----- Headings (h1-h6) ----- */
+  .dark h1,
+  .dark h2,
+  .dark h3,
+  .dark h4,
+  .dark h5,
+  .dark h6 {
+    color: #f9fafb !important; /* gray-50 */
+  }
+
+  /* ----- Cards, panels, etc. ----- */
+  .dark .bg-white\/60 {
+    background-color: rgba(31, 41, 55, 0.6) !important;
+  }
+  .dark .border-gray-200\/50 {
+    border-color: rgba(55, 65, 81, 0.5) !important;
+  }
 }
 
-/* Smooth transitions for theme change – limited to key properties */
+/* Smooth transitions for theme change */
 html,
 body,
 #root,
@@ -234,7 +278,6 @@ body,
   transition-timing-function: ease-in-out;
 }
 
-/* Optional: remove transition from elements that might cause flicker */
 .no-transition {
   transition: none !important;
 }
