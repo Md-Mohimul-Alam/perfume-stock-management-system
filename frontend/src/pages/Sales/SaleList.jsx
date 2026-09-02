@@ -53,7 +53,6 @@ const SalesList = () => {
     setFilter({ ...filter, [e.target.name]: e.target.value });
   };
 
-  // ---------- Filter + Sort ----------
   const filteredAndSortedSales = useMemo(() => {
     let filtered = sales;
     if (filter.channel) {
@@ -63,9 +62,13 @@ const SalesList = () => {
       filtered = filtered.filter(s => s.paymentStatus === filter.paymentStatus);
     }
     if (search) {
+      const lowerSearch = search.toLowerCase();
       filtered = filtered.filter(s =>
-        s.invoiceNo.toLowerCase().includes(search.toLowerCase()) ||
-        s.channel.toLowerCase().includes(search.toLowerCase())
+        s.invoiceNo.toLowerCase().includes(lowerSearch) ||
+        s.channel.toLowerCase().includes(lowerSearch) ||
+        s.items.some(item => 
+          item.product?.sku?.toLowerCase().includes(lowerSearch)
+        )
       );
     }
     if (typeFilter) {
@@ -82,7 +85,6 @@ const SalesList = () => {
       return numB - numA;
     });
   }, [sales, filter, search, typeFilter]);
-  
   // Toggle expand row
   const toggleRow = (invoiceNo) => {
     setExpandedRows(prev => ({
@@ -345,18 +347,18 @@ const SalesList = () => {
       {/* Filters */}
       <div className="bg-white rounded-2xl shadow-card p-4 mb-6 flex flex-wrap items-end gap-4">
         <div className="flex-1 min-w-[200px]">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-            <input
-              type="text"
-              placeholder="Invoice or Channel"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-secondary outline-none"
-            />
-          </div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <input
+            type="text"
+            placeholder="Invoice, Channel or SKU"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-secondary outline-none"
+          />
         </div>
+      </div>
 
         <div className="min-w-[150px]">
           <label className="block text-sm font-medium text-gray-700 mb-1">Channel</label>
