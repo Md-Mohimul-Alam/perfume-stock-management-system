@@ -534,13 +534,12 @@ const Materials = () => {
                       >
                         <Trash2 size={18} />
                       </button>
-                      {/* Stock Out button – hidden for virtual materials and when already zero */}
+                      {/* ✅ Stock Out button – always active (except virtual materials) */}
                       {!isVirtual && (
                         <button
                           onClick={() => handleStockOutClick(m)}
-                          className={`text-red-600 hover:text-red-800 ${m.currentStockMl === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          className="text-red-600 hover:text-red-800"
                           title="Stock Out"
-                          disabled={m.currentStockMl === 0}
                         >
                           <XCircle size={18} />
                         </button>
@@ -739,10 +738,14 @@ const Materials = () => {
             <p className="text-gray-600 mb-2">
               You are about to mark <strong>{stockOutMaterial.name}</strong> as <strong>Stock Out</strong>.
             </p>
-            {stockOutMaterial.currentStockMl > 0 && (
+            {stockOutMaterial.currentStockMl > 0 ? (
               <p className="text-amber-600 text-sm mb-4">
                 ⚠️ There is <strong>{stockOutMaterial.currentStockMl} ml</strong> remaining.
                 This will be recorded as <strong>Wastage</strong> and removed from inventory.
+              </p>
+            ) : (
+              <p className="text-gray-500 text-sm mb-4">
+                This item is already out of stock. Marking it as stock‑out will confirm it's currently unavailable.
               </p>
             )}
             <p className="text-sm text-gray-500 mb-6">This action cannot be undone.</p>
