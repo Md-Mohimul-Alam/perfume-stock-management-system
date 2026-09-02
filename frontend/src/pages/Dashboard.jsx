@@ -23,9 +23,10 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  Area,
+  ComposedChart,
 } from 'recharts';
 
-// ---------- Responsive styles ----------
 const responsiveStyles = `
   @media (min-width: 1920px) {
     .dashboard-container { max-width: 1800px; padding: 2rem 2.5rem; }
@@ -42,7 +43,6 @@ const responsiveStyles = `
   @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 `;
 
-// ---------- Recent Activity Component ----------
 const RecentActivity = ({ activities }) => {
   const getIcon = (type) => {
     switch (type) {
@@ -69,15 +69,15 @@ const RecentActivity = ({ activities }) => {
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-1">
       {activities.slice(0, 10).map((item, idx) => (
         <Link
           key={idx}
           to={getLink(item)}
-          className="flex items-center justify-between p-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition"
+          className="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-xl transition-all duration-200 group"
         >
           <div className="flex items-center gap-3 min-w-0">
-            <div className="p-1.5 rounded-full bg-gray-100 dark:bg-gray-700 flex-shrink-0">
+            <div className="p-2 rounded-full bg-gray-100 dark:bg-gray-700 group-hover:bg-opacity-80 flex-shrink-0">
               {getIcon(item.type)}
             </div>
             <div className="truncate">
@@ -96,7 +96,6 @@ const RecentActivity = ({ activities }) => {
   );
 };
 
-// ---------- Main Dashboard Component ----------
 const Dashboard = () => {
   const { user } = useAuth();
   const { setNotifications } = useNotifications();
@@ -132,7 +131,6 @@ const Dashboard = () => {
   const [dueSales, setDueSales] = useState([]);
   const [recentActivities, setRecentActivities] = useState([]);
 
-  // ---------- Build notifications ----------
   const buildNotifications = (lowMat, lowBot, dueSalesList) => {
     const notifs = [];
     lowMat.forEach(m => {
@@ -165,7 +163,6 @@ const Dashboard = () => {
     return notifs;
   };
 
-  // ---------- Fetch data ----------
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
@@ -348,7 +345,6 @@ const Dashboard = () => {
     }
   };
 
-  // ---------- Rebuild stock ----------
   const handleRebuild = async () => {
     if (user?.role !== 'admin') {
       toast.error('Only admins can rebuild stock');
@@ -368,7 +364,6 @@ const Dashboard = () => {
     }
   };
 
-  // ---------- Export PDF ----------
   const exportDashboardPDF = async () => {
     const element = document.getElementById('dashboard-content');
     if (!element) return;
@@ -397,14 +392,14 @@ const Dashboard = () => {
     fetchDashboardData();
   }, []);
 
-  // ---------- Memoized cards ----------
+  // ----- Styled cards with gradients -----
   const mainCards = useMemo(() => [
-    { title: 'Raw Materials', value: stats.materials, icon: Package, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50/80 dark:bg-amber-900/20', border: 'border-amber-200/50 dark:border-amber-800/30', link: '/inventory/materials', linkText: 'Manage →' },
-    { title: 'Bottle Types', value: stats.bottles, icon: FlaskRound, color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50/80 dark:bg-indigo-900/20', border: 'border-indigo-200/50 dark:border-indigo-800/30', link: '/inventory/bottles', linkText: 'View →' },
-    { title: 'Total Products', value: stats.products, icon: Sparkles, color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50/80 dark:bg-purple-900/20', border: 'border-purple-200/50 dark:border-purple-800/30', link: '/products', linkText: 'Browse →' },
-    { title: 'Total Sales', value: stats.salesCount, icon: ShoppingBag, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50/80 dark:bg-blue-900/20', border: 'border-blue-200/50 dark:border-blue-800/30', link: '/sales', linkText: 'View all →' },
-    { title: 'Raw Mat. Stock Value', value: `৳${stats.rawMaterialStockValue.toFixed(2)}`, icon: Layers, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50/80 dark:bg-emerald-900/20', border: 'border-emerald-200/50 dark:border-emerald-800/30', link: '/inventory/materials', linkText: 'View stock →' },
-    { title: 'Bottles Stock Value', value: `৳${stats.bottleStockValue.toFixed(2)}`, icon: Layers, color: 'text-cyan-600 dark:text-cyan-400', bg: 'bg-cyan-50/80 dark:bg-cyan-900/20', border: 'border-cyan-200/50 dark:border-cyan-800/30', link: '/inventory/bottles', linkText: 'View stock →' },
+    { title: 'Raw Materials', value: stats.materials, icon: Package, gradient: 'from-amber-500/10 to-amber-600/5', color: 'text-amber-600 dark:text-amber-400', link: '/inventory/materials', linkText: 'Manage →' },
+    { title: 'Bottle Types', value: stats.bottles, icon: FlaskRound, gradient: 'from-indigo-500/10 to-indigo-600/5', color: 'text-indigo-600 dark:text-indigo-400', link: '/inventory/bottles', linkText: 'View →' },
+    { title: 'Total Products', value: stats.products, icon: Sparkles, gradient: 'from-purple-500/10 to-purple-600/5', color: 'text-purple-600 dark:text-purple-400', link: '/products', linkText: 'Browse →' },
+    { title: 'Total Sales', value: stats.salesCount, icon: ShoppingBag, gradient: 'from-blue-500/10 to-blue-600/5', color: 'text-blue-600 dark:text-blue-400', link: '/sales', linkText: 'View all →' },
+    { title: 'Raw Mat. Stock Value', value: `৳${stats.rawMaterialStockValue.toFixed(2)}`, icon: Layers, gradient: 'from-emerald-500/10 to-emerald-600/5', color: 'text-emerald-600 dark:text-emerald-400', link: '/inventory/materials', linkText: 'View stock →' },
+    { title: 'Bottles Stock Value', value: `৳${stats.bottleStockValue.toFixed(2)}`, icon: Layers, gradient: 'from-cyan-500/10 to-cyan-600/5', color: 'text-cyan-600 dark:text-cyan-400', link: '/inventory/bottles', linkText: 'View stock →' },
   ], [stats]);
 
   const overallSummary = useMemo(() => [
@@ -422,15 +417,14 @@ const Dashboard = () => {
     <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4 skeleton h-28" />
   );
 
-  // ---------- Render ----------
   return (
     <>
       <style>{responsiveStyles}</style>
       <div id="dashboard-content" className="dashboard-container p-4 sm:p-6 space-y-6">
 
-        {/* Header */}
-        <div className="relative overflow-hidden rounded-2xl bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm border border-gray-200/60 dark:border-gray-800/60 shadow-lg dark:shadow-gray-900/30 p-4 sm:p-6 lg:p-8">
-          <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 via-purple-500/5 to-amber-500/5" />
+        {/* Header - modern glass card */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/90 to-gray-50/90 dark:from-gray-900/90 dark:to-gray-800/90 backdrop-blur-sm border border-gray-200/60 dark:border-gray-800/60 shadow-xl dark:shadow-gray-900/40 p-6 sm:p-8">
+          <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-amber-500/10" />
           <div className="relative flex flex-wrap items-center justify-between gap-4">
             <div>
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 dark:text-gray-100">
@@ -444,16 +438,16 @@ const Dashboard = () => {
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={exportDashboardPDF}
-                className="inline-flex items-center gap-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition text-sm font-medium"
+                className="inline-flex items-center gap-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-4 py-2.5 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition text-sm font-medium shadow-sm"
               >
                 <FileText size={18} /> Export PDF
               </button>
-              <button onClick={fetchDashboardData} className="inline-flex items-center gap-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition text-sm font-medium">
+              <button onClick={fetchDashboardData} className="inline-flex items-center gap-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-4 py-2.5 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition text-sm font-medium shadow-sm">
                 <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
                 Refresh
               </button>
               {user?.role === 'admin' && (
-                <button onClick={handleRebuild} disabled={rebuilding} className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-xl transition disabled:opacity-60 text-sm font-medium">
+                <button onClick={handleRebuild} disabled={rebuilding} className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2.5 rounded-xl transition disabled:opacity-60 text-sm font-medium shadow-sm shadow-purple-500/30">
                   <RotateCw size={18} className={rebuilding ? 'animate-spin' : ''} />
                   {rebuilding ? 'Rebuilding...' : 'Rebuild Stock'}
                 </button>
@@ -461,9 +455,9 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Low Stock Alert */}
+          {/* Low Stock Alert - refined */}
           {(lowStockItems.materials.length > 0 || lowStockItems.bottles.length > 0) && (
-            <div className="relative mt-4 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-xl p-3 flex items-start gap-3 text-sm">
+            <div className="relative mt-4 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-xl p-3.5 flex items-start gap-3.5 text-sm shadow-sm">
               <AlertCircle size={20} className="text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
               <div>
                 <span className="font-semibold text-amber-800 dark:text-amber-300">Low stock alert:</span>
@@ -473,37 +467,37 @@ const Dashboard = () => {
                 {lowStockItems.bottles.length > 0 && (
                   <span className="ml-2 text-amber-700 dark:text-amber-400">{lowStockItems.bottles.length} bottle type(s) low</span>
                 )}
-                <Link to="/inventory" className="ml-3 text-amber-700 dark:text-amber-400 underline hover:text-amber-900 dark:hover:text-amber-300">View inventory</Link>
+                <Link to="/inventory" className="ml-3 text-amber-700 dark:text-amber-400 underline hover:text-amber-900 dark:hover:text-amber-300 font-medium">View inventory</Link>
               </div>
             </div>
           )}
         </div>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
-          <Link to="/sales/new" className="bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-800/40 rounded-xl p-3 text-center transition border border-indigo-200/50 dark:border-indigo-800/30 group">
-            <PlusCircle size={24} className="mx-auto text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform" />
-            <span className="text-xs font-medium text-gray-700 dark:text-gray-300 block mt-1">New Sale</span>
+        {/* Quick Actions - refined icons */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          <Link to="/sales/new" className="bg-gradient-to-br from-indigo-50 to-indigo-100/50 dark:from-indigo-900/30 dark:to-indigo-800/20 hover:shadow-md rounded-xl p-3.5 text-center transition border border-indigo-200/50 dark:border-indigo-800/30 group">
+            <PlusCircle size={26} className="mx-auto text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform" />
+            <span className="text-xs font-medium text-gray-700 dark:text-gray-300 block mt-1.5">New Sale</span>
           </Link>
-          <Link to="/expenses" className="bg-rose-50 dark:bg-rose-900/30 hover:bg-rose-100 dark:hover:bg-rose-800/40 rounded-xl p-3 text-center transition border border-rose-200/50 dark:border-rose-800/30 group">
-            <Wallet size={24} className="mx-auto text-rose-600 dark:text-rose-400 group-hover:scale-110 transition-transform" />
-            <span className="text-xs font-medium text-gray-700 dark:text-gray-300 block mt-1">Add Expense</span>
+          <Link to="/expenses" className="bg-gradient-to-br from-rose-50 to-rose-100/50 dark:from-rose-900/30 dark:to-rose-800/20 hover:shadow-md rounded-xl p-3.5 text-center transition border border-rose-200/50 dark:border-rose-800/30 group">
+            <Wallet size={26} className="mx-auto text-rose-600 dark:text-rose-400 group-hover:scale-110 transition-transform" />
+            <span className="text-xs font-medium text-gray-700 dark:text-gray-300 block mt-1.5">Add Expense</span>
           </Link>
-          <button onClick={() => navigate('/wastage/new')} className="bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-800/40 rounded-xl p-3 text-center transition border border-red-200/50 dark:border-red-800/30 group">
-            <Trash2 size={24} className="mx-auto text-red-600 dark:text-red-400 group-hover:scale-110 transition-transform" />
-            <span className="text-xs font-medium text-gray-700 dark:text-gray-300 block mt-1">Wastage</span>
+          <button onClick={() => navigate('/wastage/new')} className="bg-gradient-to-br from-red-50 to-red-100/50 dark:from-red-900/30 dark:to-red-800/20 hover:shadow-md rounded-xl p-3.5 text-center transition border border-red-200/50 dark:border-red-800/30 group">
+            <Trash2 size={26} className="mx-auto text-red-600 dark:text-red-400 group-hover:scale-110 transition-transform" />
+            <span className="text-xs font-medium text-gray-700 dark:text-gray-300 block mt-1.5">Wastage</span>
           </button>
-          <Link to="/purchases/new" className="bg-orange-50 dark:bg-orange-900/30 hover:bg-orange-100 dark:hover:bg-orange-800/40 rounded-xl p-3 text-center transition border border-orange-200/50 dark:border-orange-800/30 group">
-            <ShoppingCart size={24} className="mx-auto text-orange-600 dark:text-orange-400 group-hover:scale-110 transition-transform" />
-            <span className="text-xs font-medium text-gray-700 dark:text-gray-300 block mt-1">New Purchase</span>
+          <Link to="/purchases/new" className="bg-gradient-to-br from-orange-50 to-orange-100/50 dark:from-orange-900/30 dark:to-orange-800/20 hover:shadow-md rounded-xl p-3.5 text-center transition border border-orange-200/50 dark:border-orange-800/30 group">
+            <ShoppingCart size={26} className="mx-auto text-orange-600 dark:text-orange-400 group-hover:scale-110 transition-transform" />
+            <span className="text-xs font-medium text-gray-700 dark:text-gray-300 block mt-1.5">New Purchase</span>
           </Link>
-          <Link to="/investors" className="bg-teal-50 dark:bg-teal-900/30 hover:bg-teal-100 dark:hover:bg-teal-800/40 rounded-xl p-3 text-center transition border border-teal-200/50 dark:border-teal-800/30 group">
-            <Users size={24} className="mx-auto text-teal-600 dark:text-teal-400 group-hover:scale-110 transition-transform" />
-            <span className="text-xs font-medium text-gray-700 dark:text-gray-300 block mt-1">Investors</span>
+          <Link to="/investors" className="bg-gradient-to-br from-teal-50 to-teal-100/50 dark:from-teal-900/30 dark:to-teal-800/20 hover:shadow-md rounded-xl p-3.5 text-center transition border border-teal-200/50 dark:border-teal-800/30 group">
+            <Users size={26} className="mx-auto text-teal-600 dark:text-teal-400 group-hover:scale-110 transition-transform" />
+            <span className="text-xs font-medium text-gray-700 dark:text-gray-300 block mt-1.5">Investors</span>
           </Link>
-          <Link to="/reports" className="bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-xl p-3 text-center transition border border-gray-200/50 dark:border-gray-700/50 group">
-            <FileText size={24} className="mx-auto text-gray-600 dark:text-gray-400 group-hover:scale-110 transition-transform" />
-            <span className="text-xs font-medium text-gray-700 dark:text-gray-300 block mt-1">Reports</span>
+          <Link to="/reports" className="bg-gradient-to-br from-gray-50 to-gray-100/50 dark:from-gray-800/50 dark:to-gray-700/30 hover:shadow-md rounded-xl p-3.5 text-center transition border border-gray-200/50 dark:border-gray-700/50 group">
+            <FileText size={26} className="mx-auto text-gray-600 dark:text-gray-400 group-hover:scale-110 transition-transform" />
+            <span className="text-xs font-medium text-gray-700 dark:text-gray-300 block mt-1.5">Reports</span>
           </Link>
         </div>
 
@@ -518,50 +512,44 @@ const Dashboard = () => {
           </div>
         ) : (
           <>
-            {/* Main Stats Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-3 sm:gap-4 lg:gap-5 xl:gap-6">
+            {/* Main Stats Cards - gradient backgrounds */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-3 sm:gap-4">
               {mainCards.map((card, idx) => (
                 <div
                   key={idx}
-                  className={`bg-white dark:bg-gray-800 rounded-2xl border ${card.border} hover:shadow-xl dark:hover:shadow-gray-800/30 transition-all duration-300 hover:-translate-y-1 p-3 sm:p-4 lg:p-5 xl:p-6 stat-card flex flex-col h-full min-w-0 min-h-[110px] sm:min-h-[120px]`}
+                  className={`bg-gradient-to-br ${card.gradient} bg-white dark:bg-gray-800 rounded-2xl border border-gray-200/60 dark:border-gray-700/60 hover:shadow-xl dark:hover:shadow-gray-800/30 transition-all duration-300 hover:-translate-y-1 p-4 sm:p-5 flex flex-col h-full min-h-[120px]`}
                 >
-                  <div className="flex items-center justify-between gap-2 sm:gap-3 mb-1.5 sm:mb-2">
-                    <div className={`p-1.5 sm:p-2 lg:p-2.5 xl:p-3 rounded-xl ${card.bg} flex-shrink-0`}>
-                      <card.icon className={`w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 xl:w-7 xl:h-7 ${card.color}`} />
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <div className={`p-2.5 rounded-xl bg-white/80 dark:bg-gray-700/50 shadow-sm flex-shrink-0`}>
+                      <card.icon className={`w-5 h-5 sm:w-6 sm:h-6 ${card.color}`} />
                     </div>
-                    <span
-                      className="text-sm sm:text-lg lg:text-xl xl:text-2xl 2xl:text-3xl font-bold text-gray-800 dark:text-gray-100 stat-value truncate text-right min-w-0 max-w-full overflow-hidden text-ellipsis"
-                      title={typeof card.value === 'string' ? card.value : card.value?.toString() || ''}
-                    >
+                    <span className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 dark:text-gray-100 stat-value truncate text-right">
                       {card.value}
                     </span>
                   </div>
-                  <p className="text-[10px] sm:text-xs lg:text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate">
+                  <p className="text-[10px] sm:text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate">
                     {card.title}
                   </p>
                   <Link
                     to={card.link}
-                    className="mt-auto pt-1.5 sm:pt-2 text-[10px] sm:text-xs lg:text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 inline-flex items-center gap-1 group font-medium min-h-[28px]"
+                    className="mt-auto pt-2 text-[10px] sm:text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 inline-flex items-center gap-1 group font-medium"
                   >
                     {card.linkText}
-                    <ArrowUpRight
-                      size={12}
-                      className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"
-                    />
+                    <ArrowUpRight size={12} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                   </Link>
                 </div>
               ))}
             </div>
 
-            {/* Overall Summary */}
+            {/* Overall Summary - modern cards */}
             <div>
-              <h2 className="text-base sm:text-lg lg:text-xl font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+              <h2 className="text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
                 <BarChart3 size={20} className="text-indigo-500 dark:text-indigo-400" />
                 Financial Snapshot
               </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-8 gap-3 sm:gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-8 gap-3">
                 {overallSummary.map((item, idx) => (
-                  <div key={idx} className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200/60 dark:border-gray-700/60 hover:shadow-md dark:hover:shadow-gray-800/30 transition-all duration-200 p-3 sm:p-4 text-center relative hover:-translate-y-1">
+                  <div key={idx} className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200/60 dark:border-gray-700/60 hover:shadow-md dark:hover:shadow-gray-800/30 transition-all duration-200 p-3.5 text-center relative hover:-translate-y-1">
                     <div className="flex items-center justify-center gap-1.5 mb-1">
                       <div className={`p-1.5 rounded-lg ${item.bg}`}>
                         <item.icon className={`w-3.5 h-3.5 ${item.color}`} />
@@ -585,31 +573,43 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* Performance Metrics */}
+            {/* Performance Metrics - with icons */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4">
-                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Profit Margin</p>
+              <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
+                <div className="flex items-center gap-2 mb-1">
+                  <TrendingUp size={16} className="text-emerald-500" />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Profit Margin</p>
+                </div>
                 <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                   {stats.totalRevenue > 0 ? ((stats.totalRevenue - stats.totalExpenses - stats.totalPurchases) / stats.totalRevenue * 100).toFixed(1) : 0}%
                 </p>
                 <p className="text-xs text-gray-400 dark:text-gray-500">of revenue</p>
               </div>
-              <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4">
-                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Inventory Turnover</p>
+              <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
+                <div className="flex items-center gap-2 mb-1">
+                  <RefreshCw size={16} className="text-blue-500" />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Inventory Turnover</p>
+                </div>
                 <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                   {stats.totalInventoryValue > 0 ? (stats.totalPurchases / stats.totalInventoryValue).toFixed(1) : 0}x
                 </p>
                 <p className="text-xs text-gray-400 dark:text-gray-500">purchases ÷ inventory</p>
               </div>
-              <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4">
-                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cash Conversion</p>
+              <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
+                <div className="flex items-center gap-2 mb-1">
+                  <Clock size={16} className="text-purple-500" />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cash Conversion</p>
+                </div>
                 <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                   {stats.totalRevenue > 0 ? (stats.dueAmount / stats.totalRevenue * 100).toFixed(1) : 0}%
                 </p>
                 <p className="text-xs text-gray-400 dark:text-gray-500">due payments</p>
               </div>
-              <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4">
-                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Avg. Sale Value</p>
+              <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
+                <div className="flex items-center gap-2 mb-1">
+                  <DollarSign size={16} className="text-amber-500" />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Avg. Sale Value</p>
+                </div>
                 <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
                   {stats.salesCount > 0 ? (stats.totalRevenue / stats.salesCount).toFixed(2) : 0}
                 </p>
@@ -617,73 +617,96 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* Chart & Recent Activity */}
+            {/* Chart & Recent Activity - refined */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200/60 dark:border-gray-700/60 shadow-sm dark:shadow-gray-800/20 p-4 sm:p-5">
-                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+              <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200/60 dark:border-gray-700/60 shadow-sm p-5">
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
                   <TrendingUp size={16} className="text-amber-500 dark:text-amber-400" />
                   Revenue Trend (Last 30 Days)
                 </h3>
                 {chartData.length === 0 ? (
-                  <p className="text-gray-400 dark:text-gray-500 text-sm text-center py-8">No revenue data available</p>
+                  <p className="text-gray-400 dark:text-gray-500 text-sm text-center py-12">No revenue data available</p>
                 ) : (
                   <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                    <ComposedChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                      <defs>
+                        <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" className="dark:stroke-gray-700" />
-                      <XAxis dataKey="date" tick={{ fontSize: 10 }} className="dark:fill-gray-400" />
-                      <YAxis tickFormatter={(val) => `৳${val}`} className="dark:fill-gray-400" />
+                      <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#6b7280' }} className="dark:fill-gray-400" />
+                      <YAxis tickFormatter={(val) => `৳${val}`} tick={{ fill: '#6b7280' }} className="dark:fill-gray-400" />
                       <Tooltip
                         formatter={(val) => `৳${val.toFixed(2)}`}
-                        contentStyle={{ backgroundColor: '#fff', borderColor: '#e5e7eb' }}
+                        contentStyle={{
+                          backgroundColor: '#ffffff',
+                          borderColor: '#e5e7eb',
+                          borderRadius: '8px',
+                          padding: '8px 12px',
+                        }}
                         itemStyle={{ color: '#374151' }}
-                        wrapperClassName="dark:bg-gray-800 dark:border-gray-700"
+                        labelStyle={{ color: '#6b7280' }}
+                        wrapperClassName="dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200"
                       />
                       <Legend />
+                      <Area
+                        type="monotone"
+                        dataKey="revenue"
+                        stroke="#f59e0b"
+                        strokeWidth={2}
+                        fill="url(#colorRevenue)"
+                        dot={{ r: 3, fill: '#f59e0b' }}
+                        activeDot={{ r: 6 }}
+                      />
                       <Line
                         type="monotone"
                         dataKey="revenue"
                         stroke="#f59e0b"
                         strokeWidth={2}
                         dot={{ r: 3 }}
-                        activeDot={{ r: 5 }}
+                        activeDot={{ r: 6 }}
                       />
-                    </LineChart>
+                    </ComposedChart>
                   </ResponsiveContainer>
                 )}
               </div>
 
               <div className="lg:col-span-1">
-                <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200/60 dark:border-gray-700/60 shadow-sm dark:shadow-gray-800/20 overflow-hidden">
-                  <div className="p-4 border-b border-gray-200 dark:border-gray-700 font-semibold flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200/60 dark:border-gray-700/60 shadow-sm overflow-hidden h-full">
+                  <div className="p-4 border-b border-gray-200 dark:border-gray-700 font-semibold flex items-center gap-2 text-gray-700 dark:text-gray-300 bg-gray-50/50 dark:bg-gray-800/50">
                     <Clock size={18} className="text-gray-500 dark:text-gray-400" />
                     Recent Activity
                   </div>
-                  <div className="p-2">
+                  <div className="p-2 max-h-[340px] overflow-y-auto">
                     <RecentActivity activities={recentActivities} />
                   </div>
                 </div>
               </div>
             </div>
 
+            {/* ... rest of the component (Recent Sales, Recent Purchases, Sales by Type, Top Products, Bottles Inventory Table) remains the same but with improved spacing */}
+
             {/* Two-Column: Recent Sales & Recent Purchases */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200/60 dark:border-gray-700/60 shadow-sm dark:shadow-gray-800/20 p-4 sm:p-5">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200/60 dark:border-gray-700/60 shadow-sm p-5">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
                     <ShoppingBag size={16} className="text-blue-500 dark:text-blue-400" />
                     Recent Sales
                   </h3>
-                  <Link to="/sales" className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline">View all →</Link>
+                  <Link to="/sales" className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium">View all →</Link>
                 </div>
                 {recentSales.length === 0 ? (
-                  <p className="text-gray-400 dark:text-gray-500 text-sm text-center py-4">No recent sales</p>
+                  <p className="text-gray-400 dark:text-gray-500 text-sm text-center py-6">No recent sales</p>
                 ) : (
                   <div className="space-y-2">
                     {recentSales.map((sale) => (
-                      <div key={sale._id} className="flex items-center justify-between p-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition">
+                      <div key={sale._id} className="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-xl transition">
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
-                            <DollarSign size={14} className="text-blue-500 dark:text-blue-400" />
+                          <div className="w-9 h-9 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
+                            <DollarSign size={16} className="text-blue-500 dark:text-blue-400" />
                           </div>
                           <div className="truncate">
                             <p className="text-sm font-medium text-gray-700 dark:text-gray-200 truncate">Invoice #{sale.invoiceNo}</p>
@@ -700,23 +723,23 @@ const Dashboard = () => {
                 )}
               </div>
 
-              <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200/60 dark:border-gray-700/60 shadow-sm dark:shadow-gray-800/20 p-4 sm:p-5">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200/60 dark:border-gray-700/60 shadow-sm p-5">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
                     <ShoppingCart size={16} className="text-orange-500 dark:text-orange-400" />
                     Recent Purchases
                   </h3>
-                  <Link to="/purchases" className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline">View all →</Link>
+                  <Link to="/purchases" className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium">View all →</Link>
                 </div>
                 {recentPurchases.length === 0 ? (
-                  <p className="text-gray-400 dark:text-gray-500 text-sm text-center py-4">No recent purchases</p>
+                  <p className="text-gray-400 dark:text-gray-500 text-sm text-center py-6">No recent purchases</p>
                 ) : (
                   <div className="space-y-2">
                     {recentPurchases.map((purchase) => (
-                      <div key={purchase._id} className="flex items-center justify-between p-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition">
+                      <div key={purchase._id} className="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-xl transition">
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-8 h-8 rounded-full bg-orange-50 dark:bg-orange-900/30 flex items-center justify-center flex-shrink-0">
-                            <ShoppingCart size={14} className="text-orange-500 dark:text-orange-400" />
+                          <div className="w-9 h-9 rounded-full bg-orange-50 dark:bg-orange-900/30 flex items-center justify-center flex-shrink-0">
+                            <ShoppingCart size={16} className="text-orange-500 dark:text-orange-400" />
                           </div>
                           <div className="truncate">
                             <p className="text-sm font-medium text-gray-700 dark:text-gray-200 truncate">{purchase.invoiceNo}</p>
@@ -736,38 +759,38 @@ const Dashboard = () => {
 
             {/* Sales by Type & Top Products */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200/60 dark:border-gray-700/60 shadow-sm dark:shadow-gray-800/20 p-4 sm:p-5">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200/60 dark:border-gray-700/60 shadow-sm p-5">
                 <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
                   <BarChart3 size={16} className="text-indigo-500 dark:text-indigo-400" />
                   Sales by Product Type
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gradient-to-br from-amber-50 to-amber-100/50 dark:from-amber-900/30 dark:to-amber-800/20 rounded-xl p-4 text-center border border-amber-200/50 dark:border-amber-800/30">
-                    <Droplet className="w-8 h-8 text-amber-600 dark:text-amber-400 mx-auto mb-1" />
+                  <div className="bg-gradient-to-br from-amber-50 to-amber-100/70 dark:from-amber-900/30 dark:to-amber-800/20 rounded-xl p-5 text-center border border-amber-200/50 dark:border-amber-800/30 shadow-sm">
+                    <Droplet className="w-8 h-8 text-amber-600 dark:text-amber-400 mx-auto mb-2" />
                     <p className="text-2xl font-bold text-amber-700 dark:text-amber-300">{salesTypeCounts.oil}</p>
                     <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Oil Units</p>
                   </div>
-                  <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-900/30 dark:to-blue-800/20 rounded-xl p-4 text-center border border-blue-200/50 dark:border-blue-800/30">
-                    <SprayCan className="w-8 h-8 text-blue-600 dark:text-blue-400 mx-auto mb-1" />
+                  <div className="bg-gradient-to-br from-blue-50 to-blue-100/70 dark:from-blue-900/30 dark:to-blue-800/20 rounded-xl p-5 text-center border border-blue-200/50 dark:border-blue-800/30 shadow-sm">
+                    <SprayCan className="w-8 h-8 text-blue-600 dark:text-blue-400 mx-auto mb-2" />
                     <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{salesTypeCounts.perfume}</p>
                     <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Perfume Units</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200/60 dark:border-gray-700/60 shadow-sm dark:shadow-gray-800/20 p-4 sm:p-5">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200/60 dark:border-gray-700/60 shadow-sm p-5">
                 <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
                   <Award size={16} className="text-amber-500 dark:text-amber-400" />
                   Top Selling Products
                 </h3>
                 {topProducts.length === 0 ? (
-                  <p className="text-gray-400 dark:text-gray-500 text-sm text-center py-4">No sales data yet</p>
+                  <p className="text-gray-400 dark:text-gray-500 text-sm text-center py-6">No sales data yet</p>
                 ) : (
                   <div className="space-y-2">
                     {topProducts.map((item, index) => (
-                      <div key={item.productId} className="flex items-center justify-between p-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition">
+                      <div key={item.productId} className="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-xl transition">
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 flex items-center justify-center text-xs font-bold">
+                          <div className="flex-shrink-0 w-7 h-7 rounded-full bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 flex items-center justify-center text-xs font-bold">
                             {index + 1}
                           </div>
                           <div className="truncate">
@@ -786,24 +809,24 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* Bottles Inventory Table */}
+            {/* Bottles Inventory Table - refined */}
             <div>
               <h2 className="text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
                 <FlaskRound size={18} className="text-cyan-500 dark:text-cyan-400" />
                 Available Bottles (Inventory)
               </h2>
-              <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200/60 dark:border-gray-700/60 shadow-sm dark:shadow-gray-800/20 overflow-hidden">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200/60 dark:border-gray-700/60 shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <thead className="bg-gray-50/50 dark:bg-gray-800/80 sticky top-0">
+                    <thead className="bg-gray-50/70 dark:bg-gray-800/80">
                       <tr>
-                        <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Bottle</th>
-                        <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</th>
-                        <th className="px-4 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total</th>
-                        <th className="px-4 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Sold</th>
-                        <th className="px-4 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Available</th>
-                        <th className="px-4 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Avg Cost</th>
-                        <th className="px-4 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Value</th>
+                        <th className="px-4 sm:px-6 py-3.5 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Bottle</th>
+                        <th className="px-4 sm:px-6 py-3.5 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</th>
+                        <th className="px-4 sm:px-6 py-3.5 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total</th>
+                        <th className="px-4 sm:px-6 py-3.5 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Sold</th>
+                        <th className="px-4 sm:px-6 py-3.5 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Available</th>
+                        <th className="px-4 sm:px-6 py-3.5 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Avg Cost</th>
+                        <th className="px-4 sm:px-6 py-3.5 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Value</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -815,13 +838,13 @@ const Dashboard = () => {
                         const totalValue = available * avgCost;
                         return (
                           <tr key={bottle._id} className="hover:bg-gray-50/70 dark:hover:bg-gray-700/50 transition">
-                            <td className="px-4 sm:px-6 py-3 text-sm text-gray-800 dark:text-gray-200">{bottle.sizeMl} ml</td>
-                            <td className="px-4 sm:px-6 py-3 capitalize text-sm text-gray-600 dark:text-gray-400">{bottle.type}</td>
-                            <td className="px-4 sm:px-6 py-3 text-right font-medium text-sm text-gray-800 dark:text-gray-200">{totalPurchased}</td>
-                            <td className="px-4 sm:px-6 py-3 text-right text-rose-600 dark:text-rose-400 text-sm">{sold}</td>
-                            <td className="px-4 sm:px-6 py-3 text-right font-semibold text-emerald-600 dark:text-emerald-400 text-sm">{available}</td>
-                            <td className="px-4 sm:px-6 py-3 text-right text-sm text-gray-700 dark:text-gray-300">৳{avgCost.toFixed(2)}</td>
-                            <td className="px-4 sm:px-6 py-3 text-right font-semibold text-cyan-600 dark:text-cyan-400 text-sm">৳{totalValue.toFixed(2)}</td>
+                            <td className="px-4 sm:px-6 py-3.5 text-sm font-medium text-gray-800 dark:text-gray-200">{bottle.sizeMl} ml</td>
+                            <td className="px-4 sm:px-6 py-3.5 capitalize text-sm text-gray-600 dark:text-gray-400">{bottle.type}</td>
+                            <td className="px-4 sm:px-6 py-3.5 text-right font-medium text-sm text-gray-800 dark:text-gray-200">{totalPurchased}</td>
+                            <td className="px-4 sm:px-6 py-3.5 text-right text-rose-600 dark:text-rose-400 text-sm">{sold}</td>
+                            <td className="px-4 sm:px-6 py-3.5 text-right font-semibold text-emerald-600 dark:text-emerald-400 text-sm">{available}</td>
+                            <td className="px-4 sm:px-6 py-3.5 text-right text-sm text-gray-700 dark:text-gray-300">৳{avgCost.toFixed(2)}</td>
+                            <td className="px-4 sm:px-6 py-3.5 text-right font-semibold text-cyan-600 dark:text-cyan-400 text-sm">৳{totalValue.toFixed(2)}</td>
                           </tr>
                         );
                       })}
@@ -831,20 +854,20 @@ const Dashboard = () => {
                         </tr>
                       )}
                     </tbody>
-                    <tfoot className="bg-gray-50/50 dark:bg-gray-800/80 font-semibold">
+                    <tfoot className="bg-gray-50/70 dark:bg-gray-800/80 font-semibold">
                       <tr>
-                        <td colSpan="2" className="px-4 sm:px-6 py-3 text-right text-sm text-gray-700 dark:text-gray-300">Total</td>
-                        <td className="px-4 sm:px-6 py-3 text-right text-sm text-gray-800 dark:text-gray-200">
+                        <td colSpan="2" className="px-4 sm:px-6 py-3.5 text-right text-sm text-gray-700 dark:text-gray-300">Total</td>
+                        <td className="px-4 sm:px-6 py-3.5 text-right text-sm text-gray-800 dark:text-gray-200">
                           {bottles.reduce((sum, b) => sum + (b.totalPurchased || 0), 0)}
                         </td>
-                        <td className="px-4 sm:px-6 py-3 text-right text-sm text-gray-800 dark:text-gray-200">
+                        <td className="px-4 sm:px-6 py-3.5 text-right text-sm text-gray-800 dark:text-gray-200">
                           {bottles.reduce((sum, b) => sum + (b.sold || 0), 0)}
                         </td>
-                        <td className="px-4 sm:px-6 py-3 text-right text-sm text-gray-800 dark:text-gray-200">
+                        <td className="px-4 sm:px-6 py-3.5 text-right text-sm text-gray-800 dark:text-gray-200">
                           {bottles.reduce((sum, b) => sum + Math.max(0, (b.totalPurchased || 0) - (b.sold || 0)), 0)}
                         </td>
-                        <td className="px-4 sm:px-6 py-3 text-right text-sm text-gray-500 dark:text-gray-400">-</td>
-                        <td className="px-4 sm:px-6 py-3 text-right text-cyan-600 dark:text-cyan-400 text-sm">
+                        <td className="px-4 sm:px-6 py-3.5 text-right text-sm text-gray-500 dark:text-gray-400">-</td>
+                        <td className="px-4 sm:px-6 py-3.5 text-right text-cyan-600 dark:text-cyan-400 text-sm">
                           ৳{bottles.reduce((sum, b) => sum + (Math.max(0, (b.totalPurchased || 0) - (b.sold || 0)) * (parseFloat(b.avgCostPerUnit) || 0)), 0).toFixed(2)}
                         </td>
                       </tr>
