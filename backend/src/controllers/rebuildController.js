@@ -4,7 +4,7 @@ const Purchase = require('../models/Purchase');
 const Sale = require('../models/Sale');
 const Product = require('../models/Product');
 const Transaction = require('../models/Transaction');
-const InventoryLog = require('../models/InventoryLog');
+const InventoryLog = require('../models/InventoryLog');   // ✅ NEW import
 
 // ----- Helper: parse blend components for spray products -----
 function parseBlendComponents(product) {
@@ -31,7 +31,6 @@ function parseBlendComponents(product) {
 async function applyExactBlends() {
   console.log('🔄 Applying exact product blends...');
 
-  // Ensure required materials exist
   const fixatives = [
     { name: 'Ethanol', sku: 'ETH', type: 'ethanol' },
     { name: 'Iso E Super', sku: 'Iso', type: 'fixative' },
@@ -53,7 +52,6 @@ async function applyExactBlends() {
     }
   }
 
-  // Also ensure special oils exist
   const specialOils = [
     { name: 'Dunhill Icon', sku: 'DunIco', type: 'oil' },
     { name: 'Diptyque tam dao', sku: 'DipTam', type: 'oil' },
@@ -72,12 +70,10 @@ async function applyExactBlends() {
     }
   }
 
-  // Fetch all materials
   const materials = await RawMaterial.find();
   const matMap = {};
   materials.forEach(m => { matMap[m.sku] = m; });
 
-  // Fetch all products
   const products = await Product.find({ isActive: true });
   console.log(`📦 Applying blends to ${products.length} active products.`);
 
@@ -246,10 +242,9 @@ async function applyExactBlends() {
 // ----- Main rebuild stock function -----
 exports.rebuildStock = async (req, res) => {
   try {
-    // ====== 1. Rebuild Raw Materials and Bottles from purchases and sales ======
-    console.log('🔄 Rebuilding stock from purchases and sales...');
+    console.log('🔄 Rebuilding stock from purchases, sales, and wastage...');
 
-    // 1a. Aggregate purchases (both materials and bottles)
+    // 1a. Aggregate purchases (materials and bottles)
     const purchases = await Purchase.find().lean();
     const purchaseQty = {};
     const purchaseCost = {};
@@ -326,13 +321,23 @@ exports.rebuildStock = async (req, res) => {
       }
     }
 
-    // 1c. Update Raw Materials (with isStockOut)
+    // 1b.2 Aggregate wastage from InventoryLog (raw materials only)
+    const wastageLogs = await InventoryLog.find({ reason: 'wastage', material: { $ne: null } });
+    const wastageMap = {};
+    for (const log of wastageLogs) {
+      const matId = log.material.toString();
+      if (!wastageMap[matId]) wastageMap[matId] = 0;
+      wastageMap[matId] += log.changeQuantity; // negative value (deduction)
+    }
+
+    // 1c. Update Raw Materials (including wastage and isStockOut)
     const allMaterials = await RawMaterial.find();
     for (const mat of allMaterials) {
       const id = mat._id.toString();
       const purchased = purchaseQty[id] || 0;
       const consumed = rawConsumption[id] || 0;
-      let netStock = purchased - consumed;
+      const wasted = wastageMap[id] || 0;   // negative or zero
+      let netStock = purchased - consumed + wasted; // wastage is negative, so it reduces stock
       if (netStock < 0) netStock = 0;
 
       const costData = purchaseCost[id];
@@ -341,10 +346,11 @@ exports.rebuildStock = async (req, res) => {
         avgCost = costData.totalCost / costData.totalQty;
       }
 
+      // Update only if changed
       if (mat.currentStockMl !== netStock || mat.avgCostPerMl !== avgCost || mat.isStockOut !== (netStock === 0)) {
         mat.currentStockMl = netStock;
         mat.avgCostPerMl = avgCost;
-        mat.isStockOut = (netStock === 0);   // ✅ Update stock-out status
+        mat.isStockOut = (netStock === 0);
         await mat.save();
         console.log(`✅ Material ${mat.name}: stock ${netStock}ml, isStockOut = ${mat.isStockOut}`);
       }
@@ -389,12 +395,12 @@ exports.rebuildStock = async (req, res) => {
 
     console.log(`✅ Bottles updated: ${bottleUpdatedCount} out of ${allBottles.length}`);
 
-    // ====== 2. Apply exact product blends ======
+    // 2. Apply product blends
     await applyExactBlends();
 
-    // ====== 3. Return response ======
+    // 3. Return response
     res.json({
-      message: 'Stock rebuilt and product blends updated successfully',
+      message: 'Stock rebuilt, product blends updated, and stock-out statuses refreshed.',
       updatedMaterials: allMaterials.filter(m => m.currentStockMl !== undefined).length,
       updatedBottles: bottleUpdatedCount,
     });
