@@ -62,9 +62,15 @@ const Materials = () => {
         API.get('/products'),
       ]);
 
-      const materialsData = materialsRes.data;
-      const sales = salesRes.data || [];
-      const products = productsRes.data || [];
+      // ✅ Ensure we have arrays (defensive)
+      const materialsData = Array.isArray(materialsRes.data) ? materialsRes.data : [];
+      const sales = Array.isArray(salesRes.data) ? salesRes.data : [];
+      const products = Array.isArray(productsRes.data) ? productsRes.data : [];
+
+      // If any is empty, log a warning (but continue)
+      if (!materialsData.length) console.warn('No materials data received');
+      if (!sales.length) console.warn('No sales data received');
+      if (!products.length) console.warn('No products data received');
 
       // Build product map
       const productMap = {};
@@ -98,7 +104,7 @@ const Materials = () => {
       // Build material name -> id map
       const materialNameMap = {};
       materialsData.forEach(m => {
-        materialNameMap[m.name.toLowerCase()] = m._id;
+        materialNameMap[m.name?.toLowerCase()] = m._id;
       });
 
       // Compute usage per material
@@ -424,39 +430,56 @@ const Materials = () => {
         </div>
       </div>
 
-      {/* Oil Summary Cards */}
+      {/* Oil Summary Cards – Skeleton while loading */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-2xl shadow-sm border border-amber-200 p-4">
-          <p className="text-xs text-gray-500 uppercase tracking-wider flex items-center gap-1">
-            <Droplet size={14} className="text-amber-600" /> Oil Used (Roll-on)
-          </p>
-          <p className="text-2xl font-bold text-amber-700">{oilSummary.usedOilRollOn.toFixed(0)} ml</p>
-        </div>
-        <div className="bg-white rounded-2xl shadow-sm border border-blue-200 p-4">
-          <p className="text-xs text-gray-500 uppercase tracking-wider flex items-center gap-1">
-            <FlaskRound size={14} className="text-blue-600" /> Oil Used (Spray)
-          </p>
-          <p className="text-2xl font-bold text-blue-700">{oilSummary.usedOilSpray.toFixed(0)} ml</p>
-        </div>
-        <div className="bg-white rounded-2xl shadow-sm border border-green-200 p-4">
-          <p className="text-xs text-gray-500 uppercase tracking-wider flex items-center gap-1">
-            <Package size={14} className="text-green-600" /> Total Oil Stock
-          </p>
-          <p className="text-2xl font-bold text-green-700">{oilSummary.totalOilStock.toFixed(0)} ml</p>
-        </div>
-        <div className="bg-white rounded-2xl shadow-sm border border-purple-200 p-4">
-          <p className="text-xs text-gray-500 uppercase tracking-wider flex items-center gap-1">
-            <Droplet size={14} className="text-purple-600" /> Available Oil
-          </p>
-          <p className={`text-2xl font-bold ${oilSummary.availableOil < 0 ? 'text-red-600' : 'text-purple-700'}`}>
-            {oilSummary.availableOil.toFixed(0)} ml
-          </p>
-        </div>
+        {loading ? (
+          // Skeleton placeholders
+          Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 animate-pulse">
+              <div className="h-4 bg-gray-200 rounded w-3/4 mb-2" />
+              <div className="h-8 bg-gray-200 rounded w-1/2" />
+            </div>
+          ))
+        ) : (
+          <>
+            <div className="bg-white rounded-2xl shadow-sm border border-amber-200 p-4">
+              <p className="text-xs text-gray-500 uppercase tracking-wider flex items-center gap-1">
+                <Droplet size={14} className="text-amber-600" /> Oil Used (Roll-on)
+              </p>
+              <p className="text-2xl font-bold text-amber-700">{oilSummary.usedOilRollOn.toFixed(0)} ml</p>
+            </div>
+            <div className="bg-white rounded-2xl shadow-sm border border-blue-200 p-4">
+              <p className="text-xs text-gray-500 uppercase tracking-wider flex items-center gap-1">
+                <FlaskRound size={14} className="text-blue-600" /> Oil Used (Spray)
+              </p>
+              <p className="text-2xl font-bold text-blue-700">{oilSummary.usedOilSpray.toFixed(0)} ml</p>
+            </div>
+            <div className="bg-white rounded-2xl shadow-sm border border-green-200 p-4">
+              <p className="text-xs text-gray-500 uppercase tracking-wider flex items-center gap-1">
+                <Package size={14} className="text-green-600" /> Total Oil Stock
+              </p>
+              <p className="text-2xl font-bold text-green-700">{oilSummary.totalOilStock.toFixed(0)} ml</p>
+            </div>
+            <div className="bg-white rounded-2xl shadow-sm border border-purple-200 p-4">
+              <p className="text-xs text-gray-500 uppercase tracking-wider flex items-center gap-1">
+                <Droplet size={14} className="text-purple-600" /> Available Oil
+              </p>
+              <p className={`text-2xl font-bold ${oilSummary.availableOil < 0 ? 'text-red-600' : 'text-purple-700'}`}>
+                {oilSummary.availableOil.toFixed(0)} ml
+              </p>
+            </div>
+          </>
+        )}
       </div>
 
-      {/* Table */}
+      {/* Table – with formal loader */}
       {loading ? (
-        <p>Loading...</p>
+        <div className="flex justify-center items-center h-64">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+            <p className="text-gray-500 text-sm">Loading materials...</p>
+          </div>
+        </div>
       ) : (
         <div className="bg-white rounded shadow overflow-x-auto">
           <table className="min-w-full">
