@@ -189,12 +189,13 @@ const Dashboard = () => {
         API.get('/investors/settlements'),
       ]);
 
-      const allSales = salesRes?.data || [];
-      const allExpenses = expensesRes?.data || [];
-      const allPurchases = purchasesRes?.data || [];
-      const products = productsRes?.data || [];
-      const materialsData = materialsRes?.data || [];
-      const bottleData = bottlesWithSalesRes?.data || [];
+      // ✅ Defensive: ensure all are arrays
+      const allSales = Array.isArray(salesRes?.data) ? salesRes.data : [];
+      const allExpenses = Array.isArray(expensesRes?.data) ? expensesRes.data : [];
+      const allPurchases = Array.isArray(purchasesRes?.data) ? purchasesRes.data : [];
+      const products = Array.isArray(productsRes?.data) ? productsRes.data : [];
+      const materialsData = Array.isArray(materialsRes?.data) ? materialsRes.data : [];
+      const bottleData = Array.isArray(bottlesWithSalesRes?.data) ? bottlesWithSalesRes.data : [];
 
       setMaterials(materialsData);
       setBottles(bottleData);
