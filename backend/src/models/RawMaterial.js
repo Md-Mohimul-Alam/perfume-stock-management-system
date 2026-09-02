@@ -17,6 +17,7 @@ const rawMaterialSchema = mongoose.Schema(
     currentStockMl: { type: Number, default: 0, min: 0 },
     avgCostPerMl: { type: Number, default: 0, min: 0 },
     purchases: [purchaseEntrySchema],
+    isStockOut: { type: Boolean, default: false },   // ✅ NEW
   },
   { timestamps: true }
 );
@@ -28,6 +29,7 @@ rawMaterialSchema.methods.addPurchase = function (quantityMl, costPerMl, totalCo
   const totalCostSum = this.purchases.reduce((sum, p) => sum + p.totalCost, 0);
   this.avgCostPerMl = totalCostSum / totalQty;
   this.currentStockMl += quantityMl;
+  this.isStockOut = false;   // ✅ Reset flag when stock is replenished
   return this;
 };
 

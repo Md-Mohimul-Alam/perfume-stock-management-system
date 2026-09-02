@@ -483,7 +483,8 @@ exports.stockOutMaterial = async (req, res) => {
       const wastageAmount = remainingStock * avgCost;
 
       // 1. Create an expense record (category 'Wastage')
-      const expense = await require('../models/Expense').create({
+      const Expense = require('../models/Expense');
+      const expense = await Expense.create({
         type: 'regular',
         category: 'Wastage',
         amount: wastageAmount,
@@ -493,7 +494,7 @@ exports.stockOutMaterial = async (req, res) => {
         notes: `Stock out on ${new Date().toISOString()}`,
       });
 
-      // 2. Create cash‑out transaction (handled by expense middleware, but we create manually if not already)
+      // 2. Create cash‑out transaction
       const Transaction = require('../models/Transaction');
       await Transaction.create({
         type: 'cash_out',
@@ -514,8 +515,9 @@ exports.stockOutMaterial = async (req, res) => {
       });
     }
 
-    // 4. Set stock to zero
+    // 4. Set stock to zero and mark as Stock Out
     material.currentStockMl = 0;
+    material.isStockOut = true;   // ✅ NEW
     await material.save();
 
     res.json({

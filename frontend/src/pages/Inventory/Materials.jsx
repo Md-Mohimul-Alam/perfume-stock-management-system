@@ -151,7 +151,7 @@ const Materials = () => {
 
       // Preserve backend values for virtual rows
       const updatedMaterials = materialsData.map(m => {
-        if (m._id === 'SR_SP_VIRTUAL' || m._id === 'LUXE1_VIRTUAL') {
+        if (m._id === 'SR_SP_VIRTUAL' || m._id === 'LUXE1_SP_VIRTUAL') {
           return {
             ...m,
             usedOil: m.usedOil || 0,
@@ -433,7 +433,6 @@ const Materials = () => {
       {/* Oil Summary Cards – Skeleton while loading */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {loading ? (
-          // Skeleton placeholders
           Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 animate-pulse">
               <div className="h-4 bg-gray-200 rounded w-3/4 mb-2" />
@@ -494,6 +493,7 @@ const Materials = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Purchases (৳)</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Used Oil (ml)</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Available Oil (ml)</th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Actions</th>
               </tr>
             </thead>
@@ -520,6 +520,15 @@ const Materials = () => {
                       {available.toFixed(0)}
                     </td>
                     <td className="px-6 py-4 text-center">
+                      {m.isStockOut ? (
+                        <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded-full">
+                          Stock Out
+                        </span>
+                      ) : (
+                        <span className="text-gray-300">—</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-center">
                       <button
                         onClick={() => handleEditClick(m)}
                         className="text-blue-600 hover:text-blue-800 mr-2"
@@ -534,7 +543,6 @@ const Materials = () => {
                       >
                         <Trash2 size={18} />
                       </button>
-                      {/* ✅ Stock Out button – always active (except virtual materials) */}
                       {!isVirtual && (
                         <button
                           onClick={() => handleStockOutClick(m)}
@@ -550,7 +558,7 @@ const Materials = () => {
               })}
               {materials.length === 0 && (
                 <tr>
-                  <td colSpan="10" className="text-center py-8 text-gray-500">No materials found</td>
+                  <td colSpan="11" className="text-center py-8 text-gray-500">No materials found</td>
                 </tr>
               )}
             </tbody>
