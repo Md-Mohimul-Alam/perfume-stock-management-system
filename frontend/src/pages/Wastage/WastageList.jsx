@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import API from '../../api/axios';
-import { Calendar, Search, Trash2, Eye } from 'lucide-react';
+import { Calendar, Search, Trash2, Eye, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const WastageList = () => {
@@ -123,7 +123,12 @@ const WastageList = () => {
 
       {/* Table */}
       {loading ? (
-        <p>Loading...</p>
+        <div className="flex justify-center items-center h-64">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin" />
+            <p className="text-gray-500 text-sm">Loading wastage records...</p>
+          </div>
+        </div>
       ) : (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">

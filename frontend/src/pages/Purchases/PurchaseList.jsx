@@ -29,8 +29,11 @@ const PurchaseList = () => {
     items: []
   });
   const [editLoading, setEditLoading] = useState(false);
+
+  // All items for search & edit
   const [allMaterials, setAllMaterials] = useState([]);
   const [allBottles, setAllBottles] = useState([]);
+  const [itemsLoading, setItemsLoading] = useState(false);
 
   // Upload state
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -45,8 +48,10 @@ const PurchaseList = () => {
     grandTotal: 0,
   });
 
+  // ---------- Fetch ----------
   useEffect(() => {
     fetchPurchases();
+    fetchItems();
   }, []);
 
   const fetchPurchases = async () => {
@@ -75,6 +80,35 @@ const PurchaseList = () => {
     }
   };
 
+  const fetchItems = async () => {
+    setItemsLoading(true);
+    try {
+      const [materialsRes, bottlesRes] = await Promise.all([
+        API.get('/inventory/materials'),
+        API.get('/inventory/bottles')
+      ]);
+      setAllMaterials(materialsRes.data);
+      setAllBottles(bottlesRes.data);
+    } catch (error) {
+      console.error('Failed to load items for search', error);
+    } finally {
+      setItemsLoading(false);
+    }
+  };
+
+  // ---------- Helper: get item label for search ----------
+  const getItemSearchLabel = (itemType, itemId) => {
+    if (itemType === 'RawMaterial') {
+      const mat = allMaterials.find(m => m._id === itemId);
+      return mat ? mat.sku : null;
+    } else if (itemType === 'Bottle') {
+      const bot = allBottles.find(b => b._id === itemId);
+      return bot ? `${bot.sizeMl}ml ${bot.type}` : null;
+    }
+    return null;
+  };
+
+  // ---------- View / Edit / Delete ----------
   const viewDetails = async (id) => {
     try {
       const { data } = await API.get(`/purchases/${id}`);
@@ -85,7 +119,6 @@ const PurchaseList = () => {
     }
   };
 
-  // Edit handlers
   const openEditModal = async (purchase) => {
     try {
       const [materialsRes, bottlesRes] = await Promise.all([
@@ -198,7 +231,6 @@ const PurchaseList = () => {
     }
   };
 
-  // Delete
   const handleDelete = async (id, invoiceNo) => {
     if (!window.confirm(`Delete purchase ${invoiceNo}? This will reverse stock.`)) return;
     try {
@@ -210,7 +242,7 @@ const PurchaseList = () => {
     }
   };
 
-  // Upload handlers (unchanged logic)
+  // ---------- Upload ----------
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) setUploadFile(file);
@@ -380,9 +412,10 @@ const PurchaseList = () => {
     }
   };
 
-  // Filtering
+  // ---------- Filtering (with SKU search) ----------
   const getFilteredPurchases = () => {
     let filtered = purchases;
+
     if (filter.itemType) {
       filtered = filtered.filter(p =>
         p.items.some(item => item.itemType === filter.itemType)
@@ -394,10 +427,20 @@ const PurchaseList = () => {
       );
     }
     if (search) {
-      filtered = filtered.filter(p =>
-        p.invoiceNo.toLowerCase().includes(search.toLowerCase()) ||
-        p.supplier?.toLowerCase().includes(search.toLowerCase())
-      );
+      const lowerSearch = search.toLowerCase();
+      filtered = filtered.filter(p => {
+        // Check invoice and supplier
+        const invoiceMatch = p.invoiceNo.toLowerCase().includes(lowerSearch);
+        const supplierMatch = p.supplier?.toLowerCase().includes(lowerSearch);
+        if (invoiceMatch || supplierMatch) return true;
+
+        // Check each item's SKU (for materials) or size+type (for bottles)
+        return p.items.some(item => {
+          const label = getItemSearchLabel(item.itemType, item.item);
+          if (!label) return false;
+          return label.toLowerCase().includes(lowerSearch);
+        });
+      });
     }
     if (dateRange.start && dateRange.end) {
       filtered = filtered.filter(p => {
@@ -446,7 +489,7 @@ const PurchaseList = () => {
         </div>
       </div>
 
-      {/* Summary Cards – responsive grid */}
+      {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4">
           <p className="text-xs text-gray-500 uppercase tracking-wider">Raw Materials Cost</p>
@@ -462,7 +505,7 @@ const PurchaseList = () => {
         </div>
       </div>
 
-      {/* Filters – responsive wrapping */}
+      {/* Filters */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-3 sm:p-4 mb-6 flex flex-wrap items-end gap-3 sm:gap-4">
         <div className="flex-1 min-w-[180px] sm:min-w-[200px]">
           <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
@@ -470,7 +513,7 @@ const PurchaseList = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
             <input
               type="text"
-              placeholder="Invoice or Supplier"
+              placeholder="Invoice, Supplier or SKU"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-sm"
@@ -620,7 +663,7 @@ const PurchaseList = () => {
         </div>
       )}
 
-      {/* ---------- Details Modal – responsive ---------- */}
+      {/* ---------- Details Modal ---------- */}
       {showDetailsModal && selectedPurchase && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-4 sm:p-6 relative">
@@ -697,7 +740,7 @@ const PurchaseList = () => {
         </div>
       )}
 
-      {/* ---------- EDIT MODAL – responsive ---------- */}
+      {/* ---------- EDIT MODAL ---------- */}
       {showEditModal && editingPurchase && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-4 sm:p-6 relative">
@@ -872,7 +915,7 @@ const PurchaseList = () => {
         </div>
       )}
 
-      {/* ---------- UPLOAD MODAL – responsive ---------- */}
+      {/* ---------- UPLOAD MODAL ---------- */}
       {showUploadModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-4 sm:p-6 relative">
