@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import API from '../../api/axios';
-import { Plus, Upload, X, CheckCircle, AlertCircle, Pencil, Trash2, Droplet, FlaskRound, Package } from 'lucide-react';
+import { Plus, Upload, X, CheckCircle, AlertCircle, Pencil, Trash2, Droplet, FlaskRound, Package, XCircle } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import toast from 'react-hot-toast';
 
@@ -42,6 +42,11 @@ const Materials = () => {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState(null);
+
+  // ---------- Stock Out state ----------
+  const [showStockOutModal, setShowStockOutModal] = useState(false);
+  const [stockOutMaterial, setStockOutMaterial] = useState(null);
+  const [stockOutLoading, setStockOutLoading] = useState(false);
 
   // ---------- Fetch ----------
   useEffect(() => {
@@ -138,9 +143,8 @@ const Materials = () => {
         }
       }
 
-      // ✅ Preserve backend values for virtual rows
+      // Preserve backend values for virtual rows
       const updatedMaterials = materialsData.map(m => {
-        // Virtual rows have special _id values – keep their backend values
         if (m._id === 'SR_SP_VIRTUAL' || m._id === 'LUXE1_VIRTUAL') {
           return {
             ...m,
@@ -278,6 +282,28 @@ const Materials = () => {
     } finally {
       setDeletingId(null);
       setDeletingName('');
+    }
+  };
+
+  // ---------- Stock Out handlers ----------
+  const handleStockOutClick = (material) => {
+    setStockOutMaterial(material);
+    setShowStockOutModal(true);
+  };
+
+  const handleStockOutConfirm = async () => {
+    if (!stockOutMaterial) return;
+    setStockOutLoading(true);
+    try {
+      await API.post(`/inventory/materials/${stockOutMaterial._id}/stock-out`);
+      toast.success(`Material "${stockOutMaterial.name}" marked as stock‑out.`);
+      setShowStockOutModal(false);
+      setStockOutMaterial(null);
+      fetchMaterialsAndSummary();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Stock‑out failed');
+    } finally {
+      setStockOutLoading(false);
     }
   };
 
@@ -455,6 +481,8 @@ const Materials = () => {
                 const totalPurchaseCost = m.totalPurchaseCost || 0;
                 const used = m.usedOil || 0;
                 const available = m.availableOil || 0;
+                const isVirtual = m._id && m._id.includes('_VIRTUAL');
+
                 return (
                   <tr key={m._id}>
                     <td className="px-6 py-4">{m.name}</td>
@@ -471,18 +499,29 @@ const Materials = () => {
                     <td className="px-6 py-4 text-center">
                       <button
                         onClick={() => handleEditClick(m)}
-                        className="text-blue-600 hover:text-blue-800 mr-3"
+                        className="text-blue-600 hover:text-blue-800 mr-2"
                         title="Edit"
                       >
                         <Pencil size={18} />
                       </button>
                       <button
                         onClick={() => handleDeleteClick(m._id, m.name)}
-                        className="text-red-600 hover:text-red-800"
+                        className="text-red-600 hover:text-red-800 mr-2"
                         title="Delete"
                       >
                         <Trash2 size={18} />
                       </button>
+                      {/* Stock Out button – hidden for virtual materials and when already zero */}
+                      {!isVirtual && (
+                        <button
+                          onClick={() => handleStockOutClick(m)}
+                          className={`text-red-600 hover:text-red-800 ${m.currentStockMl === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          title="Stock Out"
+                          disabled={m.currentStockMl === 0}
+                        >
+                          <XCircle size={18} />
+                        </button>
+                      )}
                     </td>
                   </tr>
                 );
@@ -663,6 +702,40 @@ const Materials = () => {
                 className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
               >
                 Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ---------- Stock Out Confirmation Modal ---------- */}
+      {showStockOutModal && stockOutMaterial && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <h3 className="text-xl font-bold mb-2">Stock Out Material</h3>
+            <p className="text-gray-600 mb-2">
+              You are about to mark <strong>{stockOutMaterial.name}</strong> as <strong>Stock Out</strong>.
+            </p>
+            {stockOutMaterial.currentStockMl > 0 && (
+              <p className="text-amber-600 text-sm mb-4">
+                ⚠️ There is <strong>{stockOutMaterial.currentStockMl} ml</strong> remaining.
+                This will be recorded as <strong>Wastage</strong> and removed from inventory.
+              </p>
+            )}
+            <p className="text-sm text-gray-500 mb-6">This action cannot be undone.</p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => { setShowStockOutModal(false); setStockOutMaterial(null); }}
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleStockOutConfirm}
+                disabled={stockOutLoading}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
+              >
+                {stockOutLoading ? 'Processing...' : 'Confirm Stock Out'}
               </button>
             </div>
           </div>

@@ -461,3 +461,69 @@ exports.addBottlePurchase = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+// @desc    Mark a raw material as Stock Out (remaining stock → wastage)
+// @route   POST /api/inventory/materials/:id/stock-out
+exports.stockOutMaterial = async (req, res) => {
+  try {
+    const material = await RawMaterial.findById(req.params.id);
+    if (!material) {
+      return res.status(404).json({ message: 'Material not found' });
+    }
+
+    // Prevent stock‑out on virtual materials (SKU ends with _VIRTUAL)
+    if (material._id.toString().includes('_VIRTUAL')) {
+      return res.status(400).json({ message: 'Cannot stock‑out virtual material' });
+    }
+
+    const remainingStock = material.currentStockMl || 0;
+    const avgCost = material.avgCostPerMl || 0;
+
+    // If there is remaining stock, record it as wastage
+    if (remainingStock > 0) {
+      const wastageAmount = remainingStock * avgCost;
+
+      // 1. Create an expense record (category 'Wastage')
+      const expense = await require('../models/Expense').create({
+        type: 'regular',
+        category: 'Wastage',
+        amount: wastageAmount,
+        date: new Date(),
+        description: `Stock out: ${material.name} (${remainingStock} ml)`,
+        reference: material.sku,
+        notes: `Stock out on ${new Date().toISOString()}`,
+      });
+
+      // 2. Create cash‑out transaction (handled by expense middleware, but we create manually if not already)
+      const Transaction = require('../models/Transaction');
+      await Transaction.create({
+        type: 'cash_out',
+        amount: wastageAmount,
+        category: 'Expense',
+        reference: expense._id,
+        refModel: 'Expense',
+        description: `Wastage from stock‑out: ${material.name}`,
+      });
+
+      // 3. Log the inventory change (negative adjustment)
+      const InventoryLog = require('../models/InventoryLog');
+      await InventoryLog.create({
+        material: material._id,
+        changeQuantity: -remainingStock,
+        reason: 'wastage',
+        notes: `Stock out: remaining ${remainingStock} ml sent to wastage`,
+      });
+    }
+
+    // 4. Set stock to zero
+    material.currentStockMl = 0;
+    await material.save();
+
+    res.json({
+      message: `Material "${material.name}" marked as stock‑out. Remaining ${remainingStock} ml recorded as wastage.`,
+      material,
+    });
+  } catch (error) {
+    console.error('Stock‑out error:', error);
+    res.status(500).json({ message: error.message });
+  }
+};

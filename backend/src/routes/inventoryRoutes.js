@@ -50,4 +50,6 @@ router.post('/bottles/bulk-add-stock', protect, bulkAddStockToBottles);
 
 router.get('/bottles/with-sales', protect, getBottlesWithSales);
 
+router.route('/materials/:id/stock-out').post(protect, stockOutMaterial);
+
 module.exports = router;
