@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../../api/axios';
-import { Plus, Trash2, AlertCircle } from 'lucide-react';
+import { Plus, Trash2, AlertCircle, Printer } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const NewSale = () => {
@@ -54,6 +54,116 @@ const NewSale = () => {
     }
   }, [selectedProduct, selectedSize, products]);
 
+  // ---------- Print Invoice ----------
+  const printInvoice = (saleData) => {
+    const itemsHtml = saleData.items.map(item => {
+      const productName = item.productName || 'Unknown';
+      const size = item.sizeMl || '';
+      const qty = item.quantity || 0;
+      const unitPrice = item.unitPrice || 0;
+      const total = item.totalPrice || 0;
+      return `
+        <tr>
+          <td style="padding: 6px 8px; border-bottom: 1px solid #ddd;">${productName}</td>
+          <td style="padding: 6px 8px; border-bottom: 1px solid #ddd; text-align: center;">${size} ml</td>
+          <td style="padding: 6px 8px; border-bottom: 1px solid #ddd; text-align: center;">${qty}</td>
+          <td style="padding: 6px 8px; border-bottom: 1px solid #ddd; text-align: right;">৳${unitPrice.toFixed(2)}</td>
+          <td style="padding: 6px 8px; border-bottom: 1px solid #ddd; text-align: right; font-weight: bold;">৳${total.toFixed(2)}</td>
+        </tr>
+      `;
+    }).join('');
+
+    const totalAmount = saleData.totalAmount || 0;
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>Invoice ${saleData.invoiceNo}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 40px; background: #fff; }
+            .invoice-box { max-width: 800px; margin: auto; padding: 20px; border: 1px solid #eee; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+            .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #b8860b; padding-bottom: 10px; margin-bottom: 20px; }
+            .header h1 { margin: 0; color: #b8860b; }
+            .details { display: flex; justify-content: space-between; margin-bottom: 20px; }
+            .details .left, .details .right { font-size: 14px; }
+            .details .left p, .details .right p { margin: 4px 0; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+            th { background: #f5f5f5; text-align: left; padding: 8px; font-size: 14px; }
+            td { padding: 6px 8px; font-size: 14px; }
+            .total-row { font-weight: bold; font-size: 16px; }
+            .total-row td { border-top: 2px solid #333; }
+            .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #888; }
+            .payment-status { display: inline-block; padding: 4px 12px; border-radius: 20px; font-weight: bold; }
+            .paid { background: #d4edda; color: #155724; }
+            .due { background: #fff3cd; color: #856404; }
+            @media print {
+              body { margin: 0; }
+              .invoice-box { box-shadow: none; border: none; }
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="invoice-box">
+            <div class="header">
+              <h1>Luxe Perfume</h1>
+              <div>
+                <span class="payment-status ${saleData.paymentStatus === 'paid' ? 'paid' : 'due'}">${saleData.paymentStatus.toUpperCase()}</span>
+              </div>
+            </div>
+            <div class="details">
+              <div class="left">
+                <p><strong>Invoice:</strong> ${saleData.invoiceNo}</p>
+                <p><strong>Date:</strong> ${new Date(saleData.saleDate).toLocaleDateString()}</p>
+                <p><strong>Channel:</strong> ${saleData.channel}</p>
+              </div>
+              <div class="right">
+                ${saleData.notes ? `<p><strong>Notes:</strong> ${saleData.notes}</p>` : ''}
+              </div>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th style="text-align:center;">Size (ml)</th>
+                  <th style="text-align:center;">Qty</th>
+                  <th style="text-align:right;">Unit Price</th>
+                  <th style="text-align:right;">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${itemsHtml}
+                <tr class="total-row">
+                  <td colspan="4" style="text-align:right;">Grand Total</td>
+                  <td style="text-align:right;">৳${totalAmount.toFixed(2)}</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="footer">
+              <p>Thank you for your business!</p>
+              <p>Luxe Perfume • www.luxeperfume.com</p>
+            </div>
+          </div>
+          <script>
+            window.onload = function() { window.print(); }
+          </script>
+        </body>
+      </html>
+    `;
+
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    if (!printWindow) {
+      toast.error('Please allow popups to print the invoice.', { duration: 4000 });
+      return;
+    }
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.focus();
+  };
+
+  // ---------- Handlers ----------
   const handleAddItem = () => {
     if (!selectedProduct || !selectedSize || !quantity || quantity <= 0) {
       toast.error('Please select product, size and enter valid quantity');
@@ -80,6 +190,7 @@ const NewSale = () => {
     }
     const newItem = {
       product: selectedProduct,
+      productName: product.name,
       sizeMl: parseFloat(selectedSize),
       quantity: parseInt(quantity),
       unitPrice: price,
@@ -122,11 +233,31 @@ const NewSale = () => {
           totalPrice: item.totalPrice,
         })),
       };
-      await API.post('/sales', payload);
-      toast.success('Sale created successfully');
-      navigate('/sales');
+      const response = await API.post('/sales', payload);
+      const createdSale = response.data;
+
+      // Prepare sale data for printing (include product names from form)
+      const printData = {
+        invoiceNo: createdSale.invoiceNo,
+        saleDate: createdSale.saleDate,
+        channel: createdSale.channel,
+        paymentStatus: createdSale.paymentStatus,
+        notes: createdSale.notes,
+        items: form.items, // contains productName, sizeMl, etc.
+        totalAmount: createdSale.totalAmount,
+      };
+
+      // Print the invoice
+      printInvoice(printData);
+
+      // Show success and navigate after a short delay
+      toast.success('Sale created successfully! Printing invoice...');
+      setTimeout(() => {
+        navigate('/sales');
+      }, 2000);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create sale');
+      setSubmitting(false);
     } finally {
       setSubmitting(false);
     }
@@ -134,13 +265,14 @@ const NewSale = () => {
 
   const totalAmount = form.items.reduce((sum, item) => sum + item.totalPrice, 0);
 
+  // ---------- Render ----------
   return (
     <div>
       <h1 className="text-3xl font-bold mb-6">New Sale</h1>
-      <div className="bg-white rounded-2xl shadow-card p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-card dark:shadow-gray-900/30 p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
-            <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
+            <div className="flex items-center gap-2 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-sm rounded-lg px-4 py-3">
               <AlertCircle size={20} />
               <span>{error}</span>
             </div>
@@ -148,14 +280,14 @@ const NewSale = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Channel *</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Channel *</label>
               <input
                 type="text"
                 list="channel-suggestions"
                 value={form.channel}
                 onChange={(e) => setForm({ ...form, channel: e.target.value })}
                 placeholder="Type or select channel"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-secondary outline-none bg-white"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-brand-secondary outline-none"
                 required
               />
               <datalist id="channel-suggestions">
@@ -163,49 +295,49 @@ const NewSale = () => {
               </datalist>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Sale Date</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sale Date</label>
               <input
                 type="date"
                 value={form.saleDate}
                 onChange={(e) => setForm({ ...form, saleDate: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-secondary outline-none"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-brand-secondary outline-none"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Payment Status</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Payment Status</label>
               <select
                 value={form.paymentStatus}
                 onChange={(e) => setForm({ ...form, paymentStatus: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-secondary outline-none bg-white"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-brand-secondary outline-none"
               >
                 <option value="paid">Paid</option>
                 <option value="due">Due</option>
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
               <input
                 type="text"
                 placeholder="Optional notes"
                 value={form.notes}
                 onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-secondary outline-none"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-brand-secondary outline-none"
               />
             </div>
           </div>
 
-          <div className="border-t border-gray-200 pt-6">
-            <h3 className="text-lg font-semibold mb-4">Add Product</h3>
+          <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+            <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">Add Product</h3>
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Product</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Product</label>
                 <select
                   value={selectedProduct}
                   onChange={(e) => {
                     setSelectedProduct(e.target.value);
                     setSelectedSize('');
                   }}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-secondary outline-none bg-white"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-brand-secondary outline-none"
                 >
                   <option value="">Select product</option>
                   {products.filter(p => p.isActive !== false).map(p => (
@@ -214,11 +346,11 @@ const NewSale = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Size (ml)</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Size (ml)</label>
                 <select
                   value={selectedSize}
                   onChange={(e) => setSelectedSize(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-secondary outline-none bg-white"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-brand-secondary outline-none"
                 >
                   <option value="">Select size</option>
                   {selectedProduct && products.find(p => p._id === selectedProduct)?.sizes.map(s => (
@@ -227,24 +359,24 @@ const NewSale = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Quantity</label>
                 <input
                   type="number"
                   min="1"
                   value={quantity}
                   onChange={(e) => setQuantity(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-secondary outline-none"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-brand-secondary outline-none"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Unit Price (৳)</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Unit Price (৳)</label>
                 <input
                   type="number"
                   step="0.01"
                   min="0"
                   value={unitPrice}
                   onChange={(e) => setUnitPrice(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-secondary outline-none"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-brand-secondary outline-none"
                   placeholder="Price per unit"
                 />
               </div>
@@ -252,7 +384,7 @@ const NewSale = () => {
                 <button
                   type="button"
                   onClick={handleAddItem}
-                  className="w-full bg-brand-primary text-white py-2 rounded-lg hover:bg-brand-secondary transition flex items-center justify-center gap-2"
+                  className="w-full bg-brand-primary hover:bg-brand-secondary text-white py-2 rounded-lg transition flex items-center justify-center gap-2"
                 >
                   <Plus size={18} /> Add
                 </button>
@@ -261,35 +393,35 @@ const NewSale = () => {
           </div>
 
           {form.items.length > 0 && (
-            <div className="border-t border-gray-200 pt-6">
-              <h3 className="text-lg font-semibold mb-4">Items</h3>
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+              <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">Items</h3>
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                  <thead className="bg-gray-50 dark:bg-gray-800/50">
                     <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Size (ml)</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Qty</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Unit Price</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
-                      <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Action</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Product</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Size (ml)</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Qty</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Unit Price</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Total</th>
+                      <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
+                  <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                     {form.items.map((item, idx) => {
                       const product = products.find(p => p._id === item.product);
                       return (
                         <tr key={idx}>
-                          <td className="px-4 py-3">{product?.name || 'Unknown'}</td>
-                          <td className="px-4 py-3">{item.sizeMl}</td>
-                          <td className="px-4 py-3">{item.quantity}</td>
-                          <td className="px-4 py-3">৳{item.unitPrice.toFixed(2)}</td>
-                          <td className="px-4 py-3 font-semibold">৳{item.totalPrice.toFixed(2)}</td>
+                          <td className="px-4 py-3 text-gray-800 dark:text-gray-200">{product?.name || 'Unknown'}</td>
+                          <td className="px-4 py-3 text-gray-800 dark:text-gray-200">{item.sizeMl}</td>
+                          <td className="px-4 py-3 text-gray-800 dark:text-gray-200">{item.quantity}</td>
+                          <td className="px-4 py-3 text-gray-800 dark:text-gray-200">৳{item.unitPrice.toFixed(2)}</td>
+                          <td className="px-4 py-3 font-semibold text-gray-800 dark:text-gray-200">৳{item.totalPrice.toFixed(2)}</td>
                           <td className="px-4 py-3 text-center">
                             <button
                               type="button"
                               onClick={() => removeItem(idx)}
-                              className="text-red-600 hover:text-red-800"
+                              className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
                             >
                               <Trash2 size={18} />
                             </button>
@@ -297,9 +429,9 @@ const NewSale = () => {
                         </tr>
                       );
                     })}
-                    <tr className="font-bold bg-gray-50">
-                      <td colSpan="4" className="px-4 py-3 text-right">Grand Total</td>
-                      <td className="px-4 py-3">৳{totalAmount.toFixed(2)}</td>
+                    <tr className="font-bold bg-gray-50 dark:bg-gray-800/50">
+                      <td colSpan="4" className="px-4 py-3 text-right text-gray-800 dark:text-gray-200">Grand Total</td>
+                      <td className="px-4 py-3 text-gray-800 dark:text-gray-200">৳{totalAmount.toFixed(2)}</td>
                       <td></td>
                     </tr>
                   </tbody>
@@ -308,18 +440,18 @@ const NewSale = () => {
             </div>
           )}
 
-          <div className="flex gap-3 pt-4 border-t border-gray-200">
+          <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
             <button
               type="submit"
               disabled={submitting}
-              className="bg-brand-primary text-white px-6 py-2 rounded-lg hover:bg-brand-secondary transition disabled:opacity-50"
+              className="bg-brand-primary hover:bg-brand-secondary text-white px-6 py-2 rounded-lg transition disabled:opacity-50"
             >
               {submitting ? 'Creating...' : 'Create Sale'}
             </button>
             <button
               type="button"
               onClick={() => navigate('/sales')}
-              className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+              className="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition text-gray-700 dark:text-gray-300"
             >
               Cancel
             </button>

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import API from '../../api/axios';
-import { Plus, Eye, Search, Upload, X, CheckCircle, AlertCircle, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
+import { Plus, Eye, Search, Upload, X, CheckCircle, AlertCircle, Trash2, ChevronDown, ChevronRight, Printer } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import toast from 'react-hot-toast';
 
@@ -241,6 +241,117 @@ const SalesList = () => {
     }
   };
 
+  // ---------- Print Invoice ----------
+  const printInvoice = (sale) => {
+    // Build the invoice HTML
+    const itemsHtml = sale.items.map(item => {
+      const productName = item.product?.name || 'Unknown';
+      const size = item.sizeMl || '';
+      const qty = item.quantity || 0;
+      const unitPrice = item.unitPrice || 0;
+      const total = item.totalPrice || 0;
+      return `
+        <tr>
+          <td style="padding: 6px 8px; border-bottom: 1px solid #ddd;">${productName}</td>
+          <td style="padding: 6px 8px; border-bottom: 1px solid #ddd; text-align: center;">${size} ml</td>
+          <td style="padding: 6px 8px; border-bottom: 1px solid #ddd; text-align: center;">${qty}</td>
+          <td style="padding: 6px 8px; border-bottom: 1px solid #ddd; text-align: right;">৳${unitPrice.toFixed(2)}</td>
+          <td style="padding: 6px 8px; border-bottom: 1px solid #ddd; text-align: right; font-weight: bold;">৳${total.toFixed(2)}</td>
+        </tr>
+      `;
+    }).join('');
+
+    const totalAmount = sale.totalAmount || 0;
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>Invoice ${sale.invoiceNo}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 40px; background: #fff; }
+            .invoice-box { max-width: 800px; margin: auto; padding: 20px; border: 1px solid #eee; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+            .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #b8860b; padding-bottom: 10px; margin-bottom: 20px; }
+            .header h1 { margin: 0; color: #b8860b; }
+            .header .logo { max-height: 60px; }
+            .details { display: flex; justify-content: space-between; margin-bottom: 20px; }
+            .details .left, .details .right { font-size: 14px; }
+            .details .left p, .details .right p { margin: 4px 0; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+            th { background: #f5f5f5; text-align: left; padding: 8px; font-size: 14px; }
+            td { padding: 6px 8px; font-size: 14px; }
+            .total-row { font-weight: bold; font-size: 16px; }
+            .total-row td { border-top: 2px solid #333; }
+            .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #888; }
+            .payment-status { display: inline-block; padding: 4px 12px; border-radius: 20px; font-weight: bold; }
+            .paid { background: #d4edda; color: #155724; }
+            .due { background: #fff3cd; color: #856404; }
+            @media print {
+              body { margin: 0; }
+              .invoice-box { box-shadow: none; border: none; }
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="invoice-box">
+            <div class="header">
+              <h1>Luxe Perfume</h1>
+              <div>
+                <span class="payment-status ${sale.paymentStatus === 'paid' ? 'paid' : 'due'}">${sale.paymentStatus.toUpperCase()}</span>
+              </div>
+            </div>
+            <div class="details">
+              <div class="left">
+                <p><strong>Invoice:</strong> ${sale.invoiceNo}</p>
+                <p><strong>Date:</strong> ${new Date(sale.saleDate).toLocaleDateString()}</p>
+                <p><strong>Channel:</strong> ${sale.channel}</p>
+              </div>
+              <div class="right">
+                ${sale.notes ? `<p><strong>Notes:</strong> ${sale.notes}</p>` : ''}
+              </div>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th style="text-align:center;">Size (ml)</th>
+                  <th style="text-align:center;">Qty</th>
+                  <th style="text-align:right;">Unit Price</th>
+                  <th style="text-align:right;">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${itemsHtml}
+                <tr class="total-row">
+                  <td colspan="4" style="text-align:right;">Grand Total</td>
+                  <td style="text-align:right;">৳${totalAmount.toFixed(2)}</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="footer">
+              <p>Thank you for your business!</p>
+              <p>Luxe Perfume • www.luxeperfume.com</p>
+            </div>
+          </div>
+          <script>
+            window.onload = function() { window.print(); }
+          </script>
+        </body>
+      </html>
+    `;
+
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    if (!printWindow) {
+      toast.error('Please allow popups to print the invoice.');
+      return;
+    }
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.focus();
+  };
+
   // ---------- View Details ----------
   const handleViewDetails = async (saleId) => {
     setDetailsLoading(true);
@@ -468,6 +579,13 @@ const SalesList = () => {
                             <Eye size={18} />
                           </button>
                           <button
+                            onClick={() => printInvoice(s)}
+                            className="text-green-600 hover:text-green-800"
+                            title="Print Invoice"
+                          >
+                            <Printer size={18} />
+                          </button>
+                          <button
                             onClick={() => handleDeleteClick(s)}
                             className="text-red-600 hover:text-red-800"
                             title="Delete"
@@ -660,19 +778,32 @@ const SalesList = () => {
         </div>
       )}
 
-      {/* Details Modal */}
+      {/* Details Modal – added Print button */}
       {showDetailsModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 relative">
-            <button
-              onClick={() => {
-                setShowDetailsModal(false);
-                setSelectedSale(null);
-              }}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-            >
-              <X size={24} />
-            </button>
+            <div className="flex justify-between items-start mb-4">
+              <h2 className="text-2xl font-bold">Sale Details</h2>
+              <div className="flex gap-2">
+                {selectedSale && (
+                  <button
+                    onClick={() => printInvoice(selectedSale)}
+                    className="flex items-center gap-2 bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 transition"
+                  >
+                    <Printer size={18} /> Print
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    setShowDetailsModal(false);
+                    setSelectedSale(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+            </div>
 
             {detailsLoading ? (
               <div className="flex justify-center items-center py-12">
@@ -683,7 +814,6 @@ const SalesList = () => {
               </div>
             ) : selectedSale ? (
               <div>
-                <h2 className="text-2xl font-bold mb-4">Sale Details</h2>
                 <div className="grid grid-cols-2 gap-4 mb-6 bg-gray-50 p-4 rounded-lg">
                   <div>
                     <p className="text-sm text-gray-500">Invoice</p>
