@@ -335,8 +335,9 @@ const SalesList = () => {
               </tbody>
             </table>
             <div class="footer">
-              <p>Thank you for your business!</p>
-              <p>Luxe Perfume • www.luxeperfume.com</p>
+              <p>Thank you for choosing Luxe Perfume!</p>
+              <p>We appreciate your trust in our products.</p>
+              <p>Luxe Perfume • https://luxeperfume.netlify.app/</p>
             </div>
           </div>
           <script>
