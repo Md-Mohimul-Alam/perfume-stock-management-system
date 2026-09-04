@@ -241,9 +241,8 @@ const SalesList = () => {
     }
   };
 
-  // ---------- Print Invoice ----------
+// ---------- Print Invoice ----------
   const printInvoice = (sale) => {
-    // Build the invoice HTML
     const itemsHtml = sale.items.map(item => {
       const productName = item.product?.name || 'Unknown';
       const size = item.sizeMl || '';
@@ -262,6 +261,7 @@ const SalesList = () => {
     }).join('');
 
     const totalAmount = sale.totalAmount || 0;
+    const logoUrl = window.location.origin + '/logo.jpg';
 
     const html = `
       <!DOCTYPE html>
@@ -273,8 +273,12 @@ const SalesList = () => {
             body { font-family: Arial, sans-serif; margin: 40px; background: #fff; }
             .invoice-box { max-width: 800px; margin: auto; padding: 20px; border: 1px solid #eee; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
             .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #b8860b; padding-bottom: 10px; margin-bottom: 20px; }
-            .header h1 { margin: 0; color: #b8860b; }
-            .header .logo { max-height: 60px; }
+            .header .brand { display: flex; align-items: center; gap: 12px; }
+            .header .brand img { height: 50px; width: auto; object-fit: contain; }
+            .header .brand h1 { margin: 0; color: #b8860b; font-size: 24px; }
+            .header .payment-status { display: inline-block; padding: 4px 12px; border-radius: 20px; font-weight: bold; }
+            .paid { background: #d4edda; color: #155724; }
+            .due { background: #fff3cd; color: #856404; }
             .details { display: flex; justify-content: space-between; margin-bottom: 20px; }
             .details .left, .details .right { font-size: 14px; }
             .details .left p, .details .right p { margin: 4px 0; }
@@ -284,9 +288,6 @@ const SalesList = () => {
             .total-row { font-weight: bold; font-size: 16px; }
             .total-row td { border-top: 2px solid #333; }
             .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #888; }
-            .payment-status { display: inline-block; padding: 4px 12px; border-radius: 20px; font-weight: bold; }
-            .paid { background: #d4edda; color: #155724; }
-            .due { background: #fff3cd; color: #856404; }
             @media print {
               body { margin: 0; }
               .invoice-box { box-shadow: none; border: none; }
@@ -297,7 +298,10 @@ const SalesList = () => {
         <body>
           <div class="invoice-box">
             <div class="header">
-              <h1>Luxe Perfume</h1>
+              <div class="brand">
+                <img src="${logoUrl}" alt="Luxe Perfume" />
+                <h1>Luxe Perfume</h1>
+              </div>
               <div>
                 <span class="payment-status ${sale.paymentStatus === 'paid' ? 'paid' : 'due'}">${sale.paymentStatus.toUpperCase()}</span>
               </div>

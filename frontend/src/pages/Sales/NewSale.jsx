@@ -55,9 +55,9 @@ const NewSale = () => {
   }, [selectedProduct, selectedSize, products]);
 
   // ---------- Print Invoice ----------
-  const printInvoice = (saleData) => {
-    const itemsHtml = saleData.items.map(item => {
-      const productName = item.productName || 'Unknown';
+  const printInvoice = (sale) => {
+    const itemsHtml = sale.items.map(item => {
+      const productName = item.product?.name || 'Unknown';
       const size = item.sizeMl || '';
       const qty = item.quantity || 0;
       const unitPrice = item.unitPrice || 0;
@@ -73,19 +73,25 @@ const NewSale = () => {
       `;
     }).join('');
 
-    const totalAmount = saleData.totalAmount || 0;
+    const totalAmount = sale.totalAmount || 0;
+    const logoUrl = window.location.origin + '/logo.jpg';
 
     const html = `
       <!DOCTYPE html>
       <html>
         <head>
           <meta charset="UTF-8">
-          <title>Invoice ${saleData.invoiceNo}</title>
+          <title>Invoice ${sale.invoiceNo}</title>
           <style>
             body { font-family: Arial, sans-serif; margin: 40px; background: #fff; }
             .invoice-box { max-width: 800px; margin: auto; padding: 20px; border: 1px solid #eee; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
             .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #b8860b; padding-bottom: 10px; margin-bottom: 20px; }
-            .header h1 { margin: 0; color: #b8860b; }
+            .header .brand { display: flex; align-items: center; gap: 12px; }
+            .header .brand img { height: 50px; width: auto; object-fit: contain; }
+            .header .brand h1 { margin: 0; color: #b8860b; font-size: 24px; }
+            .header .payment-status { display: inline-block; padding: 4px 12px; border-radius: 20px; font-weight: bold; }
+            .paid { background: #d4edda; color: #155724; }
+            .due { background: #fff3cd; color: #856404; }
             .details { display: flex; justify-content: space-between; margin-bottom: 20px; }
             .details .left, .details .right { font-size: 14px; }
             .details .left p, .details .right p { margin: 4px 0; }
@@ -95,9 +101,6 @@ const NewSale = () => {
             .total-row { font-weight: bold; font-size: 16px; }
             .total-row td { border-top: 2px solid #333; }
             .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #888; }
-            .payment-status { display: inline-block; padding: 4px 12px; border-radius: 20px; font-weight: bold; }
-            .paid { background: #d4edda; color: #155724; }
-            .due { background: #fff3cd; color: #856404; }
             @media print {
               body { margin: 0; }
               .invoice-box { box-shadow: none; border: none; }
@@ -108,19 +111,22 @@ const NewSale = () => {
         <body>
           <div class="invoice-box">
             <div class="header">
-              <h1>Luxe Perfume</h1>
+              <div class="brand">
+                <img src="${logoUrl}" alt="Luxe Perfume" />
+                <h1>Luxe Perfume</h1>
+              </div>
               <div>
-                <span class="payment-status ${saleData.paymentStatus === 'paid' ? 'paid' : 'due'}">${saleData.paymentStatus.toUpperCase()}</span>
+                <span class="payment-status ${sale.paymentStatus === 'paid' ? 'paid' : 'due'}">${sale.paymentStatus.toUpperCase()}</span>
               </div>
             </div>
             <div class="details">
               <div class="left">
-                <p><strong>Invoice:</strong> ${saleData.invoiceNo}</p>
-                <p><strong>Date:</strong> ${new Date(saleData.saleDate).toLocaleDateString()}</p>
-                <p><strong>Channel:</strong> ${saleData.channel}</p>
+                <p><strong>Invoice:</strong> ${sale.invoiceNo}</p>
+                <p><strong>Date:</strong> ${new Date(sale.saleDate).toLocaleDateString()}</p>
+                <p><strong>Channel:</strong> ${sale.channel}</p>
               </div>
               <div class="right">
-                ${saleData.notes ? `<p><strong>Notes:</strong> ${saleData.notes}</p>` : ''}
+                ${sale.notes ? `<p><strong>Notes:</strong> ${sale.notes}</p>` : ''}
               </div>
             </div>
             <table>
@@ -155,7 +161,7 @@ const NewSale = () => {
 
     const printWindow = window.open('', '_blank', 'width=800,height=600');
     if (!printWindow) {
-      toast.error('Please allow popups to print the invoice.', { duration: 4000 });
+      toast.error('Please allow popups to print the invoice.');
       return;
     }
     printWindow.document.write(html);
