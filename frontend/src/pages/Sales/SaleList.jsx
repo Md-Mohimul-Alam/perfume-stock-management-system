@@ -241,20 +241,33 @@ const SalesList = () => {
     }
   };
 
-// ---------- Print Invoice ----------
+  // ---------- Print Invoice (with discount columns, if original price available) ----------
   const printInvoice = (sale) => {
     const itemsHtml = sale.items.map(item => {
       const productName = item.product?.name || 'Unknown';
       const size = item.sizeMl || '';
       const qty = item.quantity || 0;
-      const unitPrice = item.unitPrice || 0;
-      const total = item.totalPrice || 0;
+      const netPrice = item.unitPrice || 0; // final price
+      const total = netPrice * qty;
+
+      // Try to get original price from product data if available
+      let listPrice = netPrice; // fallback
+      if (item.product && item.product.sizes) {
+        const sizeVariant = item.product.sizes.find(s => s.sizeMl === item.sizeMl);
+        if (sizeVariant && sizeVariant.sellingPrice) {
+          listPrice = sizeVariant.sellingPrice;
+        }
+      }
+      const discountPerUnit = listPrice - netPrice;
+
       return `
         <tr>
           <td style="padding: 6px 8px; border-bottom: 1px solid #ddd;">${productName}</td>
           <td style="padding: 6px 8px; border-bottom: 1px solid #ddd; text-align: center;">${size} ml</td>
           <td style="padding: 6px 8px; border-bottom: 1px solid #ddd; text-align: center;">${qty}</td>
-          <td style="padding: 6px 8px; border-bottom: 1px solid #ddd; text-align: right;">৳${unitPrice.toFixed(2)}</td>
+          <td style="padding: 6px 8px; border-bottom: 1px solid #ddd; text-align: right;">৳${listPrice.toFixed(2)}</td>
+          <td style="padding: 6px 8px; border-bottom: 1px solid #ddd; text-align: right; color: #dc3545;">-৳${discountPerUnit.toFixed(2)}</td>
+          <td style="padding: 6px 8px; border-bottom: 1px solid #ddd; text-align: right; font-weight: bold;">৳${netPrice.toFixed(2)}</td>
           <td style="padding: 6px 8px; border-bottom: 1px solid #ddd; text-align: right; font-weight: bold;">৳${total.toFixed(2)}</td>
         </tr>
       `;
@@ -271,7 +284,7 @@ const SalesList = () => {
           <title>Invoice ${sale.invoiceNo}</title>
           <style>
             body { font-family: Arial, sans-serif; margin: 40px; background: #fff; }
-            .invoice-box { max-width: 800px; margin: auto; padding: 20px; border: 1px solid #eee; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+            .invoice-box { max-width: 900px; margin: auto; padding: 20px; border: 1px solid #eee; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
             .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #b8860b; padding-bottom: 10px; margin-bottom: 20px; }
             .header .brand { display: flex; align-items: center; gap: 12px; }
             .header .brand img { height: 50px; width: auto; object-fit: contain; }
@@ -322,14 +335,16 @@ const SalesList = () => {
                   <th>Product</th>
                   <th style="text-align:center;">Size (ml)</th>
                   <th style="text-align:center;">Qty</th>
-                  <th style="text-align:right;">Unit Price</th>
+                  <th style="text-align:right;">Unit Price (List)</th>
+                  <th style="text-align:right;">Discount</th>
+                  <th style="text-align:right;">Net Unit Price</th>
                   <th style="text-align:right;">Total</th>
                 </tr>
               </thead>
               <tbody>
                 ${itemsHtml}
                 <tr class="total-row">
-                  <td colspan="4" style="text-align:right;">Grand Total</td>
+                  <td colspan="6" style="text-align:right;">Grand Total</td>
                   <td style="text-align:right;">৳${totalAmount.toFixed(2)}</td>
                 </tr>
               </tbody>
@@ -347,7 +362,7 @@ const SalesList = () => {
       </html>
     `;
 
-    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    const printWindow = window.open('', '_blank', 'width=900,height=700');
     if (!printWindow) {
       toast.error('Please allow popups to print the invoice.');
       return;

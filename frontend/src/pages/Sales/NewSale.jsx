@@ -54,20 +54,33 @@ const NewSale = () => {
     }
   }, [selectedProduct, selectedSize, products]);
 
-  // ---------- Print Invoice ----------
+  // ---------- Print Invoice (with discount columns, if original price available) ----------
   const printInvoice = (sale) => {
     const itemsHtml = sale.items.map(item => {
       const productName = item.product?.name || 'Unknown';
       const size = item.sizeMl || '';
       const qty = item.quantity || 0;
-      const unitPrice = item.unitPrice || 0;
-      const total = item.totalPrice || 0;
+      const netPrice = item.unitPrice || 0; // final price
+      const total = netPrice * qty;
+
+      // Try to get original price from product data if available
+      let listPrice = netPrice; // fallback
+      if (item.product && item.product.sizes) {
+        const sizeVariant = item.product.sizes.find(s => s.sizeMl === item.sizeMl);
+        if (sizeVariant && sizeVariant.sellingPrice) {
+          listPrice = sizeVariant.sellingPrice;
+        }
+      }
+      const discountPerUnit = listPrice - netPrice;
+
       return `
         <tr>
           <td style="padding: 6px 8px; border-bottom: 1px solid #ddd;">${productName}</td>
           <td style="padding: 6px 8px; border-bottom: 1px solid #ddd; text-align: center;">${size} ml</td>
           <td style="padding: 6px 8px; border-bottom: 1px solid #ddd; text-align: center;">${qty}</td>
-          <td style="padding: 6px 8px; border-bottom: 1px solid #ddd; text-align: right;">৳${unitPrice.toFixed(2)}</td>
+          <td style="padding: 6px 8px; border-bottom: 1px solid #ddd; text-align: right;">৳${listPrice.toFixed(2)}</td>
+          <td style="padding: 6px 8px; border-bottom: 1px solid #ddd; text-align: right; color: #dc3545;">-৳${discountPerUnit.toFixed(2)}</td>
+          <td style="padding: 6px 8px; border-bottom: 1px solid #ddd; text-align: right; font-weight: bold;">৳${netPrice.toFixed(2)}</td>
           <td style="padding: 6px 8px; border-bottom: 1px solid #ddd; text-align: right; font-weight: bold;">৳${total.toFixed(2)}</td>
         </tr>
       `;
@@ -84,7 +97,7 @@ const NewSale = () => {
           <title>Invoice ${sale.invoiceNo}</title>
           <style>
             body { font-family: Arial, sans-serif; margin: 40px; background: #fff; }
-            .invoice-box { max-width: 800px; margin: auto; padding: 20px; border: 1px solid #eee; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+            .invoice-box { max-width: 900px; margin: auto; padding: 20px; border: 1px solid #eee; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
             .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #b8860b; padding-bottom: 10px; margin-bottom: 20px; }
             .header .brand { display: flex; align-items: center; gap: 12px; }
             .header .brand img { height: 50px; width: auto; object-fit: contain; }
@@ -135,14 +148,16 @@ const NewSale = () => {
                   <th>Product</th>
                   <th style="text-align:center;">Size (ml)</th>
                   <th style="text-align:center;">Qty</th>
-                  <th style="text-align:right;">Unit Price</th>
+                  <th style="text-align:right;">Unit Price (List)</th>
+                  <th style="text-align:right;">Discount</th>
+                  <th style="text-align:right;">Net Unit Price</th>
                   <th style="text-align:right;">Total</th>
                 </tr>
               </thead>
               <tbody>
                 ${itemsHtml}
                 <tr class="total-row">
-                  <td colspan="4" style="text-align:right;">Grand Total</td>
+                  <td colspan="6" style="text-align:right;">Grand Total</td>
                   <td style="text-align:right;">৳${totalAmount.toFixed(2)}</td>
                 </tr>
               </tbody>
@@ -160,7 +175,7 @@ const NewSale = () => {
       </html>
     `;
 
-    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    const printWindow = window.open('', '_blank', 'width=900,height=700');
     if (!printWindow) {
       toast.error('Please allow popups to print the invoice.');
       return;
@@ -195,12 +210,14 @@ const NewSale = () => {
       toast.error('Item already added');
       return;
     }
+    const originalUnitPrice = sizeVariant.sellingPrice || 0;
     const newItem = {
       product: selectedProduct,
       productName: product.name,
       sizeMl: parseFloat(selectedSize),
       quantity: parseInt(quantity),
-      unitPrice: price,
+      unitPrice: price,                 // editable = final price
+      originalUnitPrice: originalUnitPrice, // list price
       totalPrice: parseInt(quantity) * price,
     };
     setForm({ ...form, items: [...form.items, newItem] });
@@ -236,28 +253,33 @@ const NewSale = () => {
           product: item.product,
           sizeMl: item.sizeMl,
           quantity: item.quantity,
-          unitPrice: item.unitPrice,
+          unitPrice: item.unitPrice, // final price
           totalPrice: item.totalPrice,
         })),
       };
       const response = await API.post('/sales', payload);
       const createdSale = response.data;
 
-      // Prepare sale data for printing (include product names from form)
+      // Prepare print data using form items (which include originalUnitPrice)
       const printData = {
         invoiceNo: createdSale.invoiceNo,
         saleDate: createdSale.saleDate,
         channel: createdSale.channel,
         paymentStatus: createdSale.paymentStatus,
         notes: createdSale.notes,
-        items: form.items, // contains productName, sizeMl, etc.
+        items: form.items.map(item => ({
+          productName: item.productName,
+          sizeMl: item.sizeMl,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,           // final
+          originalUnitPrice: item.originalUnitPrice, // list
+          totalPrice: item.totalPrice,
+        })),
         totalAmount: createdSale.totalAmount,
       };
 
-      // Print the invoice
       printInvoice(printData);
 
-      // Show success and navigate after a short delay
       toast.success('Sale created successfully! Printing invoice...');
       setTimeout(() => {
         navigate('/sales');
@@ -384,7 +406,7 @@ const NewSale = () => {
                   value={unitPrice}
                   onChange={(e) => setUnitPrice(e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-brand-secondary outline-none"
-                  placeholder="Price per unit"
+                  placeholder="Discounted price"
                 />
               </div>
               <div>
