@@ -1,6 +1,27 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { X, ChevronLeft, ChevronRight, LogOut, User } from 'lucide-react';
+import {
+  X,
+  ChevronLeft,
+  ChevronRight,
+  LogOut,
+  User,
+  BarChart3,
+  FlaskRound,
+  Beaker,
+  ClipboardList,
+  Sparkles,
+  Plus,
+  DollarSign,
+  ShoppingCart,
+  Receipt,
+  Users,
+  FileText,
+  Trash2,
+  UserPlus,
+  Package,
+  TrendingUp,
+} from 'lucide-react';
 
 const Sidebar = ({
   closeDrawer,
@@ -58,7 +79,7 @@ const Sidebar = ({
           end
           onClick={handleLinkClick}
         >
-          <span className={iconClass}>📊</span>
+          <BarChart3 className={iconClass} />
           <span className={linkTextClass}>Dashboard</span>
         </NavLink>
 
@@ -69,7 +90,7 @@ const Sidebar = ({
           }
           onClick={handleLinkClick}
         >
-          <span className={iconClass}>🧴</span>
+          <FlaskRound className={iconClass} />
           <span className={linkTextClass}>Raw Materials</span>
         </NavLink>
 
@@ -80,7 +101,7 @@ const Sidebar = ({
           }
           onClick={handleLinkClick}
         >
-          <span className={iconClass}>🧪</span>
+          <Beaker className={iconClass} />
           <span className={linkTextClass}>Bottles</span>
         </NavLink>
 
@@ -91,7 +112,7 @@ const Sidebar = ({
           }
           onClick={handleLinkClick}
         >
-          <span className={iconClass}>📋</span>
+          <ClipboardList className={iconClass} />
           <span className={linkTextClass}>Batches</span>
         </NavLink>
 
@@ -102,7 +123,7 @@ const Sidebar = ({
           }
           onClick={handleLinkClick}
         >
-          <span className={iconClass}>✨</span>
+          <Sparkles className={iconClass} />
           <span className={linkTextClass}>Products</span>
         </NavLink>
 
@@ -113,7 +134,7 @@ const Sidebar = ({
           }
           onClick={handleLinkClick}
         >
-          <span className={iconClass}>➕</span>
+          <Plus className={iconClass} />
           <span className={linkTextClass}>New Product</span>
         </NavLink>
 
@@ -124,7 +145,7 @@ const Sidebar = ({
           }
           onClick={handleLinkClick}
         >
-          <span className={iconClass}>💰</span>
+          <DollarSign className={iconClass} />
           <span className={linkTextClass}>Sales</span>
         </NavLink>
 
@@ -135,11 +156,10 @@ const Sidebar = ({
           }
           onClick={handleLinkClick}
         >
-          <span className={iconClass}>➕</span>
+          <Plus className={iconClass} />
           <span className={linkTextClass}>New Sale</span>
         </NavLink>
 
-        {/* New: Sales Count */}
         <NavLink
           to="/sales/count"
           className={({ isActive }) =>
@@ -147,9 +167,10 @@ const Sidebar = ({
           }
           onClick={handleLinkClick}
         >
-          <span className={iconClass}>📊</span>
+          <TrendingUp className={iconClass} />
           <span className={linkTextClass}>Sales Count</span>
         </NavLink>
+
         <NavLink
           to="/sales/by-product"
           className={({ isActive }) =>
@@ -157,7 +178,7 @@ const Sidebar = ({
           }
           onClick={handleLinkClick}
         >
-          <span className={iconClass}>📦</span>
+          <Package className={iconClass} />
           <span className={linkTextClass}>Sales by Product</span>
         </NavLink>
 
@@ -168,7 +189,7 @@ const Sidebar = ({
           }
           onClick={handleLinkClick}
         >
-          <span className={iconClass}>📦</span>
+          <ShoppingCart className={iconClass} />
           <span className={linkTextClass}>Purchases</span>
         </NavLink>
 
@@ -179,7 +200,7 @@ const Sidebar = ({
           }
           onClick={handleLinkClick}
         >
-          <span className={iconClass}>🧾</span>
+          <Receipt className={iconClass} />
           <span className={linkTextClass}>Expenses</span>
         </NavLink>
 
@@ -190,7 +211,7 @@ const Sidebar = ({
           }
           onClick={handleLinkClick}
         >
-          <span className={iconClass}>👥</span>
+          <Users className={iconClass} />
           <span className={linkTextClass}>Investors</span>
         </NavLink>
 
@@ -201,7 +222,7 @@ const Sidebar = ({
           }
           onClick={handleLinkClick}
         >
-          <span className={iconClass}>📈</span>
+          <FileText className={iconClass} />
           <span className={linkTextClass}>Reports</span>
         </NavLink>
 
@@ -214,7 +235,7 @@ const Sidebar = ({
           }
           onClick={handleLinkClick}
         >
-          <span className={iconClass}>🗑️</span>
+          <Trash2 className={iconClass} />
           <span className={linkTextClass}>Wastage History</span>
         </NavLink>
 
@@ -225,7 +246,7 @@ const Sidebar = ({
           }
           onClick={handleLinkClick}
         >
-          <span className={iconClass}>➕</span>
+          <Plus className={iconClass} />
           <span className={linkTextClass}>Record Wastage</span>
         </NavLink>
 
@@ -239,7 +260,7 @@ const Sidebar = ({
               }
               onClick={handleLinkClick}
             >
-              <span className={iconClass}>👤</span>
+              <UserPlus className={iconClass} />
               <span className={linkTextClass}>Register User</span>
             </NavLink>
           </>
