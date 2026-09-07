@@ -150,6 +150,16 @@ const Sidebar = ({
           <span className={iconClass}>📊</span>
           <span className={linkTextClass}>Sales Count</span>
         </NavLink>
+        <NavLink
+          to="/sales/by-size-raw"
+          className={({ isActive }) =>
+            `${linkClass} ${isActive ? activeClass : ''} ${!collapsed ? 'pl-9' : 'pl-4'}`
+          }
+          onClick={handleLinkClick}
+        >
+          <span className={iconClass}>📈</span>
+          <span className={linkTextClass}>Sales by Size (Raw)</span>
+        </NavLink>
 
         <NavLink
           to="/purchases"

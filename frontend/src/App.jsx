@@ -14,6 +14,7 @@ import Batches from './pages/Production/Batches';
 import SaleList from './pages/Sales/SaleList';
 import NewSale from './pages/Sales/NewSale';
 import SalesCount from './pages/Sales/SalesCount';
+import SalesBySizeRawMaterials from './pages/Sales/SalesBySizeRawMaterials';
 import ProductList from './pages/Products/ProductList';
 import NewProduct from './pages/Products/NewProduct';
 import ExpensePage from './pages/Expenses/Expenses';
@@ -49,6 +50,7 @@ function App() {
               <Route path="sales" element={<SaleList />} />
               <Route path="sales/new" element={<NewSale />} />
               <Route path="sales/count" element={<SalesCount />} />
+              <Route path="sales/by-size-raw" element={<SalesBySizeRawMaterials />} />
               <Route path="purchases" element={<PurchaseList />} />
               <Route path="purchases/new" element={<NewPurchase />} />
               <Route path="expenses" element={<ExpensePage />} />
