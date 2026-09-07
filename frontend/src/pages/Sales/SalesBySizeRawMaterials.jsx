@@ -1,12 +1,8 @@
 import { useEffect, useState } from 'react';
 import API from '../../api/axios';
 import {
-  Droplet,
-  FlaskRound,
-  Package,
   Loader2,
   RefreshCw,
-  BarChart3,
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend,
@@ -40,13 +36,7 @@ const SalesBySizeRawMaterials = () => {
 
       setMaterials(materials);
 
-      // Build product map
-      const productMap = {};
-      products.forEach(p => {
-        productMap[p._id] = p;
-      });
-
-      // Build material name and SKU maps for matching
+      // Build maps for matching
       const materialNameMap = {};
       const materialSkuMap = {};
       materials.forEach(m => {
@@ -54,7 +44,7 @@ const SalesBySizeRawMaterials = () => {
         if (m.sku) materialSkuMap[m.sku.toLowerCase()] = m._id;
       });
 
-      // Initialize aggregation structure for ALL materials (including virtual ones if present)
+      // Initialize aggregation for all materials
       const agg = {};
       materials.forEach(m => {
         agg[m._id] = {
@@ -68,7 +58,7 @@ const SalesBySizeRawMaterials = () => {
 
       const sizeSet = new Set();
 
-      // Helper: parse blendComponents (handles array or string)
+      // Helper: parse blendComponents (array or string)
       const parseBlendComponents = (product) => {
         const comps = product.blendComponents;
         if (!comps) return [];
@@ -98,7 +88,7 @@ const SalesBySizeRawMaterials = () => {
         sale.items.forEach(item => {
           const productId = item.product?._id || item.product;
           if (!productId) return;
-          const product = productMap[productId];
+          const product = products.find(p => p._id === productId);
           if (!product) return;
 
           const size = item.sizeMl || 0;
@@ -116,23 +106,40 @@ const SalesBySizeRawMaterials = () => {
               usageList.push({ materialId: oilId, percentage: 100 });
             }
           } else if (product.type === 'spray') {
-            const comps = parseBlendComponents(product);
+            // Try to get blend components
+            let comps = parseBlendComponents(product);
+            // If no valid comps, fallback to matching by SKU/name
+            if (comps.length === 0) {
+              // Try to find a material with the same SKU as the product
+              const productSku = product.sku ? product.sku.toLowerCase() : null;
+              const productName = product.name ? product.name.toLowerCase() : null;
+              let materialId = null;
+              if (productSku && materialSkuMap[productSku]) {
+                materialId = materialSkuMap[productSku];
+              } else if (productName && materialNameMap[productName]) {
+                materialId = materialNameMap[productName];
+              }
+              if (materialId) {
+                comps = [{ material: materialId, percentage: 100 }];
+              }
+            }
+
             comps.forEach(comp => {
               let materialId = null;
-              // 1. Try direct ID from object
+              // 1. If material is an object with _id
               if (comp.material && typeof comp.material === 'object') {
                 materialId = comp.material._id || comp.material;
               } else if (typeof comp.material === 'string') {
-                // 2. Try as ID (could be a MongoDB ID)
+                // 2. Try as ID
                 materialId = comp.material;
-                // 3. Try as name (case-insensitive)
+                // 3. Try as name
                 if (!materialId || !materials.some(m => m._id === materialId)) {
                   const lowerName = comp.material.toLowerCase();
                   if (materialNameMap[lowerName]) {
                     materialId = materialNameMap[lowerName];
                   }
                 }
-                // 4. Try as SKU (case-insensitive)
+                // 4. Try as SKU
                 if (!materialId || !materials.some(m => m._id === materialId)) {
                   const lowerSku = comp.material.toLowerCase();
                   if (materialSkuMap[lowerSku]) {
@@ -142,7 +149,6 @@ const SalesBySizeRawMaterials = () => {
               }
 
               if (materialId) {
-                // Verify materialId actually exists in materials list
                 const matExists = materials.some(m => m._id === materialId);
                 if (matExists) {
                   usageList.push({ materialId, percentage: comp.percentage });
@@ -154,7 +160,7 @@ const SalesBySizeRawMaterials = () => {
           // Apply usage
           usageList.forEach(usage => {
             const matId = usage.materialId;
-            if (!agg[matId]) return; // material not in list (shouldn't happen)
+            if (!agg[matId]) return;
             const mlPerUnit = (size * usage.percentage) / 100;
             const totalMl = mlPerUnit * qty;
 
