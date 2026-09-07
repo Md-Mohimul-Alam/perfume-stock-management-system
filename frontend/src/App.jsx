@@ -13,6 +13,7 @@ import Bottles from './pages/Inventory/Bottles';
 import Batches from './pages/Production/Batches';
 import SaleList from './pages/Sales/SaleList';
 import NewSale from './pages/Sales/NewSale';
+import SalesCount from './pages/Sales/SalesCount';
 import ProductList from './pages/Products/ProductList';
 import NewProduct from './pages/Products/NewProduct';
 import ExpensePage from './pages/Expenses/Expenses';
@@ -47,6 +48,7 @@ function App() {
               <Route path="products/new" element={<NewProduct />} />
               <Route path="sales" element={<SaleList />} />
               <Route path="sales/new" element={<NewSale />} />
+              <Route path="sales/count" element={<SalesCount />} />
               <Route path="purchases" element={<PurchaseList />} />
               <Route path="purchases/new" element={<NewPurchase />} />
               <Route path="expenses" element={<ExpensePage />} />

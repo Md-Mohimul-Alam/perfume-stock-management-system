@@ -139,6 +139,18 @@ const Sidebar = ({
           <span className={linkTextClass}>New Sale</span>
         </NavLink>
 
+        {/* New: Sales Count */}
+        <NavLink
+          to="/sales/count"
+          className={({ isActive }) =>
+            `${linkClass} ${isActive ? activeClass : ''} ${!collapsed ? 'pl-9' : 'pl-4'}`
+          }
+          onClick={handleLinkClick}
+        >
+          <span className={iconClass}>📊</span>
+          <span className={linkTextClass}>Sales Count</span>
+        </NavLink>
+
         <NavLink
           to="/purchases"
           className={({ isActive }) =>
