@@ -88,7 +88,9 @@ const SalesBySizeRawMaterials = () => {
         sale.items.forEach(item => {
           const productId = item.product?._id || item.product;
           if (!productId) return;
-          const product = products.find(p => p._id === productId);
+
+          // Use item.product directly if populated, otherwise fallback to products array
+          const product = item.product?.type ? item.product : products.find(p => p._id === productId);
           if (!product) return;
 
           const size = item.sizeMl || 0;
@@ -106,55 +108,57 @@ const SalesBySizeRawMaterials = () => {
               usageList.push({ materialId: oilId, percentage: 100 });
             }
           } else if (product.type === 'spray') {
-            // Try to get blend components
-            let comps = parseBlendComponents(product);
+            // 🔄 PRIORITY RULE: If a material exists with the exact product SKU,
+            // use that material at 100% (direct pre‑mix). This overrides blendComponents.
+            const productSku = product.sku ? product.sku.toLowerCase().trim() : null;
+            let directMaterialId = null;
+            if (productSku && materialSkuMap[productSku]) {
+              directMaterialId = materialSkuMap[productSku];
+            } else {
+              // Try matching by product name (case‑insensitive)
+              const productName = product.name ? product.name.toLowerCase().trim() : null;
+              if (productName && materialNameMap[productName]) {
+                directMaterialId = materialNameMap[productName];
+              }
+            }
 
-            // Process comps
-            comps.forEach(comp => {
-              let materialId = null;
-              // 1. If material is an object with _id
-              if (comp.material && typeof comp.material === 'object') {
-                materialId = comp.material._id || comp.material;
-              } else if (typeof comp.material === 'string') {
-                // 2. Try as ID
-                materialId = comp.material;
-                // 3. Try as name
-                if (!materialId || !materials.some(m => m._id === materialId)) {
-                  const lowerName = comp.material.toLowerCase();
-                  if (materialNameMap[lowerName]) {
-                    materialId = materialNameMap[lowerName];
+            if (directMaterialId) {
+              usageList.push({ materialId: directMaterialId, percentage: 100 });
+            } else {
+              // If no direct match, try blend components
+              let comps = parseBlendComponents(product);
+
+              comps.forEach(comp => {
+                let materialId = null;
+                // 1. If material is an object with _id
+                if (comp.material && typeof comp.material === 'object') {
+                  materialId = comp.material._id || comp.material;
+                } else if (typeof comp.material === 'string') {
+                  // 2. Try as ID
+                  materialId = comp.material;
+                  // 3. Try as name
+                  if (!materialId || !materials.some(m => m._id === materialId)) {
+                    const lowerName = comp.material.toLowerCase();
+                    if (materialNameMap[lowerName]) {
+                      materialId = materialNameMap[lowerName];
+                    }
+                  }
+                  // 4. Try as SKU
+                  if (!materialId || !materials.some(m => m._id === materialId)) {
+                    const lowerSku = comp.material.toLowerCase();
+                    if (materialSkuMap[lowerSku]) {
+                      materialId = materialSkuMap[lowerSku];
+                    }
                   }
                 }
-                // 4. Try as SKU
-                if (!materialId || !materials.some(m => m._id === materialId)) {
-                  const lowerSku = comp.material.toLowerCase();
-                  if (materialSkuMap[lowerSku]) {
-                    materialId = materialSkuMap[lowerSku];
+
+                if (materialId) {
+                  const matExists = materials.some(m => m._id === materialId);
+                  if (matExists) {
+                    usageList.push({ materialId, percentage: comp.percentage });
                   }
                 }
-              }
-
-              if (materialId) {
-                const matExists = materials.some(m => m._id === materialId);
-                if (matExists) {
-                  usageList.push({ materialId, percentage: comp.percentage });
-                }
-              }
-            });
-
-            // ✅ FALLBACK: if no usageList, try SKU/name matching
-            if (usageList.length === 0) {
-              const productSku = product.sku ? product.sku.toLowerCase() : null;
-              const productName = product.name ? product.name.toLowerCase() : null;
-              let materialId = null;
-              if (productSku && materialSkuMap[productSku]) {
-                materialId = materialSkuMap[productSku];
-              } else if (productName && materialNameMap[productName]) {
-                materialId = materialNameMap[productName];
-              }
-              if (materialId) {
-                usageList.push({ materialId, percentage: 100 });
-              }
+              });
             }
           }
 
