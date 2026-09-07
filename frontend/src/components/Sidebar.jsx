@@ -157,8 +157,8 @@ const Sidebar = ({
           }
           onClick={handleLinkClick}
         >
-          <span className={iconClass}>📈</span>
-          <span className={linkTextClass}>Sales by Product (Raw)</span>
+          <span className={iconClass}>📦</span>
+          <span className={linkTextClass}>Sales by Product</span>
         </NavLink>
 
         <NavLink
