@@ -82,6 +82,18 @@ const SalesBySizeRawMaterials = () => {
         return parsed;
       };
 
+      // Helper: find material ID by name or SKU (case-insensitive)
+      const findMaterialId = (nameOrSku) => {
+        if (!nameOrSku) return null;
+        const lower = nameOrSku.toLowerCase();
+        if (materialSkuMap[lower]) return materialSkuMap[lower];
+        if (materialNameMap[lower]) return materialNameMap[lower];
+        return null;
+      };
+
+      // Helper: check if material exists in agg
+      const materialExists = (matId) => !!agg[matId];
+
       // Process sales
       sales.forEach(sale => {
         if (!sale.items) return;
@@ -89,8 +101,10 @@ const SalesBySizeRawMaterials = () => {
           const productId = item.product?._id || item.product;
           if (!productId) return;
 
-          // Use item.product directly if populated, otherwise fallback to products array
-          const product = item.product?.type ? item.product : products.find(p => p._id === productId);
+          // Use populated product if available, otherwise find in list
+          const product = (item.product && item.product.type)
+            ? item.product
+            : products.find(p => p._id === productId);
           if (!product) return;
 
           const size = item.sizeMl || 0;
@@ -108,14 +122,11 @@ const SalesBySizeRawMaterials = () => {
               usageList.push({ materialId: oilId, percentage: 100 });
             }
           } else if (product.type === 'spray') {
-            // 🔄 PRIORITY RULE: If a material exists with the exact product SKU,
-            // use that material at 100% (direct pre‑mix). This overrides blendComponents.
+            // 1️⃣ PRIORITY: Exact SKU match (e.g., SR_SP, LUXE1_SP)
             const productSku = product.sku ? product.sku.toLowerCase().trim() : null;
-            let directMaterialId = null;
-            if (productSku && materialSkuMap[productSku]) {
-              directMaterialId = materialSkuMap[productSku];
-            } else {
-              // Try matching by product name (case‑insensitive)
+            let directMaterialId = productSku ? materialSkuMap[productSku] : null;
+            if (!directMaterialId) {
+              // Try by product name
               const productName = product.name ? product.name.toLowerCase().trim() : null;
               if (productName && materialNameMap[productName]) {
                 directMaterialId = materialNameMap[productName];
@@ -125,47 +136,56 @@ const SalesBySizeRawMaterials = () => {
             if (directMaterialId) {
               usageList.push({ materialId: directMaterialId, percentage: 100 });
             } else {
-              // If no direct match, try blend components
-              let comps = parseBlendComponents(product);
-
+              // 2️⃣ Try blend components
+              const comps = parseBlendComponents(product);
+              let compUsage = [];
               comps.forEach(comp => {
                 let materialId = null;
-                // 1. If material is an object with _id
                 if (comp.material && typeof comp.material === 'object') {
                   materialId = comp.material._id || comp.material;
                 } else if (typeof comp.material === 'string') {
-                  // 2. Try as ID
-                  materialId = comp.material;
-                  // 3. Try as name
-                  if (!materialId || !materials.some(m => m._id === materialId)) {
-                    const lowerName = comp.material.toLowerCase();
-                    if (materialNameMap[lowerName]) {
-                      materialId = materialNameMap[lowerName];
-                    }
-                  }
-                  // 4. Try as SKU
-                  if (!materialId || !materials.some(m => m._id === materialId)) {
-                    const lowerSku = comp.material.toLowerCase();
-                    if (materialSkuMap[lowerSku]) {
-                      materialId = materialSkuMap[lowerSku];
-                    }
-                  }
+                  materialId = findMaterialId(comp.material);
                 }
-
-                if (materialId) {
-                  const matExists = materials.some(m => m._id === materialId);
-                  if (matExists) {
-                    usageList.push({ materialId, percentage: comp.percentage });
-                  }
+                if (materialId && materialExists(materialId)) {
+                  compUsage.push({ materialId, percentage: comp.percentage });
                 }
               });
+              if (compUsage.length > 0) {
+                usageList = compUsage;
+              } else {
+                // 3️⃣ Fallback: strip "_SP" and use base oil at 40% + ethanol/fixatives
+                const strippedSku = product.sku
+                  ? product.sku.replace(/_SP$/i, '').replace(/_SP$/i, '') // remove _SP at end
+                  : '';
+                let baseOilId = strippedSku ? findMaterialId(strippedSku) : null;
+                if (!baseOilId) {
+                  // try stripping any suffix
+                  const parts = product.sku ? product.sku.split('_') : [];
+                  const baseSku = parts.length > 1 ? parts[0] : null;
+                  baseOilId = baseSku ? findMaterialId(baseSku) : null;
+                }
+
+                if (baseOilId) {
+                  // Default percentages (based on backend's sprayRules for 6-30ml)
+                  usageList.push({ materialId: baseOilId, percentage: 40 });
+                  // Add ethanol, iso, glx, ambx if they exist
+                  const ethanolId = findMaterialId('ETH') || findMaterialId('ethanol');
+                  if (ethanolId) usageList.push({ materialId: ethanolId, percentage: 57 });
+                  const isoId = findMaterialId('iso') || findMaterialId('Iso');
+                  if (isoId) usageList.push({ materialId: isoId, percentage: 1 });
+                  const glxId = findMaterialId('glx') || findMaterialId('Galaxolide');
+                  if (glxId) usageList.push({ materialId: glxId, percentage: 1 });
+                  const ambxId = findMaterialId('ambx') || findMaterialId('Ambroxan');
+                  if (ambxId) usageList.push({ materialId: ambxId, percentage: 1 });
+                }
+              }
             }
           }
 
           // Apply usage
           usageList.forEach(usage => {
             const matId = usage.materialId;
-            if (!agg[matId]) return; // material not in list
+            if (!agg[matId]) return;
             const mlPerUnit = (size * usage.percentage) / 100;
             const totalMl = mlPerUnit * qty;
 
