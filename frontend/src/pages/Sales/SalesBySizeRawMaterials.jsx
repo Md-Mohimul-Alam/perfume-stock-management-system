@@ -108,22 +108,8 @@ const SalesBySizeRawMaterials = () => {
           } else if (product.type === 'spray') {
             // Try to get blend components
             let comps = parseBlendComponents(product);
-            // If no valid comps, fallback to matching by SKU/name
-            if (comps.length === 0) {
-              // Try to find a material with the same SKU as the product
-              const productSku = product.sku ? product.sku.toLowerCase() : null;
-              const productName = product.name ? product.name.toLowerCase() : null;
-              let materialId = null;
-              if (productSku && materialSkuMap[productSku]) {
-                materialId = materialSkuMap[productSku];
-              } else if (productName && materialNameMap[productName]) {
-                materialId = materialNameMap[productName];
-              }
-              if (materialId) {
-                comps = [{ material: materialId, percentage: 100 }];
-              }
-            }
 
+            // Process comps
             comps.forEach(comp => {
               let materialId = null;
               // 1. If material is an object with _id
@@ -155,12 +141,27 @@ const SalesBySizeRawMaterials = () => {
                 }
               }
             });
+
+            // ✅ FALLBACK: if no usageList, try SKU/name matching
+            if (usageList.length === 0) {
+              const productSku = product.sku ? product.sku.toLowerCase() : null;
+              const productName = product.name ? product.name.toLowerCase() : null;
+              let materialId = null;
+              if (productSku && materialSkuMap[productSku]) {
+                materialId = materialSkuMap[productSku];
+              } else if (productName && materialNameMap[productName]) {
+                materialId = materialNameMap[productName];
+              }
+              if (materialId) {
+                usageList.push({ materialId, percentage: 100 });
+              }
+            }
           }
 
           // Apply usage
           usageList.forEach(usage => {
             const matId = usage.materialId;
-            if (!agg[matId]) return;
+            if (!agg[matId]) return; // material not in list
             const mlPerUnit = (size * usage.percentage) / 100;
             const totalMl = mlPerUnit * qty;
 
