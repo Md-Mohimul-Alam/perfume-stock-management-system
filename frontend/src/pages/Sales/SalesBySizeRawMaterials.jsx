@@ -17,7 +17,7 @@ const SalesBySizeRawMaterials = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [materials, setMaterials] = useState([]);
-  const [aggregatedData, setAggregatedData] = useState({}); // materialId -> { sizes: {}, totalMl, totalUnits }
+  const [aggregatedData, setAggregatedData] = useState({});
   const [selectedMaterial, setSelectedMaterial] = useState('');
   const [allSizes, setAllSizes] = useState([]);
 
@@ -46,22 +46,29 @@ const SalesBySizeRawMaterials = () => {
         productMap[p._id] = p;
       });
 
-      // Initialize aggregation structure
+      // Build material name and SKU maps for matching
+      const materialNameMap = {};
+      const materialSkuMap = {};
+      materials.forEach(m => {
+        if (m.name) materialNameMap[m.name.toLowerCase()] = m._id;
+        if (m.sku) materialSkuMap[m.sku.toLowerCase()] = m._id;
+      });
+
+      // Initialize aggregation structure for ALL materials (including virtual ones if present)
       const agg = {};
       materials.forEach(m => {
         agg[m._id] = {
           name: m.name,
           sku: m.sku,
-          sizes: {}, // size -> { units, ml }
+          sizes: {},
           totalUnits: 0,
           totalMl: 0,
         };
       });
 
-      // Track all sizes for the chart
       const sizeSet = new Set();
 
-      // Helper: parse blendComponents
+      // Helper: parse blendComponents (handles array or string)
       const parseBlendComponents = (product) => {
         const comps = product.blendComponents;
         if (!comps) return [];
@@ -79,17 +86,11 @@ const SalesBySizeRawMaterials = () => {
           if (match) {
             const name = match[1].trim();
             const percentage = parseFloat(match[2]);
-            parsed.push({ name, percentage });
+            parsed.push({ material: name, percentage });
           }
         }
         return parsed;
       };
-
-      // Build material name -> id map (for cases where blendComponents reference by name)
-      const materialNameMap = {};
-      materials.forEach(m => {
-        materialNameMap[m.name?.toLowerCase()] = m._id;
-      });
 
       // Process sales
       sales.forEach(sale => {
@@ -117,13 +118,35 @@ const SalesBySizeRawMaterials = () => {
           } else if (product.type === 'spray') {
             const comps = parseBlendComponents(product);
             comps.forEach(comp => {
-              let materialId = comp.material?._id || comp.material;
-              if (!materialId && comp.name) {
-                const lowerName = comp.name.toLowerCase();
-                materialId = materialNameMap[lowerName];
+              let materialId = null;
+              // 1. Try direct ID from object
+              if (comp.material && typeof comp.material === 'object') {
+                materialId = comp.material._id || comp.material;
+              } else if (typeof comp.material === 'string') {
+                // 2. Try as ID (could be a MongoDB ID)
+                materialId = comp.material;
+                // 3. Try as name (case-insensitive)
+                if (!materialId || !materials.some(m => m._id === materialId)) {
+                  const lowerName = comp.material.toLowerCase();
+                  if (materialNameMap[lowerName]) {
+                    materialId = materialNameMap[lowerName];
+                  }
+                }
+                // 4. Try as SKU (case-insensitive)
+                if (!materialId || !materials.some(m => m._id === materialId)) {
+                  const lowerSku = comp.material.toLowerCase();
+                  if (materialSkuMap[lowerSku]) {
+                    materialId = materialSkuMap[lowerSku];
+                  }
+                }
               }
+
               if (materialId) {
-                usageList.push({ materialId, percentage: comp.percentage });
+                // Verify materialId actually exists in materials list
+                const matExists = materials.some(m => m._id === materialId);
+                if (matExists) {
+                  usageList.push({ materialId, percentage: comp.percentage });
+                }
               }
             });
           }
@@ -131,7 +154,7 @@ const SalesBySizeRawMaterials = () => {
           // Apply usage
           usageList.forEach(usage => {
             const matId = usage.materialId;
-            if (!agg[matId]) return; // material not found (maybe deleted)
+            if (!agg[matId]) return; // material not in list (shouldn't happen)
             const mlPerUnit = (size * usage.percentage) / 100;
             const totalMl = mlPerUnit * qty;
 
@@ -173,8 +196,6 @@ const SalesBySizeRawMaterials = () => {
 
   const selectedMaterialData = selectedMaterial ? aggregatedData[selectedMaterial] : null;
   const chartData = selectedMaterial ? prepareChartData(selectedMaterial) : [];
-
-  const formatCurrency = (amount) => `৳${(amount || 0).toFixed(2)}`;
 
   return (
     <div className="p-4 sm:p-6 max-w-7xl mx-auto">
@@ -335,7 +356,7 @@ const MaterialRow = ({ material, allSizes, onExpand }) => {
   const [expanded, setExpanded] = useState(false);
   const toggle = () => {
     setExpanded(!expanded);
-    if (!expanded) onExpand(); // auto-select for chart if expanding
+    if (!expanded) onExpand();
   };
 
   return (
