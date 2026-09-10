@@ -55,12 +55,12 @@ async function checkSales() {
     console.log('✅ Connected to MongoDB');
 
     // 1. Find target products
-    const srProduct = await Product.findOne({ sku: 'SR_SP' });
-    const luxeProduct = await Product.findOne({ sku: 'LUXE1_SP' });
+    const srProduct = await Product.findOne({ sku: 'NV' });
+    const luxeProduct = await Product.findOne({ sku: 'NV_SP' });
 
     console.log('\n📦 Target products:');
-    console.log('  SR_SP:', srProduct ? `${srProduct.name} (${srProduct._id})` : '❌ NOT FOUND');
-    console.log('  LUXE1_SP:', luxeProduct ? `${luxeProduct.name} (${luxeProduct._id})` : '❌ NOT FOUND');
+    console.log('  NV:', srProduct ? `${srProduct.name} (${srProduct._id})` : '❌ NOT FOUND');
+    console.log('  NV_SP:', luxeProduct ? `${luxeProduct.name} (${luxeProduct._id})` : '❌ NOT FOUND');
 
     if (!srProduct && !luxeProduct) {
       console.log('❌ Neither product exists. Create them first.');
@@ -72,8 +72,8 @@ async function checkSales() {
     console.log(`\n📋 Total sales found: ${sales.length}`);
 
     // 3. Count usage
-    const usage = { SR_SP: 0, LUXE1_SP: 0 };
-    const unitCount = { SR_SP: 0, LUXE1_SP: 0 };
+    const usage = { NV: 0, NV_SP: 0 };
+    const unitCount = { NV: 0, NV_SP: 0 };
     const sprayRules = { '6': 45, '15': 45, '30': 45, '50': 50, '100': 55 };
 
     for (const sale of sales) {
@@ -84,9 +84,9 @@ async function checkSales() {
 
         let targetKey = null;
         if (srProduct && product._id.toString() === srProduct._id.toString()) {
-          targetKey = 'SR_SP';
+          targetKey = 'NV';
         } else if (luxeProduct && product._id.toString() === luxeProduct._id.toString()) {
-          targetKey = 'LUXE1_SP';
+          targetKey = 'NV_SP';
         }
         if (!targetKey) continue;
 
@@ -113,11 +113,11 @@ async function checkSales() {
     console.log('─────────────────────────────');
     console.log('Product       | Units Sold | Oil Used (ml)');
     console.log('──────────────|────────────|──────────────');
-    console.log(`SRK Spray     | ${String(unitCount.SR_SP).padStart(10)} | ${usage.SR_SP.toFixed(2)}`);
-    console.log(`Luxe Special  | ${String(unitCount.LUXE1_SP).padStart(10)} | ${usage.LUXE1_SP.toFixed(2)}`);
+    console.log(`NV     | ${String(unitCount.NV).padStart(10)} | ${usage.NV.toFixed(2)}`);
+    console.log(`NVSP  | ${String(unitCount.NV_SP).padStart(10)} | ${usage.NV_SP.toFixed(2)}`);
     console.log('─────────────────────────────');
 
-    if (unitCount.SR_SP === 0 && unitCount.LUXE1_SP === 0) {
+    if (unitCount.NV === 0 && unitCount.NV_SP === 0) {
       console.log('\n⚠️  No sales found for these products – that\'s why usedOil is 0.');
     } else {
       console.log('\n✅ Sales exist – the virtual material usage should now be >0.');

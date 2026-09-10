@@ -7,14 +7,18 @@ const { updateBestsellers } = require('../services/productService');
 // GET /api/products
 //   - default: all active products
 //   - ?showOnClient=true : only products visible on the client site
+//   - ?hideStockOut=true : excludes products marked as stock-out
 // =============================================
 exports.getProducts = async (req, res) => {
   try {
     const filter = { isActive: true };
 
-    // ✅ Client asks only for products marked visible
     if (req.query.showOnClient === 'true') {
       filter.showOnClient = true;
+    }
+
+    if (req.query.hideStockOut === 'true') {
+      filter.isStockOut = { $ne: true };
     }
 
     const products = await Product.find(filter)
@@ -35,7 +39,7 @@ exports.createProduct = async (req, res) => {
     const {
       name, sku, type, baseOil, blendComponents, sizes,
       description, intensity, bestFor, notes, isBestseller, images,
-      showOnClient,
+      showOnClient, isStockOut,
     } = req.body;
 
     for (const size of sizes) {
@@ -57,6 +61,7 @@ exports.createProduct = async (req, res) => {
       isBestseller: isBestseller || false,
       images: images || [],
       showOnClient: showOnClient || false,
+      isStockOut: isStockOut || false,
     });
 
     for (let i = 0; i < product.sizes.length; i++) {
@@ -81,7 +86,7 @@ exports.updateProduct = async (req, res) => {
     const {
       name, sku, type, baseOil, blendComponents, sizes, isActive,
       description, intensity, bestFor, notes, isBestseller, images,
-      showOnClient,
+      showOnClient, isStockOut,
     } = req.body;
 
     // Update simple fields
@@ -92,6 +97,7 @@ exports.updateProduct = async (req, res) => {
     if (blendComponents) product.blendComponents = blendComponents;
     if (isActive !== undefined) product.isActive = isActive;
     if (showOnClient !== undefined) product.showOnClient = showOnClient;
+    if (isStockOut !== undefined) product.isStockOut = isStockOut;
     if (description !== undefined) product.description = description;
     if (intensity) product.intensity = intensity;
     if (bestFor) product.bestFor = bestFor;
@@ -99,7 +105,7 @@ exports.updateProduct = async (req, res) => {
     if (isBestseller !== undefined) product.isBestseller = isBestseller;
     if (images) product.images = images;
 
-    // --- Handle sizes: skip any size with missing or invalid bottle ---
+    // --- Handle sizes ---
     if (sizes) {
       const updatedSizes = [];
 
@@ -294,6 +300,7 @@ exports.bulkCreateProducts = async (req, res) => {
             isBestseller: !!item.isBestseller,
             images: [],
             showOnClient: false,
+            isStockOut: false,
           });
         }
 

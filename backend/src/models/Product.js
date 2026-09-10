@@ -15,7 +15,7 @@ const sizeVariantSchema = mongoose.Schema({
   fixativeMlUsed: { type: Number, default: 0 },
   makingCost: { type: Number, default: 0 },
   sellingPrice: { type: Number, required: true, min: 0 },
-  image: { type: String, default: '' }, // per‑size image URL
+  image: { type: String, default: '' },
 });
 
 const productSchema = mongoose.Schema(
@@ -28,8 +28,11 @@ const productSchema = mongoose.Schema(
     sizes: [sizeVariantSchema],
     isActive: { type: Boolean, default: true },
 
-    // ✅ NEW: controls whether this product appears on the client site
+    // ✅ Controls whether this product appears on the client site
     showOnClient: { type: Boolean, default: false },
+
+    // ✅ NEW: manual stock-out flag (also disables add-to-cart on client)
+    isStockOut: { type: Boolean, default: false },
 
     // === CUSTOMER DISPLAY FIELDS ===
     description: { type: String, default: '' },

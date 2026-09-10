@@ -54,6 +54,7 @@ const ProductList = () => {
     notes: '',
     isBestseller: false,
     showOnClient: false,
+    isStockOut: false,
     sizes: [],
     baseOil: '',
     blendComponents: [],
@@ -113,6 +114,22 @@ const ProductList = () => {
     }
   };
 
+  // ---------- Toggle Stock Out ----------
+  const toggleStockOut = async (product) => {
+    try {
+      const newValue = !product.isStockOut;
+      await API.patch(`/products/${product._id}`, { isStockOut: newValue });
+      setProducts(prev =>
+        prev.map(p =>
+          p._id === product._id ? { ...p, isStockOut: newValue } : p
+        )
+      );
+      toast.success(newValue ? 'Marked as Stock Out' : 'Marked as In Stock');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update stock status');
+    }
+  };
+
   // ---------- Delete Handlers ----------
   const handleDelete = async () => {
     if (!productToDelete) return;
@@ -141,6 +158,7 @@ const ProductList = () => {
         notes: (data.notes || []).join(', '),
         isBestseller: data.isBestseller || false,
         showOnClient: data.showOnClient || false,
+        isStockOut: data.isStockOut || false,
         sizes: (data.sizes || []).map(s => ({
           _id: s._id,
           sizeMl: s.sizeMl,
@@ -251,6 +269,7 @@ const ProductList = () => {
         notes: editForm.notes.split(',').map(s => s.trim()).filter(Boolean),
         isBestseller: editForm.isBestseller,
         showOnClient: editForm.showOnClient,
+        isStockOut: editForm.isStockOut,
         sizes: editForm.sizes.map(s => ({
           _id: s._id,
           sizeMl: s.sizeMl,
@@ -545,13 +564,14 @@ const ProductList = () => {
                 <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
                 <th className="px-4 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Bestseller</th>
                 <th className="px-4 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">On Client</th>
+                <th className="px-4 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
                 <th className="px-4 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {filteredProducts.length === 0 ? (
                 <tr>
-                  <td colSpan="10" className="text-center py-8 text-gray-400">No products found</td>
+                  <td colSpan="11" className="text-center py-8 text-gray-400">No products found</td>
                 </tr>
               ) : (
                 filteredProducts.map((p) => (
@@ -587,6 +607,27 @@ const ProductList = () => {
                           }`}
                         />
                       </button>
+                    </td>
+                    <td className="px-4 sm:px-6 py-3 sm:py-4 text-center">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleStockOut(p);
+                        }}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${
+                          p.isStockOut ? 'bg-red-500' : 'bg-emerald-500'
+                        }`}
+                        title={p.isStockOut ? 'Out of stock' : 'In stock'}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
+                            p.isStockOut ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                      <p className={`text-[10px] mt-0.5 font-medium ${p.isStockOut ? 'text-red-600' : 'text-emerald-600'}`}>
+                        {p.isStockOut ? 'OUT' : 'IN'}
+                      </p>
                     </td>
                     <td className="px-4 sm:px-6 py-3 sm:py-4 text-center">
                       <div className="flex justify-center items-center gap-1 sm:gap-2">
@@ -711,7 +752,7 @@ const ProductList = () => {
                     </select>
                   </div>
 
-                  <div className="flex items-end gap-6">
+                  <div className="flex items-end gap-6 flex-wrap">
                     <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
                       <input
                         type="checkbox"
@@ -720,7 +761,7 @@ const ProductList = () => {
                         onChange={handleEditChange}
                         className="w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
                       />
-                      Mark as Bestseller
+                      Bestseller
                     </label>
 
                     <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
@@ -731,7 +772,18 @@ const ProductList = () => {
                         onChange={handleEditChange}
                         className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
                       />
-                      Show on Client Site
+                      Show on Client
+                    </label>
+
+                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="isStockOut"
+                        checked={editForm.isStockOut}
+                        onChange={handleEditChange}
+                        className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                      />
+                      Stock Out
                     </label>
                   </div>
 
