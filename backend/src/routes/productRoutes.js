@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const {
   getProducts,
-  getProductById,           // <-- add this import
+  getProductById,
   createProduct,
   updateProduct,
   calculateCost,
@@ -19,8 +19,9 @@ router.route('/')
   .post(protect, createProduct);
 
 router.route('/:id')
-  .get(getProductById)      // <-- add this route
+  .get(getProductById)
   .put(protect, updateProduct)
+  .patch(protect, updateProduct)   // ✅ allows toggling showOnClient via PATCH
   .delete(protect, deleteProduct);
 
 router.post('/:id/calculate-cost', calculateCost);

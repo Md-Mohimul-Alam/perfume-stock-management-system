@@ -15,7 +15,7 @@ const sizeVariantSchema = mongoose.Schema({
   fixativeMlUsed: { type: Number, default: 0 },
   makingCost: { type: Number, default: 0 },
   sellingPrice: { type: Number, required: true, min: 0 },
-  image: { type: String, default: '' }, // ✅ NEW: per‑size image URL
+  image: { type: String, default: '' }, // per‑size image URL
 });
 
 const productSchema = mongoose.Schema(
@@ -27,18 +27,22 @@ const productSchema = mongoose.Schema(
     blendComponents: [blendComponentSchema],
     sizes: [sizeVariantSchema],
     isActive: { type: Boolean, default: true },
+
+    // ✅ NEW: controls whether this product appears on the client site
+    showOnClient: { type: Boolean, default: false },
+
     // === CUSTOMER DISPLAY FIELDS ===
     description: { type: String, default: '' },
     intensity: { type: String, enum: ['light', 'medium', 'strong'], default: 'medium' },
     bestFor: { type: [String], default: ['all'] },
     notes: { type: [String], default: [] },
     isBestseller: { type: Boolean, default: false },
-    images: { type: [String], default: [] }, // optional product‑level images
+    images: { type: [String], default: [] },
   },
   { timestamps: true }
 );
 
-// Pre-save hook (unchanged)
+// Pre-save hook
 productSchema.pre('save', async function () {
   if (!this.sizes || this.sizes.length === 0) return;
 
@@ -79,7 +83,7 @@ productSchema.pre('save', async function () {
   }
 });
 
-// Method to calculate making cost (unchanged)
+// Method to calculate making cost
 productSchema.methods.calculateMakingCost = async function (sizeIndex) {
   const size = this.sizes[sizeIndex];
   const bottle = await mongoose.model('Bottle').findById(size.bottle);

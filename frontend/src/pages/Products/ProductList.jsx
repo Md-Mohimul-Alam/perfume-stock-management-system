@@ -53,6 +53,7 @@ const ProductList = () => {
     bestFor: '',
     notes: '',
     isBestseller: false,
+    showOnClient: false,
     sizes: [],
     baseOil: '',
     blendComponents: [],
@@ -96,6 +97,22 @@ const ProductList = () => {
     }
   };
 
+  // ---------- Toggle Show on Client ----------
+  const toggleShowOnClient = async (product) => {
+    try {
+      const newValue = !product.showOnClient;
+      await API.patch(`/products/${product._id}`, { showOnClient: newValue });
+      setProducts(prev =>
+        prev.map(p =>
+          p._id === product._id ? { ...p, showOnClient: newValue } : p
+        )
+      );
+      toast.success(newValue ? 'Visible on client ✅' : 'Hidden from client');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update visibility');
+    }
+  };
+
   // ---------- Delete Handlers ----------
   const handleDelete = async () => {
     if (!productToDelete) return;
@@ -123,6 +140,7 @@ const ProductList = () => {
         bestFor: (data.bestFor || []).join(', '),
         notes: (data.notes || []).join(', '),
         isBestseller: data.isBestseller || false,
+        showOnClient: data.showOnClient || false,
         sizes: (data.sizes || []).map(s => ({
           _id: s._id,
           sizeMl: s.sizeMl,
@@ -232,6 +250,7 @@ const ProductList = () => {
         bestFor: editForm.bestFor.split(',').map(s => s.trim()).filter(Boolean),
         notes: editForm.notes.split(',').map(s => s.trim()).filter(Boolean),
         isBestseller: editForm.isBestseller,
+        showOnClient: editForm.showOnClient,
         sizes: editForm.sizes.map(s => ({
           _id: s._id,
           sizeMl: s.sizeMl,
@@ -525,13 +544,14 @@ const ProductList = () => {
                 <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Best For</th>
                 <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
                 <th className="px-4 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Bestseller</th>
+                <th className="px-4 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">On Client</th>
                 <th className="px-4 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {filteredProducts.length === 0 ? (
                 <tr>
-                  <td colSpan="9" className="text-center py-8 text-gray-400">No products found</td>
+                  <td colSpan="10" className="text-center py-8 text-gray-400">No products found</td>
                 </tr>
               ) : (
                 filteredProducts.map((p) => (
@@ -549,6 +569,24 @@ const ProductList = () => {
                       ) : (
                         <span className="text-gray-400">-</span>
                       )}
+                    </td>
+                    <td className="px-4 sm:px-6 py-3 sm:py-4 text-center">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleShowOnClient(p);
+                        }}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${
+                          p.showOnClient ? 'bg-emerald-500' : 'bg-gray-300'
+                        }`}
+                        title={p.showOnClient ? 'Visible on client' : 'Hidden from client'}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
+                            p.showOnClient ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
                     </td>
                     <td className="px-4 sm:px-6 py-3 sm:py-4 text-center">
                       <div className="flex justify-center items-center gap-1 sm:gap-2">
@@ -579,7 +617,7 @@ const ProductList = () => {
         </div>
       )}
 
-      {/* ---------- DELETE CONFIRMATION MODAL – responsive ---------- */}
+      {/* ---------- DELETE CONFIRMATION MODAL ---------- */}
       {showDeleteModal && productToDelete && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
@@ -607,7 +645,7 @@ const ProductList = () => {
         </div>
       )}
 
-      {/* ---------- EDIT MODAL – responsive ---------- */}
+      {/* ---------- EDIT MODAL ---------- */}
       {showEditModal && productToEdit && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-4 sm:p-6 relative">
@@ -673,7 +711,7 @@ const ProductList = () => {
                     </select>
                   </div>
 
-                  <div className="flex items-end">
+                  <div className="flex items-end gap-6">
                     <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
                       <input
                         type="checkbox"
@@ -683,6 +721,17 @@ const ProductList = () => {
                         className="w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
                       />
                       Mark as Bestseller
+                    </label>
+
+                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="showOnClient"
+                        checked={editForm.showOnClient}
+                        onChange={handleEditChange}
+                        className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
+                      />
+                      Show on Client Site
                     </label>
                   </div>
 
@@ -910,7 +959,7 @@ const ProductList = () => {
         </div>
       )}
 
-      {/* ---------- BULK UPLOAD MODAL – responsive ---------- */}
+      {/* ---------- BULK UPLOAD MODAL ---------- */}
       {showUploadModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-4 sm:p-6 relative">

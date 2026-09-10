@@ -5,10 +5,19 @@ const { updateBestsellers } = require('../services/productService');
 
 // =============================================
 // GET /api/products
+//   - default: all active products
+//   - ?showOnClient=true : only products visible on the client site
 // =============================================
 exports.getProducts = async (req, res) => {
   try {
-    const products = await Product.find({ isActive: true })
+    const filter = { isActive: true };
+
+    // ✅ Client asks only for products marked visible
+    if (req.query.showOnClient === 'true') {
+      filter.showOnClient = true;
+    }
+
+    const products = await Product.find(filter)
       .populate('baseOil', 'name sku')
       .populate('blendComponents.material', 'name sku type')
       .populate('sizes.bottle', 'sizeMl type');
@@ -25,7 +34,8 @@ exports.createProduct = async (req, res) => {
   try {
     const {
       name, sku, type, baseOil, blendComponents, sizes,
-      description, intensity, bestFor, notes, isBestseller, images
+      description, intensity, bestFor, notes, isBestseller, images,
+      showOnClient,
     } = req.body;
 
     for (const size of sizes) {
@@ -46,6 +56,7 @@ exports.createProduct = async (req, res) => {
       notes: notes || [],
       isBestseller: isBestseller || false,
       images: images || [],
+      showOnClient: showOnClient || false,
     });
 
     for (let i = 0; i < product.sizes.length; i++) {
@@ -69,7 +80,8 @@ exports.updateProduct = async (req, res) => {
 
     const {
       name, sku, type, baseOil, blendComponents, sizes, isActive,
-      description, intensity, bestFor, notes, isBestseller, images
+      description, intensity, bestFor, notes, isBestseller, images,
+      showOnClient,
     } = req.body;
 
     // Update simple fields
@@ -79,6 +91,7 @@ exports.updateProduct = async (req, res) => {
     if (baseOil) product.baseOil = baseOil;
     if (blendComponents) product.blendComponents = blendComponents;
     if (isActive !== undefined) product.isActive = isActive;
+    if (showOnClient !== undefined) product.showOnClient = showOnClient;
     if (description !== undefined) product.description = description;
     if (intensity) product.intensity = intensity;
     if (bestFor) product.bestFor = bestFor;
@@ -93,37 +106,32 @@ exports.updateProduct = async (req, res) => {
       for (const newSize of sizes) {
         let bottleId = newSize.bottle;
 
-        // If bottleId is empty or invalid, try to find existing by sizeMl
         if (!bottleId || bottleId === '' || bottleId === 'undefined') {
           const existingSize = product.sizes.find(s => s.sizeMl === newSize.sizeMl);
           if (existingSize && existingSize.bottle) {
             bottleId = existingSize.bottle;
           } else {
-            // No bottle and no existing – skip this size
             console.warn(`Skipping size ${newSize.sizeMl}ml – no bottle found`);
             continue;
           }
         }
 
-        // Validate the bottle exists
         if (bottleId) {
           const bottleExists = await Bottle.findById(bottleId);
           if (!bottleExists) {
             console.warn(`Bottle ${bottleId} not found – skipping size ${newSize.sizeMl}ml`);
-            continue; // skip this size entirely
+            continue;
           }
         } else {
-          continue; // skip if still no bottle
+          continue;
         }
 
-        // Build the size object
         updatedSizes.push({
-          _id: newSize._id, // keep if exists (for update)
+          _id: newSize._id,
           sizeMl: newSize.sizeMl,
           bottle: bottleId,
           sellingPrice: newSize.sellingPrice || 0,
           image: newSize.image || '',
-          // These will be recalculated by the pre-save hook
           oilMlUsed: 0,
           ethanolMlUsed: 0,
           fixativeMlUsed: 0,
@@ -136,7 +144,6 @@ exports.updateProduct = async (req, res) => {
 
     await product.save();
 
-    // Recalculate costs for all remaining sizes
     for (let i = 0; i < product.sizes.length; i++) {
       await product.calculateMakingCost(i);
     }
@@ -147,6 +154,7 @@ exports.updateProduct = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 // =============================================
 // POST /api/products/:id/calculate-cost
 // =============================================
@@ -285,6 +293,7 @@ exports.bulkCreateProducts = async (req, res) => {
             notes,
             isBestseller: !!item.isBestseller,
             images: [],
+            showOnClient: false,
           });
         }
 
@@ -305,7 +314,6 @@ exports.bulkCreateProducts = async (req, res) => {
           fixativeMlUsed: 0,
           makingCost: 0,
           sellingPrice: parseFloat(sellingPrice),
-          // image: '' – will be added separately via update
         });
 
         await product.save();
@@ -481,6 +489,7 @@ exports.triggerBestsellerUpdate = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 // =============================================
 // GET /api/products/:id
 // =============================================
