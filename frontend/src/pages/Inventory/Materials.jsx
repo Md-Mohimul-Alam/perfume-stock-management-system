@@ -493,7 +493,6 @@ const Materials = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Purchases (৳)</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Used Oil (ml)</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Available Oil (ml)</th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Actions</th>
               </tr>
             </thead>
@@ -518,15 +517,6 @@ const Materials = () => {
                     <td className="px-6 py-4 text-amber-600">{used.toFixed(0)}</td>
                     <td className={`px-6 py-4 font-semibold ${available < 0 ? 'text-red-600' : 'text-green-600'}`}>
                       {available.toFixed(0)}
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      {m.isStockOut ? (
-                        <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded-full">
-                          Stock Out
-                        </span>
-                      ) : (
-                        <span className="text-gray-300">—</span>
-                      )}
                     </td>
                     <td className="px-6 py-4 text-center">
                       <button
@@ -558,7 +548,7 @@ const Materials = () => {
               })}
               {materials.length === 0 && (
                 <tr>
-                  <td colSpan="11" className="text-center py-8 text-gray-500">No materials found</td>
+                  <td colSpan="10" className="text-center py-8 text-gray-500">No materials found</td>
                 </tr>
               )}
             </tbody>

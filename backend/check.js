@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const path = require('path');
 require('dotenv').config();
 
-// ----- Helper: load models (same as your push_sell_data.js) -----
+// ----- Helper: load models -----
 function loadModel(modelName) {
   const paths = [
     path.join(__dirname, 'src/models', modelName),
@@ -17,15 +17,11 @@ function loadModel(modelName) {
   throw new Error(`Cannot find model "${modelName}"`);
 }
 
-let Sale, Product, RawMaterial, Bottle, Transaction, InventoryLog;
+let Sale, Product;
 try {
   Sale = loadModel('Sale');
   Product = loadModel('Product');
-  RawMaterial = loadModel('RawMaterial');
-  Bottle = loadModel('Bottle');
-  Transaction = loadModel('Transaction');
-  InventoryLog = loadModel('InventoryLog');
-  console.log('✅ Loaded all models');
+  console.log('✅ Loaded models');
 } catch (err) {
   console.error('❌ Failed to load models:', err.message);
   process.exit(1);
@@ -42,9 +38,29 @@ function maskUri(uri) {
     const url = new URL(uri);
     if (url.password) url.password = '****';
     return url.toString();
-  } catch { return uri; }
+  } catch {
+    return uri;
+  }
 }
 console.log(`🔗 Connecting to: ${maskUri(MONGO_URI)}`);
+
+// ----- Only this SKU -----
+const TARGET_SKU = 'ParHil';
+
+// ----- Oil content rules (bottle size in ml -> oil %) -----
+// OIL ONLY — no spray percentages here.
+const OIL_RULES = { 6: 100, 15: 100, 30: 100, 50: 100, 100: 100 };
+const OIL_BUCKETS = Object.keys(OIL_RULES)
+  .map(Number)
+  .sort((a, b) => a - b);
+
+function getOilPercent(maxSizeMl) {
+  for (const size of OIL_BUCKETS) {
+    if (maxSizeMl <= size) return OIL_RULES[size];
+  }
+  // Fallback to largest bucket
+  return OIL_RULES[OIL_BUCKETS[OIL_BUCKETS.length - 1]];
+}
 
 async function checkSales() {
   try {
@@ -54,73 +70,62 @@ async function checkSales() {
     });
     console.log('✅ Connected to MongoDB');
 
-    // 1. Find target products
-    const srProduct = await Product.findOne({ sku: 'NV' });
-    const luxeProduct = await Product.findOne({ sku: 'NV_SP' });
+    // 1. Find the only target product
+    const targetProduct = await Product.findOne({ sku: TARGET_SKU });
 
-    console.log('\n📦 Target products:');
-    console.log('  NV:', srProduct ? `${srProduct.name} (${srProduct._id})` : '❌ NOT FOUND');
-    console.log('  NV_SP:', luxeProduct ? `${luxeProduct.name} (${luxeProduct._id})` : '❌ NOT FOUND');
+    console.log('\n📦 Target product:');
+    console.log(
+      `  ${TARGET_SKU}:`,
+      targetProduct ? `${targetProduct.name} (${targetProduct._id})` : '❌ NOT FOUND'
+    );
 
-    if (!srProduct && !luxeProduct) {
-      console.log('❌ Neither product exists. Create them first.');
+    if (!targetProduct) {
+      console.log(`❌ Product with SKU "${TARGET_SKU}" does not exist. Create it first.`);
       process.exit(0);
     }
 
-    // 2. Fetch all sales with product population
+    // 2. Fetch all sales with product populated
     const sales = await Sale.find().populate('items.product');
     console.log(`\n📋 Total sales found: ${sales.length}`);
 
-    // 3. Count usage
-    const usage = { NV: 0, NV_SP: 0 };
-    const unitCount = { NV: 0, NV_SP: 0 };
-    const sprayRules = { '6': 45, '15': 45, '30': 45, '50': 50, '100': 55 };
+    // 3. Accumulate oil usage ONLY for ParHil
+    let oilUsedMl = 0;
 
     for (const sale of sales) {
       if (!sale.items) continue;
+
       for (const item of sale.items) {
         const product = item.product;
         if (!product) continue;
 
-        let targetKey = null;
-        if (srProduct && product._id.toString() === srProduct._id.toString()) {
-          targetKey = 'NV';
-        } else if (luxeProduct && product._id.toString() === luxeProduct._id.toString()) {
-          targetKey = 'NV_SP';
-        }
-        if (!targetKey) continue;
+        // Skip anything that is not the target product
+        if (product._id.toString() !== targetProduct._id.toString()) continue;
 
         const sizeMl = item.sizeMl || 0;
         const qty = item.quantity || 0;
-        unitCount[targetKey] += qty;
 
-        // Determine oil percentage
-        const maxSize = product.sizes.length > 0
+        // Determine oil % from the product's largest bottle size
+        const maxSize = product.sizes && product.sizes.length > 0
           ? Math.max(...product.sizes.map(s => s.sizeMl))
           : sizeMl;
-        let oilPct = 45;
-        for (const [max, pct] of Object.entries(sprayRules)) {
-          if (maxSize <= parseInt(max)) { oilPct = pct; break; }
-        }
 
-        const oilMl = (sizeMl * (oilPct / 100)) * qty;
-        usage[targetKey] += oilMl;
+        const oilPct = getOilPercent(maxSize);
+        const oilMl = sizeMl * (oilPct / 100) * qty;
+
+        oilUsedMl += oilMl;
       }
     }
 
-    // 4. Print results
-    console.log('\n📊 Results:');
+    // 4. Print results — oil only, ParHil only
+    console.log('\n📊 Oil usage for SKU ParHil:');
     console.log('─────────────────────────────');
-    console.log('Product       | Units Sold | Oil Used (ml)');
-    console.log('──────────────|────────────|──────────────');
-    console.log(`NV     | ${String(unitCount.NV).padStart(10)} | ${usage.NV.toFixed(2)}`);
-    console.log(`NVSP  | ${String(unitCount.NV_SP).padStart(10)} | ${usage.NV_SP.toFixed(2)}`);
+    console.log(`Oil Used (ml): ${oilUsedMl.toFixed(2)}`);
     console.log('─────────────────────────────');
 
-    if (unitCount.NV === 0 && unitCount.NV_SP === 0) {
-      console.log('\n⚠️  No sales found for these products – that\'s why usedOil is 0.');
+    if (oilUsedMl === 0) {
+      console.log('\n⚠️  No oil usage found for SKU ParHil.');
     } else {
-      console.log('\n✅ Sales exist – the virtual material usage should now be >0.');
+      console.log('\n✅ Oil usage calculated (spray quantities excluded).');
     }
 
     await mongoose.disconnect();
