@@ -1,0 +1,46 @@
+{
+  "mode": "dry-run",
+  "timestamp": "2026-09-21T20:44:01.144Z",
+  "totalFixes": 4,
+  "appliedCount": 0,
+  "skippedCount": 0,
+  "errorCount": 0,
+  "report": [
+    {
+      "sku": "DunIco",
+      "name": "Dunhill Icon",
+      "status": "would-apply",
+      "oldStock": 35.33200000000002,
+      "newStock": 27,
+      "oldStockOut": false,
+      "newStockOut": false
+    },
+    {
+      "sku": "DipTam",
+      "name": "Diptyque tam dao",
+      "status": "would-apply",
+      "oldStock": 18.36800000000001,
+      "newStock": 7.5,
+      "oldStockOut": false,
+      "newStockOut": false
+    },
+    {
+      "sku": "CreAve",
+      "name": "Creed Aventus",
+      "status": "would-apply",
+      "oldStock": 29.97800000000001,
+      "newStock": 14,
+      "oldStockOut": false,
+      "newStockOut": false
+    },
+    {
+      "sku": "GucFla",
+      "name": "Gucci Flora",
+      "status": "would-apply",
+      "oldStock": 21.27199999999999,
+      "newStock": 0,
+      "oldStockOut": false,
+      "newStockOut": true
+    }
+  ]
+}

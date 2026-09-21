@@ -6,9 +6,18 @@ const Product = require('../models/Product');
 const Transaction = require('../models/Transaction');
 const InventoryLog = require('../models/InventoryLog');
 
-// ----- Helper: parse blend components for spray products -----
-function parseBlendComponents(product) {
-  const comps = product.blendComponents;
+// ----- Helper: get the effective blend for a specific size of a product -----
+function getSizeBlend(product, sizeMl) {
+  const sizeVariant = product.sizes?.find(s => s.sizeMl === sizeMl);
+  if (sizeVariant && sizeVariant.blendComponents && sizeVariant.blendComponents.length > 0) {
+    return sizeVariant.blendComponents;
+  }
+  // Fallback to product-level blend
+  return product.blendComponents || [];
+}
+
+// ----- Helper: parse blend components (works for object or string form) -----
+function parseBlendComponents(comps) {
   if (!comps) return [];
   if (Array.isArray(comps)) {
     return comps.filter(c => c.material && c.percentage);
@@ -27,10 +36,11 @@ function parseBlendComponents(product) {
   return [];
 }
 
-// ----- Helper: apply exact blends to all products -----
+// ----- Helper: apply exact blends to all products (writes PER-SIZE blends) -----
 async function applyExactBlends() {
   console.log('🔄 Applying exact product blends...');
 
+  // Ensure the shared fixatives exist
   const fixatives = [
     { name: 'Ethanol', sku: 'ETH', type: 'ethanol' },
     { name: 'Iso E Super', sku: 'Iso', type: 'fixative' },
@@ -39,9 +49,7 @@ async function applyExactBlends() {
   ];
   for (const f of fixatives) {
     let mat = await RawMaterial.findOne({ sku: f.sku });
-    if (!mat) {
-      mat = await RawMaterial.findOne({ name: f.name });
-    }
+    if (!mat) mat = await RawMaterial.findOne({ name: f.name });
     if (!mat) {
       console.log(`🆕 Creating material: ${f.name} (${f.sku})`);
       mat = new RawMaterial({ name: f.name, sku: f.sku, type: f.type, currentStockMl: 0, avgCostPerMl: 0 });
@@ -52,6 +60,7 @@ async function applyExactBlends() {
     }
   }
 
+  // Ensure the special oils exist
   const specialOils = [
     { name: 'Dunhill Icon', sku: 'DunIco', type: 'oil' },
     { name: 'Diptyque tam dao', sku: 'DipTam', type: 'oil' },
@@ -60,9 +69,7 @@ async function applyExactBlends() {
   ];
   for (const o of specialOils) {
     let mat = await RawMaterial.findOne({ sku: o.sku });
-    if (!mat) {
-      mat = await RawMaterial.findOne({ name: o.name });
-    }
+    if (!mat) mat = await RawMaterial.findOne({ name: o.name });
     if (!mat) {
       console.log(`🆕 Creating material: ${o.name} (${o.sku})`);
       mat = new RawMaterial({ name: o.name, sku: o.sku, type: o.type, currentStockMl: 0, avgCostPerMl: 0 });
@@ -77,7 +84,7 @@ async function applyExactBlends() {
   const products = await Product.find({ isActive: true });
   console.log(`📦 Applying blends to ${products.length} active products.`);
 
-  // Standard spray rules
+  // Standard spray recipe rules — matches per size (smaller = same as 6ml, bigger = same as 50ml)
   const sprayRules = {
     '6':   { oil: 40, ethanol: 57, iso: 1, glx: 1, ambx: 1 },
     '15':  { oil: 40, ethanol: 57, iso: 1, glx: 1, ambx: 1 },
@@ -86,26 +93,27 @@ async function applyExactBlends() {
     '100': { oil: 55, ethanol: 42, iso: 1, glx: 1, ambx: 1 },
   };
 
-  // ✅ Special spray rules — used ONLY for SR_SP and LUXE1_SP
+  // Special recipe rules — used only for SR_SP and LUXE1_SP
   const specialSprayRules = {
-    '6':   { oil: 50, ethanol: 47, iso: 1, glx: 1, ambx: 1 },  // 50 + 47 + 3 = 100 ✓
-    '15':  { oil: 55, ethanol: 42, iso: 1, glx: 1, ambx: 1 },  // 55 + 42 + 3 = 100 ✓
+    '6':   { oil: 50, ethanol: 47, iso: 1, glx: 1, ambx: 1 },
+    '15':  { oil: 55, ethanol: 42, iso: 1, glx: 1, ambx: 1 },
     '30':  { oil: 55, ethanol: 42, iso: 1, glx: 1, ambx: 1 },
     '50':  { oil: 55, ethanol: 42, iso: 1, glx: 1, ambx: 1 },
-    '100': { oil: 60, ethanol: 37, iso: 1, glx: 1, ambx: 1 },  // 60 + 37 + 3 = 100 ✓
+    '100': { oil: 60, ethanol: 37, iso: 1, glx: 1, ambx: 1 },
   };
 
+  // Oil split for special sprays (only the OIL portion, not the whole bottle)
   const specialSprays = {
     'SR_SP': {
       oilComponents: [
         { sku: 'DunIco', percentage: 52 },
-        { sku: 'DipTam', percentage: 48 },   // 52 + 48 = 100 ✓
+        { sku: 'DipTam', percentage: 48 },
       ],
     },
     'LUXE1_SP': {
       oilComponents: [
         { sku: 'GucFla', percentage: 28 },
-        { sku: 'CreAve', percentage: 72 },   // ✅ 28 + 72 = 100 ✓ (was 73)
+        { sku: 'CreAve', percentage: 72 },
       ],
     },
   };
@@ -115,6 +123,7 @@ async function applyExactBlends() {
 
   for (const product of products) {
     try {
+      // ---------- ROLL-ON ----------
       if (product.type === 'roll-on') {
         const oilSku = product.sku;
         const oilMat = matMap[oilSku];
@@ -137,103 +146,112 @@ async function applyExactBlends() {
         continue;
       }
 
+      // ---------- SPRAY ----------
       if (product.type === 'spray') {
         const isSpecialSpray = !!specialSprays[product.sku];
         const activeRules = isSpecialSpray ? specialSprayRules : sprayRules;
+        const blendConfig = specialSprays[product.sku];
 
-        const maxSize = Math.max(...product.sizes.map(s => s.sizeMl));
-        let sizeRule = null;
-        for (const [size, rule] of Object.entries(activeRules)) {
-          if (maxSize <= parseInt(size)) {
-            sizeRule = rule;
-            break;
-          }
-        }
-        if (!sizeRule) {
-          console.warn(`⚠️ No blend rule for ${product.name} (SKU: ${product.sku})`);
-          skipped++;
-          continue;
-        }
-
-        let oilComps = [];
         const ethanolMat = matMap['ETH'];
         const isoMat = matMap['Iso'];
         const glxMat = matMap['Glx'];
         const ambxMat = matMap['Ambx'];
 
-        const blendConfig = specialSprays[product.sku];
+        let productChanged = false;
 
-        if (blendConfig) {
-          // ✅ Special spray: oil split from blendConfig; ethanol/iso/glx/ambx from sizeRule
-          const oilTotalPct = sizeRule.oil;
-          for (const comp of blendConfig.oilComponents) {
-            const mat = matMap[comp.sku];
-            if (!mat) {
-              console.warn(`⚠️ Material ${comp.sku} not found for special blend ${product.sku}`);
-              continue;
+        // ✅ Compute a blend for EVERY size, and store it on that size
+        for (const size of product.sizes) {
+          const sizeMl = size.sizeMl;
+
+          // Pick the smallest rule key that is >= sizeMl
+          let sizeRule = null;
+          for (const [ruleSize, rule] of Object.entries(activeRules)) {
+            if (sizeMl <= parseInt(ruleSize)) {
+              sizeRule = rule;
+              break;
             }
-            const pct = (comp.percentage / 100) * oilTotalPct;
-            oilComps.push({ material: mat._id, percentage: parseFloat(pct.toFixed(2)) });
           }
-          // ✅ Use sizeRule values here (not hardcoded blendConfig)
-          if (ethanolMat) oilComps.push({ material: ethanolMat._id, percentage: sizeRule.ethanol });
-          if (isoMat) oilComps.push({ material: isoMat._id, percentage: sizeRule.iso });
-          if (glxMat) oilComps.push({ material: glxMat._id, percentage: sizeRule.glx });
-          if (ambxMat) oilComps.push({ material: ambxMat._id, percentage: sizeRule.ambx });
-
-          const total = oilComps.reduce((sum, c) => sum + c.percentage, 0);
-          if (Math.abs(total - 100) > 0.01) {
-            const diff = 100 - total;
-            oilComps[0].percentage += diff;
-            oilComps[0].percentage = parseFloat(oilComps[0].percentage.toFixed(2));
+          // Fallback — use the biggest rule available
+          if (!sizeRule) {
+            const keys = Object.keys(activeRules).map(Number).sort((a, b) => a - b);
+            sizeRule = activeRules[String(keys[keys.length - 1])];
           }
-        } else {
-          // Regular spray: everything from sizeRule
-          const oilSku = product.sku.replace('_SP', '');
-          let oilMat = matMap[oilSku];
-          if (!oilMat) {
-            const baseName = product.name.replace(' Spray', '');
-            oilMat = await RawMaterial.findOne({ name: { $regex: new RegExp(`^${baseName}$`, 'i') } });
-          }
-          if (!oilMat) {
-            console.warn(`⚠️ No oil material for spray ${product.name} (SKU: ${product.sku})`);
-            skipped++;
+          if (!sizeRule) {
+            console.warn(`⚠️ No blend rule for size ${sizeMl} of ${product.name}`);
             continue;
           }
 
-          oilComps = [
-            { material: oilMat._id, percentage: sizeRule.oil },
-          ];
+          let oilComps = [];
+
+          if (blendConfig) {
+            // Special spray — split the oil portion from blendConfig
+            const oilTotalPct = sizeRule.oil;
+            for (const comp of blendConfig.oilComponents) {
+              const mat = matMap[comp.sku];
+              if (!mat) {
+                console.warn(`⚠️ Material ${comp.sku} not found for ${product.sku}`);
+                continue;
+              }
+              const pct = (comp.percentage / 100) * oilTotalPct;
+              oilComps.push({ material: mat._id, percentage: parseFloat(pct.toFixed(2)) });
+            }
+          } else {
+            // Regular spray — single oil from SKU
+            const oilSku = product.sku.replace('_SP', '');
+            let oilMat = matMap[oilSku];
+            if (!oilMat) {
+              const baseName = product.name.replace(' Spray', '');
+              oilMat = await RawMaterial.findOne({ name: { $regex: new RegExp(`^${baseName}$`, 'i') } });
+            }
+            if (!oilMat) {
+              console.warn(`⚠️ No oil material for spray ${product.name} (SKU: ${product.sku})`);
+              break;
+            }
+            oilComps.push({ material: oilMat._id, percentage: sizeRule.oil });
+          }
+
+          // Add fixatives from sizeRule
           if (ethanolMat) oilComps.push({ material: ethanolMat._id, percentage: sizeRule.ethanol });
           if (isoMat) oilComps.push({ material: isoMat._id, percentage: sizeRule.iso });
           if (glxMat) oilComps.push({ material: glxMat._id, percentage: sizeRule.glx });
           if (ambxMat) oilComps.push({ material: ambxMat._id, percentage: sizeRule.ambx });
 
+          // Final safety — force sum to exactly 100
           const total = oilComps.reduce((sum, c) => sum + c.percentage, 0);
-          if (Math.abs(total - 100) > 0.01) {
+          if (Math.abs(total - 100) > 0.01 && oilComps.length > 0) {
             const diff = 100 - total;
-            oilComps[0].percentage += diff;
-            oilComps[0].percentage = parseFloat(oilComps[0].percentage.toFixed(2));
+            oilComps[0].percentage = parseFloat((oilComps[0].percentage + diff).toFixed(2));
+          }
+
+          // Compare against existing size-level blend
+          const current = size.blendComponents || [];
+          const isCorrect = current.length === oilComps.length &&
+            current.every((c, i) => {
+              const matId = c.material?._id?.toString() || c.material?.toString();
+              const newMatId = oilComps[i].material?.toString();
+              return matId === newMatId && Math.abs(c.percentage - oilComps[i].percentage) < 0.01;
+            });
+
+          if (!isCorrect) {
+            size.blendComponents = oilComps.map(c => ({
+              material: c.material,
+              percentage: c.percentage,
+            }));
+            productChanged = true;
           }
         }
 
-        const current = product.blendComponents || [];
-        const isCorrect = current.length === oilComps.length &&
-          current.every((c, i) => {
-            const matId = c.material?._id?.toString() || c.material?.toString();
-            const newMatId = oilComps[i].material?.toString();
-            return matId === newMatId && Math.abs(c.percentage - oilComps[i].percentage) < 0.01;
-          });
+        // Clear the legacy product-level blend so nothing reads it
+        if (product.blendComponents && product.blendComponents.length > 0) {
+          product.blendComponents = [];
+          productChanged = true;
+        }
+        product.baseOil = null;
 
-        if (!isCorrect) {
-          product.blendComponents = oilComps.map(c => ({
-            material: c.material,
-            percentage: c.percentage,
-          }));
-          product.baseOil = null;
+        if (productChanged) {
           await product.save();
           updated++;
-          console.log(`✅ Spray ${product.name} (${product.sku}) → blend updated`);
+          console.log(`✅ Spray ${product.name} (${product.sku}) → per-size blends updated`);
         }
         continue;
       }
@@ -252,6 +270,7 @@ exports.rebuildStock = async (req, res) => {
   try {
     console.log('🔄 Rebuilding stock from purchases, sales, and wastage...');
 
+    // 1a. Aggregate purchases
     const purchases = await Purchase.find().lean();
     const purchaseQty = {};
     const purchaseCost = {};
@@ -267,6 +286,7 @@ exports.rebuildStock = async (req, res) => {
       }
     }
 
+    // 1b. Aggregate consumption from sales (per-size blend aware)
     const sales = await Sale.find().populate('items.product');
     const rawConsumption = {};
     const bottleConsumption = {};
@@ -309,9 +329,11 @@ exports.rebuildStock = async (req, res) => {
             brokenProducts.add(`${product.name} (${product.sku})`);
           }
         } else if (product.type === 'spray') {
-          const comps = parseBlendComponents(product);
+          // ✅ Use per-size blend
+          const comps = getSizeBlend(product, sizeMl);
           if (comps.length === 0) {
-            brokenProducts.add(`${product.name} (${product.sku})`);
+            brokenProducts.add(`${product.name} @ ${sizeMl}ml (${product.sku})`);
+            continue;
           }
           for (const comp of comps) {
             let materialId = comp.material?._id?.toString() || comp.material?.toString();
@@ -331,10 +353,11 @@ exports.rebuildStock = async (req, res) => {
     }
 
     if (brokenProducts.size > 0) {
-      console.warn('⚠️ Products without a valid blend (their sales did NOT deduct raw material):');
+      console.warn('⚠️ Products/sizes without a valid blend (their sales did NOT deduct raw material):');
       brokenProducts.forEach(p => console.warn(`   - ${p}`));
     }
 
+    // 1b.2 Wastage
     const wastageLogs = await InventoryLog.find({ reason: 'wastage', material: { $ne: null } });
     const wastageMap = {};
     for (const log of wastageLogs) {
@@ -343,6 +366,7 @@ exports.rebuildStock = async (req, res) => {
       wastageMap[matId] += log.changeQuantity;
     }
 
+    // 1c. Update Raw Materials
     const allMaterials = await RawMaterial.find();
     for (const mat of allMaterials) {
       const id = mat._id.toString();
@@ -367,6 +391,7 @@ exports.rebuildStock = async (req, res) => {
       }
     }
 
+    // 1d. Update Bottles
     const allBottles = await Bottle.find();
     let bottleUpdatedCount = 0;
     for (const bottle of allBottles) {
@@ -396,6 +421,7 @@ exports.rebuildStock = async (req, res) => {
       }
     }
 
+    // 2. Apply blends to products
     await applyExactBlends();
 
     res.json({

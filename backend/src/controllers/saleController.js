@@ -9,10 +9,21 @@ const { generateInvoiceNo } = require('../utils/generateInvoice');
 const mongoose = require('mongoose');
 
 // ============================================================
-// ✅ NEW HELPER: Validate that a product has a usable blend/baseOil
-// Throws an error with a clear message if not.
+// Helper: get the effective blend for a specific size of a product
+// (per-size first, fall back to product-level)
 // ============================================================
-function assertProductHasBlend(product) {
+function getSizeBlend(product, sizeMl) {
+  const sizeVariant = product.sizes?.find(s => s.sizeMl === sizeMl);
+  if (sizeVariant && sizeVariant.blendComponents && sizeVariant.blendComponents.length > 0) {
+    return sizeVariant.blendComponents;
+  }
+  return product.blendComponents || [];
+}
+
+// ============================================================
+// Validate that a product has a usable blend/baseOil for the size
+// ============================================================
+function assertProductHasBlend(product, sizeMl) {
   if (product.type === 'roll-on') {
     if (!product.baseOil) {
       throw new Error(
@@ -24,20 +35,21 @@ function assertProductHasBlend(product) {
   }
 
   if (product.type === 'spray') {
-    if (!product.blendComponents || product.blendComponents.length === 0) {
+    const comps = getSizeBlend(product, sizeMl);
+    if (comps.length === 0) {
       throw new Error(
-        `Product "${product.name}" (SKU: ${product.sku}) has NO blend components. ` +
+        `Product "${product.name}" (SKU: ${product.sku}, ${sizeMl}ml) has NO blend components. ` +
         `Please edit the product and add blend components that sum to 100%.`
       );
     }
-    const total = product.blendComponents.reduce((s, c) => s + (c.percentage || 0), 0);
+    const total = comps.reduce((s, c) => s + (c.percentage || 0), 0);
     if (Math.abs(total - 100) > 0.01) {
       throw new Error(
-        `Product "${product.name}" (SKU: ${product.sku}) blend sums to ${total}% ` +
+        `Product "${product.name}" (SKU: ${product.sku}, ${sizeMl}ml) blend sums to ${total}% ` +
         `(must be exactly 100%). Please fix the product blend.`
       );
     }
-    for (const comp of product.blendComponents) {
+    for (const comp of comps) {
       if (!comp.material) {
         throw new Error(
           `Product "${product.name}" has a blend component with no material selected. ` +
@@ -55,18 +67,16 @@ exports.createSale = async (req, res) => {
     const { channel, items, saleDate, paymentStatus, notes } = req.body;
     let totalAmount = 0;
 
-    // ---------- Get the highest invoice number ----------
+    // Get the highest invoice number
     const lastSale = await Sale.findOne({}, { invoiceNo: 1 }).sort({ invoiceNo: -1 }).lean();
     let nextNumber = 1;
     if (lastSale && lastSale.invoiceNo) {
       const match = lastSale.invoiceNo.match(/(\d+)$/);
-      if (match) {
-        nextNumber = parseInt(match[1]) + 1;
-      }
+      if (match) nextNumber = parseInt(match[1]) + 1;
     }
     const invoiceNo = `INV-${String(nextNumber).padStart(4, '0')}`;
 
-    // ---------- Process items ----------
+    // Process items
     for (const item of items) {
       const product = await Product.findById(item.product).populate('sizes.bottle');
       if (!product) throw new Error(`Product ${item.product} not found`);
@@ -74,16 +84,18 @@ exports.createSale = async (req, res) => {
       const sizeVariant = product.sizes.find(s => s.sizeMl === item.sizeMl);
       if (!sizeVariant) throw new Error(`Size ${item.sizeMl} not available for this product`);
 
-      // ✅ NEW: Validate blend BEFORE deducting anything
-      assertProductHasBlend(product);
+      // Validate blend
+      assertProductHasBlend(product, item.sizeMl);
 
       totalAmount += item.quantity * item.unitPrice;
 
-      // ---------- Raw material deduction ----------
+      // Raw material deduction
       if (product.type === 'roll-on') {
         await deductRawMaterial(product.baseOil, sizeVariant.oilMlUsed * item.quantity, 'sale', null);
       } else {
-        for (const comp of product.blendComponents) {
+        // ✅ Per-size blend
+        const comps = getSizeBlend(product, item.sizeMl);
+        for (const comp of comps) {
           const mlUsed = (sizeVariant.sizeMl * comp.percentage / 100) * item.quantity;
           await deductRawMaterial(comp.material, mlUsed, 'sale', null);
         }
@@ -93,7 +105,7 @@ exports.createSale = async (req, res) => {
       await deductBottle(sizeVariant.bottle, item.quantity, 'sale', null);
     }
 
-    // ---------- Create sale ----------
+    // Create sale
     const sale = await Sale.create({
       invoiceNo,
       channel,
@@ -128,7 +140,7 @@ exports.createSale = async (req, res) => {
   }
 };
 
-// @desc    Get all sales (with filters) – populates description
+// @desc    Get all sales
 // @route   GET /api/sales
 exports.getSales = async (req, res) => {
   try {
@@ -150,7 +162,7 @@ exports.getSales = async (req, res) => {
   }
 };
 
-// @desc    Get single sale – populates description
+// @desc    Get single sale
 // @route   GET /api/sales/:id
 exports.getSaleById = async (req, res) => {
   try {
@@ -163,8 +175,8 @@ exports.getSaleById = async (req, res) => {
   }
 };
 
-// @desc    Update payment status (e.g., mark due as paid)
-// @route   PUT /api/sales/:id/payment  (and also PATCH /api/sales/:id)
+// @desc    Update payment status
+// @route   PUT /api/sales/:id/payment
 exports.updatePayment = async (req, res) => {
   try {
     const sale = await Sale.findById(req.params.id);
@@ -174,7 +186,6 @@ exports.updatePayment = async (req, res) => {
     if (paymentStatus === 'paid' && sale.paymentStatus !== 'paid') {
       sale.paymentStatus = 'paid';
       await sale.save();
-      // Record transaction
       await Transaction.create({
         type: 'cash_in',
         amount: sale.totalAmount,
@@ -193,9 +204,6 @@ exports.updatePayment = async (req, res) => {
   }
 };
 
-// ============================================================
-// ✅ UPDATED bulkCreateSales with validation + trimming + duplicate check
-// ============================================================
 // @desc    Bulk create sales from CSV/Excel
 // @route   POST /api/sales/bulk
 exports.bulkCreateSales = async (req, res) => {
@@ -205,21 +213,16 @@ exports.bulkCreateSales = async (req, res) => {
       return res.status(400).json({ message: 'No sales provided' });
     }
 
-    // 1️⃣ Extract all invoice numbers, trimming any leading/trailing spaces
     const invoiceNos = sales.map(s => s.invoiceNo?.trim()).filter(Boolean);
-
-    // 2️⃣ Query the database for any that already exist (exact match)
     const existingSales = await Sale.find({ invoiceNo: { $in: invoiceNos } }, 'invoiceNo').lean();
     const existingSet = new Set(existingSales.map(s => s.invoiceNo));
 
-    // 3️⃣ Separate new sales from duplicates (trim each invoice when comparing)
     const newSales = sales.filter(s => !existingSet.has(s.invoiceNo?.trim()));
     const duplicateSales = sales.filter(s => existingSet.has(s.invoiceNo?.trim()));
 
     const errors = [];
     const created = [];
 
-    // 4️⃣ Report duplicates as errors
     for (const sale of duplicateSales) {
       errors.push({
         saleData: sale,
@@ -227,7 +230,6 @@ exports.bulkCreateSales = async (req, res) => {
       });
     }
 
-    // 5️⃣ Process only brand‑new sales
     for (const saleData of newSales) {
       try {
         const invoiceNo = saleData.invoiceNo?.trim();
@@ -238,7 +240,6 @@ exports.bulkCreateSales = async (req, res) => {
           continue;
         }
 
-        // Process items
         const processedItems = [];
         let totalAmount = 0;
 
@@ -257,8 +258,7 @@ exports.bulkCreateSales = async (req, res) => {
             continue;
           }
 
-          // ✅ NEW: Validate blend BEFORE deducting
-          assertProductHasBlend(product);
+          assertProductHasBlend(product, sizeMl);
 
           const itemTotal = quantity * unitPrice;
           totalAmount += itemTotal;
@@ -275,7 +275,6 @@ exports.bulkCreateSales = async (req, res) => {
 
         if (processedItems.length === 0) continue;
 
-        // Create the sale
         const sale = await Sale.create({
           invoiceNo,
           channel,
@@ -292,14 +291,15 @@ exports.bulkCreateSales = async (req, res) => {
           notes: notes || '',
         });
 
-        // Deduct stock
         for (const item of processedItems) {
-          const { productRef, sizeVariant, quantity } = item;
+          const { productRef, sizeVariant, quantity, sizeMl } = item;
           await deductBottle(sizeVariant.bottle, quantity, 'sale', sale);
           if (productRef.type === 'roll-on') {
             await deductRawMaterial(productRef.baseOil, sizeVariant.oilMlUsed * quantity, 'sale', sale);
           } else {
-            for (const comp of productRef.blendComponents) {
+            // ✅ Per-size blend
+            const comps = getSizeBlend(productRef, sizeMl);
+            for (const comp of comps) {
               const mlUsed = (sizeVariant.sizeMl * comp.percentage / 100) * quantity;
               await deductRawMaterial(comp.material, mlUsed, 'sale', sale);
             }
@@ -345,7 +345,6 @@ exports.deleteSale = async (req, res) => {
       return res.status(404).json({ message: 'Sale not found' });
     }
 
-    // 1. Reverse stock for each item
     for (const item of sale.items) {
       const product = item.product;
       if (!product) continue;
@@ -387,31 +386,29 @@ exports.deleteSale = async (req, res) => {
           }
         }
       } else {
-        // spray type – blend components
-        if (product.blendComponents && product.blendComponents.length) {
-          for (const comp of product.blendComponents) {
-            if (comp.material) {
-              const mlUsed = (sizeVariant.sizeMl * comp.percentage / 100) * item.quantity;
-              const material = await RawMaterial.findById(comp.material).session(session);
-              if (material) {
-                material.currentStockMl += mlUsed;
-                await material.save({ session });
-                await InventoryLog.create([{
-                  material: material._id,
-                  changeQuantity: mlUsed,
-                  reason: 'adjustment',
-                  reference: sale._id,
-                  refModel: 'Sale',
-                  notes: `Reversal of sale ${sale.invoiceNo} – raw material restocked`,
-                }], { session });
-              }
+        // ✅ Per-size blend
+        const comps = getSizeBlend(product, item.sizeMl);
+        for (const comp of comps) {
+          if (comp.material) {
+            const mlUsed = (sizeVariant.sizeMl * comp.percentage / 100) * item.quantity;
+            const material = await RawMaterial.findById(comp.material).session(session);
+            if (material) {
+              material.currentStockMl += mlUsed;
+              await material.save({ session });
+              await InventoryLog.create([{
+                material: material._id,
+                changeQuantity: mlUsed,
+                reason: 'adjustment',
+                reference: sale._id,
+                refModel: 'Sale',
+                notes: `Reversal of sale ${sale.invoiceNo} – raw material restocked`,
+              }], { session });
             }
           }
         }
       }
     }
 
-    // 2. Delete associated records
     await InventoryLog.deleteMany({ reference: sale._id, refModel: 'Sale' }).session(session);
     await Transaction.deleteMany({ reference: sale._id, refModel: 'Sale' }).session(session);
     await sale.deleteOne({ session });

@@ -16,6 +16,9 @@ const sizeVariantSchema = mongoose.Schema({
   makingCost: { type: Number, default: 0 },
   sellingPrice: { type: Number, required: true, min: 0 },
   image: { type: String, default: '' },
+
+  // ✅ NEW: per-size blend. If present, overrides product.blendComponents.
+  blendComponents: [blendComponentSchema],
 });
 
 const productSchema = mongoose.Schema(
@@ -24,17 +27,16 @@ const productSchema = mongoose.Schema(
     sku: { type: String, required: true, unique: true },
     type: { type: String, enum: ['roll-on', 'spray'], required: true },
     baseOil: { type: mongoose.Schema.Types.ObjectId, ref: 'RawMaterial' },
+
+    // Legacy fallback – still used if no per-size blend exists
     blendComponents: [blendComponentSchema],
+
     sizes: [sizeVariantSchema],
     isActive: { type: Boolean, default: true },
 
-    // ✅ Controls whether this product appears on the client site
     showOnClient: { type: Boolean, default: false },
-
-    // ✅ NEW: manual stock-out flag (also disables add-to-cart on client)
     isStockOut: { type: Boolean, default: false },
 
-    // === CUSTOMER DISPLAY FIELDS ===
     description: { type: String, default: '' },
     intensity: { type: String, enum: ['light', 'medium', 'strong'], default: 'medium' },
     bestFor: { type: [String], default: ['all'] },
@@ -45,19 +47,32 @@ const productSchema = mongoose.Schema(
   { timestamps: true }
 );
 
-// Pre-save hook
+// Pre-save hook — computes oilMlUsed etc. per size, using per-size blend if present, else product blend
 productSchema.pre('save', async function () {
   if (!this.sizes || this.sizes.length === 0) return;
 
-  if (this.type === 'spray' && this.blendComponents && this.blendComponents.length > 0) {
-    const materialIds = this.blendComponents.map(c => c.material);
-    const materials = await mongoose.model('RawMaterial').find({ _id: { $in: materialIds } });
+  if (this.type === 'spray') {
+    // Collect all material IDs across all size blends + product fallback
+    const materialIds = new Set();
+    for (const size of this.sizes) {
+      const comps = (size.blendComponents && size.blendComponents.length > 0)
+        ? size.blendComponents
+        : (this.blendComponents || []);
+      comps.forEach(c => c.material && materialIds.add(c.material.toString()));
+    }
+    if (materialIds.size === 0) return;
+
+    const materials = await mongoose.model('RawMaterial').find({ _id: { $in: [...materialIds] } });
     const materialMap = {};
     materials.forEach(m => { materialMap[m._id.toString()] = m; });
 
     for (const size of this.sizes) {
+      const comps = (size.blendComponents && size.blendComponents.length > 0)
+        ? size.blendComponents
+        : (this.blendComponents || []);
+
       let oilMl = 0, ethanolMl = 0, fixativeMl = 0;
-      for (const comp of this.blendComponents) {
+      for (const comp of comps) {
         const material = materialMap[comp.material.toString()];
         if (!material) {
           throw new Error(`Material ${comp.material} not found for blend component`);
@@ -86,7 +101,7 @@ productSchema.pre('save', async function () {
   }
 });
 
-// Method to calculate making cost
+// Method to calculate making cost — per-size blend aware
 productSchema.methods.calculateMakingCost = async function (sizeIndex) {
   const size = this.sizes[sizeIndex];
   const bottle = await mongoose.model('Bottle').findById(size.bottle);
@@ -97,8 +112,13 @@ productSchema.methods.calculateMakingCost = async function (sizeIndex) {
     const oil = await mongoose.model('RawMaterial').findById(this.baseOil);
     materialCost = oil.avgCostPerMl * size.oilMlUsed;
   } else {
-    for (const comp of this.blendComponents) {
+    const comps = (size.blendComponents && size.blendComponents.length > 0)
+      ? size.blendComponents
+      : (this.blendComponents || []);
+
+    for (const comp of comps) {
       const material = await mongoose.model('RawMaterial').findById(comp.material);
+      if (!material) continue;
       const mlUsed = (size.sizeMl * comp.percentage) / 100;
       materialCost += material.avgCostPerMl * mlUsed;
     }
