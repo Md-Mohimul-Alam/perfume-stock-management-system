@@ -24,7 +24,8 @@ exports.getProducts = async (req, res) => {
     const products = await Product.find(filter)
       .populate('baseOil', 'name sku')
       .populate('blendComponents.material', 'name sku type')
-      .populate('sizes.bottle', 'sizeMl type');
+      .populate('sizes.bottle', 'sizeMl type')
+      .populate('sizes.blendComponents.material', 'name sku type');
     res.json(products);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -94,7 +95,8 @@ exports.updateProduct = async (req, res) => {
     if (sku) product.sku = sku;
     if (type) product.type = type;
     if (baseOil) product.baseOil = baseOil;
-    if (blendComponents) product.blendComponents = blendComponents;
+    // Only overwrite the legacy product-level blend if explicitly provided
+    if (blendComponents !== undefined) product.blendComponents = blendComponents;
     if (isActive !== undefined) product.isActive = isActive;
     if (showOnClient !== undefined) product.showOnClient = showOnClient;
     if (isStockOut !== undefined) product.isStockOut = isStockOut;
@@ -132,6 +134,20 @@ exports.updateProduct = async (req, res) => {
           continue;
         }
 
+        // ✅ FIX: Preserve per-size blendComponents (incoming first, then existing)
+        const existingSize = product.sizes.find(
+          s => s.sizeMl === newSize.sizeMl && s._id?.toString() === newSize._id?.toString()
+        ) || product.sizes.find(s => s.sizeMl === newSize.sizeMl);
+
+        const incomingBlend = newSize.blendComponents;
+        let preservedBlend = [];
+
+        if (Array.isArray(incomingBlend) && incomingBlend.length > 0) {
+          preservedBlend = incomingBlend;
+        } else if (existingSize && existingSize.blendComponents && existingSize.blendComponents.length > 0) {
+          preservedBlend = existingSize.blendComponents;
+        }
+
         updatedSizes.push({
           _id: newSize._id,
           sizeMl: newSize.sizeMl,
@@ -142,10 +158,12 @@ exports.updateProduct = async (req, res) => {
           ethanolMlUsed: 0,
           fixativeMlUsed: 0,
           makingCost: 0,
+          blendComponents: preservedBlend,   // ✅ keep it
         });
       }
 
       product.sizes = updatedSizes;
+      product.markModified('sizes');   // ✅ ensure mongoose persists the change
     }
 
     await product.save();
@@ -321,6 +339,7 @@ exports.bulkCreateProducts = async (req, res) => {
           fixativeMlUsed: 0,
           makingCost: 0,
           sellingPrice: parseFloat(sellingPrice),
+          blendComponents: [],
         });
 
         await product.save();
@@ -505,7 +524,8 @@ exports.getProductById = async (req, res) => {
     const product = await Product.findById(req.params.id)
       .populate('baseOil', 'name sku')
       .populate('blendComponents.material', 'name sku type')
-      .populate('sizes.bottle', 'sizeMl type');
+      .populate('sizes.bottle', 'sizeMl type')
+      .populate('sizes.blendComponents.material', 'name sku type');
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }

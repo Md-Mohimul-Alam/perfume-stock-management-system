@@ -16,7 +16,8 @@ const {
   importMaterialsWithPurchases,
   bulkAddStockToBottles,
   addBottlePurchase,
-  stockOutMaterial,  // ✅ added missing import
+  stockOutMaterial,
+  adjustMaterialStock,   // ✅ NEW
 } = require('../controllers/inventoryController');
 const { getBottlesWithSales } = require('../controllers/bottleController');
 const { protect } = require('../middlewares/authMiddleware');
@@ -43,6 +44,7 @@ router.route('/bottles/:id')
 // Inventory logs
 router.get('/logs', protect, getLogs);
 router.post('/bottles/:id/purchase', protect, addBottlePurchase);
+
 // Bulk and import endpoints
 router.post('/materials/bulk', protect, bulkCreateMaterials);
 router.post('/bottles/bulk', protect, bulkCreateBottles);
@@ -54,5 +56,9 @@ router.get('/bottles/with-sales', protect, getBottlesWithSales);
 // ✅ Stock‑out route
 router.route('/materials/:id/stock-out')
   .post(protect, stockOutMaterial);
+
+// ✅ NEW: Manual stock adjustment (recount reconciliation)
+router.route('/materials/:id/adjust')
+  .post(protect, adjustMaterialStock);
 
 module.exports = router;

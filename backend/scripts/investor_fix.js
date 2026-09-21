@@ -1,7 +1,7 @@
 // scripts/fixInvestorWithdrawals.js
 const mongoose = require('mongoose');
-const Investor = require('./src/models/Investor');
-const Transaction = require('./src/models/Transaction');
+const Investor = require('../src/models/Investor');
+const Transaction = require('../src/models/Transaction');
 require('dotenv').config();
 
 async function fixWithdrawals() {

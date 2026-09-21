@@ -7,9 +7,20 @@ const { deductRawMaterial, deductBottle } = require('../services/inventoryServic
 const { generateInvoiceNo } = require('../utils/generateInvoice');
 
 // ============================================================
-// ✅ NEW HELPER: same validation as saleController
+// Helper: get the effective blend for a specific size of a product
 // ============================================================
-function assertProductHasBlend(product) {
+function getSizeBlend(product, sizeMl) {
+  const sizeVariant = product.sizes?.find(s => s.sizeMl === sizeMl);
+  if (sizeVariant && sizeVariant.blendComponents && sizeVariant.blendComponents.length > 0) {
+    return sizeVariant.blendComponents;
+  }
+  return product.blendComponents || [];
+}
+
+// ============================================================
+// Validation: product must have a valid blend/baseOil for the size
+// ============================================================
+function assertProductHasBlend(product, sizeMl) {
   if (product.type === 'roll-on') {
     if (!product.baseOil) {
       throw new Error(
@@ -21,20 +32,21 @@ function assertProductHasBlend(product) {
   }
 
   if (product.type === 'spray') {
-    if (!product.blendComponents || product.blendComponents.length === 0) {
+    const comps = getSizeBlend(product, sizeMl);
+    if (comps.length === 0) {
       throw new Error(
-        `Product "${product.name}" (SKU: ${product.sku}) has NO blend components. ` +
+        `Product "${product.name}" (SKU: ${product.sku}, ${sizeMl}ml) has NO blend components. ` +
         `Please edit the product and add blend components that sum to 100%.`
       );
     }
-    const total = product.blendComponents.reduce((s, c) => s + (c.percentage || 0), 0);
+    const total = comps.reduce((s, c) => s + (c.percentage || 0), 0);
     if (Math.abs(total - 100) > 0.01) {
       throw new Error(
-        `Product "${product.name}" (SKU: ${product.sku}) blend sums to ${total}% ` +
+        `Product "${product.name}" (SKU: ${product.sku}, ${sizeMl}ml) blend sums to ${total}% ` +
         `(must be exactly 100%). Please fix the product blend.`
       );
     }
-    for (const comp of product.blendComponents) {
+    for (const comp of comps) {
       if (!comp.material) {
         throw new Error(
           `Product "${product.name}" has a blend component with no material selected. ` +
@@ -58,14 +70,16 @@ exports.createProduction = async (req, res) => {
       const sizeVariant = product.sizes.find(s => s.sizeMl === item.sizeMl);
       if (!sizeVariant) throw new Error(`Size ${item.sizeMl} not found for product`);
 
-      // ✅ NEW: Validate blend BEFORE deducting
-      assertProductHasBlend(product);
+      // Validate blend
+      assertProductHasBlend(product, item.sizeMl);
 
       // Deduct raw materials
       if (product.type === 'roll-on') {
         await deductRawMaterial(product.baseOil, sizeVariant.oilMlUsed * item.quantity, 'production', null);
       } else {
-        for (const comp of product.blendComponents) {
+        // ✅ Per-size blend
+        const comps = getSizeBlend(product, item.sizeMl);
+        for (const comp of comps) {
           const mlUsed = (sizeVariant.sizeMl * comp.percentage / 100) * item.quantity;
           await deductRawMaterial(comp.material, mlUsed, 'production', null);
         }
@@ -84,7 +98,6 @@ exports.createProduction = async (req, res) => {
       status: 'completed',
     });
 
-    // Link logs
     await InventoryLog.updateMany(
       { reference: null, reason: 'production' },
       { reference: production._id, refModel: 'Production' }

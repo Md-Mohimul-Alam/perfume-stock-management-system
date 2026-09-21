@@ -1,8 +1,8 @@
 const RawMaterial = require('../models/RawMaterial');
 const Bottle = require('../models/Bottle');
 const InventoryLog = require('../models/InventoryLog');
-const Sale = require('../models/Sale');          // ✅ Added
-const Product = require('../models/Product');    // ✅ Added
+const Sale = require('../models/Sale');
+const Product = require('../models/Product');
 
 // @desc    Get all raw materials with stock and total purchase cost
 // @route   GET /api/inventory/materials
@@ -26,11 +26,19 @@ exports.getMaterials = async (req, res) => {
     const usageMap = {};
     const costMap = {};
 
-    // Helper: get oil percentage from product's blendComponents
-    function getOilPercentage(product) {
-      if (!product.blendComponents || product.blendComponents.length === 0) return 0;
+    // ✅ Helper: per-size aware — returns oil % for the given size
+    function getOilPercentage(product, sizeMl) {
+      const sizeVariant = product.sizes?.find(s => s.sizeMl === sizeMl);
+      let comps = [];
+      if (sizeVariant && sizeVariant.blendComponents && sizeVariant.blendComponents.length > 0) {
+        comps = sizeVariant.blendComponents;
+      } else if (product.blendComponents && product.blendComponents.length > 0) {
+        comps = product.blendComponents;
+      }
+      if (comps.length === 0) return 0;
+
       let totalOil = 0;
-      for (const comp of product.blendComponents) {
+      for (const comp of comps) {
         const matId = comp.material?._id?.toString() || comp.material?.toString();
         const material = materials.find(m => m._id.toString() === matId);
         if (material && material.type === 'oil') {
@@ -40,12 +48,20 @@ exports.getMaterials = async (req, res) => {
       return totalOil;
     }
 
-    // Helper: compute weighted average cost of oil components only
-    function computeOilBlendCost(product) {
-      if (!product.blendComponents || product.blendComponents.length === 0) return 0;
+    // ✅ Helper: per-size aware — weighted avg cost of oil components
+    function computeOilBlendCost(product, sizeMl) {
+      const sizeVariant = product.sizes?.find(s => s.sizeMl === sizeMl);
+      let comps = [];
+      if (sizeVariant && sizeVariant.blendComponents && sizeVariant.blendComponents.length > 0) {
+        comps = sizeVariant.blendComponents;
+      } else if (product.blendComponents && product.blendComponents.length > 0) {
+        comps = product.blendComponents;
+      }
+      if (comps.length === 0) return 0;
+
       let totalWeight = 0;
       let weightedCost = 0;
-      for (const comp of product.blendComponents) {
+      for (const comp of comps) {
         const matId = comp.material?._id?.toString() || comp.material?.toString();
         const material = materials.find(m => m._id.toString() === matId);
         if (material && material.type === 'oil') {
@@ -68,21 +84,19 @@ exports.getMaterials = async (req, res) => {
 
         const sizeMl = item.sizeMl || 0;
         const qty = item.quantity || 0;
-        const oilPct = getOilPercentage(product);
+        const oilPct = getOilPercentage(product, sizeMl);
         if (oilPct === 0) continue;
 
         const totalOilMl = (sizeMl * (oilPct / 100)) * qty;
         if (!usageMap[sku]) usageMap[sku] = 0;
         usageMap[sku] += totalOilMl;
 
-        // Compute cost only once per product
         if (!costMap[sku]) {
-          costMap[sku] = computeOilBlendCost(product);
+          costMap[sku] = computeOilBlendCost(product, sizeMl);
         }
       }
     }
 
-    // Round usage to 2 decimals
     for (const sku in usageMap) {
       usageMap[sku] = Math.round(usageMap[sku] * 100) / 100;
     }
@@ -118,6 +132,7 @@ exports.getMaterials = async (req, res) => {
     res.status(500).json({ message: error.message, stack: error.stack });
   }
 };
+
 // @desc    Get single raw material
 // @route   GET /api/inventory/materials/:id
 exports.getMaterialById = async (req, res) => {
@@ -228,15 +243,27 @@ exports.deleteBottle = async (req, res) => {
   }
 };
 
-// @desc    Get inventory logs
+// @desc    Get inventory logs (supports ?reason=wastage for full history)
 // @route   GET /api/inventory/logs
 exports.getLogs = async (req, res) => {
   try {
-    const logs = await InventoryLog.find()
+    const { reason, material, bottle } = req.query;
+    const filter = {};
+    if (reason) filter.reason = reason;
+    if (material) filter.material = material;
+    if (bottle) filter.bottle = bottle;
+
+    // When a specific reason is requested, return all of them (no 100 cap).
+    const limit = reason ? 0 : 100;
+
+    const query = InventoryLog.find(filter)
       .populate('material', 'name sku')
       .populate('bottle', 'sizeMl type')
-      .sort('-date')
-      .limit(100);
+      .sort('-date');
+
+    if (limit) query.limit(limit);
+
+    const logs = await query;
     res.json(logs);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -461,6 +488,7 @@ exports.addBottlePurchase = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 // @desc    Mark a raw material as Stock Out (remaining stock → wastage)
 // @route   POST /api/inventory/materials/:id/stock-out
 exports.stockOutMaterial = async (req, res) => {
@@ -470,7 +498,6 @@ exports.stockOutMaterial = async (req, res) => {
       return res.status(404).json({ message: 'Material not found' });
     }
 
-    // Prevent stock‑out on virtual materials (SKU ends with _VIRTUAL)
     if (material._id.toString().includes('_VIRTUAL')) {
       return res.status(400).json({ message: 'Cannot stock‑out virtual material' });
     }
@@ -478,11 +505,9 @@ exports.stockOutMaterial = async (req, res) => {
     const remainingStock = material.currentStockMl || 0;
     const avgCost = material.avgCostPerMl || 0;
 
-    // If there is remaining stock, record it as wastage
     if (remainingStock > 0) {
       const wastageAmount = remainingStock * avgCost;
 
-      // 1. Create an expense record (category 'Wastage')
       const Expense = require('../models/Expense');
       const expense = await Expense.create({
         type: 'regular',
@@ -494,7 +519,6 @@ exports.stockOutMaterial = async (req, res) => {
         notes: `Stock out on ${new Date().toISOString()}`,
       });
 
-      // 2. Create cash‑out transaction
       const Transaction = require('../models/Transaction');
       await Transaction.create({
         type: 'cash_out',
@@ -505,8 +529,6 @@ exports.stockOutMaterial = async (req, res) => {
         description: `Wastage from stock‑out: ${material.name}`,
       });
 
-      // 3. Log the inventory change (negative adjustment)
-      const InventoryLog = require('../models/InventoryLog');
       await InventoryLog.create({
         material: material._id,
         changeQuantity: -remainingStock,
@@ -515,9 +537,8 @@ exports.stockOutMaterial = async (req, res) => {
       });
     }
 
-    // 4. Set stock to zero and mark as Stock Out
     material.currentStockMl = 0;
-    material.isStockOut = true;   // ✅ NEW
+    material.isStockOut = true;
     await material.save();
 
     res.json({
@@ -526,6 +547,84 @@ exports.stockOutMaterial = async (req, res) => {
     });
   } catch (error) {
     console.error('Stock‑out error:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Manually adjust a raw material's stock to match physical count
+// @route   POST /api/inventory/materials/:id/adjust
+exports.adjustMaterialStock = async (req, res) => {
+  try {
+    const material = await RawMaterial.findById(req.params.id);
+    if (!material) {
+      return res.status(404).json({ message: 'Material not found' });
+    }
+
+    if (material._id.toString().includes('_VIRTUAL')) {
+      return res.status(400).json({ message: 'Cannot adjust virtual material' });
+    }
+
+    const { newStockMl, reason, recordAsWastage = true, notes } = req.body;
+
+    if (newStockMl === undefined || newStockMl === null || isNaN(newStockMl) || newStockMl < 0) {
+      return res.status(400).json({ message: 'newStockMl must be a non-negative number' });
+    }
+
+    const oldStock = material.currentStockMl || 0;
+    const delta = newStockMl - oldStock;
+
+    if (Math.abs(delta) < 0.001) {
+      return res.json({ message: 'No change needed', material });
+    }
+
+    await InventoryLog.create({
+      material: material._id,
+      changeQuantity: delta,
+      reason: 'adjustment',
+      notes: notes || `Manual stock adjustment: ${oldStock} → ${newStockMl} ml (${reason || 'recount'})`,
+    });
+
+    let wastageAmount = 0;
+    if (delta < 0 && recordAsWastage) {
+      const lossMl = Math.abs(delta);
+      wastageAmount = lossMl * (material.avgCostPerMl || 0);
+
+      if (wastageAmount > 0.01) {
+        const Expense = require('../models/Expense');
+        const Transaction = require('../models/Transaction');
+
+        const expense = await Expense.create({
+          type: 'regular',
+          category: 'Wastage',
+          amount: wastageAmount,
+          date: new Date(),
+          description: `Stock adjustment: ${material.name} (${lossMl.toFixed(2)} ml)`,
+          reference: material.sku,
+          notes: notes || `Adjustment from ${oldStock} → ${newStockMl} ml`,
+        });
+
+        await Transaction.create({
+          type: 'cash_out',
+          amount: wastageAmount,
+          category: 'Expense',
+          reference: expense._id,
+          refModel: 'Expense',
+          description: `Wastage from stock adjustment: ${material.name}`,
+        });
+      }
+    }
+
+    material.currentStockMl = newStockMl;
+    material.isStockOut = newStockMl === 0;
+    await material.save();
+
+    res.json({
+      message: `Stock adjusted from ${oldStock} → ${newStockMl} ml (${delta > 0 ? '+' : ''}${delta.toFixed(2)})`,
+      wastageRecorded: wastageAmount > 0 ? wastageAmount.toFixed(2) : 0,
+      material,
+    });
+  } catch (error) {
+    console.error('Adjust stock error:', error);
     res.status(500).json({ message: error.message });
   }
 };
