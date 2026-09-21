@@ -84,7 +84,7 @@ async function applyExactBlends() {
   // ✅ UPDATED: Regular spray rules — each size sums to exactly 100
   const sprayRules = {
     '6':   { oil: 45, ethanol: 52, iso: 1, glx: 1, ambx: 1 },
-    '15':  { oil: 45, ethanol: 52, iso: 1, glx: 1, ambx: 1 },
+    '15':  { oil: 50, ethanol: 47, iso: 1, glx: 1, ambx: 1 },
     '30':  { oil: 52, ethanol: 45, iso: 1, glx: 1, ambx: 1 },
     '50':  { oil: 55, ethanol: 42, iso: 1, glx: 1, ambx: 1 },
     '100': { oil: 60, ethanol: 37, iso: 1, glx: 1, ambx: 1 },
