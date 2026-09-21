@@ -81,14 +81,16 @@ async function applyExactBlends() {
   const products = await Product.find({ isActive: true });
   console.log(`📦 Applying blends to ${products.length} active products.`);
 
+  // ✅ UPDATED: Regular spray rules — each size sums to exactly 100
   const sprayRules = {
-    '6':   { oil: 40, ethanol: 57, iso: 1, glx: 1, ambx: 1 },
-    '15':  { oil: 40, ethanol: 57, iso: 1, glx: 1, ambx: 1 },
-    '30':  { oil: 40, ethanol: 57, iso: 1, glx: 1, ambx: 1 },
+    '6':   { oil: 45, ethanol: 52, iso: 1, glx: 1, ambx: 1 },
+    '15':  { oil: 45, ethanol: 52, iso: 1, glx: 1, ambx: 1 },
+    '30':  { oil: 45, ethanol: 52, iso: 1, glx: 1, ambx: 1 },
     '50':  { oil: 55, ethanol: 42, iso: 1, glx: 1, ambx: 1 },
-    '100': { oil: 55, ethanol: 42, iso: 1, glx: 1, ambx: 1 },
+    '100': { oil: 60, ethanol: 37, iso: 1, glx: 1, ambx: 1 },
   };
 
+  // ✅ Special spray rules — used ONLY for SR_SP and LUXE1_SP
   const specialSprayRules = {
     '6':   { oil: 50, ethanol: 47, iso: 1, glx: 1, ambx: 1 },
     '15':  { oil: 55, ethanol: 42, iso: 1, glx: 1, ambx: 1 },
@@ -235,7 +237,7 @@ async function applyExactBlends() {
         product.baseOil = null;
 
         if (productChanged) {
-          // ✅ FIX: force mongoose to detect nested changes
+          // ✅ Force mongoose to detect nested changes
           product.markModified('sizes');
           product.markModified('blendComponents');
           await product.save();
