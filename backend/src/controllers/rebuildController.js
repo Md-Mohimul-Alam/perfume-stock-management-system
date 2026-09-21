@@ -77,12 +77,22 @@ async function applyExactBlends() {
   const products = await Product.find({ isActive: true });
   console.log(`📦 Applying blends to ${products.length} active products.`);
 
+  // ✅ Standard spray rules (for regular / non-special sprays)
   const sprayRules = {
     '6': { oil: 40, ethanol: 57, iso: 1, glx: 1, ambx: 1 },
     '15': { oil: 40, ethanol: 57, iso: 1, glx: 1, ambx: 1 },
     '30': { oil: 40, ethanol: 57, iso: 1, glx: 1, ambx: 1 },
     '50': { oil: 55, ethanol: 42, iso: 1, glx: 1, ambx: 1 },
     '100': { oil: 55, ethanol: 42, iso: 1, glx: 1, ambx: 1 },
+  };
+
+  // ✅ NEW: Special spray rules — ONLY for SR_SP (SRK Spray) and LUXE1_SP (Luxe Special)
+  const specialSprayRules = {
+    '6': { oil: 50, ethanol: 57, iso: 1, glx: 1, ambx: 1 },
+    '15': { oil: 55, ethanol: 57, iso: 1, glx: 1, ambx: 1 },
+    '30': { oil: 55, ethanol: 57, iso: 1, glx: 1, ambx: 1 },
+    '50': { oil: 55, ethanol: 42, iso: 1, glx: 1, ambx: 1 },
+    '100': { oil: 60, ethanol: 42, iso: 1, glx: 1, ambx: 1 },
   };
 
   const specialSprays = {
@@ -136,9 +146,13 @@ async function applyExactBlends() {
       }
 
       if (product.type === 'spray') {
+        // ✅ Pick which rule set to use
+        const isSpecialSpray = !!specialSprays[product.sku];
+        const activeRules = isSpecialSpray ? specialSprayRules : sprayRules;
+
         const maxSize = Math.max(...product.sizes.map(s => s.sizeMl));
         let sizeRule = null;
-        for (const [size, rule] of Object.entries(sprayRules)) {
+        for (const [size, rule] of Object.entries(activeRules)) {
           if (maxSize <= parseInt(size)) {
             sizeRule = rule;
             break;
@@ -159,6 +173,7 @@ async function applyExactBlends() {
         const blendConfig = specialSprays[product.sku];
 
         if (blendConfig) {
+          // Special spray: oil split from blendConfig, oil total from activeRules
           const oilTotalPct = sizeRule.oil;
           for (const comp of blendConfig.oilComponents) {
             const mat = matMap[comp.sku];
@@ -181,6 +196,7 @@ async function applyExactBlends() {
             oilComps[0].percentage = parseFloat(oilComps[0].percentage.toFixed(2));
           }
         } else {
+          // Regular spray: everything from activeRules
           const oilSku = product.sku.replace('_SP', '');
           let oilMat = matMap[oilSku];
           if (!oilMat) {
@@ -274,7 +290,7 @@ exports.rebuildStock = async (req, res) => {
     const materialNameMap = {};
     materials.forEach(m => materialNameMap[m.name.toLowerCase()] = m._id.toString());
 
-    // ✅ NEW: track broken products so we can log a warning
+    // Track broken products so we can log a warning
     const brokenProducts = new Set();
 
     for (const sale of sales) {
@@ -305,13 +321,11 @@ exports.rebuildStock = async (req, res) => {
             if (!rawConsumption[oilId]) rawConsumption[oilId] = 0;
             rawConsumption[oilId] += totalMl;
           } else {
-            // ✅ NEW: log broken product
             brokenProducts.add(`${product.name} (${product.sku})`);
           }
         } else if (product.type === 'spray') {
           const comps = parseBlendComponents(product);
           if (comps.length === 0) {
-            // ✅ NEW: log broken product
             brokenProducts.add(`${product.name} (${product.sku})`);
           }
           for (const comp of comps) {
@@ -331,7 +345,6 @@ exports.rebuildStock = async (req, res) => {
       }
     }
 
-    // ✅ NEW: report broken products to the console
     if (brokenProducts.size > 0) {
       console.warn('⚠️ Products without a valid blend (their sales did NOT deduct raw material):');
       brokenProducts.forEach(p => console.warn(`   - ${p}`));
@@ -418,7 +431,7 @@ exports.rebuildStock = async (req, res) => {
       message: 'Stock rebuilt, product blends updated, and stock-out statuses refreshed.',
       updatedMaterials: allMaterials.filter(m => m.currentStockMl !== undefined).length,
       updatedBottles: bottleUpdatedCount,
-      brokenProducts: Array.from(brokenProducts), // ✅ NEW: return list
+      brokenProducts: Array.from(brokenProducts),
     });
   } catch (error) {
     console.error('Rebuild stock error:', error);
