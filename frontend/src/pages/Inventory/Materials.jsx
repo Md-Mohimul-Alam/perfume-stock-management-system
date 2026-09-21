@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import API from '../../api/axios';
-import { Plus, Upload, X, CheckCircle, AlertCircle, Pencil, Trash2, Droplet, FlaskRound, Package, XCircle } from 'lucide-react';
+import { Plus, Upload, X, CheckCircle, AlertCircle, Pencil, Trash2, Droplet, FlaskRound, Package, XCircle, AlertTriangle } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import toast from 'react-hot-toast';
 
@@ -13,7 +13,11 @@ const Materials = () => {
     usedOilSpray: 0,
     totalOilStock: 0,
     availableOil: 0,
+    totalWastage: 0,           // ✅ NEW
   });
+
+  // ✅ NEW: wastage per material (materialId -> ml wasted)
+  const [wastageMap, setWastageMap] = useState({});
 
   // Add modal
   const [showAddModal, setShowAddModal] = useState(false);
@@ -56,21 +60,38 @@ const Materials = () => {
   const fetchMaterialsAndSummary = async () => {
     setLoading(true);
     try {
-      const [materialsRes, salesRes, productsRes] = await Promise.all([
+      // ✅ NEW: also fetch inventory logs to compute wastage
+      const [materialsRes, salesRes, productsRes, logsRes] = await Promise.all([
         API.get('/inventory/materials'),
         API.get('/sales'),
         API.get('/products'),
+        API.get('/inventory/logs'),   // ✅ NEW
       ]);
 
-      // ✅ Ensure we have arrays (defensive)
+      // Ensure we have arrays (defensive)
       const materialsData = Array.isArray(materialsRes.data) ? materialsRes.data : [];
       const sales = Array.isArray(salesRes.data) ? salesRes.data : [];
       const products = Array.isArray(productsRes.data) ? productsRes.data : [];
+      const logs = Array.isArray(logsRes.data) ? logsRes.data : [];
 
-      // If any is empty, log a warning (but continue)
       if (!materialsData.length) console.warn('No materials data received');
       if (!sales.length) console.warn('No sales data received');
       if (!products.length) console.warn('No products data received');
+      if (!logs.length) console.warn('No inventory logs received');
+
+      // ✅ NEW: Aggregate wastage per material from inventory logs
+      // Wastage logs have reason: 'wastage' and changeQuantity is negative.
+      const localWastageMap = {};
+      for (const log of logs) {
+        if (log.reason !== 'wastage') continue;
+        if (!log.material) continue;
+        const matId = log.material?._id?.toString() || log.material?.toString();
+        if (!matId) continue;
+        // changeQuantity is negative for wastage → use abs() for display
+        const qty = Math.abs(Number(log.changeQuantity) || 0);
+        localWastageMap[matId] = (localWastageMap[matId] || 0) + qty;
+      }
+      setWastageMap(localWastageMap);
 
       // Build product map
       const productMap = {};
@@ -149,13 +170,17 @@ const Materials = () => {
         }
       }
 
-      // Preserve backend values for virtual rows
+      // Preserve backend values for virtual rows + attach wastage
       const updatedMaterials = materialsData.map(m => {
+        const matId = m._id?.toString();
+        const wastedForThis = localWastageMap[matId] || 0;
+
         if (m._id === 'SR_SP_VIRTUAL' || m._id === 'LUXE1_SP_VIRTUAL') {
           return {
             ...m,
             usedOil: m.usedOil || 0,
             availableOil: m.availableOil || 0,
+            wastedOil: 0,   // ✅ NEW (virtual rows have no wastage)
           };
         }
         const used = usageMap[m._id] || 0;
@@ -163,6 +188,7 @@ const Materials = () => {
           ...m,
           usedOil: used,
           availableOil: m.currentStockMl || 0,
+          wastedOil: wastedForThis,   // ✅ NEW
         };
       });
       setMaterials(updatedMaterials);
@@ -171,6 +197,8 @@ const Materials = () => {
       const oilMaterials = updatedMaterials.filter(m => m.type === 'oil');
       const totalOilStock = oilMaterials.reduce((sum, m) => sum + (m.currentStockMl || 0), 0);
       const totalAvailable = totalOilStock;
+      // ✅ NEW: sum all wastage for oils only
+      const totalWastage = oilMaterials.reduce((sum, m) => sum + (m.wastedOil || 0), 0);
 
       let usedRollOn = 0;
       let usedSpray = 0;
@@ -211,6 +239,7 @@ const Materials = () => {
         usedOilSpray: usedSpray,
         totalOilStock,
         availableOil: totalAvailable,
+        totalWastage,   // ✅ NEW
       });
 
     } catch (error) {
@@ -305,6 +334,7 @@ const Materials = () => {
       toast.success(`Material "${stockOutMaterial.name}" marked as stock‑out.`);
       setShowStockOutModal(false);
       setStockOutMaterial(null);
+      // ✅ UPDATED: refresh will now also pull fresh wastage logs
       fetchMaterialsAndSummary();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Stock‑out failed');
@@ -431,9 +461,10 @@ const Materials = () => {
       </div>
 
       {/* Oil Summary Cards – Skeleton while loading */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      {/* ✅ UPDATED: 5 cards now (was 4) – added Wastage card */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
         {loading ? (
-          Array.from({ length: 4 }).map((_, i) => (
+          Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 animate-pulse">
               <div className="h-4 bg-gray-200 rounded w-3/4 mb-2" />
               <div className="h-8 bg-gray-200 rounded w-1/2" />
@@ -453,6 +484,13 @@ const Materials = () => {
               </p>
               <p className="text-2xl font-bold text-blue-700">{oilSummary.usedOilSpray.toFixed(0)} ml</p>
             </div>
+            {/* ✅ NEW: Wastage card */}
+            <div className="bg-white rounded-2xl shadow-sm border border-red-200 p-4">
+              <p className="text-xs text-gray-500 uppercase tracking-wider flex items-center gap-1">
+                <AlertTriangle size={14} className="text-red-600" /> Oil Wasted
+              </p>
+              <p className="text-2xl font-bold text-red-700">{oilSummary.totalWastage.toFixed(0)} ml</p>
+            </div>
             <div className="bg-white rounded-2xl shadow-sm border border-green-200 p-4">
               <p className="text-xs text-gray-500 uppercase tracking-wider flex items-center gap-1">
                 <Package size={14} className="text-green-600" /> Total Oil Stock
@@ -471,7 +509,7 @@ const Materials = () => {
         )}
       </div>
 
-      {/* Table – with formal loader */}
+      {/* Table */}
       {loading ? (
         <div className="flex justify-center items-center h-64">
           <div className="flex flex-col items-center gap-3">
@@ -492,6 +530,8 @@ const Materials = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Price (৳)</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Purchases (৳)</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Used Oil (ml)</th>
+                {/* ✅ NEW: Wasted column */}
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Wasted (ml)</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Available Oil (ml)</th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Actions</th>
               </tr>
@@ -502,12 +542,27 @@ const Materials = () => {
                 const totalPrice = (m.currentStockMl || 0) * perMlCost;
                 const totalPurchaseCost = m.totalPurchaseCost || 0;
                 const used = m.usedOil || 0;
+                const wasted = m.wastedOil || 0;          // ✅ NEW
                 const available = m.availableOil || 0;
                 const isVirtual = m._id && m._id.includes('_VIRTUAL');
+                const isStockOut = m.isStockOut === true;  // ✅ NEW: reflect the flag
 
                 return (
-                  <tr key={m._id}>
-                    <td className="px-6 py-4">{m.name}</td>
+                  <tr key={m._id} className={isStockOut ? 'bg-red-50/40' : ''}>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <span>{m.name}</span>
+                        {/* ✅ NEW: stock-out badge */}
+                        {isStockOut && (
+                          <span
+                            className="text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-semibold whitespace-nowrap"
+                            title="Marked as Stock Out – all remaining stock moved to wastage"
+                          >
+                            STOCK OUT
+                          </span>
+                        )}
+                      </div>
+                    </td>
                     <td className="px-6 py-4">{m.sku}</td>
                     <td className="px-6 py-4 capitalize">{m.type}</td>
                     <td className="px-6 py-4">{m.currentStockMl}</td>
@@ -515,6 +570,10 @@ const Materials = () => {
                     <td className="px-6 py-4">{totalPrice.toFixed(2)}</td>
                     <td className="px-6 py-4">{totalPurchaseCost.toFixed(2)}</td>
                     <td className="px-6 py-4 text-amber-600">{used.toFixed(0)}</td>
+                    {/* ✅ NEW: Wasted cell */}
+                    <td className={`px-6 py-4 font-semibold ${wasted > 0 ? 'text-red-600' : 'text-gray-400'}`}>
+                      {wasted.toFixed(0)}
+                    </td>
                     <td className={`px-6 py-4 font-semibold ${available < 0 ? 'text-red-600' : 'text-green-600'}`}>
                       {available.toFixed(0)}
                     </td>
@@ -536,8 +595,9 @@ const Materials = () => {
                       {!isVirtual && (
                         <button
                           onClick={() => handleStockOutClick(m)}
-                          className="text-red-600 hover:text-red-800"
-                          title="Stock Out"
+                          className={`${isStockOut ? 'text-gray-400 cursor-not-allowed' : 'text-red-600 hover:text-red-800'}`}
+                          title={isStockOut ? 'Already stock out' : 'Stock Out'}
+                          disabled={isStockOut}
                         >
                           <XCircle size={18} />
                         </button>
@@ -548,7 +608,8 @@ const Materials = () => {
               })}
               {materials.length === 0 && (
                 <tr>
-                  <td colSpan="10" className="text-center py-8 text-gray-500">No materials found</td>
+                  {/* ✅ UPDATED: colSpan 11 now */}
+                  <td colSpan="11" className="text-center py-8 text-gray-500">No materials found</td>
                 </tr>
               )}
             </tbody>
@@ -670,6 +731,17 @@ const Materials = () => {
                     <span className="text-gray-500">Per ml Cost (৳)</span>
                     <p className="font-semibold">{(editingMaterial.avgCostPerMl || 0).toFixed(2)}</p>
                   </div>
+                  {/* ✅ NEW: show wastage in edit modal */}
+                  <div>
+                    <span className="text-gray-500">Wasted (ml)</span>
+                    <p className="font-semibold text-red-600">{editingMaterial.wastedOil || 0}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Stock Out?</span>
+                    <p className={`font-semibold ${editingMaterial.isStockOut ? 'text-red-600' : 'text-green-600'}`}>
+                      {editingMaterial.isStockOut ? 'Yes' : 'No'}
+                    </p>
+                  </div>
                   <div className="col-span-2">
                     <span className="text-gray-500">Total Price (৳)</span>
                     <p className="font-semibold text-blue-600">
@@ -677,7 +749,7 @@ const Materials = () => {
                     </p>
                   </div>
                 </div>
-                <p className="text-xs text-gray-400 mt-2">* Stock and cost are updated via purchases and usage.</p>
+                <p className="text-xs text-gray-400 mt-2">* Stock and cost are updated via purchases, sales, and wastage.</p>
               </div>
 
               {editError && <p className="text-red-500 text-sm">{editError}</p>}
