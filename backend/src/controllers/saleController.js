@@ -8,6 +8,46 @@ const { deductRawMaterial, deductBottle } = require('../services/inventoryServic
 const { generateInvoiceNo } = require('../utils/generateInvoice');
 const mongoose = require('mongoose');
 
+// ============================================================
+// ✅ NEW HELPER: Validate that a product has a usable blend/baseOil
+// Throws an error with a clear message if not.
+// ============================================================
+function assertProductHasBlend(product) {
+  if (product.type === 'roll-on') {
+    if (!product.baseOil) {
+      throw new Error(
+        `Product "${product.name}" (SKU: ${product.sku}) has NO base oil configured. ` +
+        `Please edit the product and select a base oil before selling.`
+      );
+    }
+    return;
+  }
+
+  if (product.type === 'spray') {
+    if (!product.blendComponents || product.blendComponents.length === 0) {
+      throw new Error(
+        `Product "${product.name}" (SKU: ${product.sku}) has NO blend components. ` +
+        `Please edit the product and add blend components that sum to 100%.`
+      );
+    }
+    const total = product.blendComponents.reduce((s, c) => s + (c.percentage || 0), 0);
+    if (Math.abs(total - 100) > 0.01) {
+      throw new Error(
+        `Product "${product.name}" (SKU: ${product.sku}) blend sums to ${total}% ` +
+        `(must be exactly 100%). Please fix the product blend.`
+      );
+    }
+    for (const comp of product.blendComponents) {
+      if (!comp.material) {
+        throw new Error(
+          `Product "${product.name}" has a blend component with no material selected. ` +
+          `Please fix the product blend.`
+        );
+      }
+    }
+  }
+}
+
 // @desc    Create a sale (auto-deduct stock) – with sequential invoice numbers
 // @route   POST /api/sales
 exports.createSale = async (req, res) => {
@@ -34,27 +74,18 @@ exports.createSale = async (req, res) => {
       const sizeVariant = product.sizes.find(s => s.sizeMl === item.sizeMl);
       if (!sizeVariant) throw new Error(`Size ${item.sizeMl} not available for this product`);
 
+      // ✅ NEW: Validate blend BEFORE deducting anything
+      assertProductHasBlend(product);
+
       totalAmount += item.quantity * item.unitPrice;
 
-      // ---------- Safe raw material deduction ----------
+      // ---------- Raw material deduction ----------
       if (product.type === 'roll-on') {
-        if (product.baseOil) {
-          await deductRawMaterial(product.baseOil, sizeVariant.oilMlUsed * item.quantity, 'sale', null);
-        } else {
-          console.warn(`⚠️ No baseOil for ${product.name} (SKU: ${product.sku}) – skipping raw material deduction.`);
-        }
+        await deductRawMaterial(product.baseOil, sizeVariant.oilMlUsed * item.quantity, 'sale', null);
       } else {
-        if (product.blendComponents && product.blendComponents.length > 0) {
-          for (const comp of product.blendComponents) {
-            if (comp.material) {
-              const mlUsed = (sizeVariant.sizeMl * comp.percentage / 100) * item.quantity;
-              await deductRawMaterial(comp.material, mlUsed, 'sale', null);
-            } else {
-              console.warn(`⚠️ Missing material in blend for ${product.name} – skipping.`);
-            }
-          }
-        } else {
-          console.warn(`⚠️ No blendComponents for ${product.name} (SKU: ${product.sku}) – skipping raw material deduction.`);
+        for (const comp of product.blendComponents) {
+          const mlUsed = (sizeVariant.sizeMl * comp.percentage / 100) * item.quantity;
+          await deductRawMaterial(comp.material, mlUsed, 'sale', null);
         }
       }
 
@@ -163,7 +194,7 @@ exports.updatePayment = async (req, res) => {
 };
 
 // ============================================================
-// ✅ UPDATED bulkCreateSales with trimming and duplicate check
+// ✅ UPDATED bulkCreateSales with validation + trimming + duplicate check
 // ============================================================
 // @desc    Bulk create sales from CSV/Excel
 // @route   POST /api/sales/bulk
@@ -225,6 +256,9 @@ exports.bulkCreateSales = async (req, res) => {
             errors.push({ saleData, error: `Size ${sizeMl}ml not available for SKU ${sku}` });
             continue;
           }
+
+          // ✅ NEW: Validate blend BEFORE deducting
+          assertProductHasBlend(product);
 
           const itemTotal = quantity * unitPrice;
           totalAmount += itemTotal;

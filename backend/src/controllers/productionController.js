@@ -6,6 +6,45 @@ const InventoryLog = require('../models/InventoryLog');
 const { deductRawMaterial, deductBottle } = require('../services/inventoryService');
 const { generateInvoiceNo } = require('../utils/generateInvoice');
 
+// ============================================================
+// ✅ NEW HELPER: same validation as saleController
+// ============================================================
+function assertProductHasBlend(product) {
+  if (product.type === 'roll-on') {
+    if (!product.baseOil) {
+      throw new Error(
+        `Product "${product.name}" (SKU: ${product.sku}) has NO base oil configured. ` +
+        `Please edit the product and select a base oil before producing.`
+      );
+    }
+    return;
+  }
+
+  if (product.type === 'spray') {
+    if (!product.blendComponents || product.blendComponents.length === 0) {
+      throw new Error(
+        `Product "${product.name}" (SKU: ${product.sku}) has NO blend components. ` +
+        `Please edit the product and add blend components that sum to 100%.`
+      );
+    }
+    const total = product.blendComponents.reduce((s, c) => s + (c.percentage || 0), 0);
+    if (Math.abs(total - 100) > 0.01) {
+      throw new Error(
+        `Product "${product.name}" (SKU: ${product.sku}) blend sums to ${total}% ` +
+        `(must be exactly 100%). Please fix the product blend.`
+      );
+    }
+    for (const comp of product.blendComponents) {
+      if (!comp.material) {
+        throw new Error(
+          `Product "${product.name}" has a blend component with no material selected. ` +
+          `Please fix the product blend.`
+        );
+      }
+    }
+  }
+}
+
 // @desc    Create production batch
 // @route   POST /api/production
 exports.createProduction = async (req, res) => {
@@ -18,6 +57,9 @@ exports.createProduction = async (req, res) => {
 
       const sizeVariant = product.sizes.find(s => s.sizeMl === item.sizeMl);
       if (!sizeVariant) throw new Error(`Size ${item.sizeMl} not found for product`);
+
+      // ✅ NEW: Validate blend BEFORE deducting
+      assertProductHasBlend(product);
 
       // Deduct raw materials
       if (product.type === 'roll-on') {

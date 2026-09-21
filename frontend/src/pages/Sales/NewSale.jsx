@@ -54,7 +54,7 @@ const NewSale = () => {
     }
   }, [selectedProduct, selectedSize, products]);
 
-// ---------- Print Invoice ----------
+  // ---------- Print Invoice ----------
   const printInvoice = (sale) => {
     const itemsHtml = sale.items.map(item => {
       const productName = item.product?.name || 'Unknown';
@@ -285,10 +285,14 @@ const NewSale = () => {
       <h1 className="text-3xl font-bold mb-6">New Sale</h1>
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-card dark:shadow-gray-900/30 p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* ✅ UPDATED: prettier error box that handles long backend messages */}
           {error && (
-            <div className="flex items-center gap-2 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-sm rounded-lg px-4 py-3">
-              <AlertCircle size={20} />
-              <span>{error}</span>
+            <div className="flex items-start gap-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-sm rounded-lg px-4 py-3">
+              <AlertCircle size={20} className="flex-shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold mb-1">Cannot create sale</p>
+                <p className="whitespace-pre-wrap break-words">{error}</p>
+              </div>
             </div>
           )}
 

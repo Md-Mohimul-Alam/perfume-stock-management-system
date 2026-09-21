@@ -32,6 +32,18 @@ const parseSize = (sizeStr) => {
   return null;
 };
 
+// ---------- Helper to check if a product is missing its blend ----------
+// ✅ NEW: used to render warning badge in the table
+const isBlendMissing = (product) => {
+  if (product.type === 'roll-on') {
+    return !product.baseOil;
+  }
+  if (product.type === 'spray') {
+    return !product.blendComponents || product.blendComponents.length === 0;
+  }
+  return false;
+};
+
 const ProductList = () => {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
@@ -574,84 +586,104 @@ const ProductList = () => {
                   <td colSpan="11" className="text-center py-8 text-gray-400">No products found</td>
                 </tr>
               ) : (
-                filteredProducts.map((p) => (
-                  <tr key={p._id} className="hover:bg-gray-50 transition">
-                    <td className="px-4 sm:px-6 py-3 sm:py-4 font-medium text-gray-800 text-sm">{p.name}</td>
-                    <td className="px-4 sm:px-6 py-3 sm:py-4 text-gray-600 text-sm">{p.sku}</td>
-                    <td className="px-4 sm:px-6 py-3 sm:py-4 capitalize text-sm">{p.type || '-'}</td>
-                    <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-gray-500 max-w-xs truncate">{p.description || '-'}</td>
-                    <td className="px-4 sm:px-6 py-3 sm:py-4 capitalize text-sm">{p.intensity || 'medium'}</td>
-                    <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm">{p.bestFor?.join(', ') || 'all'}</td>
-                    <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm">{p.notes?.join(', ') || '-'}</td>
-                    <td className="px-4 sm:px-6 py-3 sm:py-4 text-center">
-                      {p.isBestseller ? (
-                        <span className="px-2 py-1 bg-amber-100 text-amber-800 text-xs font-semibold rounded-full">★</span>
-                      ) : (
-                        <span className="text-gray-400">-</span>
-                      )}
-                    </td>
-                    <td className="px-4 sm:px-6 py-3 sm:py-4 text-center">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleShowOnClient(p);
-                        }}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${
-                          p.showOnClient ? 'bg-emerald-500' : 'bg-gray-300'
-                        }`}
-                        title={p.showOnClient ? 'Visible on client' : 'Hidden from client'}
-                      >
-                        <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
-                            p.showOnClient ? 'translate-x-6' : 'translate-x-1'
-                          }`}
-                        />
-                      </button>
-                    </td>
-                    <td className="px-4 sm:px-6 py-3 sm:py-4 text-center">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleStockOut(p);
-                        }}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${
-                          p.isStockOut ? 'bg-red-500' : 'bg-emerald-500'
-                        }`}
-                        title={p.isStockOut ? 'Out of stock' : 'In stock'}
-                      >
-                        <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
-                            p.isStockOut ? 'translate-x-6' : 'translate-x-1'
-                          }`}
-                        />
-                      </button>
-                      <p className={`text-[10px] mt-0.5 font-medium ${p.isStockOut ? 'text-red-600' : 'text-emerald-600'}`}>
-                        {p.isStockOut ? 'OUT' : 'IN'}
-                      </p>
-                    </td>
-                    <td className="px-4 sm:px-6 py-3 sm:py-4 text-center">
-                      <div className="flex justify-center items-center gap-1 sm:gap-2">
+                filteredProducts.map((p) => {
+                  const blendMissing = isBlendMissing(p);
+                  return (
+                    <tr key={p._id} className="hover:bg-gray-50 transition">
+                      {/* ✅ NEW: warning badge next to product name if blend is missing */}
+                      <td className="px-4 sm:px-6 py-3 sm:py-4 font-medium text-gray-800 text-sm">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span>{p.name}</span>
+                          {blendMissing && (
+                            <span
+                              className="text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-semibold whitespace-nowrap"
+                              title={
+                                p.type === 'roll-on'
+                                  ? 'No base oil configured — sales will fail'
+                                  : 'No blend components — sales will fail'
+                              }
+                            >
+                              ⚠ {p.type === 'roll-on' ? 'NO OIL' : 'NO BLEND'}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 sm:px-6 py-3 sm:py-4 text-gray-600 text-sm">{p.sku}</td>
+                      <td className="px-4 sm:px-6 py-3 sm:py-4 capitalize text-sm">{p.type || '-'}</td>
+                      <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-gray-500 max-w-xs truncate">{p.description || '-'}</td>
+                      <td className="px-4 sm:px-6 py-3 sm:py-4 capitalize text-sm">{p.intensity || 'medium'}</td>
+                      <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm">{p.bestFor?.join(', ') || 'all'}</td>
+                      <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm">{p.notes?.join(', ') || '-'}</td>
+                      <td className="px-4 sm:px-6 py-3 sm:py-4 text-center">
+                        {p.isBestseller ? (
+                          <span className="px-2 py-1 bg-amber-100 text-amber-800 text-xs font-semibold rounded-full">★</span>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
+                      <td className="px-4 sm:px-6 py-3 sm:py-4 text-center">
                         <button
-                          onClick={() => openEditModal(p)}
-                          className="text-blue-600 hover:text-blue-800 p-1"
-                          title="Edit"
-                        >
-                          <Edit size={18} />
-                        </button>
-                        <button
-                          onClick={() => {
-                            setProductToDelete(p);
-                            setShowDeleteModal(true);
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleShowOnClient(p);
                           }}
-                          className="text-red-600 hover:text-red-800 p-1"
-                          title="Deactivate"
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${
+                            p.showOnClient ? 'bg-emerald-500' : 'bg-gray-300'
+                          }`}
+                          title={p.showOnClient ? 'Visible on client' : 'Hidden from client'}
                         >
-                          <Trash2 size={18} />
+                          <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
+                              p.showOnClient ? 'translate-x-6' : 'translate-x-1'
+                            }`}
+                          />
                         </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                      <td className="px-4 sm:px-6 py-3 sm:py-4 text-center">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleStockOut(p);
+                          }}
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${
+                            p.isStockOut ? 'bg-red-500' : 'bg-emerald-500'
+                          }`}
+                          title={p.isStockOut ? 'Out of stock' : 'In stock'}
+                        >
+                          <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
+                              p.isStockOut ? 'translate-x-6' : 'translate-x-1'
+                            }`}
+                          />
+                        </button>
+                        <p className={`text-[10px] mt-0.5 font-medium ${p.isStockOut ? 'text-red-600' : 'text-emerald-600'}`}>
+                          {p.isStockOut ? 'OUT' : 'IN'}
+                        </p>
+                      </td>
+                      <td className="px-4 sm:px-6 py-3 sm:py-4 text-center">
+                        <div className="flex justify-center items-center gap-1 sm:gap-2">
+                          <button
+                            onClick={() => openEditModal(p)}
+                            className="text-blue-600 hover:text-blue-800 p-1"
+                            title="Edit"
+                          >
+                            <Edit size={18} />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setProductToDelete(p);
+                              setShowDeleteModal(true);
+                            }}
+                            className="text-red-600 hover:text-red-800 p-1"
+                            title="Deactivate"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>

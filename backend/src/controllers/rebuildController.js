@@ -4,7 +4,7 @@ const Purchase = require('../models/Purchase');
 const Sale = require('../models/Sale');
 const Product = require('../models/Product');
 const Transaction = require('../models/Transaction');
-const InventoryLog = require('../models/InventoryLog');   // ✅ NEW import
+const InventoryLog = require('../models/InventoryLog');
 
 // ----- Helper: parse blend components for spray products -----
 function parseBlendComponents(product) {
@@ -274,6 +274,9 @@ exports.rebuildStock = async (req, res) => {
     const materialNameMap = {};
     materials.forEach(m => materialNameMap[m.name.toLowerCase()] = m._id.toString());
 
+    // ✅ NEW: track broken products so we can log a warning
+    const brokenProducts = new Set();
+
     for (const sale of sales) {
       if (!sale.items) continue;
       for (const item of sale.items) {
@@ -301,9 +304,16 @@ exports.rebuildStock = async (req, res) => {
             const totalMl = oilMlUsed * qty;
             if (!rawConsumption[oilId]) rawConsumption[oilId] = 0;
             rawConsumption[oilId] += totalMl;
+          } else {
+            // ✅ NEW: log broken product
+            brokenProducts.add(`${product.name} (${product.sku})`);
           }
         } else if (product.type === 'spray') {
           const comps = parseBlendComponents(product);
+          if (comps.length === 0) {
+            // ✅ NEW: log broken product
+            brokenProducts.add(`${product.name} (${product.sku})`);
+          }
           for (const comp of comps) {
             let materialId = comp.material?._id?.toString() || comp.material?.toString();
             if (!materialId && comp.name) {
@@ -321,23 +331,29 @@ exports.rebuildStock = async (req, res) => {
       }
     }
 
+    // ✅ NEW: report broken products to the console
+    if (brokenProducts.size > 0) {
+      console.warn('⚠️ Products without a valid blend (their sales did NOT deduct raw material):');
+      brokenProducts.forEach(p => console.warn(`   - ${p}`));
+    }
+
     // 1b.2 Aggregate wastage from InventoryLog (raw materials only)
     const wastageLogs = await InventoryLog.find({ reason: 'wastage', material: { $ne: null } });
     const wastageMap = {};
     for (const log of wastageLogs) {
       const matId = log.material.toString();
       if (!wastageMap[matId]) wastageMap[matId] = 0;
-      wastageMap[matId] += log.changeQuantity; // negative value (deduction)
+      wastageMap[matId] += log.changeQuantity;
     }
 
-    // 1c. Update Raw Materials (including wastage and isStockOut)
+    // 1c. Update Raw Materials
     const allMaterials = await RawMaterial.find();
     for (const mat of allMaterials) {
       const id = mat._id.toString();
       const purchased = purchaseQty[id] || 0;
       const consumed = rawConsumption[id] || 0;
-      const wasted = wastageMap[id] || 0;   // negative or zero
-      let netStock = purchased - consumed + wasted; // wastage is negative, so it reduces stock
+      const wasted = wastageMap[id] || 0;
+      let netStock = purchased - consumed + wasted;
       if (netStock < 0) netStock = 0;
 
       const costData = purchaseCost[id];
@@ -346,7 +362,6 @@ exports.rebuildStock = async (req, res) => {
         avgCost = costData.totalCost / costData.totalQty;
       }
 
-      // Update only if changed
       if (mat.currentStockMl !== netStock || mat.avgCostPerMl !== avgCost || mat.isStockOut !== (netStock === 0)) {
         mat.currentStockMl = netStock;
         mat.avgCostPerMl = avgCost;
@@ -356,7 +371,7 @@ exports.rebuildStock = async (req, res) => {
       }
     }
 
-    // 1d. Update Bottles (no isStockOut yet)
+    // 1d. Update Bottles
     const allBottles = await Bottle.find();
     let bottleUpdatedCount = 0;
     for (const bottle of allBottles) {
@@ -403,6 +418,7 @@ exports.rebuildStock = async (req, res) => {
       message: 'Stock rebuilt, product blends updated, and stock-out statuses refreshed.',
       updatedMaterials: allMaterials.filter(m => m.currentStockMl !== undefined).length,
       updatedBottles: bottleUpdatedCount,
+      brokenProducts: Array.from(brokenProducts), // ✅ NEW: return list
     });
   } catch (error) {
     console.error('Rebuild stock error:', error);
