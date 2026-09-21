@@ -12,9 +12,11 @@ exports.getMaterials = async (req, res) => {
     const materials = await RawMaterial.find();
     const result = materials.map(m => {
       const totalPurchaseCost = (m.purchases || []).reduce((sum, p) => sum + (p.totalCost || 0), 0);
+      // ✅ NEW: total purchased quantity in ml
+      const totalPurchaseMl = (m.purchases || []).reduce((sum, p) => sum + (p.quantityMl || 0), 0);
       const obj = m.toObject();
       delete obj.purchases;
-      return { ...obj, totalPurchaseCost };
+      return { ...obj, totalPurchaseCost, totalPurchaseMl };
     });
 
     // 2. Build material map for cost lookup
@@ -26,7 +28,6 @@ exports.getMaterials = async (req, res) => {
     const usageMap = {};
     const costMap = {};
 
-    // ✅ Helper: per-size aware — returns oil % for the given size
     function getOilPercentage(product, sizeMl) {
       const sizeVariant = product.sizes?.find(s => s.sizeMl === sizeMl);
       let comps = [];
@@ -48,7 +49,6 @@ exports.getMaterials = async (req, res) => {
       return totalOil;
     }
 
-    // ✅ Helper: per-size aware — weighted avg cost of oil components
     function computeOilBlendCost(product, sizeMl) {
       const sizeVariant = product.sizes?.find(s => s.sizeMl === sizeMl);
       let comps = [];
@@ -72,14 +72,12 @@ exports.getMaterials = async (req, res) => {
       return totalWeight > 0 ? weightedCost / totalWeight : 0;
     }
 
-    // Process sales
     for (const sale of sales) {
       if (!sale.items) continue;
       for (const item of sale.items) {
         const product = item.product;
         if (!product) continue;
         const sku = product.sku ? product.sku.trim() : '';
-        // Only process special spray SKUs
         if (sku !== 'SR_SP' && sku !== 'LUXE1_SP') continue;
 
         const sizeMl = item.sizeMl || 0;
@@ -101,7 +99,6 @@ exports.getMaterials = async (req, res) => {
       usageMap[sku] = Math.round(usageMap[sku] * 100) / 100;
     }
 
-    // 4. Build virtual material rows
     const virtualMaterials = [];
     const specialSKUs = ['SR_SP', 'LUXE1_SP'];
     const nameMap = {
@@ -120,6 +117,7 @@ exports.getMaterials = async (req, res) => {
         currentStockMl: 0,
         avgCostPerMl: cost,
         totalPurchaseCost: used * cost,
+        totalPurchaseMl: 0,   // ✅ NEW
         usedOil: used,
         availableOil: 0,
       });
@@ -211,7 +209,7 @@ exports.createBottle = async (req, res) => {
   }
 };
 
-// @desc    Update a bottle type (including stock and cost)
+// @desc    Update a bottle type
 // @route   PUT /api/inventory/bottles/:id
 exports.updateBottle = async (req, res) => {
   try {
@@ -243,7 +241,7 @@ exports.deleteBottle = async (req, res) => {
   }
 };
 
-// @desc    Get inventory logs (supports ?reason=wastage for full history)
+// @desc    Get inventory logs
 // @route   GET /api/inventory/logs
 exports.getLogs = async (req, res) => {
   try {
@@ -253,7 +251,6 @@ exports.getLogs = async (req, res) => {
     if (material) filter.material = material;
     if (bottle) filter.bottle = bottle;
 
-    // When a specific reason is requested, return all of them (no 100 cap).
     const limit = reason ? 0 : 100;
 
     const query = InventoryLog.find(filter)
@@ -270,7 +267,7 @@ exports.getLogs = async (req, res) => {
   }
 };
 
-// @desc    Bulk create raw materials from Excel/CSV
+// @desc    Bulk create raw materials
 // @route   POST /api/inventory/materials/bulk
 exports.bulkCreateMaterials = async (req, res) => {
   try {
@@ -310,7 +307,7 @@ exports.bulkCreateMaterials = async (req, res) => {
   }
 };
 
-// @desc    Bulk create bottles from Excel/CSV
+// @desc    Bulk create bottles
 // @route   POST /api/inventory/bottles/bulk
 exports.bulkCreateBottles = async (req, res) => {
   try {
@@ -402,7 +399,7 @@ exports.importMaterialsWithPurchases = async (req, res) => {
   }
 };
 
-// @desc    Bulk add stock to bottles (e.g., from production)
+// @desc    Bulk add stock to bottles
 // @route   POST /api/inventory/bottles/bulk-add-stock
 exports.bulkAddStockToBottles = async (req, res) => {
   try {
@@ -537,6 +534,9 @@ exports.stockOutMaterial = async (req, res) => {
       });
     }
 
+    // ✅ increment cycle wastage counter (before zeroing stock)
+    material.currentCycleWastageMl = (material.currentCycleWastageMl || 0) + remainingStock;
+
     material.currentStockMl = 0;
     material.isStockOut = true;
     await material.save();
@@ -612,6 +612,13 @@ exports.adjustMaterialStock = async (req, res) => {
           description: `Wastage from stock adjustment: ${material.name}`,
         });
       }
+
+      // ✅ increment cycle wastage counter
+      material.currentCycleWastageMl = (material.currentCycleWastageMl || 0) + lossMl;
+    } else if (delta > 0) {
+      // ✅ Always reset cycle whenever stock is ADDED (checkbox doesn't matter for gains)
+      material.currentCycleWastageMl = 0;
+      material.lastRestockAt = new Date();
     }
 
     material.currentStockMl = newStockMl;

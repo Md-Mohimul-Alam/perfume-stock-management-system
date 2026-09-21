@@ -193,7 +193,7 @@ const Materials = () => {
         }
       }
 
-      // ✅ CHANGED: use currentCycleWastageMl from backend if available, else fallback to lifetime logs
+      // Use currentCycleWastageMl from backend if available, else fallback to lifetime logs
       const updatedMaterials = materialsData.map(m => {
         const matId = m._id?.toString();
         const historicalWasted = localWastageMap[matId] || 0;
@@ -554,7 +554,6 @@ const Materials = () => {
                 <AlertTriangle size={14} className="text-red-600" /> Oil Wasted
               </p>
               <p className="text-2xl font-bold text-red-700">{oilSummary.totalWastage.toFixed(0)} ml</p>
-              {/* ✅ CHANGED: clarify it's cycle-based */}
               <p className="text-[10px] text-gray-400 mt-0.5">current cycle</p>
             </div>
             <div className="bg-white rounded-2xl shadow-sm border border-green-200 p-4">
@@ -593,10 +592,10 @@ const Materials = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock (ml)</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Per ml Cost (৳)</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Price (৳)</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Oil Purchases (ml)</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Price Of Available Oil (৳)</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Purchases (৳)</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Used Oil (ml)</th>
-                {/* ✅ CHANGED: subtitle says it's cycle-based */}
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Wasted (ml)
                   <span className="block text-[9px] text-gray-400 normal-case font-normal">current cycle</span>
@@ -610,13 +609,13 @@ const Materials = () => {
                 const perMlCost = m.avgCostPerMl || 0;
                 const totalPrice = (m.currentStockMl || 0) * perMlCost;
                 const totalPurchaseCost = m.totalPurchaseCost || 0;
+                const totalPurchaseMl = m.totalPurchaseMl || 0;
                 const used = m.usedOil || 0;
                 const wasted = m.wastedOil || 0;
                 const historicalWasted = m.historicalWasted || 0;
                 const available = m.availableOil || 0;
                 const isVirtual = m._id && m._id.includes('_VIRTUAL');
                 const isStockOut = m.isStockOut === true;
-                // ✅ CHANGED: flag for "fresh cycle" badge
                 const wasRestocked = m.lastRestockAt && historicalWasted > 0 && wasted === 0;
 
                 return (
@@ -632,7 +631,6 @@ const Materials = () => {
                             STOCK OUT
                           </span>
                         )}
-                        {/* ✅ CHANGED: NEW CYCLE badge after restock */}
                         {wasRestocked && (
                           <span
                             className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-semibold whitespace-nowrap flex items-center gap-1"
@@ -647,7 +645,15 @@ const Materials = () => {
                     <td className="px-6 py-4 capitalize">{m.type}</td>
                     <td className="px-6 py-4">{m.currentStockMl}</td>
                     <td className="px-6 py-4">{perMlCost.toFixed(2)}</td>
-                    <td className="px-6 py-4">{totalPrice.toFixed(2)}</td>
+                    {/* ✅ NEW: Total purchased ml */}
+                    <td className="px-6 py-4 text-emerald-700 font-medium">
+                      {totalPurchaseMl.toFixed(2)}
+                    </td>
+                    {/* Value of current available stock (Stock × Per-ml cost) */}
+                    <td className="px-6 py-4 text-blue-600 font-semibold">
+                      {totalPrice.toFixed(2)}
+                    </td>
+                    {/* Lifetime purchase cost */}
                     <td className="px-6 py-4">{totalPurchaseCost.toFixed(2)}</td>
                     <td className="px-6 py-4 text-amber-600">{used.toFixed(0)}</td>
                     <td className={`px-6 py-4 font-semibold ${wasted > 0 ? 'text-red-600' : 'text-gray-400'}`}>
@@ -696,7 +702,7 @@ const Materials = () => {
               })}
               {materials.length === 0 && (
                 <tr>
-                  <td colSpan="11" className="text-center py-8 text-gray-500">No materials found</td>
+                  <td colSpan="12" className="text-center py-8 text-gray-500">No materials found</td>
                 </tr>
               )}
             </tbody>
@@ -806,7 +812,6 @@ const Materials = () => {
                 </select>
               </div>
 
-              {/* ✅ CHANGED: show cycle + lifetime + last restock */}
               <div className="border-t pt-4 mt-2">
                 <p className="text-sm text-gray-500 mb-2">Inventory Details (read‑only)</p>
                 <div className="grid grid-cols-2 gap-2 text-sm">
