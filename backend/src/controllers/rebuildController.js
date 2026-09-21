@@ -77,44 +77,36 @@ async function applyExactBlends() {
   const products = await Product.find({ isActive: true });
   console.log(`📦 Applying blends to ${products.length} active products.`);
 
-  // ✅ Standard spray rules (for regular / non-special sprays)
+  // Standard spray rules
   const sprayRules = {
-    '6': { oil: 40, ethanol: 57, iso: 1, glx: 1, ambx: 1 },
-    '15': { oil: 40, ethanol: 57, iso: 1, glx: 1, ambx: 1 },
-    '30': { oil: 40, ethanol: 57, iso: 1, glx: 1, ambx: 1 },
-    '50': { oil: 55, ethanol: 42, iso: 1, glx: 1, ambx: 1 },
+    '6':   { oil: 40, ethanol: 57, iso: 1, glx: 1, ambx: 1 },
+    '15':  { oil: 40, ethanol: 57, iso: 1, glx: 1, ambx: 1 },
+    '30':  { oil: 40, ethanol: 57, iso: 1, glx: 1, ambx: 1 },
+    '50':  { oil: 55, ethanol: 42, iso: 1, glx: 1, ambx: 1 },
     '100': { oil: 55, ethanol: 42, iso: 1, glx: 1, ambx: 1 },
   };
 
-  // ✅ NEW: Special spray rules — ONLY for SR_SP (SRK Spray) and LUXE1_SP (Luxe Special)
+  // ✅ Special spray rules — used ONLY for SR_SP and LUXE1_SP
   const specialSprayRules = {
-    '6': { oil: 50, ethanol: 57, iso: 1, glx: 1, ambx: 1 },
-    '15': { oil: 55, ethanol: 57, iso: 1, glx: 1, ambx: 1 },
-    '30': { oil: 55, ethanol: 57, iso: 1, glx: 1, ambx: 1 },
-    '50': { oil: 55, ethanol: 42, iso: 1, glx: 1, ambx: 1 },
-    '100': { oil: 60, ethanol: 42, iso: 1, glx: 1, ambx: 1 },
+    '6':   { oil: 50, ethanol: 47, iso: 1, glx: 1, ambx: 1 },  // 50 + 47 + 3 = 100 ✓
+    '15':  { oil: 55, ethanol: 42, iso: 1, glx: 1, ambx: 1 },  // 55 + 42 + 3 = 100 ✓
+    '30':  { oil: 55, ethanol: 42, iso: 1, glx: 1, ambx: 1 },
+    '50':  { oil: 55, ethanol: 42, iso: 1, glx: 1, ambx: 1 },
+    '100': { oil: 60, ethanol: 37, iso: 1, glx: 1, ambx: 1 },  // 60 + 37 + 3 = 100 ✓
   };
 
   const specialSprays = {
     'SR_SP': {
       oilComponents: [
         { sku: 'DunIco', percentage: 52 },
-        { sku: 'DipTam', percentage: 48 },
+        { sku: 'DipTam', percentage: 48 },   // 52 + 48 = 100 ✓
       ],
-      ethanol: 52,
-      iso: 1,
-      glx: 1,
-      ambx: 1,
     },
     'LUXE1_SP': {
       oilComponents: [
         { sku: 'GucFla', percentage: 28 },
-        { sku: 'CreAve', percentage: 73 },
+        { sku: 'CreAve', percentage: 72 },   // ✅ 28 + 72 = 100 ✓ (was 73)
       ],
-      ethanol: 52,
-      iso: 1,
-      glx: 1,
-      ambx: 1,
     },
   };
 
@@ -146,7 +138,6 @@ async function applyExactBlends() {
       }
 
       if (product.type === 'spray') {
-        // ✅ Pick which rule set to use
         const isSpecialSpray = !!specialSprays[product.sku];
         const activeRules = isSpecialSpray ? specialSprayRules : sprayRules;
 
@@ -173,7 +164,7 @@ async function applyExactBlends() {
         const blendConfig = specialSprays[product.sku];
 
         if (blendConfig) {
-          // Special spray: oil split from blendConfig, oil total from activeRules
+          // ✅ Special spray: oil split from blendConfig; ethanol/iso/glx/ambx from sizeRule
           const oilTotalPct = sizeRule.oil;
           for (const comp of blendConfig.oilComponents) {
             const mat = matMap[comp.sku];
@@ -184,10 +175,11 @@ async function applyExactBlends() {
             const pct = (comp.percentage / 100) * oilTotalPct;
             oilComps.push({ material: mat._id, percentage: parseFloat(pct.toFixed(2)) });
           }
-          if (ethanolMat) oilComps.push({ material: ethanolMat._id, percentage: blendConfig.ethanol });
-          if (isoMat) oilComps.push({ material: isoMat._id, percentage: blendConfig.iso });
-          if (glxMat) oilComps.push({ material: glxMat._id, percentage: blendConfig.glx });
-          if (ambxMat) oilComps.push({ material: ambxMat._id, percentage: blendConfig.ambx });
+          // ✅ Use sizeRule values here (not hardcoded blendConfig)
+          if (ethanolMat) oilComps.push({ material: ethanolMat._id, percentage: sizeRule.ethanol });
+          if (isoMat) oilComps.push({ material: isoMat._id, percentage: sizeRule.iso });
+          if (glxMat) oilComps.push({ material: glxMat._id, percentage: sizeRule.glx });
+          if (ambxMat) oilComps.push({ material: ambxMat._id, percentage: sizeRule.ambx });
 
           const total = oilComps.reduce((sum, c) => sum + c.percentage, 0);
           if (Math.abs(total - 100) > 0.01) {
@@ -196,7 +188,7 @@ async function applyExactBlends() {
             oilComps[0].percentage = parseFloat(oilComps[0].percentage.toFixed(2));
           }
         } else {
-          // Regular spray: everything from activeRules
+          // Regular spray: everything from sizeRule
           const oilSku = product.sku.replace('_SP', '');
           let oilMat = matMap[oilSku];
           if (!oilMat) {
@@ -260,7 +252,6 @@ exports.rebuildStock = async (req, res) => {
   try {
     console.log('🔄 Rebuilding stock from purchases, sales, and wastage...');
 
-    // 1a. Aggregate purchases (materials and bottles)
     const purchases = await Purchase.find().lean();
     const purchaseQty = {};
     const purchaseCost = {};
@@ -276,9 +267,6 @@ exports.rebuildStock = async (req, res) => {
       }
     }
 
-    console.log(`📦 Total purchased entities: ${Object.keys(purchaseQty).length}`);
-
-    // 1b. Aggregate consumption from sales
     const sales = await Sale.find().populate('items.product');
     const rawConsumption = {};
     const bottleConsumption = {};
@@ -290,7 +278,6 @@ exports.rebuildStock = async (req, res) => {
     const materialNameMap = {};
     materials.forEach(m => materialNameMap[m.name.toLowerCase()] = m._id.toString());
 
-    // Track broken products so we can log a warning
     const brokenProducts = new Set();
 
     for (const sale of sales) {
@@ -304,7 +291,6 @@ exports.rebuildStock = async (req, res) => {
         const sizeMl = item.sizeMl || 0;
         const qty = item.quantity || 0;
 
-        // Bottle consumption
         const sizeVariant = product.sizes.find(s => s.sizeMl === sizeMl);
         if (sizeVariant && sizeVariant.bottle) {
           const bottleId = sizeVariant.bottle.toString();
@@ -312,7 +298,6 @@ exports.rebuildStock = async (req, res) => {
           bottleConsumption[bottleId] += qty;
         }
 
-        // Raw material consumption
         if (product.type === 'roll-on') {
           if (product.baseOil) {
             const oilId = product.baseOil.toString();
@@ -350,7 +335,6 @@ exports.rebuildStock = async (req, res) => {
       brokenProducts.forEach(p => console.warn(`   - ${p}`));
     }
 
-    // 1b.2 Aggregate wastage from InventoryLog (raw materials only)
     const wastageLogs = await InventoryLog.find({ reason: 'wastage', material: { $ne: null } });
     const wastageMap = {};
     for (const log of wastageLogs) {
@@ -359,7 +343,6 @@ exports.rebuildStock = async (req, res) => {
       wastageMap[matId] += log.changeQuantity;
     }
 
-    // 1c. Update Raw Materials
     const allMaterials = await RawMaterial.find();
     for (const mat of allMaterials) {
       const id = mat._id.toString();
@@ -384,7 +367,6 @@ exports.rebuildStock = async (req, res) => {
       }
     }
 
-    // 1d. Update Bottles
     const allBottles = await Bottle.find();
     let bottleUpdatedCount = 0;
     for (const bottle of allBottles) {
@@ -401,14 +383,8 @@ exports.rebuildStock = async (req, res) => {
       }
 
       let needsUpdate = false;
-      if (bottle.currentStock !== netStock) {
-        bottle.currentStock = netStock;
-        needsUpdate = true;
-      }
-      if (bottle.avgCostPerUnit !== avgCost) {
-        bottle.avgCostPerUnit = avgCost;
-        needsUpdate = true;
-      }
+      if (bottle.currentStock !== netStock) { bottle.currentStock = netStock; needsUpdate = true; }
+      if (bottle.avgCostPerUnit !== avgCost) { bottle.avgCostPerUnit = avgCost; needsUpdate = true; }
       if (bottle.totalPurchased !== undefined && bottle.totalPurchased !== purchased) {
         bottle.totalPurchased = purchased;
         needsUpdate = true;
@@ -417,16 +393,11 @@ exports.rebuildStock = async (req, res) => {
       if (needsUpdate) {
         await bottle.save();
         bottleUpdatedCount++;
-        console.log(`🍾 Bottle ${bottle.sku || bottle._id}: stock ${netStock} (purchased ${purchased}, consumed ${consumed})`);
       }
     }
 
-    console.log(`✅ Bottles updated: ${bottleUpdatedCount} out of ${allBottles.length}`);
-
-    // 2. Apply product blends
     await applyExactBlends();
 
-    // 3. Return response
     res.json({
       message: 'Stock rebuilt, product blends updated, and stock-out statuses refreshed.',
       updatedMaterials: allMaterials.filter(m => m.currentStockMl !== undefined).length,
