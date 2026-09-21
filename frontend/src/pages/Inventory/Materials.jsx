@@ -3,10 +3,26 @@ import API from '../../api/axios';
 import {
   Plus, Upload, X, CheckCircle, AlertCircle,
   Pencil, Trash2, Droplet, FlaskRound, Package,
-  XCircle, AlertTriangle, Settings,
+  XCircle, AlertTriangle, Settings, RotateCcw,
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import toast from 'react-hot-toast';
+
+// ✅ Helper: friendly time-ago string
+const timeAgo = (date) => {
+  if (!date) return 'never';
+  const d = new Date(date);
+  const seconds = Math.floor((new Date() - d) / 1000);
+  if (seconds < 60) return 'just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}d ago`;
+  const months = Math.floor(days / 30);
+  return `${months}mo ago`;
+};
 
 const Materials = () => {
   // ---------- State ----------
@@ -51,7 +67,7 @@ const Materials = () => {
   const [stockOutMaterial, setStockOutMaterial] = useState(null);
   const [stockOutLoading, setStockOutLoading] = useState(false);
 
-  // ✅ NEW: Adjust Stock state
+  // Adjust Stock state
   const [showAdjustModal, setShowAdjustModal] = useState(false);
   const [adjustMaterial, setAdjustMaterial] = useState(null);
   const [adjustForm, setAdjustForm] = useState({
@@ -71,12 +87,11 @@ const Materials = () => {
   const fetchMaterialsAndSummary = async () => {
     setLoading(true);
     try {
-      // ✅ Fetch wastage-only logs (no 100-log cap)
       const [materialsRes, salesRes, productsRes, logsRes] = await Promise.all([
         API.get('/inventory/materials'),
         API.get('/sales'),
         API.get('/products'),
-        API.get('/inventory/logs?reason=wastage'),   // ✅ only wastage logs
+        API.get('/inventory/logs?reason=wastage'),
       ]);
 
       const materialsData = Array.isArray(materialsRes.data) ? materialsRes.data : [];
@@ -89,7 +104,7 @@ const Materials = () => {
       if (!products.length) console.warn('No products data received');
       if (!logs.length) console.warn('No wastage logs received');
 
-      // Aggregate wastage per material
+      // Historical (lifetime) wastage from logs
       const localWastageMap = {};
       for (const log of logs) {
         if (log.reason !== 'wastage') continue;
@@ -105,7 +120,6 @@ const Materials = () => {
       const productMap = {};
       products.forEach(p => { productMap[p._id] = p; });
 
-      // Helper: parse blendComponents (product-level fallback)
       const parseBlendComponents = (product, sizeMl) => {
         const sizeVariant = product.sizes?.find(s => s.sizeMl === sizeMl);
         if (sizeVariant && sizeVariant.blendComponents && sizeVariant.blendComponents.length > 0) {
@@ -137,7 +151,7 @@ const Materials = () => {
         materialNameMap[m.name?.toLowerCase()] = m._id;
       });
 
-      // Compute usage per material
+      // Compute usage per material from all sales
       const usageMap = {};
 
       for (const sale of sales) {
@@ -179,9 +193,13 @@ const Materials = () => {
         }
       }
 
+      // ✅ CHANGED: use currentCycleWastageMl from backend if available, else fallback to lifetime logs
       const updatedMaterials = materialsData.map(m => {
         const matId = m._id?.toString();
-        const wastedForThis = localWastageMap[matId] || 0;
+        const historicalWasted = localWastageMap[matId] || 0;
+        const cycleWasted = (m.currentCycleWastageMl !== undefined && m.currentCycleWastageMl !== null)
+          ? m.currentCycleWastageMl
+          : historicalWasted;
 
         if (m._id === 'SR_SP_VIRTUAL' || m._id === 'LUXE1_SP_VIRTUAL') {
           return {
@@ -189,6 +207,7 @@ const Materials = () => {
             usedOil: m.usedOil || 0,
             availableOil: m.availableOil || 0,
             wastedOil: 0,
+            historicalWasted,
           };
         }
         const used = usageMap[m._id] || 0;
@@ -196,7 +215,8 @@ const Materials = () => {
           ...m,
           usedOil: used,
           availableOil: m.currentStockMl || 0,
-          wastedOil: wastedForThis,
+          wastedOil: cycleWasted,
+          historicalWasted,
         };
       });
       setMaterials(updatedMaterials);
@@ -348,7 +368,7 @@ const Materials = () => {
     }
   };
 
-  // ---------- ✅ NEW: Adjust Stock ----------
+  // ---------- Adjust Stock ----------
   const handleAdjustClick = (material) => {
     setAdjustMaterial(material);
     setAdjustForm({
@@ -534,6 +554,8 @@ const Materials = () => {
                 <AlertTriangle size={14} className="text-red-600" /> Oil Wasted
               </p>
               <p className="text-2xl font-bold text-red-700">{oilSummary.totalWastage.toFixed(0)} ml</p>
+              {/* ✅ CHANGED: clarify it's cycle-based */}
+              <p className="text-[10px] text-gray-400 mt-0.5">current cycle</p>
             </div>
             <div className="bg-white rounded-2xl shadow-sm border border-green-200 p-4">
               <p className="text-xs text-gray-500 uppercase tracking-wider flex items-center gap-1">
@@ -574,7 +596,11 @@ const Materials = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Price (৳)</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Purchases (৳)</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Used Oil (ml)</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Wasted (ml)</th>
+                {/* ✅ CHANGED: subtitle says it's cycle-based */}
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Wasted (ml)
+                  <span className="block text-[9px] text-gray-400 normal-case font-normal">current cycle</span>
+                </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Available Oil (ml)</th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Actions</th>
               </tr>
@@ -586,14 +612,17 @@ const Materials = () => {
                 const totalPurchaseCost = m.totalPurchaseCost || 0;
                 const used = m.usedOil || 0;
                 const wasted = m.wastedOil || 0;
+                const historicalWasted = m.historicalWasted || 0;
                 const available = m.availableOil || 0;
                 const isVirtual = m._id && m._id.includes('_VIRTUAL');
                 const isStockOut = m.isStockOut === true;
+                // ✅ CHANGED: flag for "fresh cycle" badge
+                const wasRestocked = m.lastRestockAt && historicalWasted > 0 && wasted === 0;
 
                 return (
                   <tr key={m._id} className={isStockOut ? 'bg-red-50/40' : ''}>
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span>{m.name}</span>
                         {isStockOut && (
                           <span
@@ -601,6 +630,15 @@ const Materials = () => {
                             title="Marked as Stock Out – all remaining stock moved to wastage"
                           >
                             STOCK OUT
+                          </span>
+                        )}
+                        {/* ✅ CHANGED: NEW CYCLE badge after restock */}
+                        {wasRestocked && (
+                          <span
+                            className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-semibold whitespace-nowrap flex items-center gap-1"
+                            title={`Restocked ${timeAgo(m.lastRestockAt)} — wastage counter reset`}
+                          >
+                            <RotateCcw size={10} /> NEW CYCLE
                           </span>
                         )}
                       </div>
@@ -633,7 +671,6 @@ const Materials = () => {
                       >
                         <Trash2 size={18} />
                       </button>
-                      {/* ✅ NEW: Adjust Stock button */}
                       {!isVirtual && (
                         <button
                           onClick={() => handleAdjustClick(m)}
@@ -769,6 +806,7 @@ const Materials = () => {
                 </select>
               </div>
 
+              {/* ✅ CHANGED: show cycle + lifetime + last restock */}
               <div className="border-t pt-4 mt-2">
                 <p className="text-sm text-gray-500 mb-2">Inventory Details (read‑only)</p>
                 <div className="grid grid-cols-2 gap-2 text-sm">
@@ -781,13 +819,29 @@ const Materials = () => {
                     <p className="font-semibold">{(editingMaterial.avgCostPerMl || 0).toFixed(2)}</p>
                   </div>
                   <div>
-                    <span className="text-gray-500">Wasted (ml)</span>
-                    <p className="font-semibold text-red-600">{editingMaterial.wastedOil || 0}</p>
+                    <span className="text-gray-500">Wasted this cycle</span>
+                    <p className="font-semibold text-red-600">
+                      {editingMaterial.wastedOil || 0} ml
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Lifetime wastage</span>
+                    <p className="font-semibold text-gray-500">
+                      {editingMaterial.historicalWasted || 0} ml
+                    </p>
                   </div>
                   <div>
                     <span className="text-gray-500">Stock Out?</span>
                     <p className={`font-semibold ${editingMaterial.isStockOut ? 'text-red-600' : 'text-green-600'}`}>
                       {editingMaterial.isStockOut ? 'Yes' : 'No'}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Last restock</span>
+                    <p className="font-semibold text-gray-700">
+                      {editingMaterial.lastRestockAt
+                        ? timeAgo(editingMaterial.lastRestockAt)
+                        : 'never'}
                     </p>
                   </div>
                   <div className="col-span-2">
@@ -797,7 +851,9 @@ const Materials = () => {
                     </p>
                   </div>
                 </div>
-                <p className="text-xs text-gray-400 mt-2">* Stock and cost are updated via purchases, sales, and wastage.</p>
+                <p className="text-xs text-gray-400 mt-2">
+                  * Wastage counter resets to 0 on every restock (purchase).
+                </p>
               </div>
 
               {editError && <p className="text-red-500 text-sm">{editError}</p>}
@@ -848,7 +904,7 @@ const Materials = () => {
         </div>
       )}
 
-      {/* ---------- Stock Out Confirmation Modal ---------- */}
+      {/* ---------- Stock Out Modal ---------- */}
       {showStockOutModal && stockOutMaterial && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
@@ -886,7 +942,7 @@ const Materials = () => {
         </div>
       )}
 
-      {/* ---------- ✅ NEW: Adjust Stock Modal ---------- */}
+      {/* ---------- Adjust Stock Modal ---------- */}
       {showAdjustModal && adjustMaterial && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
@@ -937,6 +993,9 @@ const Materials = () => {
                         <span className="text-gray-500">
                           {' '}(will record ৳{(Math.abs(delta) * (adjustMaterial.avgCostPerMl || 0)).toFixed(2)} wastage)
                         </span>
+                      )}
+                      {delta > 0 && (
+                        <span className="text-gray-500"> (starts new cycle)</span>
                       )}
                     </p>
                   );
