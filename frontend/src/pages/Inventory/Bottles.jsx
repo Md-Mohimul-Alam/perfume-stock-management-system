@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import API from '../../api/axios';
-import { Plus, Upload, X, CheckCircle, AlertCircle, Pencil, Trash2, DollarSign } from 'lucide-react';
+import {
+  Plus, Upload, X, CheckCircle, AlertCircle, Pencil, Trash2,
+  DollarSign, XCircle, PackageX,
+} from 'lucide-react';
 import * as XLSX from 'xlsx';
 import toast from 'react-hot-toast';
 
@@ -54,6 +57,18 @@ const Bottles = () => {
   const [purchasing, setPurchasing] = useState(false);
   const [purchaseError, setPurchaseError] = useState('');
 
+  // ✅ NEW: Stock-out confirm
+  const [showStockOutConfirm, setShowStockOutConfirm] = useState(false);
+  const [stockOutBottle, setStockOutBottle] = useState(null);
+  const [stockingOut, setStockingOut] = useState(false);
+
+  // ✅ NEW: Waste modal (partial)
+  const [showWasteModal, setShowWasteModal] = useState(false);
+  const [wasteBottleTarget, setWasteBottleTarget] = useState(null);
+  const [wasteData, setWasteData] = useState({ quantity: '', notes: '' });
+  const [wasting, setWasting] = useState(false);
+  const [wasteError, setWasteError] = useState('');
+
   useEffect(() => {
     fetchBottlesWithSales();
   }, []);
@@ -68,6 +83,8 @@ const Bottles = () => {
         avgCostPerUnit: Number(b.avgCostPerUnit) || 0,
         totalPurchased: Number(b.totalPurchased) || 0,
         sold: Number(b.sold) || 0,
+        wasted: Number(b.wasted) || 0,
+        produced: Number(b.produced) || 0,
       }));
       setBottles(formatted);
     } catch (error) {
@@ -78,6 +95,7 @@ const Bottles = () => {
     }
   };
 
+  // ---------- Add ----------
   const handleAddSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -100,6 +118,7 @@ const Bottles = () => {
     }
   };
 
+  // ---------- Edit ----------
   const handleEditClick = (bottle) => {
     setEditingBottle(bottle);
     setEditForm({
@@ -134,6 +153,7 @@ const Bottles = () => {
     }
   };
 
+  // ---------- Delete ----------
   const handleDeleteClick = (id, sizeMl, type) => {
     setDeletingId(id);
     setDeletingSize(`${sizeMl}ml (${type})`);
@@ -154,6 +174,7 @@ const Bottles = () => {
     }
   };
 
+  // ---------- Purchase ----------
   const handlePurchaseClick = (bottle) => {
     setPurchaseBottle(bottle);
     setPurchaseData({ quantity: '', costPerUnit: '', supplier: '', invoiceNo: '' });
@@ -191,6 +212,67 @@ const Bottles = () => {
     }
   };
 
+  // ---------- Stock Out ----------
+  const handleStockOutClick = (bottle) => {
+    setStockOutBottle(bottle);
+    setShowStockOutConfirm(true);
+  };
+
+  const handleStockOutConfirm = async () => {
+    if (!stockOutBottle) return;
+    setStockingOut(true);
+    try {
+      await API.post(`/inventory/bottles/${stockOutBottle._id}/stock-out`);
+      toast.success(`Bottle ${stockOutBottle.sizeMl}ml (${stockOutBottle.type}) marked as Stock Out.`);
+      setShowStockOutConfirm(false);
+      setStockOutBottle(null);
+      fetchBottlesWithSales();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Stock‑out failed');
+    } finally {
+      setStockingOut(false);
+    }
+  };
+
+  // ---------- Waste (partial) ----------
+  const handleWasteClick = (bottle) => {
+    setWasteBottleTarget(bottle);
+    setWasteData({ quantity: '', notes: '' });
+    setWasteError('');
+    setShowWasteModal(true);
+  };
+
+  const handleWasteSubmit = async (e) => {
+    e.preventDefault();
+    if (!wasteBottleTarget) return;
+    const qty = parseFloat(wasteData.quantity);
+    if (!qty || qty <= 0) {
+      setWasteError('Quantity must be positive');
+      return;
+    }
+    if (qty > (wasteBottleTarget.currentStock || 0)) {
+      setWasteError(`Only ${wasteBottleTarget.currentStock} in stock`);
+      return;
+    }
+    setWasting(true);
+    setWasteError('');
+    try {
+      await API.post(`/inventory/bottles/${wasteBottleTarget._id}/waste`, {
+        quantity: qty,
+        notes: wasteData.notes || undefined,
+      });
+      toast.success(`Wasted ${qty} bottle(s)`);
+      setShowWasteModal(false);
+      setWasteBottleTarget(null);
+      fetchBottlesWithSales();
+    } catch (err) {
+      setWasteError(err.response?.data?.message || 'Waste failed');
+    } finally {
+      setWasting(false);
+    }
+  };
+
+  // ---------- Upload ----------
   const handleFileChange = (e) => {
     const selected = e.target.files[0];
     if (selected) setFile(selected);
@@ -231,7 +313,7 @@ const Bottles = () => {
           const found = Object.keys(firstRow).join(', ');
           setUploadResult({
             success: false,
-            message: `Could not find a column for bottle size. Found: ${found || 'none'}. Please include a column like "Size" or "Size (ml)".`,
+            message: `Could not find a column for bottle size. Found: ${found || 'none'}.`,
           });
           setUploading(false);
           return;
@@ -273,7 +355,7 @@ const Bottles = () => {
         if (!items.length) {
           setUploadResult({
             success: false,
-            message: 'No valid rows. Could not extract size and type. Ensure values like "3.5ml Role" or "6ml Spray".',
+            message: 'No valid rows. Ensure values like "3.5ml Role" or "6ml Spray".',
           });
           setUploading(false);
           return;
@@ -297,6 +379,7 @@ const Bottles = () => {
     }
   };
 
+  // ---------- Render ----------
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
@@ -328,9 +411,11 @@ const Bottles = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total Purchased</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Sold</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Wasted</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Available</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Per Unit Cost</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Stock Value</th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Actions</th>
               </tr>
             </thead>
@@ -338,11 +423,12 @@ const Bottles = () => {
               {bottles.map((b) => {
                 const totalPurchased = b.totalPurchased || 0;
                 const sold = b.sold || 0;
-                // ✅ Use actual currentStock — this is what the sale controller checks
+                const wasted = b.wasted || 0;
                 const available = b.currentStock || 0;
                 const unitCost = b.avgCostPerUnit || 0;
-                const totalValue = available * unitCost;   // value of REMAINING stock
-                const mismatch = Math.abs(available - (totalPurchased - sold)) > 0.001;
+                const totalValue = available * unitCost;
+                const expected = totalPurchased - sold - wasted;
+                const mismatch = Math.abs(available - expected) > 0.001;
 
                 return (
                   <tr key={b._id} className="hover:bg-gray-50 transition">
@@ -350,11 +436,12 @@ const Bottles = () => {
                     <td className="px-6 py-4 capitalize">{b.type}</td>
                     <td className="px-6 py-4 text-right font-medium">{totalPurchased}</td>
                     <td className="px-6 py-4 text-right text-rose-600">{sold}</td>
+                    <td className="px-6 py-4 text-right text-orange-600">{wasted}</td>
                     <td className={`px-6 py-4 text-right font-semibold ${available <= 0 ? 'text-red-600' : 'text-green-600'}`}>
                       {available}
                       {mismatch && (
                         <span
-                          title={`Mismatch: purchased − sold = ${totalPurchased - sold}, actual = ${available}`}
+                          title={`Mismatch: purchased − sold − wasted = ${expected}, actual = ${available}`}
                           className="ml-1 text-amber-500 cursor-help"
                         >
                           ⚠️
@@ -364,23 +451,47 @@ const Bottles = () => {
                     <td className="px-6 py-4 text-right">৳{unitCost.toFixed(2)}</td>
                     <td className="px-6 py-4 text-right font-semibold text-cyan-600">৳{totalValue.toFixed(2)}</td>
                     <td className="px-6 py-4 text-center">
+                      {b.isStockOut ? (
+                        <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded-full">
+                          Stock Out
+                        </span>
+                      ) : (
+                        <span className="text-gray-300">—</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-center">
                       <button
                         onClick={() => handlePurchaseClick(b)}
-                        className="text-green-600 hover:text-green-800 mr-3"
+                        className="text-green-600 hover:text-green-800 mr-2"
                         title="Record Purchase"
                       >
                         <DollarSign size={18} />
                       </button>
                       <button
+                        onClick={() => handleWasteClick(b)}
+                        className="text-orange-600 hover:text-orange-800 mr-2"
+                        title="Waste (partial)"
+                        disabled={b.currentStock <= 0}
+                      >
+                        <PackageX size={18} className={b.currentStock <= 0 ? 'opacity-30' : ''} />
+                      </button>
+                      <button
                         onClick={() => handleEditClick(b)}
-                        className="text-blue-600 hover:text-blue-800 mr-3"
+                        className="text-blue-600 hover:text-blue-800 mr-2"
                         title="Edit"
                       >
                         <Pencil size={18} />
                       </button>
                       <button
+                        onClick={() => handleStockOutClick(b)}
+                        className="text-red-600 hover:text-red-800 mr-2"
+                        title="Stock Out (all remaining)"
+                      >
+                        <XCircle size={18} />
+                      </button>
+                      <button
                         onClick={() => handleDeleteClick(b._id, b.sizeMl, b.type)}
-                        className="text-red-600 hover:text-red-800"
+                        className="text-gray-500 hover:text-gray-700"
                         title="Delete"
                       >
                         <Trash2 size={18} />
@@ -391,7 +502,7 @@ const Bottles = () => {
               })}
               {bottles.length === 0 && (
                 <tr>
-                  <td colSpan="8" className="text-center py-8 text-gray-500">No bottles found</td>
+                  <td colSpan="10" className="text-center py-8 text-gray-500">No bottles found</td>
                 </tr>
               )}
             </tbody>
@@ -404,6 +515,9 @@ const Bottles = () => {
                 <td className="px-6 py-3 text-right text-rose-600">
                   {bottles.reduce((sum, b) => sum + (b.sold || 0), 0)}
                 </td>
+                <td className="px-6 py-3 text-right text-orange-600">
+                  {bottles.reduce((sum, b) => sum + (b.wasted || 0), 0)}
+                </td>
                 <td className="px-6 py-3 text-right">
                   {bottles.reduce((sum, b) => sum + (b.currentStock || 0), 0)}
                 </td>
@@ -411,7 +525,7 @@ const Bottles = () => {
                 <td className="px-6 py-3 text-right text-cyan-600">
                   ৳{bottles.reduce((sum, b) => sum + ((b.currentStock || 0) * (b.avgCostPerUnit || 0)), 0).toFixed(2)}
                 </td>
-                <td className="px-6 py-3" />
+                <td colSpan="2" className="px-6 py-3" />
               </tr>
             </tfoot>
           </table>
@@ -561,7 +675,11 @@ const Bottles = () => {
                     <span className="text-gray-500">Sold</span>
                     <p className="font-semibold text-rose-600">{editingBottle.sold || 0}</p>
                   </div>
-                  <div className="col-span-2">
+                  <div>
+                    <span className="text-gray-500">Wasted</span>
+                    <p className="font-semibold text-orange-600">{editingBottle.wasted || 0}</p>
+                  </div>
+                  <div>
                     <span className="text-gray-500">Current Stock (actual)</span>
                     <p className={`font-semibold ${(editingBottle.currentStock || 0) <= 0 ? 'text-red-600' : 'text-green-600'}`}>
                       {editingBottle.currentStock || 0}
@@ -618,6 +736,104 @@ const Bottles = () => {
         </div>
       )}
 
+      {/* ---------- Stock Out Confirmation ---------- */}
+      {showStockOutConfirm && stockOutBottle && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <h3 className="text-xl font-bold mb-2">Stock Out Bottle</h3>
+            <p className="text-gray-600 mb-2">
+              You are about to mark <strong>{stockOutBottle.sizeMl}ml ({stockOutBottle.type})</strong> as <strong>Stock Out</strong>.
+            </p>
+            {stockOutBottle.currentStock > 0 ? (
+              <p className="text-amber-600 text-sm mb-4">
+                ⚠️ There are <strong>{stockOutBottle.currentStock} pcs</strong> remaining.
+                This will be recorded as <strong>Wastage</strong> and removed from inventory.
+              </p>
+            ) : (
+              <p className="text-gray-500 text-sm mb-4">
+                Already out of stock. Marking it as stock‑out will confirm it's unavailable.
+              </p>
+            )}
+            <p className="text-sm text-gray-500 mb-6">This action cannot be undone.</p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => { setShowStockOutConfirm(false); setStockOutBottle(null); }}
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleStockOutConfirm}
+                disabled={stockingOut}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
+              >
+                {stockingOut ? 'Processing...' : 'Confirm Stock Out'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ---------- Waste Modal (partial) ---------- */}
+      {showWasteModal && wasteBottleTarget && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
+            <button
+              onClick={() => { setShowWasteModal(false); setWasteBottleTarget(null); }}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+            >
+              <X size={24} />
+            </button>
+            <h2 className="text-2xl font-bold mb-2">Record Wastage</h2>
+            <p className="text-gray-500 text-sm mb-4">
+              {wasteBottleTarget.sizeMl}ml – <span className="capitalize">{wasteBottleTarget.type}</span> · Available: <strong>{wasteBottleTarget.currentStock}</strong>
+            </p>
+            <form onSubmit={handleWasteSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Quantity *</label>
+                <input
+                  type="number"
+                  step="1"
+                  min="1"
+                  max={wasteBottleTarget.currentStock}
+                  value={wasteData.quantity}
+                  onChange={(e) => setWasteData({ ...wasteData, quantity: e.target.value })}
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-400 outline-none"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Notes (optional)</label>
+                <input
+                  type="text"
+                  value={wasteData.notes}
+                  onChange={(e) => setWasteData({ ...wasteData, notes: e.target.value })}
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-400 outline-none"
+                  placeholder="e.g., Broken, damaged during shipping"
+                />
+              </div>
+              {wasteError && <p className="text-red-500 text-sm">{wasteError}</p>}
+              <div className="flex gap-3">
+                <button
+                  type="submit"
+                  disabled={wasting}
+                  className="flex-1 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 disabled:opacity-50"
+                >
+                  {wasting ? 'Recording...' : 'Record Wastage'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setShowWasteModal(false); setWasteBottleTarget(null); }}
+                  className="flex-1 border border-gray-300 py-2 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* ---------- Upload Modal ---------- */}
       {showUploadModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -634,9 +850,7 @@ const Bottles = () => {
             </button>
             <h2 className="text-2xl font-bold mb-2">Bulk Upload Bottles</h2>
             <p className="text-gray-500 text-sm mb-4">
-              Upload CSV/Excel with columns: <strong>Size</strong> (e.g., "3.5ml Role") and optional <strong>Type</strong> (spray or roll‑on).
-              <br />
-              Optional columns: <strong>Stock</strong> (initial quantity) and <strong>Per Unit Cost (৳)</strong>.
+              Columns: <strong>Size</strong> (e.g., "3.5ml Role"), optional <strong>Type</strong>, <strong>Stock</strong>, <strong>Per Unit Cost</strong>.
             </p>
             <form onSubmit={handleUploadSubmit} className="space-y-4">
               <div>

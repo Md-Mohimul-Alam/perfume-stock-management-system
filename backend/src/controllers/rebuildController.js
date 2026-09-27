@@ -15,7 +15,7 @@ function getSizeBlend(product, sizeMl) {
   return product.blendComponents || [];
 }
 
-// ----- Helper: parse blend components (works for object or string form) -----
+// ----- Helper: parse blend components -----
 function parseBlendComponents(comps) {
   if (!comps) return [];
   if (Array.isArray(comps)) {
@@ -35,7 +35,7 @@ function parseBlendComponents(comps) {
   return [];
 }
 
-// ----- Helper: apply exact blends to all products (writes PER-SIZE blends) -----
+// ----- Helper: apply exact blends to all products -----
 async function applyExactBlends() {
   console.log('🔄 Applying exact product blends...');
 
@@ -81,7 +81,6 @@ async function applyExactBlends() {
   const products = await Product.find({ isActive: true });
   console.log(`📦 Applying blends to ${products.length} active products.`);
 
-  // ✅ Regular spray rules — each size sums to exactly 100
   const sprayRules = {
     '6':   { oil: 55.2, ethanol: 44.8, iso: 0, glx: 0, ambx: 0 },
     '15':  { oil: 50, ethanol: 47, iso: 1, glx: 1, ambx: 1 },
@@ -90,7 +89,6 @@ async function applyExactBlends() {
     '100': { oil: 60, ethanol: 37, iso: 1, glx: 1, ambx: 1 },
   };
 
-  // ✅ Special spray rules — used ONLY for SR_SP and LUXE1_SP
   const specialSprayRules = {
     '6':   { oil: 55, ethanol: 45, iso: 0, glx: 0, ambx: 0 },
     '15':  { oil: 55, ethanol: 42, iso: 1, glx: 1, ambx: 1 },
@@ -203,13 +201,11 @@ async function applyExactBlends() {
             }
           }
 
-          // ✅ Only push if > 0
           if (ethanolMat && sizeRule.ethanol > 0) oilComps.push({ material: ethanolMat._id, percentage: sizeRule.ethanol });
           if (isoMat && sizeRule.iso > 0) oilComps.push({ material: isoMat._id, percentage: sizeRule.iso });
           if (glxMat && sizeRule.glx > 0) oilComps.push({ material: glxMat._id, percentage: sizeRule.glx });
           if (ambxMat && sizeRule.ambx > 0) oilComps.push({ material: ambxMat._id, percentage: sizeRule.ambx });
 
-          // Fix rounding drift on first component only
           const total = oilComps.reduce((sum, c) => sum + c.percentage, 0);
           if (Math.abs(total - 100) > 0.01 && oilComps.length > 0) {
             const diff = 100 - total;
@@ -233,7 +229,6 @@ async function applyExactBlends() {
           }
         }
 
-        // Clear legacy product-level blend so nothing reads it
         if (product.blendComponents && product.blendComponents.length > 0) {
           product.blendComponents = [];
           productChanged = true;
@@ -305,7 +300,6 @@ exports.rebuildStock = async (req, res) => {
         const sizeMl = item.sizeMl || 0;
         const qty = item.quantity || 0;
 
-        // Bottle consumption
         const sizeVariant = product.sizes.find(s => s.sizeMl === sizeMl);
         if (sizeVariant && sizeVariant.bottle) {
           const bottleId = sizeVariant.bottle.toString();
@@ -313,7 +307,6 @@ exports.rebuildStock = async (req, res) => {
           bottleConsumption[bottleId] += qty;
         }
 
-        // Raw material consumption
         if (product.type === 'roll-on') {
           if (product.baseOil) {
             const oilId = product.baseOil.toString();
@@ -352,13 +345,35 @@ exports.rebuildStock = async (req, res) => {
       brokenProducts.forEach(p => console.warn(`   - ${p}`));
     }
 
-    // 3. Aggregate wastage from InventoryLog (raw materials only)
+    // 3. Aggregate wastage from InventoryLog (raw materials)
     const wastageLogs = await InventoryLog.find({ reason: 'wastage', material: { $ne: null } });
     const wastageMap = {};
     for (const log of wastageLogs) {
       const matId = log.material.toString();
       if (!wastageMap[matId]) wastageMap[matId] = 0;
       wastageMap[matId] += log.changeQuantity;
+    }
+
+    // ✅ 3b. Aggregate wastage from InventoryLog (bottles)
+    const bottleWastageLogs = await InventoryLog.find({ reason: 'wastage', bottle: { $ne: null } });
+    const bottleWastageMap = {};
+    for (const log of bottleWastageLogs) {
+      const botId = log.bottle.toString();
+      if (!bottleWastageMap[botId]) bottleWastageMap[botId] = 0;
+      bottleWastageMap[botId] += log.changeQuantity;   // negative
+    }
+
+    // ✅ 3c. Aggregate production additions from InventoryLog (bottles)
+    const bottleProductionLogs = await InventoryLog.find({
+      reason: 'production',
+      bottle: { $ne: null },
+      changeQuantity: { $gt: 0 },
+    });
+    const bottleProductionMap = {};
+    for (const log of bottleProductionLogs) {
+      const botId = log.bottle.toString();
+      if (!bottleProductionMap[botId]) bottleProductionMap[botId] = 0;
+      bottleProductionMap[botId] += log.changeQuantity;
     }
 
     // 4. Update Raw Materials
@@ -368,7 +383,7 @@ exports.rebuildStock = async (req, res) => {
       const purchased = purchaseQty[id] || 0;
       const consumed = rawConsumption[id] || 0;
       const wasted = wastageMap[id] || 0;
-      let netStock = purchased - consumed + wasted;
+      let netStock = purchased - consumed + wasted;   // wastage is negative
       if (netStock < 0) netStock = 0;
 
       const costData = purchaseCost[id];
@@ -386,7 +401,7 @@ exports.rebuildStock = async (req, res) => {
       }
     }
 
-    // 5. Update Bottles — ✅ INCLUDES production additions (BATCH-PROD entries)
+    // 5. Update Bottles — includes purchases + production − consumed + wastage
     const allBottles = await Bottle.find();
     let bottleUpdatedCount = 0;
     for (const bottle of allBottles) {
@@ -394,19 +409,14 @@ exports.rebuildStock = async (req, res) => {
       const purchased = purchaseQty[id] || 0;
       const consumed = bottleConsumption[id] || 0;
 
-      // ✅ Include production additions (BATCH-PROD entries in bottle.purchases)
-      // that are NOT part of the Purchase collection.
-      let productionAdded = 0;
-      if (Array.isArray(bottle.purchases)) {
-        for (const p of bottle.purchases) {
-          if (p.invoiceNo === 'BATCH-PROD' || p.supplier === 'Production') {
-            productionAdded += p.quantity || 0;
-          }
-        }
-      }
+      // Production additions tracked in InventoryLog
+      const productionAdded = bottleProductionMap[id] || 0;
+
+      // Wastage from InventoryLog (negative)
+      const wasted = bottleWastageMap[id] || 0;
 
       const totalAvailable = purchased + productionAdded;
-      let netStock = totalAvailable - consumed;
+      let netStock = totalAvailable - consumed + wasted;
       if (netStock < 0) netStock = 0;
 
       const costData = purchaseCost[id];
@@ -418,17 +428,20 @@ exports.rebuildStock = async (req, res) => {
       let needsUpdate = false;
       if (bottle.currentStock !== netStock) { bottle.currentStock = netStock; needsUpdate = true; }
       if (bottle.avgCostPerUnit !== avgCost) { bottle.avgCostPerUnit = avgCost; needsUpdate = true; }
-      // ✅ totalPurchased now includes production additions
-      const expectedTotalPurchased = totalAvailable;
-      if (bottle.totalPurchased !== undefined && bottle.totalPurchased !== expectedTotalPurchased) {
-        bottle.totalPurchased = expectedTotalPurchased;
+      if (bottle.totalPurchased !== undefined && bottle.totalPurchased !== totalAvailable) {
+        bottle.totalPurchased = totalAvailable;
+        needsUpdate = true;
+      }
+      // ✅ stock-out flag sync
+      if (bottle.isStockOut !== (netStock === 0)) {
+        bottle.isStockOut = (netStock === 0);
         needsUpdate = true;
       }
 
       if (needsUpdate) {
         await bottle.save();
         bottleUpdatedCount++;
-        console.log(`🍾 Bottle ${bottle.sizeMl}ml (${bottle.type}): stock ${netStock} (purchased ${purchased} + production ${productionAdded} − consumed ${consumed})`);
+        console.log(`🍾 Bottle ${bottle.sizeMl}ml (${bottle.type}): stock ${netStock} (purchased ${purchased} + production ${productionAdded} − consumed ${consumed} + wasted ${wasted})`);
       }
     }
 

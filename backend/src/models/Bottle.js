@@ -15,23 +15,20 @@ const bottleSchema = mongoose.Schema(
     type: { type: String, enum: ['roll-on', 'spray'], required: true },
     currentStock: { type: Number, default: 0, min: 0 },
     avgCostPerUnit: { type: Number, default: 0, min: 0 },
-    totalPurchased: { type: Number, default: 0 }, // ✅ total quantity ever purchased
+    totalPurchased: { type: Number, default: 0 }, // total quantity ever purchased/added
     purchases: [bottlePurchaseSchema],
+
+    // ✅ NEW: stock-out flag
+    isStockOut: { type: Boolean, default: false },
   },
   {
     timestamps: true,
-    // ✅ We keep virtuals enabled but only include safe virtuals (if any)
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
   }
 );
 
-// ❌ REMOVED – the virtual below was causing errors when 'purchases' is excluded
-// bottleSchema.virtual('totalPurchasedCalc').get(function () {
-//   return this.purchases.reduce((sum, p) => sum + p.quantity, 0);
-// });
-
-// ✅ addPurchase updates stock, avg cost, and totalPurchased
+// ✅ addPurchase updates stock, avg cost, totalPurchased, and clears stock-out
 bottleSchema.methods.addPurchase = function (quantity, costPerUnit, totalCost, supplier, invoiceNo) {
   this.purchases.push({ quantity, costPerUnit, totalCost, supplier, invoiceNo });
 
@@ -39,7 +36,10 @@ bottleSchema.methods.addPurchase = function (quantity, costPerUnit, totalCost, s
   const totalCostSum = this.purchases.reduce((sum, p) => sum + p.totalCost, 0);
   this.avgCostPerUnit = totalQty > 0 ? totalCostSum / totalQty : 0;
   this.currentStock += quantity;
-  this.totalPurchased = totalQty; // ✅ stored field
+  this.totalPurchased = totalQty;
+
+  // ✅ Reset stock-out when stock is replenished
+  if (quantity > 0) this.isStockOut = false;
 
   return this;
 };
