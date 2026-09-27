@@ -249,6 +249,16 @@ const Sidebar = ({
           <Plus className={iconClass} />
           <span className={linkTextClass}>Record Wastage</span>
         </NavLink>
+        <NavLink
+          to="/orders"
+          className={({ isActive }) =>
+            `${linkClass} ${isActive ? activeClass : ''}`
+          }
+          onClick={handleLinkClick}
+        >
+          <ClipboardList className={iconClass} />
+          <span className={linkTextClass}>Orders</span>
+        </NavLink>
 
         {user?.role === 'admin' && (
           <>

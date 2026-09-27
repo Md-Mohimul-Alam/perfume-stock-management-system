@@ -71,6 +71,7 @@ app.use('/api/expenses', require('./routes/expenseRoutes'));
 app.use('/api/investors', require('./routes/investorRoutes'));
 app.use('/api/reports', require('./routes/reportRoutes'));
 app.use('/api/upload', require('./routes/uploadRoutes'));
+app.use('/api/orders', require('./routes/orderRoutes'));
 
 // ========== 👇 NEW: Admin routes ==========
 app.use('/api/admin', require('./routes/adminRoutes'));

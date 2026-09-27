@@ -24,6 +24,7 @@ import Investors from './pages/Investors/Investors';
 import Reports from './pages/Reports/Reports';
 import WastageList from './pages/Wastage/WastageList';
 import WastageForm from './pages/Wastage/WastageForm';
+import Orders from './pages/Orders/Orders';
 
 function App() {
   return (
@@ -58,6 +59,7 @@ function App() {
               <Route path="reports" element={<Reports />} />
               <Route path="wastage" element={<WastageList />} />
               <Route path="wastage/new" element={<WastageForm />} />
+              <Route path="orders" element={<Orders />} />
             </Route>
           </Routes>
         </NotificationProvider>
