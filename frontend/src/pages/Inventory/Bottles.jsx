@@ -5,7 +5,6 @@ import * as XLSX from 'xlsx';
 import toast from 'react-hot-toast';
 
 const Bottles = () => {
-  // ---------- State ----------
   const [bottles, setBottles] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -20,7 +19,7 @@ const Bottles = () => {
   const [submitting, setSubmitting] = useState(false);
   const [modalError, setModalError] = useState('');
 
-  // Edit modal – enhanced
+  // Edit modal
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingBottle, setEditingBottle] = useState(null);
   const [editForm, setEditForm] = useState({
@@ -32,18 +31,18 @@ const Bottles = () => {
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [editError, setEditError] = useState('');
 
-  // Delete confirmation
+  // Delete
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
   const [deletingSize, setDeletingSize] = useState('');
 
-  // Upload modal
+  // Upload
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState(null);
 
-  // Purchase modal
+  // Purchase
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [purchaseBottle, setPurchaseBottle] = useState(null);
   const [purchaseData, setPurchaseData] = useState({
@@ -55,7 +54,6 @@ const Bottles = () => {
   const [purchasing, setPurchasing] = useState(false);
   const [purchaseError, setPurchaseError] = useState('');
 
-  // ---------- Fetch ----------
   useEffect(() => {
     fetchBottlesWithSales();
   }, []);
@@ -80,7 +78,6 @@ const Bottles = () => {
     }
   };
 
-  // ---------- Single Add ----------
   const handleAddSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -103,7 +100,6 @@ const Bottles = () => {
     }
   };
 
-  // ---------- Edit ----------
   const handleEditClick = (bottle) => {
     setEditingBottle(bottle);
     setEditForm({
@@ -138,7 +134,6 @@ const Bottles = () => {
     }
   };
 
-  // ---------- Delete ----------
   const handleDeleteClick = (id, sizeMl, type) => {
     setDeletingId(id);
     setDeletingSize(`${sizeMl}ml (${type})`);
@@ -159,7 +154,6 @@ const Bottles = () => {
     }
   };
 
-  // ---------- Purchase ----------
   const handlePurchaseClick = (bottle) => {
     setPurchaseBottle(bottle);
     setPurchaseData({ quantity: '', costPerUnit: '', supplier: '', invoiceNo: '' });
@@ -197,7 +191,6 @@ const Bottles = () => {
     }
   };
 
-  // ---------- Bulk Upload ----------
   const handleFileChange = (e) => {
     const selected = e.target.files[0];
     if (selected) setFile(selected);
@@ -304,10 +297,8 @@ const Bottles = () => {
     }
   };
 
-  // ---------- Render ----------
   return (
     <div>
-      {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <h1 className="text-3xl font-bold">Bottles</h1>
         <div className="flex gap-3">
@@ -326,7 +317,6 @@ const Bottles = () => {
         </div>
       </div>
 
-      {/* Table */}
       {loading ? (
         <p>Loading...</p>
       ) : (
@@ -336,11 +326,11 @@ const Bottles = () => {
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Size (ml)</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total Stock</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total Purchased</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Sold</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Available</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Per Unit Cost</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total Value</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Stock Value</th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Actions</th>
               </tr>
             </thead>
@@ -348,9 +338,11 @@ const Bottles = () => {
               {bottles.map((b) => {
                 const totalPurchased = b.totalPurchased || 0;
                 const sold = b.sold || 0;
-                const available = totalPurchased - sold;
+                // ✅ Use actual currentStock — this is what the sale controller checks
+                const available = b.currentStock || 0;
                 const unitCost = b.avgCostPerUnit || 0;
-                const totalValue = totalPurchased * unitCost;
+                const totalValue = available * unitCost;   // value of REMAINING stock
+                const mismatch = Math.abs(available - (totalPurchased - sold)) > 0.001;
 
                 return (
                   <tr key={b._id} className="hover:bg-gray-50 transition">
@@ -358,8 +350,16 @@ const Bottles = () => {
                     <td className="px-6 py-4 capitalize">{b.type}</td>
                     <td className="px-6 py-4 text-right font-medium">{totalPurchased}</td>
                     <td className="px-6 py-4 text-right text-rose-600">{sold}</td>
-                    <td className={`px-6 py-4 text-right font-semibold ${available < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                    <td className={`px-6 py-4 text-right font-semibold ${available <= 0 ? 'text-red-600' : 'text-green-600'}`}>
                       {available}
+                      {mismatch && (
+                        <span
+                          title={`Mismatch: purchased − sold = ${totalPurchased - sold}, actual = ${available}`}
+                          className="ml-1 text-amber-500 cursor-help"
+                        >
+                          ⚠️
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-right">৳{unitCost.toFixed(2)}</td>
                     <td className="px-6 py-4 text-right font-semibold text-cyan-600">৳{totalValue.toFixed(2)}</td>
@@ -405,11 +405,11 @@ const Bottles = () => {
                   {bottles.reduce((sum, b) => sum + (b.sold || 0), 0)}
                 </td>
                 <td className="px-6 py-3 text-right">
-                  {bottles.reduce((sum, b) => sum + ((b.totalPurchased || 0) - (b.sold || 0)), 0)}
+                  {bottles.reduce((sum, b) => sum + (b.currentStock || 0), 0)}
                 </td>
                 <td className="px-6 py-3 text-right">-</td>
                 <td className="px-6 py-3 text-right text-cyan-600">
-                  ৳{bottles.reduce((sum, b) => sum + ((b.totalPurchased || 0) * (b.avgCostPerUnit || 0)), 0).toFixed(2)}
+                  ৳{bottles.reduce((sum, b) => sum + ((b.currentStock || 0) * (b.avgCostPerUnit || 0)), 0).toFixed(2)}
                 </td>
                 <td className="px-6 py-3" />
               </tr>
@@ -418,7 +418,7 @@ const Bottles = () => {
         </div>
       )}
 
-      {/* ---------- Add Modal (unchanged) ---------- */}
+      {/* ---------- Add Modal ---------- */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
@@ -487,7 +487,7 @@ const Bottles = () => {
         </div>
       )}
 
-      {/* ---------- ENHANCED Edit Modal ---------- */}
+      {/* ---------- Edit Modal ---------- */}
       {showEditModal && editingBottle && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
@@ -535,7 +535,7 @@ const Bottles = () => {
                   className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 outline-none"
                 />
                 <p className="text-xs text-gray-400 mt-1">
-                  This will override the calculated stock. Usually stock is updated via purchases and sales.
+                  This is the actual available stock used by the sales system.
                 </p>
               </div>
               <div>
@@ -550,12 +550,11 @@ const Bottles = () => {
                 />
               </div>
 
-              {/* Summary (read‑only) */}
               <div className="border-t pt-4 mt-2">
                 <p className="text-sm text-gray-500 mb-2">Stock & Sales Summary (read‑only)</p>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
-                    <span className="text-gray-500">Total Stock</span>
+                    <span className="text-gray-500">Total Purchased</span>
                     <p className="font-semibold">{editingBottle.totalPurchased || 0}</p>
                   </div>
                   <div>
@@ -563,9 +562,9 @@ const Bottles = () => {
                     <p className="font-semibold text-rose-600">{editingBottle.sold || 0}</p>
                   </div>
                   <div className="col-span-2">
-                    <span className="text-gray-500">Available Stock</span>
-                    <p className={`font-semibold ${((editingBottle.totalPurchased || 0) - (editingBottle.sold || 0)) < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                      {(editingBottle.totalPurchased || 0) - (editingBottle.sold || 0)}
+                    <span className="text-gray-500">Current Stock (actual)</span>
+                    <p className={`font-semibold ${(editingBottle.currentStock || 0) <= 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      {editingBottle.currentStock || 0}
                     </p>
                   </div>
                 </div>
@@ -619,7 +618,7 @@ const Bottles = () => {
         </div>
       )}
 
-      {/* ---------- Upload Modal (unchanged) ---------- */}
+      {/* ---------- Upload Modal ---------- */}
       {showUploadModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
@@ -638,8 +637,6 @@ const Bottles = () => {
               Upload CSV/Excel with columns: <strong>Size</strong> (e.g., "3.5ml Role") and optional <strong>Type</strong> (spray or roll‑on).
               <br />
               Optional columns: <strong>Stock</strong> (initial quantity) and <strong>Per Unit Cost (৳)</strong>.
-              <br />
-              If Type is missing, it will be inferred from the Size text.
             </p>
             <form onSubmit={handleUploadSubmit} className="space-y-4">
               <div>
@@ -664,20 +661,6 @@ const Bottles = () => {
                       <div>
                         <p className="font-medium">{uploadResult.data.message}</p>
                         <p className="text-sm">Created: {uploadResult.data.created?.length || 0}</p>
-                        {uploadResult.data.errors?.length > 0 && (
-                          <details className="mt-1">
-                            <summary className="cursor-pointer text-sm">
-                              View errors ({uploadResult.data.errors.length})
-                            </summary>
-                            <ul className="text-xs mt-1 space-y-1 max-h-40 overflow-y-auto">
-                              {uploadResult.data.errors.map((e, i) => (
-                                <li key={i}>
-                                  • {e.error} {e.item && `(item: ${JSON.stringify(e.item)})`}
-                                </li>
-                              ))}
-                            </ul>
-                          </details>
-                        )}
                       </div>
                     </div>
                   ) : (
@@ -714,7 +697,7 @@ const Bottles = () => {
         </div>
       )}
 
-      {/* ---------- Purchase Modal (unchanged) ---------- */}
+      {/* ---------- Purchase Modal ---------- */}
       {showPurchaseModal && purchaseBottle && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
