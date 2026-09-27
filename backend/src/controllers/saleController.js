@@ -10,7 +10,6 @@ const mongoose = require('mongoose');
 
 // ============================================================
 // Helper: get the effective blend for a specific size of a product
-// (per-size first, fall back to product-level)
 // ============================================================
 function getSizeBlend(product, sizeMl) {
   const sizeVariant = product.sizes?.find(s => s.sizeMl === sizeMl);
@@ -93,10 +92,13 @@ exports.createSale = async (req, res) => {
       if (product.type === 'roll-on') {
         await deductRawMaterial(product.baseOil, sizeVariant.oilMlUsed * item.quantity, 'sale', null);
       } else {
-        // ✅ Per-size blend
+        // ✅ Per-size blend — skip 0% components
         const comps = getSizeBlend(product, item.sizeMl);
         for (const comp of comps) {
-          const mlUsed = (sizeVariant.sizeMl * comp.percentage / 100) * item.quantity;
+          const pct = comp.percentage || 0;
+          if (pct <= 0) continue;   // ✅ skip 0%
+          const mlUsed = (sizeVariant.sizeMl * pct / 100) * item.quantity;
+          if (mlUsed <= 0) continue; // ✅ skip 0 ml
           await deductRawMaterial(comp.material, mlUsed, 'sale', null);
         }
       }
@@ -297,10 +299,13 @@ exports.bulkCreateSales = async (req, res) => {
           if (productRef.type === 'roll-on') {
             await deductRawMaterial(productRef.baseOil, sizeVariant.oilMlUsed * quantity, 'sale', sale);
           } else {
-            // ✅ Per-size blend
+            // ✅ Per-size blend — skip 0% components
             const comps = getSizeBlend(productRef, sizeMl);
             for (const comp of comps) {
-              const mlUsed = (sizeVariant.sizeMl * comp.percentage / 100) * quantity;
+              const pct = comp.percentage || 0;
+              if (pct <= 0) continue;
+              const mlUsed = (sizeVariant.sizeMl * pct / 100) * quantity;
+              if (mlUsed <= 0) continue;
               await deductRawMaterial(comp.material, mlUsed, 'sale', sale);
             }
           }
@@ -386,24 +391,25 @@ exports.deleteSale = async (req, res) => {
           }
         }
       } else {
-        // ✅ Per-size blend
+        // ✅ Per-size blend — skip 0% components
         const comps = getSizeBlend(product, item.sizeMl);
         for (const comp of comps) {
-          if (comp.material) {
-            const mlUsed = (sizeVariant.sizeMl * comp.percentage / 100) * item.quantity;
-            const material = await RawMaterial.findById(comp.material).session(session);
-            if (material) {
-              material.currentStockMl += mlUsed;
-              await material.save({ session });
-              await InventoryLog.create([{
-                material: material._id,
-                changeQuantity: mlUsed,
-                reason: 'adjustment',
-                reference: sale._id,
-                refModel: 'Sale',
-                notes: `Reversal of sale ${sale.invoiceNo} – raw material restocked`,
-              }], { session });
-            }
+          const pct = comp.percentage || 0;
+          if (pct <= 0 || !comp.material) continue;
+          const mlUsed = (sizeVariant.sizeMl * pct / 100) * item.quantity;
+          if (mlUsed <= 0) continue;
+          const material = await RawMaterial.findById(comp.material).session(session);
+          if (material) {
+            material.currentStockMl += mlUsed;
+            await material.save({ session });
+            await InventoryLog.create([{
+              material: material._id,
+              changeQuantity: mlUsed,
+              reason: 'adjustment',
+              reference: sale._id,
+              refModel: 'Sale',
+              notes: `Reversal of sale ${sale.invoiceNo} – raw material restocked`,
+            }], { session });
           }
         }
       }

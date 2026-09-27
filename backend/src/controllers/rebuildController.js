@@ -15,7 +15,7 @@ function getSizeBlend(product, sizeMl) {
   return product.blendComponents || [];
 }
 
-// ----- Helper: parse blend components (works for object or string form) -----
+// ----- Helper: parse blend components -----
 function parseBlendComponents(comps) {
   if (!comps) return [];
   if (Array.isArray(comps)) {
@@ -35,7 +35,7 @@ function parseBlendComponents(comps) {
   return [];
 }
 
-// ----- Helper: apply exact blends to all products (writes PER-SIZE blends) -----
+// ----- Helper: apply exact blends to all products -----
 async function applyExactBlends() {
   console.log('🔄 Applying exact product blends...');
 
@@ -81,7 +81,6 @@ async function applyExactBlends() {
   const products = await Product.find({ isActive: true });
   console.log(`📦 Applying blends to ${products.length} active products.`);
 
-  // ✅ UPDATED: Regular spray rules — each size sums to exactly 100
   const sprayRules = {
     '6':   { oil: 55, ethanol: 45, iso: 0, glx: 0, ambx: 0 },
     '15':  { oil: 50, ethanol: 47, iso: 1, glx: 1, ambx: 1 },
@@ -90,7 +89,6 @@ async function applyExactBlends() {
     '100': { oil: 60, ethanol: 37, iso: 1, glx: 1, ambx: 1 },
   };
 
-  // ✅ Special spray rules — used ONLY for SR_SP and LUXE1_SP
   const specialSprayRules = {
     '6':   { oil: 55, ethanol: 45, iso: 0, glx: 0, ambx: 0 },
     '15':  { oil: 55, ethanol: 42, iso: 1, glx: 1, ambx: 1 },
@@ -109,6 +107,7 @@ async function applyExactBlends() {
     'LUXE1_SP': {
       oilComponents: [
         { sku: 'GucFla', percentage: 28 },
+        { sku: 'CreaAve', percentage: 72 },   // (kept for reference – not used directly)
         { sku: 'CreAve', percentage: 72 },
       ],
     },
@@ -185,7 +184,7 @@ async function applyExactBlends() {
                 continue;
               }
               const pct = (comp.percentage / 100) * oilTotalPct;
-              oilComps.push({ material: mat._id, percentage: parseFloat(pct.toFixed(2)) });
+              if (pct > 0) oilComps.push({ material: mat._id, percentage: parseFloat(pct.toFixed(2)) });
             }
           } else {
             const oilSku = product.sku.replace('_SP', '');
@@ -198,14 +197,18 @@ async function applyExactBlends() {
               console.warn(`⚠️ No oil material for spray ${product.name} (SKU: ${product.sku})`);
               break;
             }
-            oilComps.push({ material: oilMat._id, percentage: sizeRule.oil });
+            if (sizeRule.oil > 0) {
+              oilComps.push({ material: oilMat._id, percentage: sizeRule.oil });
+            }
           }
 
-          if (ethanolMat) oilComps.push({ material: ethanolMat._id, percentage: sizeRule.ethanol });
-          if (isoMat) oilComps.push({ material: isoMat._id, percentage: sizeRule.iso });
-          if (glxMat) oilComps.push({ material: glxMat._id, percentage: sizeRule.glx });
-          if (ambxMat) oilComps.push({ material: ambxMat._id, percentage: sizeRule.ambx });
+          // ✅ Only push if > 0
+          if (ethanolMat && sizeRule.ethanol > 0) oilComps.push({ material: ethanolMat._id, percentage: sizeRule.ethanol });
+          if (isoMat && sizeRule.iso > 0) oilComps.push({ material: isoMat._id, percentage: sizeRule.iso });
+          if (glxMat && sizeRule.glx > 0) oilComps.push({ material: glxMat._id, percentage: sizeRule.glx });
+          if (ambxMat && sizeRule.ambx > 0) oilComps.push({ material: ambxMat._id, percentage: sizeRule.ambx });
 
+          // Fix rounding drift on first component only
           const total = oilComps.reduce((sum, c) => sum + c.percentage, 0);
           if (Math.abs(total - 100) > 0.01 && oilComps.length > 0) {
             const diff = 100 - total;
@@ -237,7 +240,6 @@ async function applyExactBlends() {
         product.baseOil = null;
 
         if (productChanged) {
-          // ✅ Force mongoose to detect nested changes
           product.markModified('sizes');
           product.markModified('blendComponents');
           await product.save();
@@ -324,15 +326,15 @@ exports.rebuildStock = async (req, res) => {
             continue;
           }
           for (const comp of comps) {
+            const pct = comp.percentage || 0;
+            if (pct <= 0) continue;
             let materialId = comp.material?._id?.toString() || comp.material?.toString();
             if (!materialId && comp.name) {
               const lowerName = comp.name.toLowerCase();
               materialId = materialNameMap[lowerName];
             }
             if (!materialId) continue;
-            const percentage = comp.percentage || 0;
-            if (percentage === 0) continue;
-            const mlUsed = (sizeMl * (percentage / 100)) * qty;
+            const mlUsed = (sizeMl * (pct / 100)) * qty;
             if (!rawConsumption[materialId]) rawConsumption[materialId] = 0;
             rawConsumption[materialId] += mlUsed;
           }
@@ -341,7 +343,7 @@ exports.rebuildStock = async (req, res) => {
     }
 
     if (brokenProducts.size > 0) {
-      console.warn('⚠️ Products/sizes without a valid blend (their sales did NOT deduct raw material):');
+      console.warn('⚠️ Products/sizes without a valid blend:');
       brokenProducts.forEach(p => console.warn(`   - ${p}`));
     }
 
@@ -373,7 +375,7 @@ exports.rebuildStock = async (req, res) => {
         mat.avgCostPerMl = avgCost;
         mat.isStockOut = (netStock === 0);
         await mat.save();
-        console.log(`✅ Material ${mat.name}: stock ${netStock}ml, isStockOut = ${mat.isStockOut}`);
+        console.log(`✅ Material ${mat.name}: stock ${netStock}ml`);
       }
     }
 

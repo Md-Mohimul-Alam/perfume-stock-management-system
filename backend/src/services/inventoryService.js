@@ -4,7 +4,12 @@ const InventoryLog = require('../models/InventoryLog');
 
 exports.deductRawMaterial = async (materialId, quantityMl, reason, reference) => {
   if (!materialId) throw new Error('Material ID is required');
-  if (quantityMl <= 0) throw new Error('Quantity must be positive');
+
+  // ✅ Skip if quantity is zero or negative — nothing to deduct
+  if (quantityMl <= 0) {
+    console.warn(`⚠️ Skipping raw material deduction for ${materialId}: quantity = ${quantityMl}`);
+    return null;
+  }
 
   const material = await RawMaterial.findById(materialId);
   if (!material) throw new Error(`Material ${materialId} not found`);
@@ -15,11 +20,9 @@ exports.deductRawMaterial = async (materialId, quantityMl, reason, reference) =>
     );
   }
 
-  // ✅ Deduct and persist
   material.currentStockMl -= quantityMl;
-  await material.save(); // 👈 This was missing – fixes the issue
+  await material.save();
 
-  // ✅ Log the deduction
   await InventoryLog.create({
     material: material._id,
     changeQuantity: -quantityMl,
@@ -34,7 +37,12 @@ exports.deductRawMaterial = async (materialId, quantityMl, reason, reference) =>
 
 exports.deductBottle = async (bottleId, quantity, reason, reference) => {
   if (!bottleId) throw new Error('Bottle ID is required');
-  if (quantity <= 0) throw new Error('Quantity must be positive');
+
+  // ✅ Skip if quantity is zero or negative
+  if (quantity <= 0) {
+    console.warn(`⚠️ Skipping bottle deduction for ${bottleId}: quantity = ${quantity}`);
+    return null;
+  }
 
   const bottle = await Bottle.findById(bottleId);
   if (!bottle) throw new Error(`Bottle ${bottleId} not found`);
@@ -45,11 +53,9 @@ exports.deductBottle = async (bottleId, quantity, reason, reference) => {
     );
   }
 
-  // ✅ Deduct and persist
   bottle.currentStock -= quantity;
-  await bottle.save(); // 👈 This was missing – fixes the issue
+  await bottle.save();
 
-  // ✅ Log the deduction
   await InventoryLog.create({
     bottle: bottle._id,
     changeQuantity: -quantity,

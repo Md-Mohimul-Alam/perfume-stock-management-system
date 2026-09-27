@@ -18,7 +18,7 @@ function getSizeBlend(product, sizeMl) {
 }
 
 // ============================================================
-// Validation: product must have a valid blend/baseOil for the size
+// Validation
 // ============================================================
 function assertProductHasBlend(product, sizeMl) {
   if (product.type === 'roll-on') {
@@ -70,17 +70,19 @@ exports.createProduction = async (req, res) => {
       const sizeVariant = product.sizes.find(s => s.sizeMl === item.sizeMl);
       if (!sizeVariant) throw new Error(`Size ${item.sizeMl} not found for product`);
 
-      // Validate blend
       assertProductHasBlend(product, item.sizeMl);
 
       // Deduct raw materials
       if (product.type === 'roll-on') {
         await deductRawMaterial(product.baseOil, sizeVariant.oilMlUsed * item.quantity, 'production', null);
       } else {
-        // ✅ Per-size blend
+        // ✅ Per-size blend — skip 0% components
         const comps = getSizeBlend(product, item.sizeMl);
         for (const comp of comps) {
-          const mlUsed = (sizeVariant.sizeMl * comp.percentage / 100) * item.quantity;
+          const pct = comp.percentage || 0;
+          if (pct <= 0) continue;
+          const mlUsed = (sizeVariant.sizeMl * pct / 100) * item.quantity;
+          if (mlUsed <= 0) continue;
           await deductRawMaterial(comp.material, mlUsed, 'production', null);
         }
       }
