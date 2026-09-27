@@ -21,6 +21,7 @@ import {
   UserPlus,
   Package,
   TrendingUp,
+  ShoppingBag,   // ✅ NEW
 } from 'lucide-react';
 
 const Sidebar = ({
@@ -182,6 +183,18 @@ const Sidebar = ({
           <span className={linkTextClass}>Sales by Product</span>
         </NavLink>
 
+        {/* ✅ NEW: Orders (right after sales sub-items) */}
+        <NavLink
+          to="/orders"
+          className={({ isActive }) =>
+            `${linkClass} ${isActive ? activeClass : ''} ${!collapsed ? 'pl-9' : 'pl-4'}`
+          }
+          onClick={handleLinkClick}
+        >
+          <ShoppingBag className={iconClass} />
+          <span className={linkTextClass}>Orders</span>
+        </NavLink>
+
         <NavLink
           to="/purchases"
           className={({ isActive }) =>
@@ -248,16 +261,6 @@ const Sidebar = ({
         >
           <Plus className={iconClass} />
           <span className={linkTextClass}>Record Wastage</span>
-        </NavLink>
-        <NavLink
-          to="/orders"
-          className={({ isActive }) =>
-            `${linkClass} ${isActive ? activeClass : ''}`
-          }
-          onClick={handleLinkClick}
-        >
-          <ClipboardList className={iconClass} />
-          <span className={linkTextClass}>Orders</span>
         </NavLink>
 
         {user?.role === 'admin' && (
