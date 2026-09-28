@@ -18,14 +18,11 @@ const allowedOrigins = [
   "https://luxeperfume.netlify.app",
 ];
 
-// Optional frontend URL from environment
 if (process.env.FRONTEND_URL) {
   const frontendUrl =
     process.env.FRONTEND_URL.replace(/\/$/, "");
 
-  if (
-    !allowedOrigins.includes(frontendUrl)
-  ) {
+  if (!allowedOrigins.includes(frontendUrl)) {
     allowedOrigins.push(frontendUrl);
   }
 }
@@ -33,14 +30,12 @@ if (process.env.FRONTEND_URL) {
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Postman, curl, server-to-server
+      // Allow Postman, curl, server-to-server requests
       if (!origin) {
         return callback(null, true);
       }
 
-      if (
-        allowedOrigins.includes(origin)
-      ) {
+      if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
 
@@ -128,22 +123,17 @@ app.use(
 app.get("/", (req, res) => {
   return res.status(200).json({
     success: true,
-    message:
-      "Luxe Perfume API is running",
+    message: "Luxe Perfume API is running",
   });
 });
 
-app.get(
-  "/health",
-  (req, res) => {
-    return res.status(200).json({
-      success: true,
-      status: "ok",
-      timestamp:
-        new Date().toISOString(),
-    });
-  }
-);
+app.get("/health", (req, res) => {
+  return res.status(200).json({
+    success: true,
+    status: "ok",
+    timestamp: new Date().toISOString(),
+  });
+});
 
 // ------------------- Routes -------------------
 

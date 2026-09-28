@@ -1,51 +1,25 @@
 const mongoose = require("mongoose");
 
-let cached =
-  global.mongooseConnection;
-
-if (!cached) {
-  cached =
-    global.mongooseConnection = {
-      conn: null,
-      promise: null,
-    };
-}
-
 const connectDB = async () => {
-  if (cached.conn) {
-    return cached.conn;
-  }
-
   if (!process.env.MONGO_URI) {
-    throw new Error(
-      "MONGO_URI is not defined"
-    );
-  }
-
-  if (!cached.promise) {
-    cached.promise =
-      mongoose.connect(
-        process.env.MONGO_URI,
-        {
-          bufferCommands: false,
-          serverSelectionTimeoutMS: 5000,
-          maxPoolSize: 10,
-        }
-      );
+    throw new Error("MONGO_URI is not defined");
   }
 
   try {
-    cached.conn =
-      await cached.promise;
-
-    console.log(
-      "MongoDB connected"
+    const connection = await mongoose.connect(
+      process.env.MONGO_URI,
+      {
+        serverSelectionTimeoutMS: 10000,
+        maxPoolSize: 10,
+      }
     );
 
-    return cached.conn;
-  } catch (error) {
-    cached.promise = null;
+    console.log(
+      `MongoDB Connected: ${connection.connection.host}`
+    );
 
+    return connection;
+  } catch (error) {
     console.error(
       "MongoDB connection failed:",
       error
