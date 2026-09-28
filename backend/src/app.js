@@ -1,101 +1,216 @@
-const express = require('express');
-const dotenv = require('dotenv');
-const cors = require('cors');
-const connectDB = require('./config/db');
-const { notFound, errorHandler } = require('./middlewares/errorMiddleware');
-const path = require('path');
-const fs = require('fs');
+const express = require("express");
+const cors = require("cors");
+const path = require("path");
+const fs = require("fs");
 
-// 👇 Add cron for scheduled rebuild (optional)
-const cron = require('node-cron');
-const { rebuildStock } = require('./controllers/rebuildController');
-
-dotenv.config();
-connectDB();
+const {
+  notFound,
+  errorHandler,
+} = require("./middlewares/errorMiddleware");
 
 const app = express();
 
 // ------------------- CORS -------------------
+
 const allowedOrigins = [
-  'http://localhost:5173',
-  'https://perfume-stock-management-system-545.vercel.app',
-  'https://luxeperfume.netlify.app'
+  "http://localhost:5173",
+  "https://perfume-stock-management-system-545.vercel.app",
+  "https://luxeperfume.netlify.app",
 ];
 
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+// Optional frontend URL from environment
+if (process.env.FRONTEND_URL) {
+  const frontendUrl =
+    process.env.FRONTEND_URL.replace(/\/$/, "");
+
+  if (
+    !allowedOrigins.includes(frontendUrl)
+  ) {
+    allowedOrigins.push(frontendUrl);
+  }
+}
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Postman, curl, server-to-server
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      if (
+        allowedOrigins.includes(origin)
+      ) {
+        return callback(null, true);
+      }
+
+      console.error(
+        `CORS blocked for origin: ${origin}`
+      );
+
+      return callback(
+        new Error(
+          `Not allowed by CORS: ${origin}`
+        )
+      );
+    },
+
+    credentials: true,
+
+    methods: [
+      "GET",
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE",
+      "OPTIONS",
+    ],
+
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+    ],
+  })
+);
+
+// ------------------- Parsers -------------------
 
 app.use(express.json());
 
-// ------------------- Upload directory and static serving -------------------
-const uploadDir = path.join(__dirname, 'uploads');
+app.use(
+  express.urlencoded({
+    extended: true,
+  })
+);
+
+// ------------------- Uploads -------------------
+
+const uploadDir = path.join(
+  __dirname,
+  "uploads"
+);
+
 if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-  console.log('✅ Uploads directory created');
+  fs.mkdirSync(uploadDir, {
+    recursive: true,
+  });
+
+  console.log(
+    "Uploads directory created"
+  );
 }
 
-app.use('/uploads', (req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-  res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none');
-  next();
-}, express.static(uploadDir));
+app.use(
+  "/uploads",
+  (req, res, next) => {
+    res.setHeader(
+      "Access-Control-Allow-Origin",
+      "*"
+    );
+
+    res.setHeader(
+      "Cross-Origin-Resource-Policy",
+      "cross-origin"
+    );
+
+    res.setHeader(
+      "Cross-Origin-Embedder-Policy",
+      "unsafe-none"
+    );
+
+    next();
+  },
+  express.static(uploadDir)
+);
+
+// ------------------- Health -------------------
+
+app.get("/", (req, res) => {
+  return res.status(200).json({
+    success: true,
+    message:
+      "Luxe Perfume API is running",
+  });
+});
+
+app.get(
+  "/health",
+  (req, res) => {
+    return res.status(200).json({
+      success: true,
+      status: "ok",
+      timestamp:
+        new Date().toISOString(),
+    });
+  }
+);
 
 // ------------------- Routes -------------------
-app.get('/', (req, res) => {
-  res.json({ message: 'Luxe Perfume API is running' });
-});
 
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
-});
+app.use(
+  "/api/auth",
+  require("./routes/authRoutes")
+);
 
-app.use('/api/auth', require('./routes/authRoutes'));
-app.use('/api/inventory', require('./routes/inventoryRoutes'));
-app.use('/api/purchases', require('./routes/purchaseRoutes'));
-app.use('/api/products', require('./routes/productRoutes'));
-app.use('/api/production', require('./routes/productionRoutes'));
-app.use('/api/sales', require('./routes/saleRoutes'));
-app.use('/api/expenses', require('./routes/expenseRoutes'));
-app.use('/api/investors', require('./routes/investorRoutes'));
-app.use('/api/reports', require('./routes/reportRoutes'));
-app.use('/api/upload', require('./routes/uploadRoutes'));
-app.use('/api/orders', require('./routes/orderRoutes'));
+app.use(
+  "/api/inventory",
+  require("./routes/inventoryRoutes")
+);
 
-// ========== 👇 NEW: Admin routes ==========
-app.use('/api/admin', require('./routes/adminRoutes'));
+app.use(
+  "/api/purchases",
+  require("./routes/purchaseRoutes")
+);
 
-// ------------------- Error handling -------------------
+app.use(
+  "/api/products",
+  require("./routes/productRoutes")
+);
+
+app.use(
+  "/api/production",
+  require("./routes/productionRoutes")
+);
+
+app.use(
+  "/api/sales",
+  require("./routes/saleRoutes")
+);
+
+app.use(
+  "/api/expenses",
+  require("./routes/expenseRoutes")
+);
+
+app.use(
+  "/api/investors",
+  require("./routes/investorRoutes")
+);
+
+app.use(
+  "/api/reports",
+  require("./routes/reportRoutes")
+);
+
+app.use(
+  "/api/upload",
+  require("./routes/uploadRoutes")
+);
+
+app.use(
+  "/api/orders",
+  require("./routes/orderRoutes")
+);
+
+app.use(
+  "/api/admin",
+  require("./routes/adminRoutes")
+);
+
+// ------------------- Error Handling -------------------
+
 app.use(notFound);
-app.use(errorHandler);
 
-// ========== 👇 OPTIONAL: Scheduled stock rebuild (runs daily at 2 AM) ==========
-// Uncomment the lines below to enable automatic daily rebuilds
-/*
-cron.schedule('0 2 * * *', async () => {
-  console.log('⏰ Running scheduled stock rebuild...');
-  try {
-    const req = { body: {}, user: { role: 'admin' } };
-    const res = {
-      json: (data) => console.log('✅ Rebuild complete:', data),
-      status: () => ({ json: () => {} }),
-    };
-    await rebuildStock(req, res);
-  } catch (error) {
-    console.error('❌ Scheduled rebuild failed:', error);
-  }
-});
-*/
+app.use(errorHandler);
 
 module.exports = app;
