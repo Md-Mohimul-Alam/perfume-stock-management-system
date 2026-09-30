@@ -33,14 +33,25 @@ const parseSize = (sizeStr) => {
 };
 
 // ---------- Helper to check if a product is missing its blend ----------
-// ✅ NEW: used to render warning badge in the table
+// ✅ FIXED: blends are stored per-size now (product.sizes[].blendComponents)
 const isBlendMissing = (product) => {
+  // Roll-on needs a base oil
   if (product.type === 'roll-on') {
     return !product.baseOil;
   }
+
+  // Spray — blends are stored PER SIZE
   if (product.type === 'spray') {
-    return !product.blendComponents || product.blendComponents.length === 0;
+    if (!product.sizes || product.sizes.length === 0) return true;
+
+    const sizesWithBlend = product.sizes.filter(
+      (s) => Array.isArray(s.blendComponents) && s.blendComponents.length > 0
+    );
+
+    // Warn only if NO size has a blend at all
+    return sizesWithBlend.length === 0;
   }
+
   return false;
 };
 
@@ -251,21 +262,28 @@ const ProductList = () => {
     e.preventDefault();
     if (!productToEdit) return;
 
-    // Validation
+    // Validation — only warn when there's truly no blend anywhere
     const type = productToEdit.type;
     if (type === 'roll-on' && !editForm.baseOil) {
       toast.error('Please select a base oil for roll-on product');
       return;
     }
+    // For spray, we don't block the submit if per-size blends already exist —
+    // the backend preserves them. Only block if both product-level AND all per-size
+    // blends are empty.
     if (type === 'spray') {
-      const invalid = editForm.blendComponents.some(c => !c.material || c.percentage <= 0 || c.percentage > 100);
-      if (invalid || editForm.blendComponents.length === 0) {
-        toast.error('Please add at least one valid blend component (material + percentage)');
-        return;
-      }
-      const total = editForm.blendComponents.reduce((sum, c) => sum + (c.percentage || 0), 0);
-      if (total !== 100) {
-        toast.error(`Total blend percentage must equal 100%. Currently: ${total}%`);
+      const hasLegacyBlend = editForm.blendComponents.length > 0;
+      const hasAnySizeBlend = (productToEdit.sizes || []).some(
+        (s) => Array.isArray(s.blendComponents) && s.blendComponents.length > 0
+      );
+      const hasIncomingBlend = editForm.blendComponents.some(
+        (c) => c.material && c.percentage > 0
+      );
+
+      if (!hasAnySizeBlend && !hasIncomingBlend) {
+        toast.error(
+          'This spray has no blend at all. Please add blend components or run Rebuild Stock.'
+        );
         return;
       }
     }
@@ -294,7 +312,8 @@ const ProductList = () => {
           makingCost: 0,
         })),
         baseOil: type === 'roll-on' ? editForm.baseOil : null,
-        blendComponents: type === 'spray' ? editForm.blendComponents : [],
+        // Only send legacy blendComponents if user actually edited them
+        ...(editForm.blendComponents.length > 0 ? { blendComponents: editForm.blendComponents } : {}),
       };
 
       await API.put(`/products/${productToEdit._id}`, payload);
@@ -590,7 +609,6 @@ const ProductList = () => {
                   const blendMissing = isBlendMissing(p);
                   return (
                     <tr key={p._id} className="hover:bg-gray-50 transition">
-                      {/* ✅ NEW: warning badge next to product name if blend is missing */}
                       <td className="px-4 sm:px-6 py-3 sm:py-4 font-medium text-gray-800 text-sm">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span>{p.name}</span>
@@ -600,7 +618,7 @@ const ProductList = () => {
                               title={
                                 p.type === 'roll-on'
                                   ? 'No base oil configured — sales will fail'
-                                  : 'No blend components — sales will fail'
+                                  : 'No blend components on any size — sales will fail'
                               }
                             >
                               ⚠ {p.type === 'roll-on' ? 'NO OIL' : 'NO BLEND'}
@@ -743,7 +761,6 @@ const ProductList = () => {
               </div>
             ) : (
               <form onSubmit={handleEditSubmit} className="space-y-4">
-                {/* Product Details */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Product Name *</label>
@@ -881,60 +898,26 @@ const ProductList = () => {
                     </div>
                   ) : (
                     <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <label className="block text-sm font-medium text-gray-700">Blend Components</label>
-                        <button
-                          type="button"
-                          onClick={addBlendComponentEdit}
-                          className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1"
-                        >
-                          <Plus size={16} /> Add Component
-                        </button>
+                      {/* ✅ NEW: show per-size blend summary for sprays */}
+                      <div className="mb-3 p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-xs text-emerald-800">
+                        <p className="font-semibold mb-1">✅ Per-size blends are active for this spray</p>
+                        {(productToEdit.sizes || []).map((s) => {
+                          const comps = s.blendComponents || [];
+                          const total = comps.reduce((sum, c) => sum + (c.percentage || 0), 0);
+                          return (
+                            <div key={s._id || s.sizeMl} className="flex justify-between py-0.5">
+                              <span>{s.sizeMl}ml:</span>
+                              <span>
+                                {comps.length} component{comps.length !== 1 && 's'}
+                                {comps.length > 0 && ` · ${total.toFixed(1)}%`}
+                              </span>
+                            </div>
+                          );
+                        })}
+                        <p className="text-[10px] mt-1 opacity-75">
+                          Blends are managed automatically by Rebuild Stock.
+                        </p>
                       </div>
-                      {editForm.blendComponents.length === 0 && (
-                        <p className="text-sm text-gray-400 italic">No blend components added.</p>
-                      )}
-                      {editForm.blendComponents.map((comp, idx) => (
-                        <div key={idx} className="flex flex-wrap items-center gap-2 mb-2">
-                          <select
-                            value={comp.material}
-                            onChange={(e) => updateBlendComponentEdit(idx, 'material', e.target.value)}
-                            className="flex-1 min-w-[160px] px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none bg-white text-sm"
-                          >
-                            <option value="">Select material</option>
-                            {materials.map(m => (
-                              <option key={m._id} value={m._id}>
-                                {m.name} ({m.sku}) – {m.type}
-                              </option>
-                            ))}
-                          </select>
-                          <div className="flex items-center gap-1">
-                            <input
-                              type="number"
-                              placeholder="%"
-                              value={comp.percentage || ''}
-                              onChange={(e) => updateBlendComponentEdit(idx, 'percentage', e.target.value)}
-                              className="w-20 px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-sm"
-                              min="0"
-                              max="100"
-                              step="0.1"
-                            />
-                            <span className="text-sm text-gray-500">%</span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => removeBlendComponentEdit(idx)}
-                            className="text-red-600 hover:text-red-800 p-1"
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                        </div>
-                      ))}
-                      <p className="text-xs text-gray-400 mt-1">
-                        Percentages must sum to 100%. Total: <span className="font-semibold">
-                          {editForm.blendComponents.reduce((sum, c) => sum + (c.percentage || 0), 0)}%
-                        </span>
-                      </p>
                     </div>
                   )}
                 </div>
@@ -1009,7 +992,6 @@ const ProductList = () => {
                   </div>
                 </div>
 
-                {/* Actions */}
                 <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
                   <button
                     type="submit"
