@@ -1,9 +1,9 @@
-const multer = require('multer');
-const path = require('path');
-const { v4: uuidv4 } = require('uuid');
+const multer = require("multer");
+const path = require("path");
+const crypto = require("crypto");
 
 // Use absolute path for uploads directory
-const uploadDir = path.join(__dirname, '../uploads');
+const uploadDir = path.join(__dirname, "../uploads");
 
 // Configure storage
 const storage = multer.diskStorage({
@@ -12,17 +12,17 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
-    const name = uuidv4() + ext;
+    const name = crypto.randomUUID() + ext;
     cb(null, name);
   },
 });
 
 // File filter – only images
 const fileFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith('image/')) {
+  if (file.mimetype.startsWith("image/")) {
     cb(null, true);
   } else {
-    cb(new Error('Only image files are allowed'), false);
+    cb(new Error("Only image files are allowed"), false);
   }
 };
 
