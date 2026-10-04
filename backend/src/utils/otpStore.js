@@ -1,30 +1,51 @@
-const Otp = require('../models/Otp');
+const Otp = require("../models/Otp");
 
-exports.saveOtp = async (email, otp, expiresInMs = 5 * 60 * 1000) => {
-  // Delete any existing OTP for this email
-  await Otp.deleteMany({ email });
-  
-  // Save new OTP
+const DEFAULT_EXPIRY_MS = 5 * 60 * 1000;
+
+// `key` may be an email, `login:${email}`, or `registration:${email}`.
+exports.saveOtp = async (
+  key,
+  otp,
+  expiresInMs = DEFAULT_EXPIRY_MS
+) => {
+  if (!key || !otp) {
+    throw new Error("OTP key and code are required");
+  }
+
+  await Otp.deleteMany({ email: key });
+
   await Otp.create({
-    email,
-    otp,
+    email: key,
+    otp: String(otp),
     expiresAt: new Date(Date.now() + expiresInMs),
   });
 };
 
-exports.getOtp = async (email) => {
-  const record = await Otp.findOne({ email });
-  if (!record) return null;
-  
-  // Safety check: if expired (though MongoDB will auto‑delete)
-  if (Date.now() > record.expiresAt.getTime()) {
-    await Otp.deleteOne({ email });
-    return null;
+exports.getOtp = async (key) => {
+  if (!key) return null;
+
+  const now = new Date();
+
+  const record = await Otp.findOne({
+    email: key,
+    expiresAt: { $gt: now },
+  });
+
+  if (record) {
+    return record.otp;
   }
-  
-  return record.otp;
+
+  // MongoDB's TTL cleanup can take time, so delete expired entries too.
+  await Otp.deleteMany({
+    email: key,
+    expiresAt: { $lte: now },
+  });
+
+  return null;
 };
 
-exports.deleteOtp = async (email) => {
-  await Otp.deleteMany({ email });
+exports.deleteOtp = async (key) => {
+  if (!key) return;
+
+  await Otp.deleteMany({ email: key });
 };
