@@ -197,23 +197,7 @@ app.use(
   require("./routes/adminRoutes")
 );
 
-// TEMPORARY — remove before going to production
-app.get("/api/debug/otp/:key", async (req, res) => {
-  try {
-    const Otp = require("./models/Otp");
-    const record = await Otp.findOne({ email: req.params.key });
-    if (!record) {
-      return res.status(404).json({ message: "No OTP found" });
-    }
-    res.json({
-      otp: record.otp,
-      expiresAt: record.expiresAt,
-      expired: new Date(record.expiresAt) < new Date(),
-    });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
+
 // ------------------- Error Handling -------------------
 
 app.use(notFound);
