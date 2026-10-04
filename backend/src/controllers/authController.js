@@ -225,23 +225,30 @@ exports.login = async (req, res) => {
     const otpKey = `login:${email}`;
     const otp = generateOtp();
 
+    // Save OTP to DB first — this always happens now
     await saveOtp(otpKey, otp);
 
+    // Try to email it, but don't fail the whole login if email is broken.
+    // This is a temporary workaround while SMTP is blocked on Vercel.
     try {
       await sendOtpEmail(email, otp);
+      console.log("OTP email sent to", email);
     } catch (emailError) {
-      await deleteOtp(otpKey);
-      throw emailError;
+      console.error("OTP email failed (login will continue):", {
+        message: emailError.message,
+        code: emailError.code,
+      });
+      // NOTE: do NOT deleteOtp here — we want the OTP to stay in the DB
+      // so it can be read manually.
     }
 
     return res.json({
-      message: "OTP sent to your email",
+      message: "OTP generated. Check the database if email did not arrive.",
     });
   } catch (error) {
     console.error("Login OTP error:", {
       message: error.message,
       code: error.code,
-      responseCode: error.responseCode,
     });
 
     return res.status(500).json({
@@ -249,7 +256,6 @@ exports.login = async (req, res) => {
     });
   }
 };
-
 // --------------------------------------------------
 // LOGIN STEP 2: VERIFY OTP AND ISSUE JWT
 // --------------------------------------------------
