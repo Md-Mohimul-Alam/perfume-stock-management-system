@@ -1,18 +1,50 @@
-// api/index.js
-require("dotenv").config();
+const mongoose = require("mongoose");
 
-const app = require("../src/app");
-const connectDB = require("../src/config/db");
+let cached = global._mongoose;
 
-// Critical: await DB connection before every request
-app.use(async (req, res, next) => {
-  try {
-    await connectDB();
-    next();
-  } catch (err) {
-    console.error("DB connect failed:", err.message);
-    return res.status(503).json({ message: "Database unavailable" });
+if (!cached) {
+  cached = global._mongoose = {
+    conn: null,
+    promise: null,
+  };
+}
+
+const connectDB = async () => {
+  if (cached.conn) {
+    return cached.conn;
   }
-});
 
-module.exports = app;
+  const uri = process.env.MONGO_URI;
+
+  if (!uri) {
+    throw new Error("MONGO_URI is not defined");
+  }
+
+  if (!cached.promise) {
+    cached.promise = mongoose
+      .connect(uri, {
+        serverSelectionTimeoutMS: 8000,
+        maxPoolSize: 5,
+        bufferCommands: false,
+      })
+      .then((connection) => {
+        console.log(
+          `MongoDB Connected: ${connection.connection.host}`
+        );
+        return connection;
+      })
+      .catch((error) => {
+        console.error(
+          "MongoDB connection failed:",
+          error.message
+        );
+        cached.promise = null;
+        throw error;
+      });
+  }
+
+  cached.conn = await cached.promise;
+  return cached.conn;
+};
+
+module.exports = connectDB;
