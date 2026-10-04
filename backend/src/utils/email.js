@@ -28,9 +28,24 @@ const createTransporter = () => {
       user: process.env.SMTP_USER.trim(),
       pass: process.env.SMTP_PASS.trim(),
     },
-    connectionTimeout: 10_000,
-    greetingTimeout: 10_000,
-    socketTimeout: 15_000,
+
+    // --- Render / cloud-host reliability fixes ---
+    // Force IPv4: Node 17+ prefers IPv6, but Render often drops IPv6
+    // silently, causing ETIMEDOUT. This is the #1 cause of this error.
+    family: 4,
+
+    // No pooling — OTP sends are one-shot; pooling adds no benefit
+    // and can leave stale sockets around after a timeout.
+    pool: false,
+
+    // Slightly more generous timeouts for cold Render instances.
+    connectionTimeout: 20_000,
+    greetingTimeout: 20_000,
+    socketTimeout: 30_000,
+
+    // Keep TLS verification ON. Never set rejectUnauthorized: false —
+    // it doesn't fix timeouts and it leaks credentials.
+    // tls: { rejectUnauthorized: true },
   });
 };
 
@@ -68,10 +83,16 @@ exports.sendOtpEmail = async (to, otp) => {
     });
   } catch (error) {
     // Never log the OTP or SMTP password.
+    // Log the full diagnostic surface so we can see WHY it failed.
     console.error("Nodemailer OTP email error:", {
       message: error.message,
       code: error.code,
+      command: error.command,
       responseCode: error.responseCode,
+      errno: error.errno,
+      syscall: error.syscall,
+      address: error.address,
+      port: error.port,
     });
 
     throw error;
