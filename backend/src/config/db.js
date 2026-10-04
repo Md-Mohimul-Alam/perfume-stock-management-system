@@ -26,8 +26,8 @@ const connectDB = async () => {
         return m;
       })
       .catch((err) => {
-        console.error("MongoDB connection failed:", err);
-        cached.promise = null; // allow retry on next request
+        console.error("MongoDB connection failed:", err.message);
+        cached.promise = null;
         throw err;
       });
   }
