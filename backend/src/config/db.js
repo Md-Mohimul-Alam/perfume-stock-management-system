@@ -4,15 +4,21 @@ require("dotenv").config();
 const app = require("../src/app");
 const connectDB = require("../src/config/db");
 
-// Critical: await DB connection before every request
-app.use(async (req, res, next) => {
+module.exports = async (req, res) => {
+  // Let Express handle CORS preflight without waiting for MongoDB.
+  if (req.method === "OPTIONS") {
+    return app(req, res);
+  }
+
   try {
     await connectDB();
-    next();
-  } catch (err) {
-    console.error("DB connect failed:", err.message);
-    return res.status(503).json({ message: "Database unavailable" });
-  }
-});
+    return app(req, res);
+  } catch (error) {
+    console.error("DB connect failed:", error.message);
 
-module.exports = app;
+    return res.status(503).json({
+      success: false,
+      message: "Database unavailable",
+    });
+  }
+};
