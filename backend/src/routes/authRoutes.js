@@ -1,16 +1,20 @@
-const express = require('express');
-const router = express.Router();
+const express = require("express");
+
 const {
   register,
-  verifyRegistrationOtp,  // 👈 new
+  verifyRegistrationOtp,
   login,
   verifyOtp,
-} = require('../controllers/authController');
+} = require("../controllers/authController");
 
-// Public routes
-router.post('/register', register);
-router.post('/verify-registration', verifyRegistrationOtp); // 👈 new OTP verification
-router.post('/login', login);
-router.post('/verify-otp', verifyOtp);
+const router = express.Router();
+
+// Public registration routes
+router.post("/register", register);
+router.post("/verify-registration", verifyRegistrationOtp);
+
+// Two-step login routes
+router.post("/login", login);
+router.post("/verify-otp", verifyOtp);
 
 module.exports = router;

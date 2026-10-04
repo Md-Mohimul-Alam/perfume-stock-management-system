@@ -1,58 +1,39 @@
-const { Resend } = require('resend');
+const nodemailer = require("nodemailer");
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: Number(process.env.SMTP_PORT || 587),
+  secure: process.env.SMTP_SECURE === "true",
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
 
-// Sender email – default Resend sender (works without domain verification)
-const FROM_EMAIL = 'Luxe Perfume <onboarding@resend.dev>';
-
-// =============================================
-// OTP email
-// =============================================
 exports.sendOtpEmail = async (to, otp) => {
-  console.log(`📧 Sending OTP to ${to} (OTP: ${otp})`);
   try {
-    const result = await resend.emails.send({
-      from: FROM_EMAIL,
+    return await transporter.sendMail({
+      from: process.env.EMAIL_FROM,
       to,
-      subject: 'Your OTP for Luxe Perfume',
+      subject: "Your FAME'S Organization verification code",
+      text: `Your verification code is ${otp}. It is valid for 5 minutes.`,
       html: `
-        <div style="font-family: sans-serif; max-width: 500px;">
-          <h2 style="color: #b8860b;">OTP Code</h2>
-          <h1 style="color: #b8860b; font-size: 36px;">${otp}</h1>
-          <p>This OTP is valid for <strong>5 minutes</strong>.</p>
-          <p>If you didn't request this, please ignore.</p>
+        <div style="font-family:Arial,sans-serif;max-width:500px;margin:auto">
+          <h2 style="color:#047857">Email verification</h2>
+          <p>Your verification code is:</p>
+          <h1 style="color:#047857;font-size:36px;letter-spacing:8px">${otp}</h1>
+          <p>This code is valid for <strong>5 minutes</strong>.</p>
+          <p>If you didn't request this code, please ignore this email.</p>
         </div>
       `,
     });
-    console.log('✅ OTP sent via Resend:', result);
   } catch (error) {
-    console.error('❌ Resend error:', error);
-    throw new Error('Failed to send OTP email');
-  }
-};
-
-// =============================================
-// Verification email (optional)
-// =============================================
-exports.sendVerificationEmail = async (to, token) => {
-  const link = `${process.env.BASE_URL}/api/auth/verify/${token}`;
-  console.log(`📧 Sending verification email to ${to}`);
-  try {
-    await resend.emails.send({
-      from: FROM_EMAIL,
-      to,
-      subject: 'Verify Your Luxe Perfume Account',
-      html: `
-        <div style="font-family: sans-serif; max-width: 500px;">
-          <h2 style="color: #b8860b;">Welcome</h2>
-          <a href="${link}" style="background: #b8860b; color: white; padding: 12px 24px;">Verify Email</a>
-          <p>Expires in 1 hour.</p>
-        </div>
-      `,
+    // Don't log the OTP or SMTP password.
+    console.error("Nodemailer OTP email error:", {
+      message: error.message,
+      code: error.code,
+      responseCode: error.responseCode,
     });
-    console.log('✅ Verification email sent');
-  } catch (error) {
-    console.error('❌ Resend error:', error);
-    throw new Error('Failed to send verification email');
+    throw error;
   }
 };
