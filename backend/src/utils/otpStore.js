@@ -12,13 +12,29 @@ exports.saveOtp = async (
     throw new Error("OTP key and code are required");
   }
 
-  await Otp.deleteMany({ email: key });
+  console.log(`[otp] saveOtp called for key=${key}`);
 
-  await Otp.create({
-    email: key,
-    otp: String(otp),
-    expiresAt: new Date(Date.now() + expiresInMs),
-  });
+  try {
+    await Otp.deleteMany({ email: key });
+
+    const record = await Otp.create({
+      email: key,
+      otp: String(otp),
+      expiresAt: new Date(Date.now() + expiresInMs),
+    });
+
+    console.log(
+      `[otp] saved OTP for ${key}, expires at ${record.expiresAt.toISOString()}`
+    );
+
+    return record;
+  } catch (err) {
+    console.error(`[otp] saveOtp FAILED for ${key}:`, {
+      name: err.name,
+      message: err.message,
+    });
+    throw err;
+  }
 };
 
 exports.getOtp = async (key) => {
@@ -26,26 +42,47 @@ exports.getOtp = async (key) => {
 
   const now = new Date();
 
-  const record = await Otp.findOne({
-    email: key,
-    expiresAt: { $gt: now },
-  });
+  try {
+    const record = await Otp.findOne({
+      email: key,
+      expiresAt: { $gt: now },
+    });
 
-  if (record) {
-    return record.otp;
+    if (record) {
+      console.log(`[otp] getOtp hit for ${key}`);
+      return record.otp;
+    }
+
+    // MongoDB's TTL cleanup can take time, so delete expired entries too.
+    await Otp.deleteMany({
+      email: key,
+      expiresAt: { $lte: now },
+    });
+
+    console.log(`[otp] getOtp miss for ${key}`);
+    return null;
+  } catch (err) {
+    console.error(`[otp] getOtp FAILED for ${key}:`, {
+      name: err.name,
+      message: err.message,
+    });
+    throw err;
   }
-
-  // MongoDB's TTL cleanup can take time, so delete expired entries too.
-  await Otp.deleteMany({
-    email: key,
-    expiresAt: { $lte: now },
-  });
-
-  return null;
 };
 
 exports.deleteOtp = async (key) => {
   if (!key) return;
 
-  await Otp.deleteMany({ email: key });
+  try {
+    const result = await Otp.deleteMany({ email: key });
+    console.log(
+      `[otp] deleteOtp for ${key}, deleted ${result.deletedCount}`
+    );
+  } catch (err) {
+    console.error(`[otp] deleteOtp FAILED for ${key}:`, {
+      name: err.name,
+      message: err.message,
+    });
+    throw err;
+  }
 };
