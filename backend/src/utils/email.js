@@ -1,19 +1,7 @@
 const nodemailer = require("nodemailer");
-const {
-  SESv2Client,
-  SendEmailCommand,
-} = require("@aws-sdk/client-sesv2");
-
-let transporter;
 
 const createTransporter = () => {
-  const required = [
-    "AWS_REGION",
-    "AWS_ACCESS_KEY_ID",
-    "AWS_SECRET_ACCESS_KEY",
-    "EMAIL_FROM",
-  ];
-
+  const required = ["SMTP_HOST", "SMTP_USER", "SMTP_PASS", "EMAIL_FROM"];
   const missing = required.filter((name) => !process.env[name]?.trim());
 
   if (missing.length > 0) {
@@ -22,19 +10,42 @@ const createTransporter = () => {
     );
   }
 
-  const sesClient = new SESv2Client({
-    region: process.env.AWS_REGION.trim(),
-    credentials: {
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID.trim(),
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY.trim(),
-    },
-  });
+  const port = Number(process.env.SMTP_PORT || 587);
+
+  if (!Number.isInteger(port) || port < 1 || port > 65535) {
+    throw new Error("SMTP_PORT must be a valid port number");
+  }
+
+  const secure = process.env.SMTP_SECURE
+    ? process.env.SMTP_SECURE.toLowerCase() === "true"
+    : port === 465;
 
   return nodemailer.createTransport({
-    SES: {
-      sesClient,
-      SendEmailCommand,
+    host: process.env.SMTP_HOST.trim(),
+    port,
+    secure,
+    auth: {
+      user: process.env.SMTP_USER.trim(),
+      pass: process.env.SMTP_PASS.trim(),
     },
+
+    // --- Render / cloud-host reliability fixes ---
+    // Force IPv4: Node 17+ prefers IPv6, but Render often drops IPv6
+    // silently, causing ETIMEDOUT. This is the #1 cause of this error.
+    family: 4,
+
+    // No pooling — OTP sends are one-shot; pooling adds no benefit
+    // and can leave stale sockets around after a timeout.
+    pool: false,
+
+    // Slightly more generous timeouts for cold Render instances.
+    connectionTimeout: 20_000,
+    greetingTimeout: 20_000,
+    socketTimeout: 30_000,
+
+    // Keep TLS verification ON. Never set rejectUnauthorized: false —
+    // it doesn't fix timeouts and it leaks credentials.
+    // tls: { rejectUnauthorized: true },
   });
 };
 
@@ -51,9 +62,7 @@ exports.sendOtpEmail = async (to, otp) => {
   }
 
   try {
-    if (!transporter) {
-      transporter = createTransporter();
-    }
+    const transporter = createTransporter();
 
     return await transporter.sendMail({
       from: process.env.EMAIL_FROM.trim(),
@@ -73,10 +82,17 @@ exports.sendOtpEmail = async (to, otp) => {
       `,
     });
   } catch (error) {
-    console.error("Nodemailer SES email error:", {
+    // Never log the OTP or SMTP password.
+    // Log the full diagnostic surface so we can see WHY it failed.
+    console.error("Nodemailer OTP email error:", {
       message: error.message,
       code: error.code,
-      name: error.name,
+      command: error.command,
+      responseCode: error.responseCode,
+      errno: error.errno,
+      syscall: error.syscall,
+      address: error.address,
+      port: error.port,
     });
 
     throw error;
