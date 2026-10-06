@@ -2,11 +2,11 @@ const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 
 const User = require("../models/User");
+const Otp = require("../models/Otp");
 const {
-  queueOtpEmail,
-  queuePasswordResetEmail,
-} = require("../utils/emailQueue");
-const { saveOtp, getOtp, deleteOtp } = require("../utils/otpStore");
+  sendOtpEmail,
+  sendPasswordResetEmail,
+} = require("../utils/email");
 
 // --------------------------------------------------
 // HELPERS
@@ -27,21 +27,34 @@ const generate6DigitOtp = () =>
 const normalizeEmail = (email) =>
   String(email || "").trim().toLowerCase();
 
-// Fire-and-forget queue call — never blocks the HTTP response
-const enqueueOtp = (email, otp, context = "otp") => {
-  queueOtpEmail(email, otp).catch((err) => {
-    console.error(`[${context}] OTP queue failed for ${email}:`, err.message);
+// --------------------------------------------------
+// OTP storage (inline — no separate otpStore needed)
+// --------------------------------------------------
+const OTP_EXPIRY_MS = 5 * 60 * 1000;
+
+const saveOtp = async (key, otp) => {
+  await Otp.deleteMany({ email: key });
+  return Otp.create({
+    email: key,
+    otp: String(otp),
+    expiresAt: new Date(Date.now() + OTP_EXPIRY_MS),
   });
 };
 
-const enqueueReset = (email, resetUrl) => {
-  queuePasswordResetEmail(email, resetUrl).catch((err) => {
-    console.error(`[forgotPassword] queue failed for ${email}:`, err.message);
+const getOtp = async (key) => {
+  const record = await Otp.findOne({
+    email: key,
+    expiresAt: { $gt: new Date() },
   });
+  return record ? record.otp : null;
+};
+
+const deleteOtp = async (key) => {
+  await Otp.deleteMany({ email: key });
 };
 
 // --------------------------------------------------
-// REGISTER — creates user, queues registration OTP
+// REGISTER — creates user, sends registration OTP
 // --------------------------------------------------
 exports.register = async (req, res) => {
   try {
@@ -64,7 +77,6 @@ exports.register = async (req, res) => {
       return res.status(400).json({ message: "Email already registered" });
     }
 
-    // Admin limit: only 2 admins allowed
     if (role === "admin") {
       const adminCount = await User.countDocuments({ role: "admin" });
       if (adminCount >= 2) {
@@ -81,10 +93,17 @@ exports.register = async (req, res) => {
       role,
     });
 
-    // Persist OTP first, then queue the email
     const otp = generate6DigitOtp();
     await saveOtp(`registration:${normalizedEmail}`, otp);
-    enqueueOtp(normalizedEmail, otp, "register");
+
+    // ✅ AWAIT the email — critical on Vercel
+    try {
+      await sendOtpEmail(normalizedEmail, otp);
+      console.log("✅ Registration OTP email sent to", normalizedEmail);
+    } catch (emailError) {
+      console.error("❌ Registration OTP email failed:", emailError.message);
+      // Continue — OTP is saved; user can hit resend
+    }
 
     return res.status(201).json({
       message:
@@ -134,7 +153,7 @@ exports.verifyRegistrationOtp = async (req, res) => {
 };
 
 // --------------------------------------------------
-// LOGIN — Step 1: check credentials, queue login OTP
+// LOGIN — Step 1: send login OTP
 // --------------------------------------------------
 exports.login = async (req, res) => {
   try {
@@ -153,11 +172,19 @@ exports.login = async (req, res) => {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    // User exists but hasn't verified email → resend registration OTP
     if (!user.isVerified) {
       const regOtp = generate6DigitOtp();
       await saveOtp(`registration:${normalizedEmail}`, regOtp);
-      enqueueOtp(normalizedEmail, regOtp, "login-verify-reminder");
+
+      try {
+        await sendOtpEmail(normalizedEmail, regOtp);
+        console.log("✅ Verification reminder OTP sent");
+      } catch (emailError) {
+        console.error(
+          "❌ Verification reminder OTP failed:",
+          emailError.message
+        );
+      }
 
       return res.status(403).json({
         message:
@@ -167,10 +194,19 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Normal login → send login OTP
     const otp = generate6DigitOtp();
     await saveOtp(`login:${normalizedEmail}`, otp);
-    enqueueOtp(normalizedEmail, otp, "login");
+
+    // ✅ AWAIT — this is the critical change from the previous version
+    try {
+      await sendOtpEmail(normalizedEmail, otp);
+      console.log("✅ Login OTP email sent to", normalizedEmail);
+    } catch (emailError) {
+      console.error("❌ Login OTP email failed:", emailError.message);
+      return res.status(500).json({
+        message: "Could not send OTP email. Please try again.",
+      });
+    }
 
     return res.json({
       message: "OTP sent to your email. Verify to complete login.",
@@ -223,7 +259,7 @@ exports.verifyOtp = async (req, res) => {
 };
 
 // --------------------------------------------------
-// RESEND OTP — for registration or login
+// RESEND OTP
 // --------------------------------------------------
 exports.resendOtp = async (req, res) => {
   try {
@@ -261,9 +297,17 @@ exports.resendOtp = async (req, res) => {
     }
 
     const otp = generate6DigitOtp();
-    const key = `${purpose}:${normalizedEmail}`;
-    await saveOtp(key, otp);
-    enqueueOtp(normalizedEmail, otp, `resend-${purpose}`);
+    await saveOtp(`${purpose}:${normalizedEmail}`, otp);
+
+    try {
+      await sendOtpEmail(normalizedEmail, otp);
+      console.log("✅ Resend OTP email sent to", normalizedEmail);
+    } catch (emailError) {
+      console.error("❌ Resend OTP failed:", emailError.message);
+      return res.status(500).json({
+        message: "Could not send OTP email. Please try again.",
+      });
+    }
 
     return res.json({
       message: "A new OTP has been sent to your email.",
@@ -275,7 +319,7 @@ exports.resendOtp = async (req, res) => {
 };
 
 // --------------------------------------------------
-// FORGOT PASSWORD — queues a reset link email
+// FORGOT PASSWORD
 // --------------------------------------------------
 exports.forgotPassword = async (req, res) => {
   try {
@@ -287,7 +331,6 @@ exports.forgotPassword = async (req, res) => {
 
     const user = await User.findOne({ email: normalizedEmail });
 
-    // Generic response — never reveal whether email is registered
     const genericMessage =
       "If an account exists for that email, a password reset link will be sent.";
 
@@ -318,8 +361,20 @@ exports.forgotPassword = async (req, res) => {
       `${frontendUrl.replace(/\/$/, "")}` +
       `/reset-password?token=${resetToken}`;
 
-    // Queue the email — do not block the response on delivery
-    enqueueReset(user.email, resetUrl);
+    try {
+      await sendPasswordResetEmail(user.email, resetUrl);
+      console.log("✅ Password reset email sent to", user.email);
+    } catch (emailError) {
+      console.error("❌ Reset email failed:", emailError.message);
+
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpires = undefined;
+      await user.save({ validateBeforeSave: false });
+
+      return res
+        .status(500)
+        .json({ message: "Unable to send the reset email right now." });
+    }
 
     return res.json({ message: genericMessage });
   } catch (error) {
@@ -329,7 +384,7 @@ exports.forgotPassword = async (req, res) => {
 };
 
 // --------------------------------------------------
-// RESET PASSWORD — consume token, set new password
+// RESET PASSWORD
 // --------------------------------------------------
 exports.resetPassword = async (req, res) => {
   try {
@@ -362,7 +417,7 @@ exports.resetPassword = async (req, res) => {
       });
     }
 
-    user.password = password; // pre-save hook hashes it
+    user.password = password;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
 

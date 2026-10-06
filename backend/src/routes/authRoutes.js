@@ -1,5 +1,4 @@
 const express = require("express");
-
 const {
   register,
   verifyRegistrationOtp,
@@ -12,26 +11,18 @@ const {
 
 const router = express.Router();
 
-// ---------------------------------------------
-// Registration (public)
-// ---------------------------------------------
+// Registration
 router.post("/register", register);
 router.post("/verify-registration", verifyRegistrationOtp);
 
-// ---------------------------------------------
 // Two-step login
-// ---------------------------------------------
 router.post("/login", login);
 router.post("/verify-otp", verifyOtp);
 
-// ---------------------------------------------
-// OTP resend (login or registration)
-// ---------------------------------------------
+// Resend OTP
 router.post("/resend-otp", resendOtp);
 
-// ---------------------------------------------
 // Password reset
-// ---------------------------------------------
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password/:token", resetPassword);
 

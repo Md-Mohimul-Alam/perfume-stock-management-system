@@ -28,10 +28,8 @@ exports.submitContact = async (req, res) => {
       }
     }
 
-    // ✅ AWAIT on Vercel — fire-and-forget gets killed when the response is sent
-    console.log("[submitContact] Sending email...");
+    // ✅ AWAIT — do not fire-and-forget on Vercel
     await sendContactEmail({ name, email, phone, message });
-    console.log("[submitContact] Email sent successfully");
 
     return res.status(200).json({
       success: true,

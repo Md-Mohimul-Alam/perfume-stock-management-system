@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
 import API from '../api/axios';
 import logo from "../../public/logo.jpg";
+
+const RESEND_COOLDOWN_SECONDS = 30;
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -11,7 +13,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
-  const { login: authLogin, setAuthUser } = useAuth(); // ✅ get setAuthUser
+  const { login: authLogin, setAuthUser } = useAuth();
   const navigate = useNavigate();
 
   // OTP states
@@ -20,6 +22,23 @@ const Login = () => {
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpError, setOtpError] = useState('');
   const [otpSuccess, setOtpSuccess] = useState(false);
+
+  // Resend states
+  const [resending, setResending] = useState(false);
+  const [resendMessage, setResendMessage] = useState('');
+  const [resendError, setResendError] = useState('');
+  const [cooldown, setCooldown] = useState(0);
+
+  // --------------------------------------------------
+  // Cooldown ticker
+  // --------------------------------------------------
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const id = setInterval(() => {
+      setCooldown((c) => (c > 0 ? c - 1 : 0));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [cooldown]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -36,12 +55,15 @@ const Login = () => {
 
     setLoading(true);
     try {
-      const response = await API.post('/auth/login', { email, password });
+      await API.post('/auth/login', { email, password });
       setLoading(false);
       setShowOtpModal(true);
       setOtp('');
       setOtpError('');
       setOtpSuccess(false);
+      setResendMessage('');
+      setResendError('');
+      setCooldown(RESEND_COOLDOWN_SECONDS);
     } catch (err) {
       setLoading(false);
       const msg = err.response?.data?.message || 'Something went wrong. Please try again.';
@@ -60,10 +82,7 @@ const Login = () => {
     try {
       const response = await API.post('/auth/verify-otp', { email, otp });
       const { token, ...userData } = response.data;
-
-      // ✅ Set auth state using context (updates user and localStorage)
       setAuthUser(userData, token);
-
       setOtpSuccess(true);
       setTimeout(() => {
         setShowOtpModal(false);
@@ -76,27 +95,53 @@ const Login = () => {
     }
   };
 
+  const handleResend = async () => {
+    if (resending || cooldown > 0) return;
+
+    setResending(true);
+    setResendError('');
+    setResendMessage('');
+
+    try {
+      await API.post('/auth/resend-otp', {
+        email,
+        purpose: 'login',
+      });
+      setResendMessage('A new OTP has been sent to your email.');
+      setOtp('');
+      setOtpError('');
+      setCooldown(RESEND_COOLDOWN_SECONDS);
+    } catch (err) {
+      const msg =
+        err.response?.data?.message ||
+        'Could not resend OTP. Please try again.';
+      setResendError(msg);
+    } finally {
+      setResending(false);
+    }
+  };
+
   const closeModal = () => {
     setShowOtpModal(false);
     setOtp('');
     setOtpError('');
+    setResendMessage('');
+    setResendError('');
+    setCooldown(0);
   };
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center px-5 py-10">
       <div className="w-full max-w-md bg-white rounded-3xl shadow-xl p-8">
-        {/* Logo */}
         <div className="flex justify-center mb-6">
           <img src={logo} alt="logo" className="w-40 object-contain" />
         </div>
 
-        {/* Heading */}
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-mutedNavy">Welcome Back</h2>
           <p className="text-gray-500 mt-2">Sign in to your account</p>
         </div>
 
-        {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
           {error && (
             <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
@@ -244,18 +289,37 @@ const Login = () => {
                 {otpLoading ? "Verifying..." : "Verify OTP"}
               </button>
 
-              <p className="text-center text-sm text-gray-500">
-                Didn't receive it?{' '}
-                <button
-                  type="button"
-                  onClick={() => {
-                    alert('Resend functionality not implemented. Please try logging in again.');
-                  }}
-                  className="text-blue-600 hover:underline"
-                >
-                  Resend
-                </button>
-              </p>
+              {/* Resend block */}
+              <div className="text-center text-sm">
+                <p className="text-gray-500">
+                  Didn't receive it?{' '}
+                  <button
+                    type="button"
+                    onClick={handleResend}
+                    disabled={resending || cooldown > 0 || otpSuccess}
+                    className="text-blue-600 hover:underline disabled:cursor-not-allowed disabled:text-gray-400 disabled:no-underline"
+                  >
+                    {resending
+                      ? 'Sending...'
+                      : cooldown > 0
+                      ? `Resend in ${cooldown}s`
+                      : 'Resend'}
+                  </button>
+                </p>
+
+                {resendMessage && (
+                  <p className="mt-2 flex items-center justify-center gap-1 text-green-600">
+                    <CheckCircle className="w-4 h-4" />
+                    {resendMessage}
+                  </p>
+                )}
+                {resendError && (
+                  <p className="mt-2 flex items-center justify-center gap-1 text-red-500">
+                    <AlertCircle className="w-4 h-4" />
+                    {resendError}
+                  </p>
+                )}
+              </div>
             </form>
           </div>
         </div>

@@ -3,11 +3,9 @@ const transporter = require("./mailer");
 // --------------------------------------------------
 // Shared sender + receiver
 // --------------------------------------------------
-const FROM =
-  process.env.EMAIL_FROM || process.env.SMTP_USER;
+const FROM = process.env.EMAIL_FROM || process.env.SMTP_USER;
 const TO =
-  process.env.CONTACT_RECEIVER_EMAIL ||
-  process.env.SMTP_USER;
+  process.env.CONTACT_RECEIVER_EMAIL || process.env.SMTP_USER;
 
 // --------------------------------------------------
 // Escape user input before injecting into HTML
