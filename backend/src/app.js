@@ -5,7 +5,6 @@ const fs = require("fs");
 const mongoose = require("mongoose");
 
 const connectDB = require("./config/db");
-const contactRoutes = require("./routes/contactRoutes");
 
 const {
   notFound,
@@ -18,14 +17,15 @@ const app = express();
 
 const allowedOrigins = [
   "http://localhost:5173",
+  "http://localhost:3000",
   "https://perfume-stock-management-system-545.vercel.app",
+  "https://perfume-stock-management-system-ewa.vercel.app",
   "https://luxeperfume.netlify.app",
-  "http://localhost:5173"
 ];
 
 if (process.env.FRONTEND_URL) {
-  const frontendUrl = process.env.FRONTEND_URL.replace(/\/$/, "");
-  if (!allowedOrigins.includes(frontendUrl)) {
+  const frontendUrl = process.env.FRONTEND_URL.trim().replace(/\/$/, "");
+  if (frontendUrl && !allowedOrigins.includes(frontendUrl)) {
     allowedOrigins.push(frontendUrl);
   }
 }
@@ -33,14 +33,12 @@ if (process.env.FRONTEND_URL) {
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin) {
-        return callback(null, true);
-      }
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+
       console.error(`CORS blocked for origin: ${origin}`);
-      return callback(new Error(`Not allowed by CORS: ${origin}`));
+      // Do NOT throw — just refuse to attach CORS headers.
+      return callback(null, false);
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
@@ -48,19 +46,19 @@ app.use(
   })
 );
 
+// Explicit preflight handling (Vercel sometimes drops OPTIONS)
+app.options("*", cors());
+
 // ------------------- Parsers -------------------
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ------------------- DB Connection Middleware -------------------
-// MUST come before routes so every request waits for a live DB connection.
 
 app.use(async (req, res, next) => {
   try {
-    if (mongoose.connection.readyState === 1) {
-      return next();
-    }
+    if (mongoose.connection.readyState === 1) return next();
 
     console.log(">>> DB middleware: connecting...");
     await connectDB();
@@ -95,14 +93,14 @@ app.use(
 // ------------------- Health -------------------
 
 app.get("/", (req, res) => {
-  return res.status(200).json({
+  res.status(200).json({
     success: true,
     message: "Luxe Perfume API is running",
   });
 });
 
 app.get("/health", (req, res) => {
-  return res.status(200).json({
+  res.status(200).json({
     success: true,
     status: "ok",
     timestamp: new Date().toISOString(),
@@ -116,6 +114,9 @@ app.get("/api/debug", (req, res) => {
     hasUri: Boolean(process.env.MONGO_URI),
     readyState: mongoose.connection.readyState,
     host: mongoose.connection.host || null,
+    smtpHost: process.env.SMTP_HOST || null,
+    smtpPort: process.env.SMTP_PORT || null,
+    contactReceiver: process.env.CONTACT_RECEIVER_EMAIL || null,
   });
 });
 
@@ -133,7 +134,7 @@ app.use("/api/reports", require("./routes/reportRoutes"));
 app.use("/api/upload", require("./routes/uploadRoutes"));
 app.use("/api/orders", require("./routes/orderRoutes"));
 app.use("/api/admin", require("./routes/adminRoutes"));
-app.use("/api/contact", contactRoutes);
+app.use("/api/contact", require("./routes/contactRoutes"));
 
 // ------------------- Error Handling -------------------
 
