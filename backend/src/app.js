@@ -19,6 +19,7 @@ const allowedOrigins = [
   "http://localhost:5173",
   "https://perfume-stock-management-system-545.vercel.app",
   "https://luxeperfume.netlify.app",
+  "http://localhost:5173"
 ];
 
 if (process.env.FRONTEND_URL) {
