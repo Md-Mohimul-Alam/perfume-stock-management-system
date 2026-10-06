@@ -131,6 +131,7 @@ app.use("/api/reports", require("./routes/reportRoutes"));
 app.use("/api/upload", require("./routes/uploadRoutes"));
 app.use("/api/orders", require("./routes/orderRoutes"));
 app.use("/api/admin", require("./routes/adminRoutes"));
+app.use("/api/contact", contactRoutes);
 
 // ------------------- Error Handling -------------------
 
