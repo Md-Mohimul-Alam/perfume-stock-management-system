@@ -37,7 +37,6 @@ app.use(
       if (allowedOrigins.includes(origin)) return callback(null, true);
 
       console.error(`CORS blocked for origin: ${origin}`);
-      // Do NOT throw — just refuse to attach CORS headers.
       return callback(null, false);
     },
     credentials: true,
@@ -46,8 +45,7 @@ app.use(
   })
 );
 
-// Explicit preflight handling (Vercel sometimes drops OPTIONS)
-app.options("*", cors());
+// ❌ REMOVED: app.options("*", cors()); — crashes on Express 5
 
 // ------------------- Parsers -------------------
 
@@ -71,12 +69,18 @@ app.use(async (req, res, next) => {
 });
 
 // ------------------- Uploads -------------------
+// ⚠️ Vercel's filesystem is read-only except for /tmp.
+// Wrap mkdir in try/catch so a read-only FS doesn't crash the whole app.
 
 const uploadDir = path.join(__dirname, "uploads");
 
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-  console.log("Uploads directory created");
+try {
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+    console.log("Uploads directory created");
+  }
+} catch (err) {
+  console.warn("Uploads directory unavailable (read-only FS?):", err.message);
 }
 
 app.use(
