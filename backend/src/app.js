@@ -18,6 +18,7 @@ const app = express();
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
+  "http://localhost:4173",
   "https://perfume-stock-management-system-545.vercel.app",
   "https://perfume-stock-management-system-ewa.vercel.app",
   "https://luxeperfume.netlify.app",
