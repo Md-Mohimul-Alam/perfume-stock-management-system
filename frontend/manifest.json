@@ -3,6 +3,7 @@
   "short_name": "LUXE",
   "description": "LUXE Perfume Stock, Sales, Inventory and Business Management System",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#111111",
   "theme_color": "#111111",
