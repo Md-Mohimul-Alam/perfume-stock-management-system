@@ -1,10 +1,42 @@
-const express = require('express');
-const router = express.Router();
-const upload = require('../middlewares/upload');
-const { uploadImage } = require('../controllers/uploadController');
-const { protect } = require('../middlewares/authMiddleware');
+const express = require("express");
 
-// Protect the upload route – only authenticated users can upload
-router.post('/', protect, upload.single('image'), uploadImage);
+const router =
+  express.Router();
 
-module.exports = router;
+const upload =
+  require(
+    "../middlewares/upload"
+  );
+
+const {
+  uploadImage,
+} = require(
+  "../controllers/uploadController"
+);
+
+const {
+  protect,
+  authorizeRoles,
+} = require(
+  "../middlewares/authMiddleware"
+);
+
+router.post(
+  "/",
+
+  protect,
+
+  authorizeRoles(
+    "admin",
+    "staff"
+  ),
+
+  upload.single(
+    "image"
+  ),
+
+  uploadImage
+);
+
+module.exports =
+  router;
