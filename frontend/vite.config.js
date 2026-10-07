@@ -26,11 +26,6 @@ export default defineConfig(({ mode }) => {
 
         includeAssets: [
           'favicon.ico',
-
-          // iPhone / iOS Home Screen icon
-          'luxe-touch-icon-v2.png',
-
-          // Android / PWA icons
           'icons/icon-192.png',
           'icons/icon-512.png',
           'icons/icon-512-maskable.png',
@@ -38,23 +33,21 @@ export default defineConfig(({ mode }) => {
 
         manifest: {
           name: 'LUXE Perfume Management',
-
           short_name: 'LUXE',
 
           description:
             'LUXE Perfume Stock, Sales, Inventory and Business Management System',
 
           start_url: '/',
-
           scope: '/',
 
           display: 'standalone',
-
           orientation: 'portrait',
 
+          background_color: '#111111',
           theme_color: '#111111',
 
-          background_color: '#111111',
+          lang: 'en',
 
           categories: [
             'business',
@@ -78,7 +71,7 @@ export default defineConfig(({ mode }) => {
               src: '/icons/icon-512-maskable.png',
               sizes: '512x512',
               type: 'image/png',
-              purpose: 'maskable',
+              purpose: 'any maskable',
             },
           ],
         },
@@ -94,16 +87,8 @@ export default defineConfig(({ mode }) => {
 
           runtimeCaching: [
             {
-              /*
-                Cache normal runtime images,
-                but DO NOT cache app/PWA icons.
-              */
-              urlPattern: ({
-                request,
-                url,
-              }) =>
+              urlPattern: ({ request, url }) =>
                 request.destination === 'image' &&
-                !url.pathname.includes('touch-icon') &&
                 !url.pathname.startsWith('/icons/'),
 
               handler: 'CacheFirst',
@@ -113,9 +98,7 @@ export default defineConfig(({ mode }) => {
 
                 expiration: {
                   maxEntries: 100,
-
-                  maxAgeSeconds:
-                    60 * 60 * 24 * 30,
+                  maxAgeSeconds: 60 * 60 * 24 * 30,
                 },
 
                 cacheableResponse: {
