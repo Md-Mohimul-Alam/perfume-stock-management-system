@@ -26,27 +26,28 @@ export default defineConfig(({ mode }) => {
 
         includeAssets: [
           'favicon.ico',
-          'apple-touch-icon.png',
-          'apple-touch-icon-test.png',
           'icons/icon-192.png',
           'icons/icon-512.png',
-          'icons/icon-512-maskable.png',
         ],
 
         manifest: {
           name: 'LUXE Perfume Management',
+
           short_name: 'LUXE',
 
           description:
             'LUXE Perfume Stock, Sales, Inventory and Business Management System',
 
           start_url: '/',
+
           scope: '/',
 
           display: 'standalone',
+
           orientation: 'portrait',
 
           background_color: '#111111',
+
           theme_color: '#111111',
 
           lang: 'en',
@@ -69,12 +70,6 @@ export default defineConfig(({ mode }) => {
               type: 'image/png',
               purpose: 'any',
             },
-            {
-              src: '/icons/icon-512-maskable.png',
-              sizes: '512x512',
-              type: 'image/png',
-              purpose: 'any maskable',
-            },
           ],
         },
 
@@ -85,26 +80,43 @@ export default defineConfig(({ mode }) => {
             '**/*.{js,css,html,ico,png,svg,jpg,jpeg,webp,woff,woff2}',
           ],
 
-          navigateFallback: '/index.html',
+          navigateFallback:
+            '/index.html',
 
           runtimeCaching: [
             {
-              urlPattern: ({ request, url }) =>
+              urlPattern: ({
+                request,
+                url,
+              }) =>
                 request.destination === 'image' &&
-                !url.pathname.startsWith('/icons/'),
+                !url.pathname.startsWith(
+                  '/icons/'
+                ),
 
-              handler: 'CacheFirst',
+              handler:
+                'CacheFirst',
 
               options: {
-                cacheName: 'luxe-images',
+                cacheName:
+                  'luxe-images',
 
                 expiration: {
-                  maxEntries: 100,
-                  maxAgeSeconds: 60 * 60 * 24 * 30,
+                  maxEntries:
+                    100,
+
+                  maxAgeSeconds:
+                    60 *
+                    60 *
+                    24 *
+                    30,
                 },
 
                 cacheableResponse: {
-                  statuses: [0, 200],
+                  statuses: [
+                    0,
+                    200,
+                  ],
                 },
               },
             },
@@ -119,11 +131,15 @@ export default defineConfig(({ mode }) => {
 
     server: {
       proxy:
-        mode === 'development' && apiUrl
+        mode === 'development' &&
+        apiUrl
           ? {
               '/api': {
-                target: apiUrl,
-                changeOrigin: true,
+                target:
+                  apiUrl,
+
+                changeOrigin:
+                  true,
               },
             }
           : undefined,
@@ -133,11 +149,21 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         output: {
           manualChunks(id) {
-            if (id.includes('node_modules')) {
+            if (
+              id.includes(
+                'node_modules'
+              )
+            ) {
               if (
-                id.includes('react') ||
-                id.includes('react-dom') ||
-                id.includes('react-router-dom')
+                id.includes(
+                  'react'
+                ) ||
+                id.includes(
+                  'react-dom'
+                ) ||
+                id.includes(
+                  'react-router-dom'
+                )
               ) {
                 return 'vendor-react'
               }
@@ -148,12 +174,15 @@ export default defineConfig(({ mode }) => {
         },
       },
 
-      chunkSizeWarningLimit: 1000,
+      chunkSizeWarningLimit:
+        1000,
     },
 
     define: {
       'import.meta.env.VITE_API_URL':
-        JSON.stringify(apiUrl || ''),
+        JSON.stringify(
+          apiUrl || ''
+        ),
     },
   }
 })
