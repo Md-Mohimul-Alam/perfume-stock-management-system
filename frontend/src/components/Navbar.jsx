@@ -1,84 +1,332 @@
-import { useState, useEffect, useRef } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
+
+import {
+  Link,
+  useNavigate,
+} from 'react-router-dom';
+
+import {
+  Menu,
+  LogOut,
+  Bell,
+  AlertCircle,
+  Package,
+  DollarSign,
+  Sun,
+  Moon,
+  X,
+} from 'lucide-react';
+
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { useNavigate } from 'react-router-dom';
-import { Menu, LogOut, Bell, AlertCircle, Package, DollarSign, X, Sun, Moon } from 'lucide-react';
-import { Link } from 'react-router-dom';
 
-// ====== Notification Bell Component (inline) ======
-const NotificationBell = ({ notifications }) => {
+/* ========================================
+   NOTIFICATION BELL
+======================================== */
+
+const NotificationBell = ({ notifications = [] }) => {
   const [isOpen, setIsOpen] = useState(false);
+
   const dropdownRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target)
+      ) {
         setIsOpen(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+
+    document.addEventListener(
+      'mousedown',
+      handleClickOutside
+    );
+
+    return () => {
+      document.removeEventListener(
+        'mousedown',
+        handleClickOutside
+      );
+    };
   }, []);
 
-  const totalUnread = notifications.filter(n => !n.read).length;
+  const totalUnread = notifications.filter(
+    (notification) => !notification.read
+  ).length;
 
   const getIcon = (type) => {
     switch (type) {
-      case 'warning': return <AlertCircle className="w-4 h-4 text-amber-500" />;
-      case 'due': return <DollarSign className="w-4 h-4 text-red-500" />;
-      default: return <Package className="w-4 h-4 text-blue-500" />;
+      case 'warning':
+        return (
+          <AlertCircle className="h-4 w-4 text-amber-500" />
+        );
+
+      case 'due':
+        return (
+          <DollarSign className="h-4 w-4 text-red-500" />
+        );
+
+      default:
+        return (
+          <Package className="h-4 w-4 text-blue-500" />
+        );
     }
   };
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div
+      ref={dropdownRef}
+      className="relative"
+    >
       <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+        type="button"
+        onClick={() => setIsOpen((prev) => !prev)}
+        className="
+          relative
+          flex
+          h-10
+          w-10
+          items-center
+          justify-center
+          rounded-xl
+
+          text-gray-600
+          transition-colors
+
+          hover:bg-gray-100
+          hover:text-brand-primary
+
+          dark:text-gray-300
+          dark:hover:bg-slate-800
+          dark:hover:text-brand-secondary
+        "
         aria-label="Notifications"
+        aria-expanded={isOpen}
       >
-        <Bell size={22} className="text-gray-700 dark:text-gray-300" />
+        <Bell size={21} />
+
         {totalUnread > 0 && (
-          <span className="absolute top-0.5 right-0.5 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold leading-none">
-            {totalUnread}
+          <span
+            className="
+              absolute
+              -right-0.5
+              -top-0.5
+
+              flex
+              h-5
+              min-w-5
+              items-center
+              justify-center
+
+              rounded-full
+              bg-red-500
+
+              px-1
+
+              text-[10px]
+              font-bold
+              leading-none
+              text-white
+            "
+          >
+            {totalUnread > 99 ? '99+' : totalUnread}
           </span>
         )}
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700 font-semibold flex items-center justify-between">
-            <span className="text-gray-800 dark:text-gray-200">Notifications</span>
-            {totalUnread > 0 && (
-              <button
-                className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline"
-                onClick={() => setIsOpen(false)}
+        <div
+          className="
+            fixed
+            left-4
+            right-4
+            top-[72px]
+            z-[70]
+
+            overflow-hidden
+            rounded-2xl
+
+            border
+            border-gray-200
+
+            bg-white
+            shadow-2xl
+
+            dark:border-slate-700
+            dark:bg-slate-800
+
+            sm:absolute
+            sm:left-auto
+            sm:right-0
+            sm:top-auto
+            sm:mt-3
+            sm:w-96
+          "
+        >
+          {/* Header */}
+          <div
+            className="
+              flex
+              items-center
+              justify-between
+
+              border-b
+              border-gray-200
+
+              px-4
+              py-3
+
+              dark:border-slate-700
+            "
+          >
+            <div>
+              <h3
+                className="
+                  text-sm
+                  font-semibold
+                  text-gray-900
+                  dark:text-gray-100
+                "
               >
-                Mark all read
-              </button>
-            )}
+                Notifications
+              </h3>
+
+              {totalUnread > 0 && (
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {totalUnread} unread
+                </p>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              className="
+                flex
+                h-8
+                w-8
+                items-center
+                justify-center
+                rounded-lg
+
+                text-gray-500
+
+                hover:bg-gray-100
+
+                dark:text-gray-400
+                dark:hover:bg-slate-700
+              "
+              aria-label="Close notifications"
+            >
+              <X size={18} />
+            </button>
           </div>
-          <div className="max-h-80 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-700">
+
+          {/* Notifications */}
+          <div
+            className="
+              max-h-[60vh]
+              overflow-y-auto
+              divide-y
+              divide-gray-100
+
+              dark:divide-slate-700
+            "
+          >
             {notifications.length === 0 ? (
-              <div className="p-6 text-center text-gray-400 dark:text-gray-500 text-sm">
-                ✅ No notifications
+              <div
+                className="
+                  px-6
+                  py-10
+                  text-center
+                  text-sm
+                  text-gray-500
+
+                  dark:text-gray-400
+                "
+              >
+                No notifications
               </div>
             ) : (
-              notifications.map((n, idx) => (
+              notifications.map((notification, index) => (
                 <Link
-                  key={idx}
-                  to={n.link}
-                  className={`block p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition flex items-start gap-3 ${
-                    !n.read ? 'bg-blue-50/50 dark:bg-blue-900/20' : ''
-                  }`}
+                  key={
+                    notification.id ||
+                    notification._id ||
+                    index
+                  }
+                  to={notification.link || '/'}
                   onClick={() => setIsOpen(false)}
+                  className={`
+                    flex
+                    items-start
+                    gap-3
+
+                    px-4
+                    py-3
+
+                    transition-colors
+
+                    hover:bg-gray-50
+                    dark:hover:bg-slate-700/70
+
+                    ${
+                      !notification.read
+                        ? 'bg-amber-50/60 dark:bg-amber-900/10'
+                        : ''
+                    }
+                  `}
                 >
-                  <div className="flex-shrink-0 mt-0.5">{getIcon(n.type)}</div>
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-700 dark:text-gray-300">{n.message}</p>
-                    <p className="text-xs text-gray-400 dark:text-gray-500">{n.time}</p>
+                  <div className="mt-0.5 flex-shrink-0">
+                    {getIcon(notification.type)}
                   </div>
-                  {!n.read && <div className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 mt-2" />}
+
+                  <div className="min-w-0 flex-1">
+                    <p
+                      className="
+                        break-words
+                        text-sm
+                        text-gray-700
+
+                        dark:text-gray-200
+                      "
+                    >
+                      {notification.message}
+                    </p>
+
+                    {notification.time && (
+                      <p
+                        className="
+                          mt-1
+                          text-xs
+                          text-gray-400
+
+                          dark:text-gray-500
+                        "
+                      >
+                        {notification.time}
+                      </p>
+                    )}
+                  </div>
+
+                  {!notification.read && (
+                    <div
+                      className="
+                        mt-2
+                        h-2
+                        w-2
+                        flex-shrink-0
+                        rounded-full
+                        bg-brand-primary
+                      "
+                    />
+                  )}
                 </Link>
               ))
             )}
@@ -89,10 +337,21 @@ const NotificationBell = ({ notifications }) => {
   );
 };
 
-// ====== Main Navbar Component ======
-const Navbar = ({ onToggle, notifications = [] }) => {
+/* ========================================
+   NAVBAR
+======================================== */
+
+const Navbar = ({
+  onToggle,
+  notifications = [],
+}) => {
   const { user, logout } = useAuth();
-  const { theme, toggleTheme } = useTheme();
+
+  const {
+    theme,
+    toggleTheme,
+  } = useTheme();
+
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -100,58 +359,263 @@ const Navbar = ({ onToggle, notifications = [] }) => {
     navigate('/login');
   };
 
-  const handleToggleTheme = () => {
-    console.log('🔆 Theme button clicked. Current theme:', theme);
-    toggleTheme();
-  };
-
   return (
-    <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 px-4 sm:px-6 lg:px-8 xl:px-10 py-3 sm:py-4 flex justify-between items-center sticky top-0 z-30 shadow-sm dark:shadow-gray-900/30">
-      {/* Left section */}
-      <div className="flex items-center gap-4">
-        <button
-          onClick={onToggle}
-          className="p-2 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:focus:ring-indigo-700"
-          aria-label="Toggle sidebar"
-        >
-          <Menu size={24} className="lg:w-6 lg:h-6" />
-        </button>
+    <header
+      className="
+        safe-top
+        sticky
+        top-0
+        z-30
 
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 flex items-center justify-center font-semibold text-sm lg:text-base">
-            {user?.name?.charAt(0) || 'U'}
-          </div>
-          <div className="hidden sm:block">
-            <p className="text-sm lg:text-base font-medium text-gray-700 dark:text-gray-300 leading-tight">
-              Welcome back, <span className="text-indigo-700 dark:text-indigo-400">{user?.name}</span>
-            </p>
-            <p className="text-xs lg:text-sm text-gray-400 dark:text-gray-500 leading-tight">
-              {user?.role || 'Staff'}
-            </p>
+        border-b
+        border-gray-200/80
+
+        bg-white/90
+        backdrop-blur-xl
+
+        shadow-sm
+
+        dark:border-slate-800
+        dark:bg-slate-900/90
+      "
+    >
+      <div
+        className="
+          flex
+          min-h-[62px]
+          items-center
+          justify-between
+
+          gap-2
+
+          px-3
+
+          sm:min-h-[68px]
+          sm:px-6
+
+          lg:px-8
+          xl:px-10
+        "
+      >
+        {/* =====================
+            LEFT
+        ====================== */}
+
+        <div
+          className="
+            flex
+            min-w-0
+            items-center
+            gap-2
+
+            sm:gap-3
+          "
+        >
+          <button
+            type="button"
+            onClick={onToggle}
+            className="
+              flex
+              h-10
+              w-10
+              flex-shrink-0
+              items-center
+              justify-center
+
+              rounded-xl
+
+              text-gray-600
+
+              transition-colors
+
+              hover:bg-amber-50
+              hover:text-brand-primary
+
+              dark:text-gray-300
+              dark:hover:bg-slate-800
+              dark:hover:text-brand-secondary
+            "
+            aria-label="Toggle navigation"
+          >
+            <Menu size={22} />
+          </button>
+
+          {/* User */}
+          <div
+            className="
+              flex
+              min-w-0
+              items-center
+              gap-2
+
+              sm:gap-3
+            "
+          >
+            <div
+              className="
+                flex
+                h-9
+                w-9
+                flex-shrink-0
+                items-center
+                justify-center
+
+                rounded-full
+
+                bg-amber-100
+
+                text-sm
+                font-bold
+                text-brand-primary
+
+                dark:bg-amber-900/30
+                dark:text-brand-secondary
+
+                sm:h-10
+                sm:w-10
+              "
+            >
+              {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+            </div>
+
+            <div className="hidden min-w-0 sm:block">
+              <p
+                className="
+                  max-w-[220px]
+                  truncate
+                  text-sm
+                  font-medium
+                  leading-tight
+                  text-gray-700
+
+                  dark:text-gray-200
+
+                  lg:text-base
+                "
+              >
+                Welcome back,{' '}
+                <span className="text-brand-primary dark:text-brand-secondary">
+                  {user?.name || 'User'}
+                </span>
+              </p>
+
+              <p
+                className="
+                  mt-0.5
+                  text-xs
+                  capitalize
+                  leading-tight
+                  text-gray-400
+
+                  dark:text-gray-500
+                "
+              >
+                {user?.role || 'staff'}
+              </p>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Right section */}
-      <div className="flex items-center gap-3">
-        <NotificationBell notifications={notifications} />
+        {/* =====================
+            RIGHT
+        ====================== */}
 
-        {/* ✅ Theme Toggle Button */}
-        <button
-          onClick={handleToggleTheme}
-          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition text-gray-600 dark:text-gray-300"
-          aria-label="Toggle theme"
+        <div
+          className="
+            flex
+            flex-shrink-0
+            items-center
+            gap-1
+
+            sm:gap-2
+          "
         >
-          {theme === 'light' ? <Moon size={22} /> : <Sun size={22} />}
-        </button>
+          <NotificationBell
+            notifications={notifications}
+          />
 
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-300 dark:focus:ring-red-700"
-        >
-          <LogOut size={18} className="lg:w-5 lg:h-5" />
-          <span className="hidden sm:inline">Logout</span>
-        </button>
+          {/* Theme */}
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="
+              flex
+              h-10
+              w-10
+              items-center
+              justify-center
+
+              rounded-xl
+
+              text-gray-600
+
+              transition-colors
+
+              hover:bg-amber-50
+              hover:text-brand-primary
+
+              dark:text-gray-300
+              dark:hover:bg-slate-800
+              dark:hover:text-brand-secondary
+            "
+            aria-label={
+              theme === 'light'
+                ? 'Enable dark mode'
+                : 'Enable light mode'
+            }
+            title={
+              theme === 'light'
+                ? 'Dark mode'
+                : 'Light mode'
+            }
+          >
+            {theme === 'light' ? (
+              <Moon size={21} />
+            ) : (
+              <Sun size={21} />
+            )}
+          </button>
+
+          {/* Logout */}
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="
+              flex
+              h-10
+              items-center
+              justify-center
+              gap-2
+
+              rounded-xl
+
+              bg-red-500
+
+              px-3
+
+              text-sm
+              font-medium
+              text-white
+
+              shadow-sm
+
+              transition-all
+
+              hover:bg-red-600
+              hover:shadow-md
+
+              active:scale-[0.97]
+
+              sm:px-4
+            "
+          >
+            <LogOut size={18} />
+
+            <span className="hidden md:inline">
+              Logout
+            </span>
+          </button>
+        </div>
       </div>
     </header>
   );

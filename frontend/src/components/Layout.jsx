@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 
 import Navbar from './Navbar';
@@ -43,6 +43,22 @@ const Layout = () => {
     };
   }, []);
 
+  /*
+    Prevent background page scrolling while
+    mobile drawer is open.
+  */
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [sidebarOpen]);
+
   const closeDrawer = () => {
     setSidebarOpen(false);
   };
@@ -63,16 +79,41 @@ const Layout = () => {
     <>
       <style>{layoutStyles}</style>
 
-      <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-        {/* =========================
-            Desktop Sidebar
-        ========================== */}
-        <div
-          className={`hidden lg:block lg:shrink-0 transition-all duration-300 ${
-            sidebarCollapsed
-              ? 'w-16 lg:w-20'
-              : 'w-64 lg:w-72 2xl:w-80'
-          }`}
+      <div
+        className="
+          flex
+
+          h-screen
+          min-h-screen
+
+          bg-gray-50
+
+          dark:bg-slate-900
+
+          supports-[height:100dvh]:h-[100dvh]
+          supports-[height:100dvh]:min-h-[100dvh]
+        "
+      >
+        {/* ========================================
+            DESKTOP SIDEBAR
+        ======================================== */}
+
+        <aside
+          className={`
+            hidden
+            lg:block
+            lg:shrink-0
+
+            transition-[width]
+            duration-300
+            ease-in-out
+
+            ${
+              sidebarCollapsed
+                ? 'lg:w-20'
+                : 'lg:w-72 2xl:w-80'
+            }
+          `}
         >
           <Sidebar
             collapsed={sidebarCollapsed}
@@ -80,41 +121,57 @@ const Layout = () => {
               setSidebarCollapsed((prev) => !prev)
             }
           />
-        </div>
+        </aside>
 
-        {/* =========================
-            Mobile Drawer Overlay
-        ========================== */}
+        {/* ========================================
+            MOBILE DRAWER OVERLAY
+        ======================================== */}
+
         {sidebarOpen && (
           <button
             type="button"
             aria-label="Close navigation menu"
+            onClick={closeDrawer}
             className="
-              fixed inset-0 z-40
-              bg-black/40
-              backdrop-blur-sm
-              dark:bg-black/60
+              fixed
+              inset-0
+              z-40
+
+              bg-black/45
+              backdrop-blur-[2px]
+
+              dark:bg-black/65
+
               lg:hidden
             "
-            onClick={closeDrawer}
           />
         )}
 
-        {/* =========================
-            Mobile Drawer
-        ========================== */}
-        <div
+        {/* ========================================
+            MOBILE DRAWER
+        ======================================== */}
+
+        <aside
           className={`
-            fixed left-0 top-0 z-50
-            h-full w-[85%] max-w-72
+            fixed
+            bottom-0
+            left-0
+            top-0
+            z-50
+
+            w-[86%]
+            max-w-[290px]
+
             bg-white
+
             shadow-2xl
+
             transition-transform
             duration-300
             ease-in-out
 
-            dark:bg-gray-900
-            dark:shadow-gray-900/50
+            dark:bg-slate-900
+            dark:shadow-black/50
 
             lg:hidden
 
@@ -124,17 +181,35 @@ const Layout = () => {
                 : '-translate-x-full'
             }
           `}
+          aria-hidden={!sidebarOpen}
         >
-          <Sidebar
-            closeDrawer={closeDrawer}
-            isDrawer
-          />
-        </div>
+          <div
+            className="
+              h-full
+              safe-top
+              safe-bottom
+            "
+          >
+            <Sidebar
+              closeDrawer={closeDrawer}
+              isDrawer
+            />
+          </div>
+        </aside>
 
-        {/* =========================
-            Main Application
-        ========================== */}
-        <div className="flex min-w-0 flex-1 flex-col">
+        {/* ========================================
+            MAIN APPLICATION
+        ======================================== */}
+
+        <div
+          className="
+            flex
+            min-w-0
+            flex-1
+            flex-col
+            overflow-hidden
+          "
+        >
           <Navbar
             onToggle={handleToggle}
             notifications={notifications}
@@ -143,28 +218,42 @@ const Layout = () => {
           <main
             className="
               flex-1
+              overflow-x-hidden
               overflow-y-auto
+
               bg-gray-50
-              p-4
-              pb-24
 
-              dark:bg-gray-900
+              px-4
+              pt-4
 
-              sm:p-6
-              sm:pb-24
+              pb-28
+
+              dark:bg-slate-900
+
+              sm:px-6
+              sm:pt-6
+              sm:pb-28
 
               lg:pb-6
             "
           >
-            <div className="main-content-container mx-auto max-w-7xl">
+            <div
+              className="
+                main-content-container
+                mx-auto
+                w-full
+                max-w-7xl
+              "
+            >
               <Outlet />
             </div>
           </main>
         </div>
 
-        {/* =========================
-            Mobile Bottom Navigation
-        ========================== */}
+        {/* ========================================
+            MOBILE BOTTOM NAVIGATION
+        ======================================== */}
+
         <MobileBottomNav onMore={openDrawer} />
       </div>
     </>
