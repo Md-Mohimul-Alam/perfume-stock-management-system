@@ -1,5 +1,4 @@
 import { NavLink } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 
 import {
   X,
@@ -24,6 +23,8 @@ import {
   ShoppingBag,
 } from 'lucide-react';
 
+import { useAuth } from '../context/AuthContext';
+
 const Sidebar = ({
   closeDrawer,
   isDrawer = false,
@@ -32,38 +33,57 @@ const Sidebar = ({
 }) => {
   const { user, logout } = useAuth();
 
-  const linkClass = `
-    flex items-center
-    min-h-[44px]
-    px-4
-    py-2.5
-    rounded-lg
-    text-gray-600
-    dark:text-gray-300
-    hover:text-indigo-600
-    dark:hover:text-indigo-400
-    hover:bg-indigo-50
-    dark:hover:bg-indigo-900/30
-    transition-all
-    duration-200
+  const linkBase = `
     group
     relative
-  `;
 
-  const activeClass = `
-    bg-indigo-50
-    dark:bg-indigo-900/40
-    text-indigo-700
-    dark:text-indigo-300
+    flex
+    min-h-[44px]
+    items-center
+
+    rounded-xl
+
+    px-3
+    py-2.5
+
+    text-sm
     font-medium
-    shadow-sm
+
+    transition-all
+    duration-200
   `;
 
-  const iconClass = 'w-5 h-5 flex-shrink-0';
+  const getLinkClass = ({ isActive }) =>
+    `${linkBase} ${
+      isActive
+        ? `
+          bg-amber-50
+          text-brand-primary
 
-  const linkTextClass = collapsed
+          dark:bg-amber-900/20
+          dark:text-brand-secondary
+        `
+        : `
+          text-gray-600
+
+          hover:bg-gray-100
+          hover:text-brand-primary
+
+          dark:text-gray-300
+          dark:hover:bg-slate-800
+          dark:hover:text-brand-secondary
+        `
+    }`;
+
+  const iconClass = `
+    h-5
+    w-5
+    flex-shrink-0
+  `;
+
+  const textClass = collapsed
     ? 'hidden'
-    : 'ml-3 text-sm leading-none whitespace-nowrap';
+    : 'ml-3 truncate';
 
   const handleLinkClick = () => {
     if (isDrawer && closeDrawer) {
@@ -71,33 +91,46 @@ const Sidebar = ({
     }
   };
 
-  const getLinkClass = ({ isActive }) =>
-    `${linkClass} ${isActive ? activeClass : ''}`;
+  const handleLogout = () => {
+    if (isDrawer && closeDrawer) {
+      closeDrawer();
+    }
+
+    logout();
+  };
 
   return (
     <div
       className="
-        h-full
         flex
+        h-full
         flex-col
-        bg-white
-        dark:bg-gray-900
+
         border-r
-        border-gray-100
-        dark:border-gray-800
-        shadow-sm
+        border-gray-200
+
+        bg-white
+
+        dark:border-slate-800
+        dark:bg-slate-900
       "
     >
-      {/* Header / Logo */}
+      {/* ========================================
+          LOGO
+      ======================================== */}
+
       <div
         className={`
           flex
+          min-h-[72px]
           items-center
-          h-[72px]
-          px-4
+
           border-b
-          border-gray-100
-          dark:border-gray-800
+          border-gray-200
+
+          px-3
+
+          dark:border-slate-800
 
           ${
             collapsed && !isDrawer
@@ -106,37 +139,68 @@ const Sidebar = ({
           }
         `}
       >
-        <div className="flex items-center min-w-0">
+        <div
+          className={`
+            flex
+            min-w-0
+            items-center
+
+            ${
+              collapsed && !isDrawer
+                ? 'justify-center'
+                : ''
+            }
+          `}
+        >
           <img
             src="/logo.png"
-            alt="LuxePerfume Logo"
+            alt="LUXE"
             className="
-              h-10
-              w-10
+              h-11
+              w-11
               flex-shrink-0
-              rounded-full
+
+              rounded-xl
+
               object-cover
-              border
-              border-indigo-100
-              dark:border-indigo-800/40
+
+              shadow-sm
             "
           />
 
           {!collapsed && (
-            <span
-              className="
-                ml-3
-                truncate
-                text-lg
-                font-serif
-                font-bold
-                tracking-wide
-                text-indigo-800
-                dark:text-indigo-400
-              "
-            >
-              LuxePerfume
-            </span>
+            <div className="ml-3 min-w-0">
+              <p
+                className="
+                  truncate
+                  font-serif
+                  text-lg
+                  font-bold
+                  tracking-wide
+
+                  text-brand-primary
+
+                  dark:text-brand-secondary
+                "
+              >
+                LUXE
+              </p>
+
+              <p
+                className="
+                  truncate
+                  text-[10px]
+                  uppercase
+                  tracking-[0.15em]
+
+                  text-gray-400
+
+                  dark:text-gray-500
+                "
+              >
+                Perfume Management
+              </p>
+            </div>
           )}
         </div>
 
@@ -145,28 +209,50 @@ const Sidebar = ({
             type="button"
             onClick={closeDrawer}
             className="
-              ml-3
+              ml-2
+
               flex
               h-9
               w-9
               flex-shrink-0
               items-center
               justify-center
-              rounded-lg
+
+              rounded-xl
+
               text-gray-500
+
+              transition-colors
+
               hover:bg-gray-100
+              hover:text-gray-800
+
               dark:text-gray-400
-              dark:hover:bg-gray-800
+              dark:hover:bg-slate-800
+              dark:hover:text-white
             "
-            aria-label="Close sidebar"
+            aria-label="Close navigation"
           >
-            <X size={21} />
+            <X size={20} />
           </button>
         )}
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+      {/* ========================================
+          NAVIGATION
+      ======================================== */}
+
+      <nav
+        className="
+          flex-1
+          overflow-y-auto
+
+          px-3
+          py-4
+
+          space-y-1
+        "
+      >
         <NavLink
           to="/"
           end
@@ -174,8 +260,33 @@ const Sidebar = ({
           onClick={handleLinkClick}
         >
           <BarChart3 className={iconClass} />
-          <span className={linkTextClass}>Dashboard</span>
+          <span className={textClass}>
+            Dashboard
+          </span>
         </NavLink>
+
+        {/* Inventory */}
+
+        {!collapsed && (
+          <p
+            className="
+              px-3
+              pb-1
+              pt-4
+
+              text-[10px]
+              font-semibold
+              uppercase
+              tracking-wider
+
+              text-gray-400
+
+              dark:text-gray-500
+            "
+          >
+            Inventory
+          </p>
+        )}
 
         <NavLink
           to="/inventory/materials"
@@ -183,7 +294,9 @@ const Sidebar = ({
           onClick={handleLinkClick}
         >
           <FlaskRound className={iconClass} />
-          <span className={linkTextClass}>Raw Materials</span>
+          <span className={textClass}>
+            Raw Materials
+          </span>
         </NavLink>
 
         <NavLink
@@ -192,8 +305,33 @@ const Sidebar = ({
           onClick={handleLinkClick}
         >
           <Beaker className={iconClass} />
-          <span className={linkTextClass}>Bottles</span>
+          <span className={textClass}>
+            Bottles
+          </span>
         </NavLink>
+
+        {/* Production */}
+
+        {!collapsed && (
+          <p
+            className="
+              px-3
+              pb-1
+              pt-4
+
+              text-[10px]
+              font-semibold
+              uppercase
+              tracking-wider
+
+              text-gray-400
+
+              dark:text-gray-500
+            "
+          >
+            Production
+          </p>
+        )}
 
         <NavLink
           to="/production/batches"
@@ -201,7 +339,9 @@ const Sidebar = ({
           onClick={handleLinkClick}
         >
           <ClipboardList className={iconClass} />
-          <span className={linkTextClass}>Batches</span>
+          <span className={textClass}>
+            Batches
+          </span>
         </NavLink>
 
         <NavLink
@@ -210,7 +350,9 @@ const Sidebar = ({
           onClick={handleLinkClick}
         >
           <Sparkles className={iconClass} />
-          <span className={linkTextClass}>Products</span>
+          <span className={textClass}>
+            Products
+          </span>
         </NavLink>
 
         <NavLink
@@ -219,8 +361,33 @@ const Sidebar = ({
           onClick={handleLinkClick}
         >
           <Plus className={iconClass} />
-          <span className={linkTextClass}>New Product</span>
+          <span className={textClass}>
+            New Product
+          </span>
         </NavLink>
+
+        {/* Sales */}
+
+        {!collapsed && (
+          <p
+            className="
+              px-3
+              pb-1
+              pt-4
+
+              text-[10px]
+              font-semibold
+              uppercase
+              tracking-wider
+
+              text-gray-400
+
+              dark:text-gray-500
+            "
+          >
+            Sales
+          </p>
+        )}
 
         <NavLink
           to="/sales"
@@ -228,7 +395,9 @@ const Sidebar = ({
           onClick={handleLinkClick}
         >
           <DollarSign className={iconClass} />
-          <span className={linkTextClass}>Sales</span>
+          <span className={textClass}>
+            Sales
+          </span>
         </NavLink>
 
         <NavLink
@@ -237,7 +406,9 @@ const Sidebar = ({
           onClick={handleLinkClick}
         >
           <Plus className={iconClass} />
-          <span className={linkTextClass}>New Sale</span>
+          <span className={textClass}>
+            New Sale
+          </span>
         </NavLink>
 
         <NavLink
@@ -246,7 +417,9 @@ const Sidebar = ({
           onClick={handleLinkClick}
         >
           <TrendingUp className={iconClass} />
-          <span className={linkTextClass}>Sales Count</span>
+          <span className={textClass}>
+            Sales Count
+          </span>
         </NavLink>
 
         <NavLink
@@ -255,7 +428,9 @@ const Sidebar = ({
           onClick={handleLinkClick}
         >
           <Package className={iconClass} />
-          <span className={linkTextClass}>Sales by Product</span>
+          <span className={textClass}>
+            Sales by Product
+          </span>
         </NavLink>
 
         <NavLink
@@ -264,8 +439,33 @@ const Sidebar = ({
           onClick={handleLinkClick}
         >
           <ShoppingBag className={iconClass} />
-          <span className={linkTextClass}>Orders</span>
+          <span className={textClass}>
+            Orders
+          </span>
         </NavLink>
+
+        {/* Finance */}
+
+        {!collapsed && (
+          <p
+            className="
+              px-3
+              pb-1
+              pt-4
+
+              text-[10px]
+              font-semibold
+              uppercase
+              tracking-wider
+
+              text-gray-400
+
+              dark:text-gray-500
+            "
+          >
+            Finance
+          </p>
+        )}
 
         <NavLink
           to="/purchases"
@@ -273,7 +473,9 @@ const Sidebar = ({
           onClick={handleLinkClick}
         >
           <ShoppingCart className={iconClass} />
-          <span className={linkTextClass}>Purchases</span>
+          <span className={textClass}>
+            Purchases
+          </span>
         </NavLink>
 
         <NavLink
@@ -282,7 +484,9 @@ const Sidebar = ({
           onClick={handleLinkClick}
         >
           <Receipt className={iconClass} />
-          <span className={linkTextClass}>Expenses</span>
+          <span className={textClass}>
+            Expenses
+          </span>
         </NavLink>
 
         <NavLink
@@ -291,7 +495,9 @@ const Sidebar = ({
           onClick={handleLinkClick}
         >
           <Users className={iconClass} />
-          <span className={linkTextClass}>Investors</span>
+          <span className={textClass}>
+            Investors
+          </span>
         </NavLink>
 
         <NavLink
@@ -300,10 +506,33 @@ const Sidebar = ({
           onClick={handleLinkClick}
         >
           <FileText className={iconClass} />
-          <span className={linkTextClass}>Reports</span>
+          <span className={textClass}>
+            Reports
+          </span>
         </NavLink>
 
-        <div className="my-2 border-t border-gray-100 dark:border-gray-800" />
+        {/* Wastage */}
+
+        {!collapsed && (
+          <p
+            className="
+              px-3
+              pb-1
+              pt-4
+
+              text-[10px]
+              font-semibold
+              uppercase
+              tracking-wider
+
+              text-gray-400
+
+              dark:text-gray-500
+            "
+          >
+            Wastage
+          </p>
+        )}
 
         <NavLink
           to="/wastage"
@@ -311,7 +540,9 @@ const Sidebar = ({
           onClick={handleLinkClick}
         >
           <Trash2 className={iconClass} />
-          <span className={linkTextClass}>Wastage History</span>
+          <span className={textClass}>
+            Wastage History
+          </span>
         </NavLink>
 
         <NavLink
@@ -320,12 +551,35 @@ const Sidebar = ({
           onClick={handleLinkClick}
         >
           <Plus className={iconClass} />
-          <span className={linkTextClass}>Record Wastage</span>
+          <span className={textClass}>
+            Record Wastage
+          </span>
         </NavLink>
+
+        {/* Admin */}
 
         {user?.role === 'admin' && (
           <>
-            <div className="my-2 border-t border-gray-100 dark:border-gray-800" />
+            {!collapsed && (
+              <p
+                className="
+                  px-3
+                  pb-1
+                  pt-4
+
+                  text-[10px]
+                  font-semibold
+                  uppercase
+                  tracking-wider
+
+                  text-gray-400
+
+                  dark:text-gray-500
+                "
+              >
+                Administration
+              </p>
+            )}
 
             <NavLink
               to="/register"
@@ -333,25 +587,45 @@ const Sidebar = ({
               onClick={handleLinkClick}
             >
               <UserPlus className={iconClass} />
-              <span className={linkTextClass}>Register User</span>
+
+              <span className={textClass}>
+                Register User
+              </span>
             </NavLink>
           </>
         )}
       </nav>
 
-      {/* User */}
-      <div className="border-t border-gray-100 dark:border-gray-800 p-3">
+      {/* ========================================
+          USER / FOOTER
+      ======================================== */}
+
+      <div
+        className="
+          border-t
+          border-gray-200
+
+          p-3
+
+          dark:border-slate-800
+        "
+      >
         {user && !collapsed && (
           <div
             className="
+              mb-2
+
               flex
               items-center
               gap-3
-              rounded-lg
-              px-2
-              py-2
-              hover:bg-gray-50
-              dark:hover:bg-gray-800/60
+
+              rounded-xl
+
+              bg-gray-50
+
+              p-2.5
+
+              dark:bg-slate-800/60
             "
           >
             <div
@@ -362,30 +636,54 @@ const Sidebar = ({
                 flex-shrink-0
                 items-center
                 justify-center
+
                 rounded-full
-                bg-indigo-100
-                font-semibold
-                text-indigo-700
-                dark:bg-indigo-900/40
-                dark:text-indigo-300
+
+                bg-amber-100
+
+                font-bold
+                text-brand-primary
+
+                dark:bg-amber-900/30
+                dark:text-brand-secondary
               "
             >
-              {user.name?.charAt(0) || 'U'}
+              {user.name?.charAt(0)?.toUpperCase() || 'U'}
             </div>
 
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-gray-700 dark:text-gray-200">
+              <p
+                className="
+                  truncate
+                  text-sm
+                  font-semibold
+
+                  text-gray-700
+
+                  dark:text-gray-200
+                "
+              >
                 {user.name}
               </p>
 
-              <p className="truncate text-xs capitalize text-gray-400 dark:text-gray-500">
+              <p
+                className="
+                  truncate
+                  text-xs
+                  capitalize
+
+                  text-gray-400
+
+                  dark:text-gray-500
+                "
+              >
                 {user.role || 'staff'}
               </p>
             </div>
 
             <button
               type="button"
-              onClick={logout}
+              onClick={handleLogout}
               className="
                 flex
                 h-9
@@ -393,15 +691,22 @@ const Sidebar = ({
                 flex-shrink-0
                 items-center
                 justify-center
-                rounded-lg
+
+                rounded-xl
+
                 text-gray-400
+
+                transition-colors
+
                 hover:bg-red-50
                 hover:text-red-600
+
                 dark:text-gray-500
-                dark:hover:bg-red-900/30
+                dark:hover:bg-red-900/20
                 dark:hover:text-red-400
               "
               aria-label="Logout"
+              title="Logout"
             >
               <LogOut size={17} />
             </button>
@@ -413,29 +718,37 @@ const Sidebar = ({
             type="button"
             onClick={onToggleCollapse}
             className="
-              mt-2
               flex
+              h-10
               w-full
               items-center
               justify-center
-              rounded-lg
-              py-2
+
+              rounded-xl
+
               text-gray-400
-              hover:bg-indigo-50
-              hover:text-indigo-600
+
+              transition-colors
+
+              hover:bg-amber-50
+              hover:text-brand-primary
+
               dark:text-gray-500
-              dark:hover:bg-indigo-900/30
-              dark:hover:text-indigo-400
+              dark:hover:bg-amber-900/20
+              dark:hover:text-brand-secondary
             "
             aria-label={
-              collapsed ? 'Expand sidebar' : 'Collapse sidebar'
+              collapsed
+                ? 'Expand sidebar'
+                : 'Collapse sidebar'
             }
           >
             {collapsed ? (
-              <ChevronRight size={18} />
+              <ChevronRight size={19} />
             ) : (
               <>
                 <ChevronLeft size={18} />
+
                 <span className="ml-2 text-xs font-medium">
                   Collapse
                 </span>

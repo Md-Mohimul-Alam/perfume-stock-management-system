@@ -1,326 +1,1457 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
+import {
+  useEffect,
+  useState,
+} from 'react';
+
+import {
+  Link,
+  useNavigate,
+} from 'react-router-dom';
+
+import {
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  AlertCircle,
+  CheckCircle,
+  LoaderCircle,
+  X,
+  Sun,
+  Moon,
+  ShieldCheck,
+} from 'lucide-react';
+
 import API from '../api/axios';
-import logo from "../../public/logo.png";
+
+import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 const RESEND_COOLDOWN_SECONDS = 30;
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
-  const { login: authLogin, setAuthUser } = useAuth();
   const navigate = useNavigate();
 
-  // OTP states
-  const [showOtpModal, setShowOtpModal] = useState(false);
-  const [otp, setOtp] = useState('');
-  const [otpLoading, setOtpLoading] = useState(false);
-  const [otpError, setOtpError] = useState('');
-  const [otpSuccess, setOtpSuccess] = useState(false);
+  const { setAuthUser } =
+    useAuth();
 
-  // Resend states
-  const [resending, setResending] = useState(false);
-  const [resendMessage, setResendMessage] = useState('');
-  const [resendError, setResendError] = useState('');
-  const [cooldown, setCooldown] = useState(0);
+  const {
+    theme,
+    toggleTheme,
+  } = useTheme();
 
-  // --------------------------------------------------
-  // Cooldown ticker
-  // --------------------------------------------------
+  /* ========================================
+     LOGIN STATE
+  ======================================== */
+
+  const [email, setEmail] =
+    useState('');
+
+  const [password, setPassword] =
+    useState('');
+
+  const [loading, setLoading] =
+    useState(false);
+
+  const [
+    showPassword,
+    setShowPassword,
+  ] = useState(false);
+
+  const [error, setError] =
+    useState('');
+
+  /* ========================================
+     OTP STATE
+  ======================================== */
+
+  const [
+    showOtpModal,
+    setShowOtpModal,
+  ] = useState(false);
+
+  const [otp, setOtp] =
+    useState('');
+
+  const [
+    otpLoading,
+    setOtpLoading,
+  ] = useState(false);
+
+  const [
+    otpError,
+    setOtpError,
+  ] = useState('');
+
+  const [
+    otpSuccess,
+    setOtpSuccess,
+  ] = useState(false);
+
+  /* ========================================
+     RESEND STATE
+  ======================================== */
+
+  const [
+    resending,
+    setResending,
+  ] = useState(false);
+
+  const [
+    resendMessage,
+    setResendMessage,
+  ] = useState('');
+
+  const [
+    resendError,
+    setResendError,
+  ] = useState('');
+
+  const [
+    cooldown,
+    setCooldown,
+  ] = useState(0);
+
+  /* ========================================
+     OTP COOLDOWN
+  ======================================== */
+
   useEffect(() => {
-    if (cooldown <= 0) return;
-    const id = setInterval(() => {
-      setCooldown((c) => (c > 0 ? c - 1 : 0));
-    }, 1000);
-    return () => clearInterval(id);
+    if (cooldown <= 0) {
+      return undefined;
+    }
+
+    const timer = window.setTimeout(
+      () => {
+        setCooldown(
+          (previous) =>
+            Math.max(
+              previous - 1,
+              0
+            )
+        );
+      },
+      1000
+    );
+
+    return () => {
+      window.clearTimeout(
+        timer
+      );
+    };
   }, [cooldown]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
+  /* ========================================
+     LOCK BACKGROUND WHEN MODAL OPEN
+  ======================================== */
 
-    if (!email.trim() || !password.trim()) {
-      setError('Please fill in all fields.');
-      return;
-    }
-    if (!email.includes('@')) {
-      setError('Please enter a valid email address.');
-      return;
+  useEffect(() => {
+    if (!showOtpModal) {
+      return undefined;
     }
 
-    setLoading(true);
-    try {
-      await API.post('/auth/login', { email, password });
-      setLoading(false);
-      setShowOtpModal(true);
-      setOtp('');
+    const previousOverflow =
+      document.body.style.overflow;
+
+    document.body.style.overflow =
+      'hidden';
+
+    return () => {
+      document.body.style.overflow =
+        previousOverflow;
+    };
+  }, [showOtpModal]);
+
+  /* ========================================
+     LOGIN
+  ======================================== */
+
+  const handleSubmit =
+    async (event) => {
+      event.preventDefault();
+
+      setError('');
+
+      const cleanEmail =
+        email.trim().toLowerCase();
+
+      if (
+        !cleanEmail ||
+        !password.trim()
+      ) {
+        setError(
+          'Please fill in all fields.'
+        );
+
+        return;
+      }
+
+      if (
+        !cleanEmail.includes('@')
+      ) {
+        setError(
+          'Please enter a valid email address.'
+        );
+
+        return;
+      }
+
+      setLoading(true);
+
+      try {
+        await API.post(
+          '/auth/login',
+          {
+            email: cleanEmail,
+            password,
+          }
+        );
+
+        setEmail(cleanEmail);
+
+        setOtp('');
+        setOtpError('');
+        setOtpSuccess(false);
+
+        setResendMessage('');
+        setResendError('');
+
+        setCooldown(
+          RESEND_COOLDOWN_SECONDS
+        );
+
+        setShowOtpModal(true);
+      } catch (err) {
+        const message =
+          err.response?.data
+            ?.message ||
+          'Unable to sign in. Please try again.';
+
+        setError(message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+  /* ========================================
+     VERIFY LOGIN OTP
+  ======================================== */
+
+  const handleVerifyOtp =
+    async (event) => {
+      event.preventDefault();
+
+      const cleanOtp =
+        otp.trim();
+
       setOtpError('');
-      setOtpSuccess(false);
-      setResendMessage('');
+
+      if (
+        cleanOtp.length !== 6
+      ) {
+        setOtpError(
+          'Please enter the 6-digit OTP.'
+        );
+
+        return;
+      }
+
+      setOtpLoading(true);
+
+      try {
+        const response =
+          await API.post(
+            '/auth/verify-otp',
+            {
+              email,
+              otp: cleanOtp,
+            }
+          );
+
+        const {
+          token,
+          ...userData
+        } = response.data;
+
+        if (!token) {
+          throw new Error(
+            'Authentication token was not returned.'
+          );
+        }
+
+        setAuthUser(
+          userData,
+          token
+        );
+
+        setOtpSuccess(true);
+
+        window.setTimeout(() => {
+          setShowOtpModal(
+            false
+          );
+
+          navigate('/', {
+            replace: true,
+          });
+        }, 700);
+      } catch (err) {
+        const message =
+          err.response?.data
+            ?.message ||
+          err.message ||
+          'Invalid OTP. Please try again.';
+
+        setOtpError(message);
+        setOtpLoading(false);
+      }
+    };
+
+  /* ========================================
+     RESEND OTP
+  ======================================== */
+
+  const handleResend =
+    async () => {
+      if (
+        resending ||
+        cooldown > 0 ||
+        otpSuccess
+      ) {
+        return;
+      }
+
+      setResending(true);
+
       setResendError('');
-      setCooldown(RESEND_COOLDOWN_SECONDS);
-    } catch (err) {
-      setLoading(false);
-      const msg = err.response?.data?.message || 'Something went wrong. Please try again.';
-      setError(msg);
-    }
-  };
+      setResendMessage('');
 
-  const handleVerifyOtp = async (e) => {
-    e.preventDefault();
-    if (!otp.trim()) {
-      setOtpError('Please enter the OTP.');
-      return;
-    }
-    setOtpLoading(true);
-    setOtpError('');
-    try {
-      const response = await API.post('/auth/verify-otp', { email, otp });
-      const { token, ...userData } = response.data;
-      setAuthUser(userData, token);
-      setOtpSuccess(true);
-      setTimeout(() => {
-        setShowOtpModal(false);
-        navigate('/');
-      }, 1000);
-    } catch (err) {
-      setOtpLoading(false);
-      const msg = err.response?.data?.message || 'Invalid OTP. Please try again.';
-      setOtpError(msg);
-    }
-  };
+      try {
+        await API.post(
+          '/auth/resend-otp',
+          {
+            email,
+            purpose: 'login',
+          }
+        );
 
-  const handleResend = async () => {
-    if (resending || cooldown > 0) return;
+        setOtp('');
+        setOtpError('');
 
-    setResending(true);
-    setResendError('');
-    setResendMessage('');
+        setResendMessage(
+          'A new OTP has been sent to your email.'
+        );
 
-    try {
-      await API.post('/auth/resend-otp', {
-        email,
-        purpose: 'login',
-      });
-      setResendMessage('A new OTP has been sent to your email.');
-      setOtp('');
-      setOtpError('');
-      setCooldown(RESEND_COOLDOWN_SECONDS);
-    } catch (err) {
-      const msg =
-        err.response?.data?.message ||
-        'Could not resend OTP. Please try again.';
-      setResendError(msg);
-    } finally {
-      setResending(false);
-    }
-  };
+        setCooldown(
+          RESEND_COOLDOWN_SECONDS
+        );
+      } catch (err) {
+        const message =
+          err.response?.data
+            ?.message ||
+          'Could not resend OTP. Please try again.';
+
+        setResendError(
+          message
+        );
+      } finally {
+        setResending(false);
+      }
+    };
+
+  /* ========================================
+     CLOSE OTP
+  ======================================== */
 
   const closeModal = () => {
+    if (
+      otpLoading ||
+      otpSuccess
+    ) {
+      return;
+    }
+
     setShowOtpModal(false);
+
     setOtp('');
     setOtpError('');
+
     setResendMessage('');
     setResendError('');
+
     setCooldown(0);
   };
 
+  /* ========================================
+     SHARED INPUT CLASSES
+  ======================================== */
+
+  const inputClass = `
+    w-full
+    min-h-12
+
+    rounded-xl
+
+    border
+    border-gray-300
+
+    bg-white
+
+    px-4
+    py-3
+
+    text-[16px]
+    text-gray-900
+
+    outline-none
+
+    transition
+
+    placeholder:text-gray-400
+
+    focus:border-brand-primary
+    focus:ring-2
+    focus:ring-brand-primary/20
+
+    disabled:cursor-not-allowed
+    disabled:opacity-60
+
+    dark:border-slate-600
+    dark:bg-slate-800
+    dark:text-gray-100
+    dark:placeholder:text-gray-500
+
+    dark:focus:border-brand-secondary
+    dark:focus:ring-brand-secondary/20
+  `;
+
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-5 py-10">
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-xl p-8">
-        <div className="flex justify-center mb-6">
-          <img src={logo} alt="logo" className="w-40 object-contain" />
+    <div
+      className="
+        safe-top
+        safe-bottom
+
+        relative
+
+        flex
+        min-h-screen
+        min-h-[100dvh]
+
+        items-center
+        justify-center
+
+        overflow-hidden
+
+        bg-[#faf8f5]
+
+        px-4
+        py-8
+
+        dark:bg-slate-950
+
+        sm:px-6
+      "
+    >
+      {/* Background decoration */}
+
+      <div
+        className="
+          pointer-events-none
+          absolute
+          -left-28
+          -top-28
+
+          h-72
+          w-72
+
+          rounded-full
+
+          bg-amber-300/20
+
+          blur-3xl
+
+          dark:bg-amber-600/10
+        "
+      />
+
+      <div
+        className="
+          pointer-events-none
+          absolute
+          -bottom-32
+          -right-28
+
+          h-80
+          w-80
+
+          rounded-full
+
+          bg-orange-300/20
+
+          blur-3xl
+
+          dark:bg-orange-700/10
+        "
+      />
+
+      {/* Theme */}
+
+      <button
+        type="button"
+        onClick={toggleTheme}
+        className="
+          absolute
+          right-4
+          top-[calc(env(safe-area-inset-top)+16px)]
+
+          z-10
+
+          flex
+          h-10
+          w-10
+
+          items-center
+          justify-center
+
+          rounded-xl
+
+          border
+          border-gray-200
+
+          bg-white/90
+
+          text-gray-600
+
+          shadow-sm
+
+          backdrop-blur-xl
+
+          transition
+
+          hover:bg-amber-50
+          hover:text-brand-primary
+
+          dark:border-slate-700
+          dark:bg-slate-800/90
+          dark:text-gray-300
+
+          dark:hover:bg-slate-700
+          dark:hover:text-brand-secondary
+        "
+        aria-label={
+          theme === 'light'
+            ? 'Enable dark mode'
+            : 'Enable light mode'
+        }
+      >
+        {theme === 'light' ? (
+          <Moon size={20} />
+        ) : (
+          <Sun size={20} />
+        )}
+      </button>
+
+      {/* Login Card */}
+
+      <main
+        className="
+          relative
+          z-[1]
+
+          w-full
+          max-w-md
+
+          rounded-3xl
+
+          border
+          border-gray-200/80
+
+          bg-white/95
+
+          p-5
+
+          shadow-2xl
+          shadow-black/5
+
+          backdrop-blur-xl
+
+          dark:border-slate-700
+          dark:bg-slate-900/95
+          dark:shadow-black/30
+
+          sm:p-8
+        "
+      >
+        {/* Logo */}
+
+        <div className="mb-5 flex justify-center">
+          <img
+            src="/logo.png"
+            alt="LUXE Perfume"
+            className="
+              h-auto
+              w-36
+
+              object-contain
+
+              sm:w-40
+            "
+          />
         </div>
 
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-mutedNavy">Welcome Back</h2>
-          <p className="text-gray-500 mt-2">Sign in to your account</p>
+        {/* Header */}
+
+        <div className="mb-7 text-center">
+          <h1
+            className="
+              text-2xl
+              font-bold
+              tracking-tight
+
+              text-gray-900
+
+              dark:text-white
+
+              sm:text-3xl
+            "
+          >
+            Welcome Back
+          </h1>
+
+          <p
+            className="
+              mt-2
+              text-sm
+
+              text-gray-500
+
+              dark:text-gray-400
+            "
+          >
+            Sign in to LUXE Perfume Management
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Form */}
+
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4"
+        >
           {error && (
-            <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
-              <AlertCircle className="w-5 h-5 flex-shrink-0" />
-              <span>{error}</span>
+            <div
+              role="alert"
+              className="
+                flex
+                items-start
+                gap-2.5
+
+                rounded-xl
+
+                border
+                border-red-200
+
+                bg-red-50
+
+                px-4
+                py-3
+
+                text-sm
+                text-red-700
+
+                dark:border-red-900/60
+                dark:bg-red-950/30
+                dark:text-red-300
+              "
+            >
+              <AlertCircle
+                className="
+                  mt-0.5
+                  h-5
+                  w-5
+                  flex-shrink-0
+                "
+              />
+
+              <span>
+                {error}
+              </span>
             </div>
           )}
 
+          {/* Email */}
+
           <div>
+            <label
+              htmlFor="login-email"
+              className="
+                mb-1.5
+                block
+
+                text-sm
+                font-medium
+
+                text-gray-700
+
+                dark:text-gray-300
+              "
+            >
+              Email
+            </label>
+
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <Mail className="w-5 h-5 text-gray-400" />
-              </div>
+              <Mail
+                className="
+                  pointer-events-none
+
+                  absolute
+                  left-4
+                  top-1/2
+
+                  h-5
+                  w-5
+
+                  -translate-y-1/2
+
+                  text-gray-400
+                "
+              />
+
               <input
+                id="login-email"
                 type="email"
-                placeholder="Email address"
+                autoComplete="email"
+                inputMode="email"
+                placeholder="you@example.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={loading || showOtpModal}
-                className="w-full px-4 py-3 pl-11 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-400"
+                onChange={(event) => {
+                  setEmail(
+                    event.target.value
+                  );
+
+                  setError('');
+                }}
+                disabled={
+                  loading ||
+                  showOtpModal
+                }
+                className={`
+                  ${inputClass}
+
+                  pl-11
+                `}
                 required
               />
             </div>
           </div>
 
+          {/* Password */}
+
           <div>
+            <label
+              htmlFor="login-password"
+              className="
+                mb-1.5
+                block
+
+                text-sm
+                font-medium
+
+                text-gray-700
+
+                dark:text-gray-300
+              "
+            >
+              Password
+            </label>
+
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <Lock className="w-5 h-5 text-gray-400" />
-              </div>
+              <Lock
+                className="
+                  pointer-events-none
+
+                  absolute
+                  left-4
+                  top-1/2
+
+                  h-5
+                  w-5
+
+                  -translate-y-1/2
+
+                  text-gray-400
+                "
+              />
+
               <input
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Password"
+                id="login-password"
+                type={
+                  showPassword
+                    ? 'text'
+                    : 'password'
+                }
+                autoComplete="current-password"
+                placeholder="Enter password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={loading || showOtpModal}
-                className="w-full px-4 py-3 pl-11 pr-11 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-400"
+                onChange={(event) => {
+                  setPassword(
+                    event.target.value
+                  );
+
+                  setError('');
+                }}
+                disabled={
+                  loading ||
+                  showOtpModal
+                }
+                className={`
+                  ${inputClass}
+
+                  pl-11
+                  pr-12
+                `}
                 required
               />
+
               <button
                 type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600"
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                onClick={() =>
+                  setShowPassword(
+                    (previous) =>
+                      !previous
+                  )
+                }
+                className="
+                  absolute
+                  right-1
+                  top-1/2
+
+                  flex
+                  h-10
+                  w-10
+
+                  -translate-y-1/2
+
+                  items-center
+                  justify-center
+
+                  rounded-lg
+
+                  text-gray-400
+
+                  transition
+
+                  hover:bg-gray-100
+                  hover:text-gray-600
+
+                  dark:hover:bg-slate-700
+                  dark:hover:text-gray-200
+                "
+                aria-label={
+                  showPassword
+                    ? 'Hide password'
+                    : 'Show password'
+                }
               >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                {showPassword ? (
+                  <EyeOff size={19} />
+                ) : (
+                  <Eye size={19} />
+                )}
               </button>
             </div>
           </div>
 
-          <div className="flex items-center justify-between">
-            <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-              <input
-                type="checkbox"
-                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
-              Remember me
-            </label>
-            <Link to="/forgot-password" className="text-sm text-blue-600 hover:text-blue-800 font-medium">
+          {/* Forgot */}
+
+          <div className="flex justify-end">
+            <Link
+              to="/forgot-password"
+              className="
+                text-sm
+                font-medium
+
+                text-brand-primary
+
+                hover:underline
+
+                dark:text-brand-secondary
+              "
+            >
               Forgot password?
             </Link>
           </div>
 
+          {/* Submit */}
+
           <button
             type="submit"
-            disabled={loading || showOtpModal}
-            className="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+            disabled={
+              loading ||
+              showOtpModal
+            }
+            className="
+              flex
+              min-h-12
+              w-full
+
+              items-center
+              justify-center
+
+              gap-2
+
+              rounded-xl
+
+              bg-brand-primary
+
+              px-4
+              py-3
+
+              font-semibold
+
+              text-white
+
+              shadow-md
+              shadow-amber-900/10
+
+              transition
+
+              hover:brightness-95
+
+              active:scale-[0.99]
+
+              disabled:cursor-not-allowed
+              disabled:opacity-60
+            "
           >
-            {loading ? "Signing in..." : "Sign In"}
+            {loading && (
+              <LoaderCircle
+                size={19}
+                className="animate-spin"
+              />
+            )}
+
+            {loading
+              ? 'Signing in...'
+              : 'Sign In'}
           </button>
         </form>
 
-        <div className="text-center mt-8">
-          <p className="text-gray-600">Don't have an account?</p>
+        {/* Signup */}
+
+        <div
+          className="
+            mt-7
+
+            border-t
+            border-gray-200
+
+            pt-6
+
+            text-center
+
+            dark:border-slate-700
+          "
+        >
+          <p
+            className="
+              text-sm
+
+              text-gray-500
+
+              dark:text-gray-400
+            "
+          >
+            Don't have an account?
+          </p>
+
           <Link
             to="/register"
-            className="inline-block mt-3 px-6 py-2 rounded-full border border-gray-400 hover:bg-gray-800 hover:text-white transition"
+            className="
+              mt-3
+
+              inline-flex
+              min-h-10
+
+              items-center
+              justify-center
+
+              rounded-xl
+
+              border
+              border-brand-primary
+
+              px-5
+              py-2
+
+              text-sm
+              font-semibold
+
+              text-brand-primary
+
+              transition
+
+              hover:bg-brand-primary
+              hover:text-white
+
+              dark:border-brand-secondary
+              dark:text-brand-secondary
+
+              dark:hover:bg-brand-secondary
+              dark:hover:text-slate-950
+            "
           >
-            Sign Up
+            Create Account
           </Link>
         </div>
-      </div>
+      </main>
 
-      {/* OTP Modal */}
+      {/* ========================================
+          OTP MODAL
+      ======================================== */}
+
       {showOtpModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
-            <button
-              onClick={closeModal}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-              aria-label="Close modal"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+        <div
+          className="
+            safe-top
+            safe-bottom
 
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mx-auto mb-4">
-                <Mail className="w-8 h-8" />
+            fixed
+            inset-0
+            z-[100]
+
+            flex
+            items-center
+            justify-center
+
+            overflow-y-auto
+
+            bg-black/60
+
+            p-4
+
+            backdrop-blur-sm
+          "
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="otp-heading"
+        >
+          <div
+            className="
+              relative
+
+              my-auto
+
+              w-full
+              max-w-md
+
+              rounded-3xl
+
+              border
+              border-gray-200
+
+              bg-white
+
+              p-5
+
+              shadow-2xl
+
+              dark:border-slate-700
+              dark:bg-slate-900
+
+              sm:p-7
+            "
+          >
+            {!otpSuccess && (
+              <button
+                type="button"
+                onClick={closeModal}
+                disabled={
+                  otpLoading
+                }
+                className="
+                  absolute
+                  right-4
+                  top-4
+
+                  flex
+                  h-9
+                  w-9
+
+                  items-center
+                  justify-center
+
+                  rounded-xl
+
+                  text-gray-400
+
+                  transition
+
+                  hover:bg-gray-100
+                  hover:text-gray-700
+
+                  disabled:opacity-50
+
+                  dark:hover:bg-slate-800
+                  dark:hover:text-gray-200
+                "
+                aria-label="Close OTP verification"
+              >
+                <X size={20} />
+              </button>
+            )}
+
+            <div className="mb-6 text-center">
+              <div
+                className="
+                  mx-auto
+                  mb-4
+
+                  flex
+                  h-16
+                  w-16
+
+                  items-center
+                  justify-center
+
+                  rounded-full
+
+                  bg-amber-100
+
+                  text-brand-primary
+
+                  dark:bg-amber-900/30
+                  dark:text-brand-secondary
+                "
+              >
+                {otpSuccess ? (
+                  <CheckCircle
+                    className="h-8 w-8"
+                  />
+                ) : (
+                  <ShieldCheck
+                    className="h-8 w-8"
+                  />
+                )}
               </div>
-              <h3 className="text-2xl font-bold">Check Your Email</h3>
-              <p className="text-gray-500 mt-2">
-                We've sent a 6‑digit OTP to <br />
-                <span className="font-medium text-gray-700">{email}</span>
-              </p>
+
+              <h2
+                id="otp-heading"
+                className="
+                  text-xl
+                  font-bold
+
+                  text-gray-900
+
+                  dark:text-white
+
+                  sm:text-2xl
+                "
+              >
+                {otpSuccess
+                  ? 'Verified'
+                  : 'Check Your Email'}
+              </h2>
+
+              {!otpSuccess && (
+                <p
+                  className="
+                    mt-2
+
+                    text-sm
+
+                    text-gray-500
+
+                    dark:text-gray-400
+                  "
+                >
+                  Enter the 6-digit code sent to
+                  <br />
+
+                  <span
+                    className="
+                      break-all
+                      font-medium
+
+                      text-gray-700
+
+                      dark:text-gray-200
+                    "
+                  >
+                    {email}
+                  </span>
+                </p>
+              )}
             </div>
 
-            <form onSubmit={handleVerifyOtp} className="space-y-5">
-              <div>
-                <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-1">
-                  Enter OTP
-                </label>
-                <input
-                  id="otp"
-                  type="text"
-                  placeholder="123456"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                  disabled={otpLoading || otpSuccess}
-                  className="w-full px-4 py-3 text-center text-2xl tracking-widest border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-400"
-                  maxLength={6}
-                  required
-                  autoFocus
-                />
-                {otpError && (
-                  <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                    <AlertCircle className="w-4 h-4" />
-                    {otpError}
-                  </p>
-                )}
-                {otpSuccess && (
-                  <p className="text-green-500 text-sm mt-1 flex items-center gap-1">
-                    <CheckCircle className="w-4 h-4" />
-                    Verified! Redirecting...
-                  </p>
-                )}
-              </div>
+            {otpSuccess ? (
+              <div
+                className="
+                  rounded-xl
 
-              <button
-                type="submit"
-                disabled={otpLoading || otpSuccess}
-                className="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+                  border
+                  border-green-200
+
+                  bg-green-50
+
+                  px-4
+                  py-3
+
+                  text-center
+                  text-sm
+                  font-medium
+
+                  text-green-700
+
+                  dark:border-green-900/60
+                  dark:bg-green-950/30
+                  dark:text-green-300
+                "
               >
-                {otpLoading ? "Verifying..." : "Verify OTP"}
-              </button>
+                <CheckCircle
+                  className="
+                    mr-1
+                    inline
+                    h-4
+                    w-4
+                  "
+                />
 
-              {/* Resend block */}
-              <div className="text-center text-sm">
-                <p className="text-gray-500">
-                  Didn't receive it?{' '}
-                  <button
-                    type="button"
-                    onClick={handleResend}
-                    disabled={resending || cooldown > 0 || otpSuccess}
-                    className="text-blue-600 hover:underline disabled:cursor-not-allowed disabled:text-gray-400 disabled:no-underline"
-                  >
-                    {resending
-                      ? 'Sending...'
-                      : cooldown > 0
-                      ? `Resend in ${cooldown}s`
-                      : 'Resend'}
-                  </button>
-                </p>
-
-                {resendMessage && (
-                  <p className="mt-2 flex items-center justify-center gap-1 text-green-600">
-                    <CheckCircle className="w-4 h-4" />
-                    {resendMessage}
-                  </p>
-                )}
-                {resendError && (
-                  <p className="mt-2 flex items-center justify-center gap-1 text-red-500">
-                    <AlertCircle className="w-4 h-4" />
-                    {resendError}
-                  </p>
-                )}
+                Login verified. Opening dashboard...
               </div>
-            </form>
+            ) : (
+              <form
+                onSubmit={
+                  handleVerifyOtp
+                }
+                className="space-y-4"
+              >
+                <div>
+                  <label
+                    htmlFor="login-otp"
+                    className="
+                      mb-1.5
+                      block
+
+                      text-sm
+                      font-medium
+
+                      text-gray-700
+
+                      dark:text-gray-300
+                    "
+                  >
+                    Verification Code
+                  </label>
+
+                  <input
+                    id="login-otp"
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    pattern="[0-9]*"
+                    placeholder="123456"
+                    value={otp}
+                    onChange={(event) => {
+                      const value =
+                        event.target.value
+                          .replace(
+                            /\D/g,
+                            ''
+                          )
+                          .slice(0, 6);
+
+                      setOtp(value);
+                      setOtpError('');
+                    }}
+                    disabled={
+                      otpLoading
+                    }
+                    className={`
+                      ${inputClass}
+
+                      text-center
+                      text-2xl
+                      font-semibold
+                      tracking-[0.35em]
+                    `}
+                    maxLength={6}
+                    autoFocus
+                    required
+                  />
+
+                  {otpError && (
+                    <p
+                      role="alert"
+                      className="
+                        mt-2
+
+                        flex
+                        items-start
+                        gap-1.5
+
+                        text-sm
+                        text-red-600
+
+                        dark:text-red-400
+                      "
+                    >
+                      <AlertCircle
+                        className="
+                          mt-0.5
+                          h-4
+                          w-4
+                          flex-shrink-0
+                        "
+                      />
+
+                      {otpError}
+                    </p>
+                  )}
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={
+                    otpLoading ||
+                    otp.length !== 6
+                  }
+                  className="
+                    flex
+                    min-h-12
+                    w-full
+
+                    items-center
+                    justify-center
+
+                    gap-2
+
+                    rounded-xl
+
+                    bg-brand-primary
+
+                    py-3
+
+                    font-semibold
+                    text-white
+
+                    transition
+
+                    hover:brightness-95
+
+                    disabled:cursor-not-allowed
+                    disabled:opacity-60
+                  "
+                >
+                  {otpLoading && (
+                    <LoaderCircle
+                      size={19}
+                      className="animate-spin"
+                    />
+                  )}
+
+                  {otpLoading
+                    ? 'Verifying...'
+                    : 'Verify OTP'}
+                </button>
+
+                {/* Resend */}
+
+                <div className="text-center">
+                  <p
+                    className="
+                      text-sm
+
+                      text-gray-500
+
+                      dark:text-gray-400
+                    "
+                  >
+                    Didn't receive the code?{' '}
+
+                    <button
+                      type="button"
+                      onClick={
+                        handleResend
+                      }
+                      disabled={
+                        resending ||
+                        cooldown > 0
+                      }
+                      className="
+                        font-semibold
+
+                        text-brand-primary
+
+                        hover:underline
+
+                        disabled:cursor-not-allowed
+                        disabled:text-gray-400
+                        disabled:no-underline
+
+                        dark:text-brand-secondary
+
+                        dark:disabled:text-gray-500
+                      "
+                    >
+                      {resending
+                        ? 'Sending...'
+                        : cooldown > 0
+                          ? `Resend in ${cooldown}s`
+                          : 'Resend'}
+                    </button>
+                  </p>
+
+                  {resendMessage && (
+                    <p
+                      className="
+                        mt-2
+
+                        flex
+                        items-center
+                        justify-center
+                        gap-1
+
+                        text-xs
+                        text-green-600
+
+                        dark:text-green-400
+                      "
+                    >
+                      <CheckCircle
+                        className="h-4 w-4"
+                      />
+
+                      {resendMessage}
+                    </p>
+                  )}
+
+                  {resendError && (
+                    <p
+                      className="
+                        mt-2
+
+                        flex
+                        items-center
+                        justify-center
+                        gap-1
+
+                        text-xs
+                        text-red-600
+
+                        dark:text-red-400
+                      "
+                    >
+                      <AlertCircle
+                        className="h-4 w-4"
+                      />
+
+                      {resendError}
+                    </p>
+                  )}
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}
