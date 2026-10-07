@@ -19,12 +19,22 @@
     <!-- Theme -->
     <meta name="theme-color" content="#111111" />
 
-    <!-- Browser favicon -->
+    <!-- ✅ PWA manifest — what Android Chrome reads -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Browser favicon (Android fallback) -->
     <link
       rel="icon"
       type="image/png"
       sizes="192x192"
       href="/icons/icon-192.png"
+    />
+
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="512x512"
+      href="/icons/icon-512.png"
     />
 
     <!-- Apple Touch Icons -->
