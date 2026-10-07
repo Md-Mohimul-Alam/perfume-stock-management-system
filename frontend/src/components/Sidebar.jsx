@@ -108,7 +108,7 @@ const Sidebar = ({
       >
         <div className="flex items-center min-w-0">
           <img
-            src="/logo.jpg"
+            src="/logo.png"
             alt="LuxePerfume Logo"
             className="
               h-10

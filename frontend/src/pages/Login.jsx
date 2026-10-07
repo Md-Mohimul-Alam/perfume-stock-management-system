@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
 import API from '../api/axios';
-import logo from "../../public/logo.jpg";
+import logo from "../../public/logo.png";
 
 const RESEND_COOLDOWN_SECONDS = 30;
 

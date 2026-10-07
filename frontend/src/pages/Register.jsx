@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import API from '../api/axios';
 import toast from 'react-hot-toast';
 import { User, Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
-import logo from "../../public/logo.jpg";
+import logo from "../../public/logo.png";
 
 const Register = () => {
   const navigate = useNavigate();

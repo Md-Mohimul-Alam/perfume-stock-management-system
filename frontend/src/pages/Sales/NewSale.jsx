@@ -74,7 +74,7 @@ const NewSale = () => {
     }).join('');
 
     const totalAmount = sale.totalAmount || 0;
-    const logoUrl = window.location.origin + '/logo.jpg';
+    const logoUrl = window.location.origin + '/logo.png';
 
     const html = `
       <!DOCTYPE html>
