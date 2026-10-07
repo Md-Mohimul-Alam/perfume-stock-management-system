@@ -1,293 +1,1622 @@
+const mongoose = require('mongoose');
+
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const Sale = require('../models/Sale');
-const Transaction = require('../models/Transaction');
-const InventoryLog = require('../models/InventoryLog');
-const { deductRawMaterial, deductBottle } = require('../services/inventoryService');
-const mongoose = require('mongoose');
 
-// ============================================================
-// Helper: get the effective blend for a specific size
-// ============================================================
-function getSizeBlend(product, sizeMl) {
-  const sizeVariant = product.sizes?.find(s => s.sizeMl === sizeMl);
-  if (sizeVariant && sizeVariant.blendComponents && sizeVariant.blendComponents.length > 0) {
-    return sizeVariant.blendComponents;
+const {
+  deductRawMaterial,
+  deductBottle,
+} = require('../services/inventoryService');
+
+const BLEND_TOLERANCE = 0.01;
+const MAX_NUMBER_RETRIES = 3;
+
+/* ========================================
+   ERROR HELPERS
+======================================== */
+
+const createError = (
+  message,
+  statusCode = 400
+) => {
+  const error = new Error(message);
+  error.statusCode = statusCode;
+
+  return error;
+};
+
+const sendError = (
+  res,
+  error
+) => {
+  console.error(
+    'Order controller error:',
+    error
+  );
+
+  if (
+    error?.code === 11000
+  ) {
+    return res
+      .status(409)
+      .json({
+        message:
+          'Order or invoice number already exists',
+      });
   }
-  return product.blendComponents || [];
-}
 
-// ============================================================
-// Generate next order number
-// ============================================================
-async function generateOrderNo() {
-  const last = await Order.findOne({}, { orderNo: 1 }).sort({ orderNo: -1 }).lean();
-  let next = 1;
-  if (last && last.orderNo) {
-    const match = last.orderNo.match(/(\d+)$/);
-    if (match) next = parseInt(match[1]) + 1;
+  if (
+    error?.name === 'CastError'
+  ) {
+    return res
+      .status(400)
+      .json({
+        message:
+          'Invalid ID',
+      });
   }
-  return `ORD-${String(next).padStart(4, '0')}`;
-}
 
-// ============================================================
-// @desc    Create a new order (public – from client site)
-// @route   POST /api/orders
-// ============================================================
-exports.createOrder = async (req, res) => {
-  try {
-    const { customer, items, subtotal, tax, shipping, totalAmount, notes } = req.body;
+  const message =
+    error?.message ||
+    'Order operation failed';
 
-    // Validate
-    if (!customer || !customer.name || !customer.mobile || !customer.address || !customer.city) {
-      return res.status(400).json({ message: 'Customer details (name, mobile, address, city) are required' });
+  let status =
+    error?.statusCode ||
+    500;
+
+  if (
+    !error?.statusCode &&
+    /not found/i.test(message)
+  ) {
+    status = 404;
+  }
+
+  if (
+    !error?.statusCode &&
+    /invalid|insufficient|required|must|not available|stock|blend/i.test(
+      message
+    )
+  ) {
+    status = 400;
+  }
+
+  return res
+    .status(status)
+    .json({
+      message,
+    });
+};
+
+/* ========================================
+   NUMBER HELPERS
+======================================== */
+
+const toNumber = (
+  value,
+  label
+) => {
+  const parsed =
+    Number(value);
+
+  if (
+    !Number.isFinite(parsed)
+  ) {
+    throw createError(
+      `${label} must be a valid number`
+    );
+  }
+
+  return parsed;
+};
+
+const positiveNumber = (
+  value,
+  label
+) => {
+  const parsed =
+    toNumber(
+      value,
+      label
+    );
+
+  if (parsed <= 0) {
+    throw createError(
+      `${label} must be greater than 0`
+    );
+  }
+
+  return parsed;
+};
+
+const positiveInteger = (
+  value,
+  label
+) => {
+  const parsed =
+    positiveNumber(
+      value,
+      label
+    );
+
+  if (
+    !Number.isInteger(parsed)
+  ) {
+    throw createError(
+      `${label} must be a whole number`
+    );
+  }
+
+  return parsed;
+};
+
+const roundMoney = (
+  value
+) => {
+  return Math.round(
+    (Number(value) +
+      Number.EPSILON) *
+      100
+  ) / 100;
+};
+
+const getId = (
+  value
+) => {
+  return value?._id ||
+    value ||
+    null;
+};
+
+/* ========================================
+   SERVER PRICING CONFIG
+======================================== */
+
+/*
+  IMPORTANT:
+
+  Never trust:
+  - unitPrice
+  - subtotal
+  - tax
+  - shipping
+  - totalAmount
+
+  sent by the public client.
+
+  Product prices come from MongoDB.
+
+  Optional server-controlled values:
+
+  ORDER_SHIPPING_FEE=0
+  ORDER_TAX_RATE=0
+
+  ORDER_TAX_RATE is percentage.
+*/
+
+const getSafeEnvNumber = (
+  name,
+  fallback = 0
+) => {
+  const value =
+    Number(
+      process.env[name]
+    );
+
+  if (
+    !Number.isFinite(value) ||
+    value < 0
+  ) {
+    return fallback;
+  }
+
+  return value;
+};
+
+const getOrderPricingConfig =
+  () => {
+    return {
+      shippingFee:
+        getSafeEnvNumber(
+          'ORDER_SHIPPING_FEE',
+          0
+        ),
+
+      taxRate:
+        getSafeEnvNumber(
+          'ORDER_TAX_RATE',
+          0
+        ),
+    };
+  };
+
+/* ========================================
+   PRODUCT HELPERS
+======================================== */
+
+const getSizeVariant = (
+  product,
+  sizeMl
+) => {
+  return product.sizes?.find(
+    (size) =>
+      Number(size.sizeMl) ===
+      Number(sizeMl)
+  );
+};
+
+const getSizeBlend = (
+  product,
+  sizeMl
+) => {
+  const size =
+    getSizeVariant(
+      product,
+      sizeMl
+    );
+
+  if (
+    size?.blendComponents &&
+    size.blendComponents.length > 0
+  ) {
+    return size.blendComponents;
+  }
+
+  return (
+    product.blendComponents ||
+    []
+  );
+};
+
+const getRollOnOilMlPerUnit = (
+  sizeVariant
+) => {
+  const configured =
+    Number(
+      sizeVariant?.oilMlUsed
+    );
+
+  if (
+    Number.isFinite(configured) &&
+    configured > 0
+  ) {
+    return configured;
+  }
+
+  return positiveNumber(
+    sizeVariant?.sizeMl,
+    'Roll-on size'
+  );
+};
+
+/* ========================================
+   BLEND VALIDATION
+======================================== */
+
+const assertProductHasBlend = (
+  product,
+  sizeMl
+) => {
+  if (
+    product.type ===
+    'roll-on'
+  ) {
+    if (
+      !getId(
+        product.baseOil
+      )
+    ) {
+      throw createError(
+        `Product "${product.name}" has no base oil configured`
+      );
     }
-    if (!items || !Array.isArray(items) || items.length === 0) {
-      return res.status(400).json({ message: 'No items in order' });
+
+    return;
+  }
+
+  if (
+    product.type !==
+    'spray'
+  ) {
+    throw createError(
+      `Unsupported product type "${product.type}"`
+    );
+  }
+
+  const components =
+    getSizeBlend(
+      product,
+      sizeMl
+    );
+
+  if (!components.length) {
+    throw createError(
+      `Product "${product.name}" ${sizeMl}ml has no blend configured`
+    );
+  }
+
+  const totalPercentage =
+    components.reduce(
+      (total, component) =>
+        total +
+        Number(
+          component.percentage ||
+          0
+        ),
+      0
+    );
+
+  if (
+    Math.abs(
+      totalPercentage - 100
+    ) >
+    BLEND_TOLERANCE
+  ) {
+    throw createError(
+      `Product "${product.name}" ${sizeMl}ml blend totals ${totalPercentage}% instead of 100%`
+    );
+  }
+
+  for (
+    const component of
+    components
+  ) {
+    const percentage =
+      Number(
+        component.percentage ||
+        0
+      );
+
+    if (
+      percentage <= 0
+    ) {
+      continue;
     }
 
-    // Validate each item and enrich with product reference
-    const processedItems = [];
-    for (const item of items) {
-      if (!item.name || !item.sizeMl || !item.quantity || !item.unitPrice) {
-        return res.status(400).json({ message: `Invalid item: ${JSON.stringify(item)}` });
+    if (
+      !getId(
+        component.material
+      )
+    ) {
+      throw createError(
+        `Product "${product.name}" has a blend component without a material`
+      );
+    }
+  }
+};
+
+/* ========================================
+   CUSTOMER VALIDATION
+======================================== */
+
+const normalizeCustomer = (
+  customer
+) => {
+  if (!customer) {
+    throw createError(
+      'Customer information is required'
+    );
+  }
+
+  const name =
+    String(
+      customer.name || ''
+    ).trim();
+
+  const mobile =
+    String(
+      customer.mobile || ''
+    ).trim();
+
+  const address =
+    String(
+      customer.address || ''
+    ).trim();
+
+  const city =
+    String(
+      customer.city || ''
+    ).trim();
+
+  if (
+    !name ||
+    !mobile ||
+    !address ||
+    !city
+  ) {
+    throw createError(
+      'Customer name, mobile, address and city are required'
+    );
+  }
+
+  if (
+    name.length > 120
+  ) {
+    throw createError(
+      'Customer name is too long'
+    );
+  }
+
+  if (
+    mobile.length > 30
+  ) {
+    throw createError(
+      'Mobile number is too long'
+    );
+  }
+
+  if (
+    address.length > 500
+  ) {
+    throw createError(
+      'Address is too long'
+    );
+  }
+
+  if (
+    city.length > 120
+  ) {
+    throw createError(
+      'City is too long'
+    );
+  }
+
+  return {
+    name,
+    mobile,
+    address,
+    city,
+  };
+};
+
+/* ========================================
+   ORDER NUMBER
+======================================== */
+
+const generateOrderNo =
+  async () => {
+    const last =
+      await Order.findOne(
+        {
+          orderNo:
+            /^ORD-\d+$/,
+        },
+        {
+          orderNo: 1,
+        }
+      )
+        .sort({
+          createdAt: -1,
+        })
+        .lean();
+
+    let next = 1;
+
+    if (
+      last?.orderNo
+    ) {
+      const match =
+        last.orderNo.match(
+          /^ORD-(\d+)$/
+        );
+
+      if (match) {
+        next =
+          Number(match[1]) +
+          1;
+      }
+    }
+
+    return `ORD-${String(
+      next
+    ).padStart(4, '0')}`;
+  };
+
+/* ========================================
+   SALE INVOICE NUMBER
+======================================== */
+
+const generateSaleInvoiceNo =
+  async (session) => {
+    const last =
+      await Sale.findOne(
+        {
+          invoiceNo:
+            /^INV-\d+$/,
+        },
+        {
+          invoiceNo: 1,
+        }
+      )
+        .sort({
+          createdAt: -1,
+        })
+        .session(
+          session
+        )
+        .lean();
+
+    let next = 1;
+
+    if (
+      last?.invoiceNo
+    ) {
+      const match =
+        last.invoiceNo.match(
+          /^INV-(\d+)$/
+        );
+
+      if (match) {
+        next =
+          Number(match[1]) +
+          1;
+      }
+    }
+
+    return `INV-${String(
+      next
+    ).padStart(4, '0')}`;
+  };
+
+/* ========================================
+   CREATE PUBLIC ORDER ITEMS
+
+   SECURITY:
+   Prices are fetched from Product.sizes.
+======================================== */
+
+const preparePublicOrderItems =
+  async (items) => {
+    if (
+      !Array.isArray(items) ||
+      items.length === 0
+    ) {
+      throw createError(
+        'At least one order item is required'
+      );
+    }
+
+    const processedItems =
+      [];
+
+    for (
+      let index = 0;
+      index < items.length;
+      index += 1
+    ) {
+      const item =
+        items[index];
+
+      if (
+        !item?.product ||
+        !mongoose.isValidObjectId(
+          item.product
+        )
+      ) {
+        throw createError(
+          `Item ${index + 1} requires a valid product ID`
+        );
       }
 
-      let productRef = null;
-      if (item.product) {
-        productRef = await Product.findById(item.product).select('_id name sku');
+      const sizeMl =
+        positiveNumber(
+          item.sizeMl,
+          `Item ${index + 1} size`
+        );
+
+      const quantity =
+        positiveInteger(
+          item.quantity,
+          `Item ${index + 1} quantity`
+        );
+
+      /*
+        Load trusted product information
+        directly from database.
+      */
+
+      const product =
+        await Product.findById(
+          item.product
+        );
+
+      if (!product) {
+        throw createError(
+          `Product ${item.product} not found`,
+          404
+        );
       }
+
+      if (
+        product.isActive ===
+        false
+      ) {
+        throw createError(
+          `"${product.name}" is currently unavailable`
+        );
+      }
+
+      /*
+        This endpoint belongs to the
+        client-facing store.
+      */
+
+      if (
+        product.showOnClient ===
+        false
+      ) {
+        throw createError(
+          `"${product.name}" is not available for online ordering`
+        );
+      }
+
+      if (
+        product.isStockOut
+      ) {
+        throw createError(
+          `"${product.name}" is currently out of stock`
+        );
+      }
+
+      const sizeVariant =
+        getSizeVariant(
+          product,
+          sizeMl
+        );
+
+      if (!sizeVariant) {
+        throw createError(
+          `${sizeMl}ml size is not available for "${product.name}"`
+        );
+      }
+
+      /*
+        DO NOT use item.unitPrice.
+
+        This price comes directly from
+        Product.sizes.sellingPrice.
+      */
+
+      const unitPrice =
+        Number(
+          sizeVariant.sellingPrice
+        );
+
+      if (
+        !Number.isFinite(
+          unitPrice
+        ) ||
+        unitPrice < 0
+      ) {
+        throw createError(
+          `Invalid selling price configured for "${product.name}" ${sizeMl}ml`
+        );
+      }
+
+      const totalPrice =
+        roundMoney(
+          unitPrice *
+          quantity
+        );
 
       processedItems.push({
-        product: productRef ? productRef._id : undefined,
-        name: item.name,
-        sizeMl: item.sizeMl,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        totalPrice: item.unitPrice * item.quantity,
+        product:
+          product._id,
+
+        name:
+          product.name,
+
+        sizeMl,
+
+        quantity,
+
+        unitPrice,
+
+        totalPrice,
       });
     }
 
-    const orderNo = await generateOrderNo();
+    return processedItems;
+  };
 
-    const order = await Order.create({
-      orderNo,
-      customer: {
-        name: customer.name.trim(),
-        mobile: customer.mobile.trim(),
-        address: customer.address.trim(),
-        city: customer.city.trim(),
-      },
-      items: processedItems,
-      subtotal: subtotal || processedItems.reduce((s, i) => s + i.totalPrice, 0),
-      tax: tax || 0,
-      shipping: shipping || 0,
-      totalAmount: totalAmount || processedItems.reduce((s, i) => s + i.totalPrice, 0),
-      notes: notes || '',
-      status: 'pending',
-      source: 'client-site',
-    });
+/* ========================================
+   CREATE ORDER
+======================================== */
 
-    res.status(201).json({
-      message: 'Order placed successfully',
-      orderNo: order.orderNo,
-      order,
-    });
-  } catch (error) {
-    console.error('Create order error:', error);
-    res.status(500).json({ message: error.message });
-  }
-};
+exports.createOrder =
+  async (req, res) => {
+    try {
+      const customer =
+        normalizeCustomer(
+          req.body?.customer
+        );
 
-// ============================================================
-// @desc    Get all orders
-// @route   GET /api/orders
-// ============================================================
-exports.getOrders = async (req, res) => {
-  try {
-    const { status } = req.query;
-    const filter = {};
-    if (status) filter.status = status;
+      const processedItems =
+        await preparePublicOrderItems(
+          req.body?.items
+        );
 
-    const orders = await Order.find(filter)
-      .populate('items.product', 'name sku type')
-      .populate('saleId', 'invoiceNo')
-      .sort('-createdAt');
-    res.json(orders);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
+      /*
+        Server calculates subtotal.
+      */
 
-// ============================================================
-// @desc    Get single order
-// @route   GET /api/orders/:id
-// ============================================================
-exports.getOrderById = async (req, res) => {
-  try {
-    const order = await Order.findById(req.params.id)
-      .populate('items.product', 'name sku type')
-      .populate('saleId', 'invoiceNo totalAmount');
-    if (!order) return res.status(404).json({ message: 'Order not found' });
-    res.json(order);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
+      const subtotal =
+        roundMoney(
+          processedItems.reduce(
+            (total, item) =>
+              total +
+              item.totalPrice,
+            0
+          )
+        );
 
-// ============================================================
-// @desc    Update order status (pending / placed / cancelled)
-// @route   PUT /api/orders/:id/status
-// ============================================================
-exports.updateOrderStatus = async (req, res) => {
-  try {
-    const { status } = req.body;
-    if (!['pending', 'placed', 'cancelled'].includes(status)) {
-      return res.status(400).json({ message: 'Invalid status' });
-    }
-    const order = await Order.findById(req.params.id);
-    if (!order) return res.status(404).json({ message: 'Order not found' });
+      /*
+        Server-controlled pricing config.
 
-    order.status = status;
-    await order.save();
-    res.json({ message: `Order marked as ${status}`, order });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
+        Client cannot decide tax/shipping.
+      */
 
-// ============================================================
-// @desc    Convert order → Sale (deducts stock)
-// @route   POST /api/orders/:id/place
-// ============================================================
-exports.convertOrderToSale = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
+      const {
+        shippingFee,
+        taxRate,
+      } =
+        getOrderPricingConfig();
 
-  try {
-    const order = await Order.findById(req.params.id).session(session);
-    if (!order) {
-      await session.abortTransaction();
-      return res.status(404).json({ message: 'Order not found' });
-    }
-    if (order.saleId) {
-      await session.abortTransaction();
-      return res.status(400).json({ message: 'This order has already been converted to a sale' });
-    }
+      const tax =
+        roundMoney(
+          subtotal *
+          (taxRate / 100)
+        );
 
-    // ---------- Generate sequential invoice ----------
-    const lastSale = await Sale.findOne({}, { invoiceNo: 1 }).sort({ invoiceNo: -1 }).lean();
-    let nextNumber = 1;
-    if (lastSale && lastSale.invoiceNo) {
-      const match = lastSale.invoiceNo.match(/(\d+)$/);
-      if (match) nextNumber = parseInt(match[1]) + 1;
-    }
-    const invoiceNo = `INV-${String(nextNumber).padStart(4, '0')}`;
+      const shipping =
+        roundMoney(
+          shippingFee
+        );
 
-    // ---------- Process each item – deduct stock ----------
-    const saleItems = [];
-    let totalAmount = 0;
+      const totalAmount =
+        roundMoney(
+          subtotal +
+          tax +
+          shipping
+        );
 
-    for (const orderItem of order.items) {
-      const product = await Product.findById(orderItem.product).populate('sizes.bottle').session(session);
-      if (!product) {
-        throw new Error(`Product "${orderItem.name}" (${orderItem.product}) not found`);
+      /*
+        Retry if simultaneous requests
+        generate the same ORD number.
+      */
+
+      for (
+        let attempt = 1;
+        attempt <=
+        MAX_NUMBER_RETRIES;
+        attempt += 1
+      ) {
+        try {
+          const orderNo =
+            await generateOrderNo();
+
+          const order =
+            await Order.create({
+              orderNo,
+
+              customer,
+
+              items:
+                processedItems,
+
+              subtotal,
+
+              tax,
+
+              shipping,
+
+              totalAmount,
+
+              notes:
+                String(
+                  req.body
+                    ?.notes ||
+                    ''
+                )
+                  .trim()
+                  .slice(
+                    0,
+                    1000
+                  ),
+
+              status:
+                'pending',
+
+              source:
+                'client-site',
+            });
+
+          return res
+            .status(201)
+            .json({
+              message:
+                'Order placed successfully',
+
+              orderNo:
+                order.orderNo,
+
+              order,
+            });
+        } catch (error) {
+          if (
+            error?.code ===
+              11000 &&
+            attempt <
+              MAX_NUMBER_RETRIES
+          ) {
+            continue;
+          }
+
+          throw error;
+        }
       }
 
-      const sizeVariant = product.sizes.find(s => s.sizeMl === orderItem.sizeMl);
-      if (!sizeVariant) {
-        throw new Error(`Size ${orderItem.sizeMl}ml not available for ${product.name}`);
-      }
+      throw createError(
+        'Could not generate a unique order number',
+        409
+      );
+    } catch (error) {
+      return sendError(
+        res,
+        error
+      );
+    }
+  };
 
-      // Deduct raw materials
-      if (product.type === 'roll-on') {
-        if (product.baseOil) {
-          await deductRawMaterial(
-            product.baseOil,
-            sizeVariant.oilMlUsed * orderItem.quantity,
-            'sale',
-            null
+/* ========================================
+   GET ORDERS
+======================================== */
+
+exports.getOrders =
+  async (req, res) => {
+    try {
+      const {
+        status,
+      } = req.query;
+
+      const filter = {};
+
+      if (status) {
+        if (
+          ![
+            'pending',
+            'placed',
+            'cancelled',
+          ].includes(
+            status
+          )
+        ) {
+          throw createError(
+            'Invalid order status'
           );
         }
-      } else {
-        const comps = getSizeBlend(product, orderItem.sizeMl);
-        for (const comp of comps) {
-          const pct = comp.percentage || 0;
-          if (pct <= 0) continue;
-          const mlUsed = (sizeVariant.sizeMl * pct / 100) * orderItem.quantity;
-          if (mlUsed <= 0) continue;
-          await deductRawMaterial(comp.material, mlUsed, 'sale', null);
-        }
+
+        filter.status =
+          status;
       }
 
-      // Deduct bottles
-      await deductBottle(sizeVariant.bottle, orderItem.quantity, 'sale', null);
+      const orders =
+        await Order.find(
+          filter
+        )
+          .populate(
+            'items.product',
+            'name sku type isActive showOnClient isStockOut'
+          )
+          .populate(
+            'saleId',
+            'invoiceNo totalAmount paymentStatus'
+          )
+          .sort({
+            createdAt: -1,
+          });
 
-      totalAmount += orderItem.totalPrice;
+      return res.json(
+        orders
+      );
+    } catch (error) {
+      return sendError(
+        res,
+        error
+      );
+    }
+  };
 
-      saleItems.push({
-        product: product._id,
-        sizeMl: orderItem.sizeMl,
-        quantity: orderItem.quantity,
-        unitPrice: orderItem.unitPrice,
-        totalPrice: orderItem.totalPrice,
+/* ========================================
+   GET SINGLE ORDER
+======================================== */
+
+exports.getOrderById =
+  async (req, res) => {
+    try {
+      if (
+        !mongoose.isValidObjectId(
+          req.params.id
+        )
+      ) {
+        throw createError(
+          'Invalid order ID'
+        );
+      }
+
+      const order =
+        await Order.findById(
+          req.params.id
+        )
+          .populate(
+            'items.product',
+            'name sku type isActive'
+          )
+          .populate(
+            'saleId',
+            'invoiceNo totalAmount paymentStatus'
+          );
+
+      if (!order) {
+        throw createError(
+          'Order not found',
+          404
+        );
+      }
+
+      return res.json(
+        order
+      );
+    } catch (error) {
+      return sendError(
+        res,
+        error
+      );
+    }
+  };
+
+/* ========================================
+   UPDATE ORDER STATUS
+======================================== */
+
+exports.updateOrderStatus =
+  async (req, res) => {
+    try {
+      if (
+        !mongoose.isValidObjectId(
+          req.params.id
+        )
+      ) {
+        throw createError(
+          'Invalid order ID'
+        );
+      }
+
+      const status =
+        req.body?.status;
+
+      if (
+        ![
+          'pending',
+          'placed',
+          'cancelled',
+        ].includes(status)
+      ) {
+        throw createError(
+          'Invalid order status'
+        );
+      }
+
+      const order =
+        await Order.findById(
+          req.params.id
+        );
+
+      if (!order) {
+        throw createError(
+          'Order not found',
+          404
+        );
+      }
+
+      /*
+        If order already created a Sale,
+        keep the order marked placed.
+
+        Otherwise Sale and inventory
+        records would become inconsistent.
+      */
+
+      if (
+        order.saleId &&
+        status !==
+          'placed'
+      ) {
+        throw createError(
+          'This order is already connected to a sale and must remain placed'
+        );
+      }
+
+      /*
+        Do not manually mark an order as
+        placed without creating the Sale.
+
+        Use POST /orders/:id/place instead.
+      */
+
+      if (
+        status === 'placed' &&
+        !order.saleId
+      ) {
+        throw createError(
+          'Use the Place Order action to convert this order into a sale'
+        );
+      }
+
+      order.status =
+        status;
+
+      await order.save();
+
+      return res.json({
+        message:
+          `Order marked as ${status}`,
+
+        order,
+      });
+    } catch (error) {
+      return sendError(
+        res,
+        error
+      );
+    }
+  };
+
+/* ========================================
+   PREPARE ORDER FOR SALE
+======================================== */
+
+const prepareOrderSaleItems =
+  async ({
+    order,
+    session,
+  }) => {
+    const preparedItems =
+      [];
+
+    let totalAmount = 0;
+
+    for (
+      let index = 0;
+      index <
+      order.items.length;
+      index += 1
+    ) {
+      const orderItem =
+        order.items[index];
+
+      const productId =
+        getId(
+          orderItem.product
+        );
+
+      /*
+        Old orders may have been created
+        without a product reference.
+
+        We cannot safely deduct stock from
+        those orders automatically.
+      */
+
+      if (
+        !productId ||
+        !mongoose.isValidObjectId(
+          productId
+        )
+      ) {
+        throw createError(
+          `Order item "${orderItem.name}" does not have a valid product reference`
+        );
+      }
+
+      const product =
+        await Product.findById(
+          productId
+        )
+          .populate(
+            'sizes.bottle'
+          )
+          .session(
+            session
+          );
+
+      if (!product) {
+        throw createError(
+          `Product "${orderItem.name}" not found`,
+          404
+        );
+      }
+
+      const sizeMl =
+        positiveNumber(
+          orderItem.sizeMl,
+          `Item ${index + 1} size`
+        );
+
+      const quantity =
+        positiveInteger(
+          orderItem.quantity,
+          `Item ${index + 1} quantity`
+        );
+
+      const sizeVariant =
+        getSizeVariant(
+          product,
+          sizeMl
+        );
+
+      if (!sizeVariant) {
+        throw createError(
+          `${sizeMl}ml size is no longer available for "${product.name}"`
+        );
+      }
+
+      assertProductHasBlend(
+        product,
+        sizeMl
+      );
+
+      const bottleId =
+        getId(
+          sizeVariant.bottle
+        );
+
+      if (!bottleId) {
+        throw createError(
+          `Bottle is not configured for "${product.name}" ${sizeMl}ml`
+        );
+      }
+
+      /*
+        Use the trusted price stored
+        on the order.
+
+        New orders store a price that
+        was already fetched from MongoDB.
+      */
+
+      const unitPrice =
+        Number(
+          orderItem.unitPrice
+        );
+
+      if (
+        !Number.isFinite(
+          unitPrice
+        ) ||
+        unitPrice < 0
+      ) {
+        throw createError(
+          `Invalid stored price for "${product.name}"`
+        );
+      }
+
+      const totalPrice =
+        roundMoney(
+          unitPrice *
+          quantity
+        );
+
+      totalAmount +=
+        totalPrice;
+
+      preparedItems.push({
+        product,
+
+        sizeVariant,
+
+        sizeMl,
+
+        quantity,
+
+        saleItem: {
+          product:
+            product._id,
+
+          sizeMl,
+
+          quantity,
+
+          unitPrice,
+
+          totalPrice,
+        },
       });
     }
 
-    // ---------- Create the Sale ----------
-    const sale = await Sale.create([{
-      invoiceNo,
-      channel: 'Online Order',
-      items: saleItems,
-      totalAmount,
-      saleDate: new Date(),
-      paymentStatus: 'due',   // Online orders default to due – admin marks paid when collected
-      notes: `Order ${order.orderNo} – ${order.customer.name} (${order.customer.mobile})`,
-    }], { session });
+    return {
+      preparedItems,
 
-    const createdSale = sale[0];
+      totalAmount:
+        roundMoney(
+          totalAmount
+        ),
+    };
+  };
 
-    // ---------- Link InventoryLogs to Sale ----------
-    await InventoryLog.updateMany(
-      { reference: null, reason: 'sale' },
-      { reference: createdSale._id, refModel: 'Sale' }
-    ).session(session);
+/* ========================================
+   DEDUCT ORDER INVENTORY
+======================================== */
 
-    // ---------- Mark order as placed ----------
-    order.status = 'placed';
-    order.saleId = createdSale._id;
-    await order.save({ session });
+const deductOrderInventory =
+  async ({
+    preparedItems,
+    sale,
+    session,
+  }) => {
+    for (
+      const item of
+      preparedItems
+    ) {
+      const {
+        product,
+        sizeVariant,
+        sizeMl,
+        quantity,
+      } = item;
 
-    await session.commitTransaction();
+      /* --------------------------------
+         ROLL-ON
+      -------------------------------- */
 
-    res.json({
-      message: `Order ${order.orderNo} placed successfully. Sale ${invoiceNo} created.`,
-      sale: createdSale,
-      order,
-    });
-  } catch (error) {
-    await session.abortTransaction();
-    console.error('Convert order to sale error:', error);
-    res.status(500).json({ message: error.message });
-  } finally {
-    session.endSession();
-  }
-};
+      if (
+        product.type ===
+        'roll-on'
+      ) {
+        const oilPerUnit =
+          getRollOnOilMlPerUnit(
+            sizeVariant
+          );
 
-// ============================================================
-// @desc    Delete an order
-// @route   DELETE /api/orders/:id
-// ============================================================
-exports.deleteOrder = async (req, res) => {
-  try {
-    const order = await Order.findById(req.params.id);
-    if (!order) return res.status(404).json({ message: 'Order not found' });
-    if (order.saleId) {
-      return res.status(400).json({ message: 'Cannot delete an order already converted to a sale. Delete the sale first.' });
+        await deductRawMaterial(
+          getId(
+            product.baseOil
+          ),
+
+          oilPerUnit *
+            quantity,
+
+          'sale',
+
+          sale,
+
+          session
+        );
+      }
+
+      /* --------------------------------
+         SPRAY
+      -------------------------------- */
+
+      if (
+        product.type ===
+        'spray'
+      ) {
+        const components =
+          getSizeBlend(
+            product,
+            sizeMl
+          );
+
+        for (
+          const component of
+          components
+        ) {
+          const percentage =
+            Number(
+              component.percentage ||
+                0
+            );
+
+          if (
+            percentage <= 0
+          ) {
+            continue;
+          }
+
+          const materialId =
+            getId(
+              component.material
+            );
+
+          const mlUsed =
+            sizeMl *
+            (percentage /
+              100) *
+            quantity;
+
+          if (
+            mlUsed <= 0
+          ) {
+            continue;
+          }
+
+          await deductRawMaterial(
+            materialId,
+
+            mlUsed,
+
+            'sale',
+
+            sale,
+
+            session
+          );
+        }
+      }
+
+      /* --------------------------------
+         BOTTLE
+      -------------------------------- */
+
+      await deductBottle(
+        getId(
+          sizeVariant.bottle
+        ),
+
+        quantity,
+
+        'sale',
+
+        sale,
+
+        session
+      );
     }
-    await order.deleteOne();
-    res.json({ message: 'Order deleted' });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
+  };
+
+/* ========================================
+   CONVERT ORDER TO SALE
+======================================== */
+
+exports.convertOrderToSale =
+  async (req, res) => {
+    for (
+      let attempt = 1;
+      attempt <=
+      MAX_NUMBER_RETRIES;
+      attempt += 1
+    ) {
+      const session =
+        await mongoose.startSession();
+
+      try {
+        session.startTransaction();
+
+        if (
+          !mongoose.isValidObjectId(
+            req.params.id
+          )
+        ) {
+          throw createError(
+            'Invalid order ID'
+          );
+        }
+
+        const order =
+          await Order.findById(
+            req.params.id
+          ).session(
+            session
+          );
+
+        if (!order) {
+          throw createError(
+            'Order not found',
+            404
+          );
+        }
+
+        if (
+          order.saleId
+        ) {
+          throw createError(
+            'This order has already been converted to a sale'
+          );
+        }
+
+        if (
+          order.status ===
+          'cancelled'
+        ) {
+          throw createError(
+            'A cancelled order cannot be converted to a sale'
+          );
+        }
+
+        const {
+          preparedItems,
+          totalAmount,
+        } =
+          await prepareOrderSaleItems({
+            order,
+            session,
+          });
+
+        const invoiceNo =
+          await generateSaleInvoiceNo(
+            session
+          );
+
+        /*
+          Create Sale first inside
+          transaction.
+
+          Online orders remain due until
+          payment is collected.
+        */
+
+        const [sale] =
+          await Sale.create(
+            [
+              {
+                invoiceNo,
+
+                channel:
+                  'Online Order',
+
+                items:
+                  preparedItems.map(
+                    (item) =>
+                      item.saleItem
+                  ),
+
+                totalAmount,
+
+                saleDate:
+                  new Date(),
+
+                paymentStatus:
+                  'due',
+
+                notes:
+                  `Order ${order.orderNo} – ${order.customer.name} (${order.customer.mobile})`,
+              },
+            ],
+            {
+              session,
+            }
+          );
+
+        /*
+          Deduct stock.
+
+          Exact inventory logs receive
+          sale._id immediately.
+        */
+
+        await deductOrderInventory(
+          {
+            preparedItems,
+
+            sale,
+
+            session,
+          }
+        );
+
+        /*
+          No cash transaction is created
+          here because paymentStatus = due.
+
+          saleController.updatePayment()
+          creates cash_in when marked paid.
+        */
+
+        order.status =
+          'placed';
+
+        order.saleId =
+          sale._id;
+
+        await order.save({
+          session,
+        });
+
+        await session.commitTransaction();
+
+        return res.json({
+          message:
+            `Order ${order.orderNo} placed successfully. Sale ${invoiceNo} created.`,
+
+          sale,
+
+          order,
+        });
+      } catch (error) {
+        await session.abortTransaction();
+
+        /*
+          Sequential invoice collision:
+          retry entire transaction.
+
+          All stock deductions from the
+          failed attempt are rolled back.
+        */
+
+        if (
+          error?.code ===
+            11000 &&
+          attempt <
+            MAX_NUMBER_RETRIES
+        ) {
+          continue;
+        }
+
+        return sendError(
+          res,
+          error
+        );
+      } finally {
+        session.endSession();
+      }
+    }
+
+    return res
+      .status(409)
+      .json({
+        message:
+          'Could not generate a unique sale invoice. Please try again.',
+      });
+  };
+
+/* ========================================
+   DELETE ORDER
+======================================== */
+
+exports.deleteOrder =
+  async (req, res) => {
+    try {
+      if (
+        !mongoose.isValidObjectId(
+          req.params.id
+        )
+      ) {
+        throw createError(
+          'Invalid order ID'
+        );
+      }
+
+      const order =
+        await Order.findById(
+          req.params.id
+        );
+
+      if (!order) {
+        throw createError(
+          'Order not found',
+          404
+        );
+      }
+
+      if (
+        order.saleId
+      ) {
+        throw createError(
+          'Cannot delete an order already converted to a sale. Delete/reverse the sale first.'
+        );
+      }
+
+      await order.deleteOne();
+
+      return res.json({
+        message:
+          'Order deleted successfully',
+      });
+    } catch (error) {
+      return sendError(
+        res,
+        error
+      );
+    }
+  };

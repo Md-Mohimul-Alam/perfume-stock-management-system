@@ -1,562 +1,2186 @@
+const mongoose = require('mongoose');
+
 const Purchase = require('../models/Purchase');
 const RawMaterial = require('../models/RawMaterial');
 const Bottle = require('../models/Bottle');
 const InventoryLog = require('../models/InventoryLog');
 const Transaction = require('../models/Transaction');
-const { generateInvoiceNo } = require('../utils/generateInvoice');
-const mongoose = require('mongoose');
 
-// @desc    Create a purchase (materials/bottles)
-// @route   POST /api/purchases
-exports.createPurchase = async (req, res) => {
-  try {
-    const { supplier, items, purchaseDate, notes } = req.body;
+const {
+  generateInvoiceNo,
+} = require('../utils/generateInvoice');
 
-    // Calculate total and process each item
-    let totalAmount = 0;
-    const processedItems = [];
+const MAX_INVOICE_RETRIES = 3;
 
-    for (const item of items) {
-      const { itemType, item: itemId, quantity, costPerUnit } = item;
-      const totalCost = quantity * costPerUnit;
-      totalAmount += totalCost;
+/* ========================================
+   BASIC HELPERS
+======================================== */
 
-      let itemRef;
-      if (itemType === 'RawMaterial') {
-        itemRef = await RawMaterial.findById(itemId);
-        if (!itemRef) throw new Error(`Material ${itemId} not found`);
-        itemRef.addPurchase(quantity, costPerUnit, totalCost, supplier, req.body.invoiceNo);
-        await itemRef.save();
+const createError = (
+  message,
+  statusCode = 400
+) => {
+  const error = new Error(message);
 
-        await InventoryLog.create({
-          material: itemId,
-          changeQuantity: quantity,
-          reason: 'purchase',
-          reference: null, // will be set after purchase creation
-          notes: `Purchase invoice ${req.body.invoiceNo || 'manual'}`,
-        });
-      } else {
-        itemRef = await Bottle.findById(itemId);
-        if (!itemRef) throw new Error(`Bottle ${itemId} not found`);
-        itemRef.addPurchase(quantity, costPerUnit, totalCost, supplier, req.body.invoiceNo);
-        await itemRef.save();
+  error.statusCode =
+    statusCode;
 
-        await InventoryLog.create({
-          bottle: itemId,
-          changeQuantity: quantity,
-          reason: 'purchase',
-          notes: `Purchase invoice ${req.body.invoiceNo || 'manual'}`,
-        });
-      }
+  return error;
+};
 
-      processedItems.push({
-        itemType,
-        item: itemId,
-        quantity,
-        costPerUnit,
-        totalCost,
-      });
-    }
+const toNumber = (
+  value,
+  label
+) => {
+  const parsed =
+    Number(value);
 
-    const invoiceNo = req.body.invoiceNo || generateInvoiceNo('PUR');
-    const purchase = await Purchase.create({
-      invoiceNo,
-      supplier,
-      items: processedItems,
-      totalAmount,
-      purchaseDate: purchaseDate || Date.now(),
-      notes,
-    });
+  if (
+    !Number.isFinite(parsed)
+  ) {
+    throw createError(
+      `${label} must be a valid number`
+    );
+  }
 
-    // Link logs to purchase
-    await InventoryLog.updateMany(
-      { reference: null, reason: 'purchase' },
-      { reference: purchase._id, refModel: 'Purchase' }
+  return parsed;
+};
+
+const positiveNumber = (
+  value,
+  label
+) => {
+  const parsed =
+    toNumber(
+      value,
+      label
     );
 
-    // Record transaction (cash out)
-    await Transaction.create({
-      type: 'cash_out',
-      amount: totalAmount,
-      category: 'Purchase',
-      reference: purchase._id,
-      refModel: 'Purchase',
-      description: `Purchase ${invoiceNo}`,
+  if (parsed <= 0) {
+    throw createError(
+      `${label} must be greater than 0`
+    );
+  }
+
+  return parsed;
+};
+
+const positiveInteger = (
+  value,
+  label
+) => {
+  const parsed =
+    positiveNumber(
+      value,
+      label
+    );
+
+  if (
+    !Number.isInteger(parsed)
+  ) {
+    throw createError(
+      `${label} must be a whole number`
+    );
+  }
+
+  return parsed;
+};
+
+const validateObjectId = (
+  value,
+  label
+) => {
+  if (
+    !mongoose.isValidObjectId(
+      value
+    )
+  ) {
+    throw createError(
+      `Invalid ${label}`
+    );
+  }
+
+  return value;
+};
+
+/* ========================================
+   DATE
+======================================== */
+
+const parsePurchaseDate = (
+  value,
+  fallback = null
+) => {
+  if (
+    value === undefined ||
+    value === null ||
+    value === ''
+  ) {
+    return (
+      fallback ||
+      new Date()
+    );
+  }
+
+  const date =
+    new Date(value);
+
+  if (
+    Number.isNaN(
+      date.getTime()
+    )
+  ) {
+    throw createError(
+      'Invalid purchase date'
+    );
+  }
+
+  return date;
+};
+
+/* ========================================
+   ERROR RESPONSE
+======================================== */
+
+const sendError = (
+  res,
+  error
+) => {
+  console.error(
+    'Purchase controller error:',
+    error
+  );
+
+  if (
+    error?.code === 11000
+  ) {
+    return res
+      .status(409)
+      .json({
+        message:
+          'Purchase invoice already exists',
+      });
+  }
+
+  if (
+    error?.name ===
+    'CastError'
+  ) {
+    return res
+      .status(400)
+      .json({
+        message:
+          'Invalid ID',
+      });
+  }
+
+  const message =
+    error?.message ||
+    'Purchase operation failed';
+
+  let status =
+    error?.statusCode ||
+    500;
+
+  if (
+    !error?.statusCode &&
+    /not found/i.test(
+      message
+    )
+  ) {
+    status = 404;
+  }
+
+  if (
+    !error?.statusCode &&
+    /invalid|cannot|must|required|duplicate|stock/i.test(
+      message
+    )
+  ) {
+    status = 400;
+  }
+
+  return res
+    .status(status)
+    .json({
+      message,
     });
-
-    res.status(201).json(purchase);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
 };
 
-// @desc    Get all purchases
-// @route   GET /api/purchases
-exports.getPurchases = async (req, res) => {
-  try {
-    const { supplier, startDate, endDate } = req.query;
-    const filter = {};
-    if (supplier) filter.supplier = supplier;
-    if (startDate || endDate) {
-      filter.purchaseDate = {};
-      if (startDate) filter.purchaseDate.$gte = new Date(startDate);
-      if (endDate) filter.purchaseDate.$lte = new Date(endDate);
-    }
-    const purchases = await Purchase.find(filter)
-      .populate('items.item', 'name sku sizeMl type')
-      .sort('-purchaseDate');
-    res.json(purchases);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+/* ========================================
+   ITEM VALIDATION
+======================================== */
+
+const normalizeItems = (
+  items
+) => {
+  if (
+    !Array.isArray(items) ||
+    items.length === 0
+  ) {
+    throw createError(
+      'At least one purchase item is required'
+    );
   }
-};
 
-// @desc    Get single purchase
-// @route   GET /api/purchases/:id
-exports.getPurchaseById = async (req, res) => {
-  try {
-    const purchase = await Purchase.findById(req.params.id)
-      .populate('items.item', 'name sku sizeMl type');
-    if (!purchase) return res.status(404).json({ message: 'Purchase not found' });
-    res.json(purchase);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
+  const seen =
+    new Set();
 
-// @desc    Update purchase (supplier, date, notes, and items)
-// @route   PUT /api/purchases/:id
-exports.updatePurchase = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  return items.map(
+    (item, index) => {
+      const itemType =
+        item?.itemType;
 
-  try {
-    const { supplier, purchaseDate, notes, items } = req.body;
-    const purchase = await Purchase.findById(req.params.id).session(session);
-    if (!purchase) {
-      await session.abortTransaction();
-      return res.status(404).json({ message: 'Purchase not found' });
-    }
+      if (
+        ![
+          'RawMaterial',
+          'Bottle',
+        ].includes(
+          itemType
+        )
+      ) {
+        throw createError(
+          `Item ${index + 1} has an invalid item type`
+        );
+      }
 
-    // ---------- If items are provided, adjust stock by delta ----------
-    if (items && Array.isArray(items)) {
-      const oldMap = new Map();
-      purchase.items.forEach(old => {
-        const key = `${old.itemType}_${old.item}`;
-        oldMap.set(key, old);
-      });
+      const itemId =
+        validateObjectId(
+          item?.item,
+          `item ID at row ${index + 1}`
+        );
 
-      const newMap = new Map();
-      items.forEach(item => {
-        const key = `${item.itemType}_${item.item}`;
-        newMap.set(key, item);
-      });
+      let quantity;
 
-      const processedItems = [];
-      let totalAmount = 0;
+      if (
+        itemType ===
+        'Bottle'
+      ) {
+        quantity =
+          positiveInteger(
+            item.quantity,
+            `Item ${index + 1} quantity`
+          );
+      } else {
+        quantity =
+          positiveNumber(
+            item.quantity,
+            `Item ${index + 1} quantity`
+          );
+      }
 
-      // ---------- Process each new item ----------
-      for (const newItem of items) {
-        const { itemType, item: itemId, quantity, costPerUnit } = newItem;
-        if (!itemType || !itemId || quantity <= 0 || costPerUnit <= 0) {
-          throw new Error(`Invalid item data: ${JSON.stringify(newItem)}`);
-        }
+      const costPerUnit =
+        positiveNumber(
+          item.costPerUnit,
+          `Item ${index + 1} cost`
+        );
 
-        const key = `${itemType}_${itemId}`;
-        const oldItem = oldMap.get(key);
-        let delta = 0;
-        let oldQuantity = 0;
+      const key =
+        `${itemType}:${String(
+          itemId
+        )}`;
 
-        if (oldItem) {
-          oldQuantity = oldItem.quantity;
-          delta = oldQuantity - quantity; // positive = reduction, negative = increase
-        } else {
-          delta = -quantity; // new item → stock increase
-        }
+      /*
+        Reject duplicate lines.
 
-        let itemRef;
-        if (itemType === 'RawMaterial') {
-          itemRef = await RawMaterial.findById(itemId).session(session);
-          if (!itemRef) throw new Error(`Raw material ${itemId} not found`);
+        It makes inventory corrections,
+        purchase editing and reversal
+        deterministic.
+      */
 
-          if (delta > 0) {
-            if (itemRef.currentStockMl < delta) {
-              await session.abortTransaction();
-              return res.status(400).json({
-                message: `Cannot reduce quantity by ${delta}ml: only ${itemRef.currentStockMl}ml available.`
-              });
-            }
-            itemRef.currentStockMl -= delta;
-          } else if (delta < 0) {
-            itemRef.currentStockMl += (-delta);
-          }
+      if (seen.has(key)) {
+        throw createError(
+          `Duplicate purchase item at row ${index + 1}`
+        );
+      }
 
-          // Update or create purchase entry in material
-          const purchaseEntry = itemRef.purchases.find(p => p.invoiceNo === purchase.invoiceNo);
-          if (purchaseEntry) {
-            purchaseEntry.quantityMl = quantity;
-            purchaseEntry.costPerUnit = costPerUnit;
-            purchaseEntry.totalCost = quantity * costPerUnit;
-          } else {
-            itemRef.purchases.push({
-              invoiceNo: purchase.invoiceNo,
-              supplier: purchase.supplier,
-              quantityMl: quantity,
-              costPerUnit,
-              totalCost: quantity * costPerUnit,
-              purchaseDate: purchase.purchaseDate,
-            });
-          }
+      seen.add(key);
 
-          // Recalculate avg cost
-          const totalQty = itemRef.purchases.reduce((sum, p) => sum + p.quantityMl, 0);
-          const totalCost = itemRef.purchases.reduce((sum, p) => sum + p.totalCost, 0);
-          itemRef.avgCostPerMl = totalQty > 0 ? totalCost / totalQty : 0;
-          await itemRef.save({ session });
+      return {
+        itemType,
 
-          if (delta !== 0) {
-            await InventoryLog.create([{
-              material: itemId,
-              changeQuantity: -delta,
-              reason: 'purchase',                         // <-- CHANGED HERE
-              reference: purchase._id,
-              refModel: 'Purchase',
-              notes: `Purchase ${purchase.invoiceNo} edit: ${delta > 0 ? 'removed' : 'added'} ${Math.abs(delta)}ml`,
-            }], { session });
-          }
+        item:
+          itemId,
 
-        } else if (itemType === 'Bottle') {
-          itemRef = await Bottle.findById(itemId).session(session);
-          if (!itemRef) throw new Error(`Bottle ${itemId} not found`);
+        quantity,
 
-          if (delta > 0) {
-            if (itemRef.currentStock < delta) {
-              await session.abortTransaction();
-              return res.status(400).json({
-                message: `Cannot reduce bottle quantity by ${delta}: only ${itemRef.currentStock} available.`
-              });
-            }
-            itemRef.currentStock -= delta;
-          } else if (delta < 0) {
-            itemRef.currentStock += (-delta);
-          }
+        costPerUnit,
 
-          const purchaseEntry = itemRef.purchases.find(p => p.invoiceNo === purchase.invoiceNo);
-          if (purchaseEntry) {
-            purchaseEntry.quantity = quantity;
-            purchaseEntry.costPerUnit = costPerUnit;
-            purchaseEntry.totalCost = quantity * costPerUnit;
-          } else {
-            itemRef.purchases.push({
-              invoiceNo: purchase.invoiceNo,
-              supplier: purchase.supplier,
-              quantity,
-              costPerUnit,
-              totalCost: quantity * costPerUnit,
-              purchaseDate: purchase.purchaseDate,
-            });
-          }
-
-          const totalQty = itemRef.purchases.reduce((sum, p) => sum + p.quantity, 0);
-          const totalCost = itemRef.purchases.reduce((sum, p) => sum + p.totalCost, 0);
-          itemRef.avgCostPerUnit = totalQty > 0 ? totalCost / totalQty : 0;
-          await itemRef.save({ session });
-
-          if (delta !== 0) {
-            await InventoryLog.create([{
-              bottle: itemId,
-              changeQuantity: -delta,
-              reason: 'purchase',                         // <-- CHANGED HERE
-              reference: purchase._id,
-              refModel: 'Purchase',
-              notes: `Purchase ${purchase.invoiceNo} edit: ${delta > 0 ? 'removed' : 'added'} ${Math.abs(delta)} units`,
-            }], { session });
-          }
-        }
-
-        const totalCost = quantity * costPerUnit;
-        totalAmount += totalCost;
-
-        processedItems.push({
-          itemType,
-          item: itemId,
-          quantity,
+        totalCost:
+          quantity *
           costPerUnit,
-          totalCost,
-        });
-      }
-
-      // ---------- Handle removed items ----------
-      for (const [key, oldItem] of oldMap) {
-        if (!newMap.has(key)) {
-          const { itemType, item: itemId, quantity: oldQty } = oldItem;
-          if (itemType === 'RawMaterial') {
-            const material = await RawMaterial.findById(itemId).session(session);
-            if (material) {
-              if (material.currentStockMl < oldQty) {
-                await session.abortTransaction();
-                return res.status(400).json({
-                  message: `Cannot remove material: stock (${material.currentStockMl}ml) is less than purchase quantity (${oldQty}ml).`
-                });
-              }
-              material.currentStockMl -= oldQty;
-              const idx = material.purchases.findIndex(p => p.invoiceNo === purchase.invoiceNo);
-              if (idx !== -1) material.purchases.splice(idx, 1);
-              const totalQty = material.purchases.reduce((sum, p) => sum + p.quantityMl, 0);
-              const totalCost = material.purchases.reduce((sum, p) => sum + p.totalCost, 0);
-              material.avgCostPerMl = totalQty > 0 ? totalCost / totalQty : 0;
-              await material.save({ session });
-              await InventoryLog.create([{
-                material: itemId,
-                changeQuantity: -oldQty,
-                reason: 'purchase',                         // <-- CHANGED HERE
-                reference: purchase._id,
-                refModel: 'Purchase',
-                notes: `Purchase ${purchase.invoiceNo} edit: removed item entirely`,
-              }], { session });
-            }
-          } else if (itemType === 'Bottle') {
-            const bottle = await Bottle.findById(itemId).session(session);
-            if (bottle) {
-              if (bottle.currentStock < oldQty) {
-                await session.abortTransaction();
-                return res.status(400).json({
-                  message: `Cannot remove bottle: stock (${bottle.currentStock}) is less than purchase quantity (${oldQty}).`
-                });
-              }
-              bottle.currentStock -= oldQty;
-              const idx = bottle.purchases.findIndex(p => p.invoiceNo === purchase.invoiceNo);
-              if (idx !== -1) bottle.purchases.splice(idx, 1);
-              const totalQty = bottle.purchases.reduce((sum, p) => sum + p.quantity, 0);
-              const totalCost = bottle.purchases.reduce((sum, p) => sum + p.totalCost, 0);
-              bottle.avgCostPerUnit = totalQty > 0 ? totalCost / totalQty : 0;
-              await bottle.save({ session });
-              await InventoryLog.create([{
-                bottle: itemId,
-                changeQuantity: -oldQty,
-                reason: 'purchase',                         // <-- CHANGED HERE
-                reference: purchase._id,
-                refModel: 'Purchase',
-                notes: `Purchase ${purchase.invoiceNo} edit: removed item entirely`,
-              }], { session });
-            }
-          }
-        }
-      }
-
-      // Update purchase items and total
-      purchase.items = processedItems;
-      purchase.totalAmount = totalAmount;
-
-      // Update transaction amount
-      await Transaction.updateOne(
-        { reference: purchase._id, refModel: 'Purchase' },
-        { amount: totalAmount, description: `Purchase ${purchase.invoiceNo}` }
-      ).session(session);
+      };
     }
-
-    // ---------- Update metadata ----------
-    if (supplier !== undefined) purchase.supplier = supplier;
-    if (purchaseDate) purchase.purchaseDate = new Date(purchaseDate);
-    if (notes !== undefined) purchase.notes = notes;
-
-    await purchase.save({ session });
-    await session.commitTransaction();
-
-    const updated = await Purchase.findById(purchase._id).populate('items.item', 'name sku sizeMl type');
-    res.json(updated);
-  } catch (error) {
-    await session.abortTransaction();
-    res.status(500).json({ message: error.message });
-  } finally {
-    session.endSession();
-  }
+  );
 };
-// @desc    Delete a purchase (reverses stock)
-// @route   DELETE /api/purchases/:id
-exports.deletePurchase = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-  try {
-    const purchase = await Purchase.findById(req.params.id);
-    if (!purchase) {
-      await session.abortTransaction();
-      return res.status(404).json({ message: 'Purchase not found' });
-    }
 
-    // 1. Reverse stock for each item – with validation
-    for (const item of purchase.items) {
-      const { itemType, item: itemId, quantity, costPerUnit, totalCost } = item;
-      if (itemType === 'RawMaterial') {
-        const material = await RawMaterial.findById(itemId).session(session);
-        if (!material) {
-          await session.abortTransaction();
-          return res.status(404).json({ message: `Material ${itemId} not found` });
-        }
-        // --- CHECK SUFFICIENCY ---
-        if (material.currentStockMl < quantity) {
-          await session.abortTransaction();
-          return res.status(400).json({
-            message: `Cannot delete purchase: raw material stock (${material.currentStockMl}ml) is less than purchase quantity (${quantity}ml). Stock has been partially consumed.`
-          });
-        }
-        // Remove the purchase entry by invoice number
-        const purchaseEntryIndex = material.purchases.findIndex(p => p.invoiceNo === purchase.invoiceNo);
-        if (purchaseEntryIndex !== -1) {
-          material.purchases.splice(purchaseEntryIndex, 1);
-          // Recalculate avg cost
-          const totalQty = material.purchases.reduce((sum, p) => sum + p.quantityMl, 0);
-          const totalCostSum = material.purchases.reduce((sum, p) => sum + p.totalCost, 0);
-          material.avgCostPerMl = totalQty > 0 ? totalCostSum / totalQty : 0;
-          material.currentStockMl -= quantity;
-          await material.save({ session });
-        } else {
-          // Fallback: just subtract stock
-          material.currentStockMl -= quantity;
-          await material.save({ session });
-        }
-        // Delete inventory logs for this purchase
-        await InventoryLog.deleteMany({
-          reference: purchase._id,
-          reason: 'purchase',
-          material: material._id,
-        }).session(session);
-      } else if (itemType === 'Bottle') {
-        const bottle = await Bottle.findById(itemId).session(session);
-        if (!bottle) {
-          await session.abortTransaction();
-          return res.status(404).json({ message: `Bottle ${itemId} not found` });
-        }
-        // --- CHECK SUFFICIENCY ---
-        if (bottle.currentStock < quantity) {
-          await session.abortTransaction();
-          return res.status(400).json({
-            message: `Cannot delete purchase: bottle stock (${bottle.currentStock}) is less than purchase quantity (${quantity}). Stock has been partially consumed.`
-          });
-        }
-        // Remove purchase entry by invoice
-        const purchaseEntryIndex = bottle.purchases.findIndex(p => p.invoiceNo === purchase.invoiceNo);
-        if (purchaseEntryIndex !== -1) {
-          bottle.purchases.splice(purchaseEntryIndex, 1);
-          const totalQty = bottle.purchases.reduce((sum, p) => sum + p.quantity, 0);
-          const totalCostSum = bottle.purchases.reduce((sum, p) => sum + p.totalCost, 0);
-          bottle.avgCostPerUnit = totalQty > 0 ? totalCostSum / totalQty : 0;
-          bottle.currentStock -= quantity;
-          await bottle.save({ session });
-        } else {
-          bottle.currentStock -= quantity;
-          await bottle.save({ session });
-        }
-        await InventoryLog.deleteMany({
-          reference: purchase._id,
-          reason: 'purchase',
-          bottle: bottle._id,
-        }).session(session);
-      }
-    }
+/* ========================================
+   COST RECALCULATION
+======================================== */
 
-    // 2. Delete transaction
-    await Transaction.deleteMany({ reference: purchase._id, refModel: 'Purchase' }).session(session);
+const recalculateMaterialCost = (
+  material
+) => {
+  const purchases =
+    material.purchases ||
+    [];
 
-    // 3. Delete the purchase itself
-    await purchase.deleteOne({ session });
+  const totalQuantity =
+    purchases.reduce(
+      (total, purchase) =>
+        total +
+        Number(
+          purchase.quantityMl ||
+          0
+        ),
+      0
+    );
 
-    await session.commitTransaction();
-    res.json({ message: 'Purchase deleted and stock reversed' });
-  } catch (error) {
-    await session.abortTransaction();
-    res.status(500).json({ message: error.message });
-  } finally {
-    session.endSession();
-  }
+  const totalCost =
+    purchases.reduce(
+      (total, purchase) =>
+        total +
+        Number(
+          purchase.totalCost ||
+          0
+        ),
+      0
+    );
+
+  material.avgCostPerMl =
+    totalQuantity > 0
+      ? totalCost /
+        totalQuantity
+      : 0;
 };
-// @desc    Bulk create purchases from sheet
-// @route   POST /api/purchases/bulk
-exports.bulkCreatePurchases = async (req, res) => {
-  try {
-    const { purchases } = req.body;
-    if (!purchases || !purchases.length) {
-      return res.status(400).json({ message: 'No purchases provided' });
+
+const recalculateBottleCost = (
+  bottle
+) => {
+  const purchases =
+    bottle.purchases ||
+    [];
+
+  const totalQuantity =
+    purchases.reduce(
+      (total, purchase) =>
+        total +
+        Number(
+          purchase.quantity ||
+          0
+        ),
+      0
+    );
+
+  const totalCost =
+    purchases.reduce(
+      (total, purchase) =>
+        total +
+        Number(
+          purchase.totalCost ||
+          0
+        ),
+      0
+    );
+
+  bottle.avgCostPerUnit =
+    totalQuantity > 0
+      ? totalCost /
+        totalQuantity
+      : 0;
+
+  /*
+    Keep totalPurchased aligned with
+    the purchase history.
+  */
+
+  bottle.totalPurchased =
+    totalQuantity;
+};
+
+/* ========================================
+   INVENTORY LOG
+======================================== */
+
+const createPurchaseLog =
+  async ({
+    purchase,
+    itemType,
+    itemId,
+    changeQuantity,
+    notes,
+    date,
+    session,
+  }) => {
+    const data = {
+      changeQuantity,
+
+      reason:
+        'purchase',
+
+      reference:
+        purchase._id,
+
+      refModel:
+        'Purchase',
+
+      notes,
+
+      date:
+        date ||
+        new Date(),
+    };
+
+    if (
+      itemType ===
+      'RawMaterial'
+    ) {
+      data.material =
+        itemId;
     }
 
-    const created = [];
-    const errors = [];
+    if (
+      itemType ===
+      'Bottle'
+    ) {
+      data.bottle =
+        itemId;
+    }
 
-    for (const purchaseData of purchases) {
-      try {
-        // Validate required fields
-        if (!purchaseData.invoiceNo || !purchaseData.items || !purchaseData.items.length) {
-          errors.push({
-            purchaseData,
-            error: 'Missing invoiceNo or items',
-          });
-          continue;
-        }
-
-        // Check for duplicate invoice
-        const existing = await Purchase.findOne({ invoiceNo: purchaseData.invoiceNo });
-        if (existing) {
-          errors.push({
-            purchaseData,
-            error: `Invoice ${purchaseData.invoiceNo} already exists`,
-          });
-          continue;
-        }
-
-        // Validate each item
-        let totalAmount = 0;
-        const validItems = [];
-
-        for (const itemData of purchaseData.items) {
-          const { itemType, item: itemId, quantity, costPerUnit } = itemData;
-
-          if (!itemType || !itemId || !quantity || quantity <= 0 || !costPerUnit || costPerUnit <= 0) {
-            throw new Error(`Invalid item data: ${JSON.stringify(itemData)}`);
-          }
-
-          const Model = itemType === 'RawMaterial' ? RawMaterial : Bottle;
-          const exists = await Model.findById(itemId);
-          if (!exists) {
-            throw new Error(`Item ${itemId} not found in ${itemType} collection`);
-          }
-
-          const itemTotal = quantity * costPerUnit;
-          totalAmount += itemTotal;
-
-          validItems.push({
-            itemType,
-            item: itemId,
-            quantity,
-            costPerUnit,
-            totalCost: itemTotal,
-          });
-        }
-
-        const purchase = new Purchase({
-          invoiceNo: purchaseData.invoiceNo,
-          supplier: purchaseData.supplier || '',
-          purchaseDate: purchaseData.purchaseDate || new Date(),
-          notes: purchaseData.notes || '',
-          items: validItems,
-          totalAmount,
-        });
-
-        await purchase.save();
-        created.push(purchase);
-      } catch (err) {
-        errors.push({
-          purchaseData,
-          error: err.message,
-        });
+    await InventoryLog.create(
+      [data],
+      {
+        session,
       }
+    );
+  };
+
+/* ========================================
+   PURCHASE CASH TRANSACTION
+======================================== */
+
+const syncPurchaseTransaction =
+  async ({
+    purchase,
+    session,
+  }) => {
+    /*
+      Remove old/duplicate transaction
+      records first.
+    */
+
+    await Transaction.deleteMany({
+      reference:
+        purchase._id,
+
+      refModel:
+        'Purchase',
+
+      category:
+        'Purchase',
+    }).session(
+      session
+    );
+
+    await Transaction.create(
+      [
+        {
+          type:
+            'cash_out',
+
+          amount:
+            purchase.totalAmount,
+
+          category:
+            'Purchase',
+
+          reference:
+            purchase._id,
+
+          refModel:
+            'Purchase',
+
+          date:
+            purchase.purchaseDate,
+
+          description:
+            `Purchase ${purchase.invoiceNo}`,
+        },
+      ],
+      {
+        session,
+      }
+    );
+  };
+
+/* ========================================
+   CREATE INVENTORY ADDITION
+======================================== */
+
+const addPurchaseToInventory =
+  async ({
+    purchase,
+    item,
+    supplier,
+    purchaseDate,
+    session,
+  }) => {
+    const {
+      itemType,
+      item: itemId,
+      quantity,
+      costPerUnit,
+      totalCost,
+    } = item;
+
+    /* ------------------------------------
+       RAW MATERIAL
+    ------------------------------------ */
+
+    if (
+      itemType ===
+      'RawMaterial'
+    ) {
+      const material =
+        await RawMaterial.findById(
+          itemId
+        ).session(
+          session
+        );
+
+      if (!material) {
+        throw createError(
+          `Raw material ${itemId} not found`,
+          404
+        );
+      }
+
+      /*
+        IMPORTANT:
+
+        RawMaterial uses costPerMl,
+        not costPerUnit.
+      */
+
+      material.purchases.push({
+        quantityMl:
+          quantity,
+
+        costPerMl:
+          costPerUnit,
+
+        totalCost,
+
+        supplier,
+
+        invoiceNo:
+          purchase.invoiceNo,
+
+        purchaseDate,
+      });
+
+      material.currentStockMl +=
+        quantity;
+
+      material.isStockOut =
+        false;
+
+      /*
+        Keep your existing business rule:
+        a restock begins a new wastage cycle.
+      */
+
+      material.currentCycleWastageMl =
+        0;
+
+      material.lastRestockAt =
+        purchaseDate;
+
+      recalculateMaterialCost(
+        material
+      );
+
+      await material.save({
+        session,
+      });
+
+      await createPurchaseLog({
+        purchase,
+
+        itemType,
+
+        itemId,
+
+        changeQuantity:
+          quantity,
+
+        notes:
+          `Purchase ${purchase.invoiceNo}: added ${quantity}ml`,
+
+        date:
+          purchaseDate,
+
+        session,
+      });
+
+      return;
     }
 
-    res.status(201).json({
-      message: `Created ${created.length} purchases, ${errors.length} errors`,
-      created,
-      errors,
+    /* ------------------------------------
+       BOTTLE
+    ------------------------------------ */
+
+    const bottle =
+      await Bottle.findById(
+        itemId
+      ).session(
+        session
+      );
+
+    if (!bottle) {
+      throw createError(
+        `Bottle ${itemId} not found`,
+        404
+      );
+    }
+
+    bottle.purchases.push({
+      quantity,
+
+      costPerUnit,
+
+      totalCost,
+
+      supplier,
+
+      invoiceNo:
+        purchase.invoiceNo,
+
+      purchaseDate,
     });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
+
+    bottle.currentStock +=
+      quantity;
+
+    bottle.isStockOut =
+      false;
+
+    recalculateBottleCost(
+      bottle
+    );
+
+    await bottle.save({
+      session,
+    });
+
+    await createPurchaseLog({
+      purchase,
+
+      itemType,
+
+      itemId,
+
+      changeQuantity:
+        quantity,
+
+      notes:
+        `Purchase ${purchase.invoiceNo}: added ${quantity} bottle(s)`,
+
+      date:
+        purchaseDate,
+
+      session,
+    });
+  };
+
+/* ========================================
+   CREATE PURCHASE INTERNAL
+======================================== */
+
+const createPurchaseInternal =
+  async ({
+    invoiceNo,
+    supplier,
+    items,
+    purchaseDate,
+    notes,
+    session,
+  }) => {
+    const cleanInvoice =
+      String(
+        invoiceNo || ''
+      ).trim();
+
+    if (!cleanInvoice) {
+      throw createError(
+        'Invoice number is required'
+      );
+    }
+
+    const existing =
+      await Purchase.findOne({
+        invoiceNo:
+          cleanInvoice,
+      })
+        .session(
+          session
+        )
+        .lean();
+
+    if (existing) {
+      throw createError(
+        `Invoice ${cleanInvoice} already exists`,
+        409
+      );
+    }
+
+    const cleanSupplier =
+      String(
+        supplier || ''
+      ).trim();
+
+    const cleanDate =
+      parsePurchaseDate(
+        purchaseDate
+      );
+
+    const normalizedItems =
+      normalizeItems(
+        items
+      );
+
+    const totalAmount =
+      normalizedItems.reduce(
+        (total, item) =>
+          total +
+          item.totalCost,
+        0
+      );
+
+    /*
+      Create purchase first.
+
+      Everything is inside the same
+      MongoDB transaction, so if stock
+      addition fails this document is
+      rolled back automatically.
+    */
+
+    const [purchase] =
+      await Purchase.create(
+        [
+          {
+            invoiceNo:
+              cleanInvoice,
+
+            supplier:
+              cleanSupplier,
+
+            items:
+              normalizedItems,
+
+            totalAmount,
+
+            purchaseDate:
+              cleanDate,
+
+            notes:
+              String(
+                notes || ''
+              ).trim(),
+          },
+        ],
+        {
+          session,
+        }
+      );
+
+    for (
+      const item of
+      normalizedItems
+    ) {
+      await addPurchaseToInventory({
+        purchase,
+
+        item,
+
+        supplier:
+          cleanSupplier,
+
+        purchaseDate:
+          cleanDate,
+
+        session,
+      });
+    }
+
+    await syncPurchaseTransaction({
+      purchase,
+
+      session,
+    });
+
+    return purchase;
+  };
+
+/* ========================================
+   CREATE PURCHASE
+======================================== */
+
+exports.createPurchase =
+  async (req, res) => {
+    const requestedInvoice =
+      String(
+        req.body
+          ?.invoiceNo ||
+          ''
+      ).trim();
+
+    /*
+      If user supplied an invoice,
+      do not silently replace it.
+
+      If system generates the invoice,
+      retry a few times on collision.
+    */
+
+    const maxAttempts =
+      requestedInvoice
+        ? 1
+        : MAX_INVOICE_RETRIES;
+
+    for (
+      let attempt = 1;
+      attempt <= maxAttempts;
+      attempt += 1
+    ) {
+      const session =
+        await mongoose.startSession();
+
+      try {
+        session.startTransaction();
+
+        const invoiceNo =
+          requestedInvoice ||
+          generateInvoiceNo(
+            'PUR'
+          );
+
+        const purchase =
+          await createPurchaseInternal({
+            invoiceNo,
+
+            supplier:
+              req.body?.supplier,
+
+            items:
+              req.body?.items,
+
+            purchaseDate:
+              req.body
+                ?.purchaseDate,
+
+            notes:
+              req.body?.notes,
+
+            session,
+          });
+
+        await session.commitTransaction();
+
+        return res
+          .status(201)
+          .json(
+            purchase
+          );
+      } catch (error) {
+        await session.abortTransaction();
+
+        if (
+          !requestedInvoice &&
+          error?.code ===
+            11000 &&
+          attempt <
+            maxAttempts
+        ) {
+          continue;
+        }
+
+        return sendError(
+          res,
+          error
+        );
+      } finally {
+        session.endSession();
+      }
+    }
+
+    return res
+      .status(409)
+      .json({
+        message:
+          'Could not generate purchase invoice. Please try again.',
+      });
+  };
+
+/* ========================================
+   GET PURCHASES
+======================================== */
+
+exports.getPurchases =
+  async (req, res) => {
+    try {
+      const {
+        supplier,
+        startDate,
+        endDate,
+      } = req.query;
+
+      const filter = {};
+
+      if (supplier) {
+        filter.supplier =
+          supplier;
+      }
+
+      if (
+        startDate ||
+        endDate
+      ) {
+        filter.purchaseDate =
+          {};
+
+        if (startDate) {
+          const start =
+            new Date(
+              startDate
+            );
+
+          if (
+            Number.isNaN(
+              start.getTime()
+            )
+          ) {
+            throw createError(
+              'Invalid start date'
+            );
+          }
+
+          filter.purchaseDate.$gte =
+            start;
+        }
+
+        if (endDate) {
+          const end =
+            new Date(
+              endDate
+            );
+
+          if (
+            Number.isNaN(
+              end.getTime()
+            )
+          ) {
+            throw createError(
+              'Invalid end date'
+            );
+          }
+
+          filter.purchaseDate.$lte =
+            end;
+        }
+      }
+
+      const purchases =
+        await Purchase.find(
+          filter
+        )
+          .populate(
+            'items.item',
+            'name sku sizeMl type'
+          )
+          .sort({
+            purchaseDate:
+              -1,
+
+            createdAt:
+              -1,
+          });
+
+      return res.json(
+        purchases
+      );
+    } catch (error) {
+      return sendError(
+        res,
+        error
+      );
+    }
+  };
+
+/* ========================================
+   GET SINGLE PURCHASE
+======================================== */
+
+exports.getPurchaseById =
+  async (req, res) => {
+    try {
+      validateObjectId(
+        req.params.id,
+        'purchase ID'
+      );
+
+      const purchase =
+        await Purchase.findById(
+          req.params.id
+        ).populate(
+          'items.item',
+          'name sku sizeMl type'
+        );
+
+      if (!purchase) {
+        return res
+          .status(404)
+          .json({
+            message:
+              'Purchase not found',
+          });
+      }
+
+      return res.json(
+        purchase
+      );
+    } catch (error) {
+      return sendError(
+        res,
+        error
+      );
+    }
+  };
+
+/* ========================================
+   UPDATE INVENTORY LINE
+======================================== */
+
+const updateInventoryLine =
+  async ({
+    purchase,
+    oldItem,
+    newItem,
+    supplier,
+    purchaseDate,
+    session,
+  }) => {
+    const itemType =
+      newItem.itemType;
+
+    const itemId =
+      newItem.item;
+
+    const oldQuantity =
+      oldItem
+        ? Number(
+            oldItem.quantity
+          )
+        : 0;
+
+    const newQuantity =
+      Number(
+        newItem.quantity
+      );
+
+    /*
+      Positive delta = add stock.
+      Negative delta = remove stock.
+    */
+
+    const delta =
+      newQuantity -
+      oldQuantity;
+
+    /* ------------------------------------
+       MATERIAL
+    ------------------------------------ */
+
+    if (
+      itemType ===
+      'RawMaterial'
+    ) {
+      const material =
+        await RawMaterial.findById(
+          itemId
+        ).session(
+          session
+        );
+
+      if (!material) {
+        throw createError(
+          `Raw material ${itemId} not found`,
+          404
+        );
+      }
+
+      if (
+        delta < 0 &&
+        material.currentStockMl <
+          Math.abs(delta)
+      ) {
+        throw createError(
+          `Cannot reduce purchase quantity by ${Math.abs(
+            delta
+          )}ml. Only ${material.currentStockMl}ml is currently available.`
+        );
+      }
+
+      material.currentStockMl +=
+        delta;
+
+      const entry =
+        material.purchases.find(
+          (purchaseEntry) =>
+            purchaseEntry.invoiceNo ===
+            purchase.invoiceNo
+        );
+
+      if (entry) {
+        entry.quantityMl =
+          newQuantity;
+
+        entry.costPerMl =
+          newItem.costPerUnit;
+
+        entry.totalCost =
+          newItem.totalCost;
+
+        entry.supplier =
+          supplier;
+
+        entry.purchaseDate =
+          purchaseDate;
+      } else {
+        material.purchases.push({
+          quantityMl:
+            newQuantity,
+
+          costPerMl:
+            newItem.costPerUnit,
+
+          totalCost:
+            newItem.totalCost,
+
+          supplier,
+
+          invoiceNo:
+            purchase.invoiceNo,
+
+          purchaseDate,
+        });
+      }
+
+      if (delta > 0) {
+        material.isStockOut =
+          false;
+      }
+
+      recalculateMaterialCost(
+        material
+      );
+
+      await material.save({
+        session,
+      });
+
+      if (delta !== 0) {
+        await createPurchaseLog({
+          purchase,
+
+          itemType,
+
+          itemId,
+
+          changeQuantity:
+            delta,
+
+          notes:
+            `Purchase ${purchase.invoiceNo} edited: ${
+              delta > 0
+                ? 'added'
+                : 'removed'
+            } ${Math.abs(
+              delta
+            )}ml`,
+
+          session,
+        });
+      }
+
+      return;
+    }
+
+    /* ------------------------------------
+       BOTTLE
+    ------------------------------------ */
+
+    const bottle =
+      await Bottle.findById(
+        itemId
+      ).session(
+        session
+      );
+
+    if (!bottle) {
+      throw createError(
+        `Bottle ${itemId} not found`,
+        404
+      );
+    }
+
+    if (
+      delta < 0 &&
+      bottle.currentStock <
+        Math.abs(delta)
+    ) {
+      throw createError(
+        `Cannot reduce purchase quantity by ${Math.abs(
+          delta
+        )}. Only ${bottle.currentStock} bottle(s) are currently available.`
+      );
+    }
+
+    bottle.currentStock +=
+      delta;
+
+    const entry =
+      bottle.purchases.find(
+        (purchaseEntry) =>
+          purchaseEntry.invoiceNo ===
+          purchase.invoiceNo
+      );
+
+    if (entry) {
+      entry.quantity =
+        newQuantity;
+
+      entry.costPerUnit =
+        newItem.costPerUnit;
+
+      entry.totalCost =
+        newItem.totalCost;
+
+      entry.supplier =
+        supplier;
+
+      entry.purchaseDate =
+        purchaseDate;
+    } else {
+      bottle.purchases.push({
+        quantity:
+          newQuantity,
+
+        costPerUnit:
+          newItem.costPerUnit,
+
+        totalCost:
+          newItem.totalCost,
+
+        supplier,
+
+        invoiceNo:
+          purchase.invoiceNo,
+
+        purchaseDate,
+      });
+    }
+
+    if (delta > 0) {
+      bottle.isStockOut =
+        false;
+    }
+
+    recalculateBottleCost(
+      bottle
+    );
+
+    await bottle.save({
+      session,
+    });
+
+    if (delta !== 0) {
+      await createPurchaseLog({
+        purchase,
+
+        itemType,
+
+        itemId,
+
+        changeQuantity:
+          delta,
+
+        notes:
+          `Purchase ${purchase.invoiceNo} edited: ${
+            delta > 0
+              ? 'added'
+              : 'removed'
+          } ${Math.abs(
+            delta
+          )} bottle(s)`,
+
+        session,
+      });
+    }
+  };
+
+/* ========================================
+   REMOVE INVENTORY LINE
+======================================== */
+
+const removeInventoryLine =
+  async ({
+    purchase,
+    oldItem,
+    session,
+  }) => {
+    const itemType =
+      oldItem.itemType;
+
+    const itemId =
+      oldItem.item;
+
+    const quantity =
+      Number(
+        oldItem.quantity
+      );
+
+    /* ------------------------------------
+       MATERIAL
+    ------------------------------------ */
+
+    if (
+      itemType ===
+      'RawMaterial'
+    ) {
+      const material =
+        await RawMaterial.findById(
+          itemId
+        ).session(
+          session
+        );
+
+      if (!material) {
+        throw createError(
+          `Raw material ${itemId} not found`,
+          404
+        );
+      }
+
+      if (
+        material.currentStockMl <
+        quantity
+      ) {
+        throw createError(
+          `Cannot remove ${material.name} from purchase. Current stock is ${material.currentStockMl}ml but purchase contains ${quantity}ml. Some stock has already been consumed.`
+        );
+      }
+
+      material.currentStockMl -=
+        quantity;
+
+      material.purchases =
+        material.purchases.filter(
+          (entry) =>
+            entry.invoiceNo !==
+            purchase.invoiceNo
+        );
+
+      recalculateMaterialCost(
+        material
+      );
+
+      await material.save({
+        session,
+      });
+
+      await createPurchaseLog({
+        purchase,
+
+        itemType,
+
+        itemId,
+
+        changeQuantity:
+          -quantity,
+
+        notes:
+          `Purchase ${purchase.invoiceNo} edited: material removed completely`,
+
+        session,
+      });
+
+      return;
+    }
+
+    /* ------------------------------------
+       BOTTLE
+    ------------------------------------ */
+
+    const bottle =
+      await Bottle.findById(
+        itemId
+      ).session(
+        session
+      );
+
+    if (!bottle) {
+      throw createError(
+        `Bottle ${itemId} not found`,
+        404
+      );
+    }
+
+    if (
+      bottle.currentStock <
+      quantity
+    ) {
+      throw createError(
+        `Cannot remove bottle from purchase. Current stock is ${bottle.currentStock} but purchase contains ${quantity}. Some bottles have already been consumed.`
+      );
+    }
+
+    bottle.currentStock -=
+      quantity;
+
+    bottle.purchases =
+      bottle.purchases.filter(
+        (entry) =>
+          entry.invoiceNo !==
+          purchase.invoiceNo
+      );
+
+    recalculateBottleCost(
+      bottle
+    );
+
+    await bottle.save({
+      session,
+    });
+
+    await createPurchaseLog({
+      purchase,
+
+      itemType,
+
+      itemId,
+
+      changeQuantity:
+        -quantity,
+
+      notes:
+        `Purchase ${purchase.invoiceNo} edited: bottle removed completely`,
+
+      session,
+    });
+  };
+
+/* ========================================
+   SYNC EMBEDDED PURCHASE METADATA
+======================================== */
+
+const syncPurchaseMetadata =
+  async ({
+    purchase,
+    supplier,
+    purchaseDate,
+    session,
+  }) => {
+    for (
+      const item of
+      purchase.items
+    ) {
+      if (
+        item.itemType ===
+        'RawMaterial'
+      ) {
+        const material =
+          await RawMaterial.findById(
+            item.item
+          ).session(
+            session
+          );
+
+        if (!material) {
+          continue;
+        }
+
+        const entry =
+          material.purchases.find(
+            (purchaseEntry) =>
+              purchaseEntry.invoiceNo ===
+              purchase.invoiceNo
+          );
+
+        if (entry) {
+          entry.supplier =
+            supplier;
+
+          entry.purchaseDate =
+            purchaseDate;
+
+          await material.save({
+            session,
+          });
+        }
+
+        continue;
+      }
+
+      const bottle =
+        await Bottle.findById(
+          item.item
+        ).session(
+          session
+        );
+
+      if (!bottle) {
+        continue;
+      }
+
+      const entry =
+        bottle.purchases.find(
+          (purchaseEntry) =>
+            purchaseEntry.invoiceNo ===
+            purchase.invoiceNo
+        );
+
+      if (entry) {
+        entry.supplier =
+          supplier;
+
+        entry.purchaseDate =
+          purchaseDate;
+
+        await bottle.save({
+          session,
+        });
+      }
+    }
+  };
+
+/* ========================================
+   UPDATE PURCHASE
+======================================== */
+
+exports.updatePurchase =
+  async (req, res) => {
+    const session =
+      await mongoose.startSession();
+
+    try {
+      session.startTransaction();
+
+      validateObjectId(
+        req.params.id,
+        'purchase ID'
+      );
+
+      const purchase =
+        await Purchase.findById(
+          req.params.id
+        ).session(
+          session
+        );
+
+      if (!purchase) {
+        throw createError(
+          'Purchase not found',
+          404
+        );
+      }
+
+      const supplier =
+        req.body.supplier !==
+        undefined
+          ? String(
+              req.body.supplier
+            ).trim()
+          : purchase.supplier ||
+            '';
+
+      const purchaseDate =
+        req.body.purchaseDate !==
+        undefined
+          ? parsePurchaseDate(
+              req.body
+                .purchaseDate,
+              purchase.purchaseDate
+            )
+          : purchase.purchaseDate;
+
+      const notes =
+        req.body.notes !==
+        undefined
+          ? String(
+              req.body.notes ||
+              ''
+            ).trim()
+          : purchase.notes ||
+            '';
+
+      const itemsWereProvided =
+        req.body.items !==
+        undefined;
+
+      if (itemsWereProvided) {
+        const newItems =
+          normalizeItems(
+            req.body.items
+          );
+
+        const oldMap =
+          new Map();
+
+        for (
+          const oldItem of
+          purchase.items
+        ) {
+          const key =
+            `${oldItem.itemType}:${String(
+              oldItem.item
+            )}`;
+
+          oldMap.set(
+            key,
+            oldItem
+          );
+        }
+
+        const newMap =
+          new Map();
+
+        for (
+          const newItem of
+          newItems
+        ) {
+          const key =
+            `${newItem.itemType}:${String(
+              newItem.item
+            )}`;
+
+          newMap.set(
+            key,
+            newItem
+          );
+
+          const oldItem =
+            oldMap.get(
+              key
+            );
+
+          await updateInventoryLine({
+            purchase,
+
+            oldItem,
+
+            newItem,
+
+            supplier,
+
+            purchaseDate,
+
+            session,
+          });
+        }
+
+        /*
+          Anything present previously but
+          not present in the new request
+          must be removed from inventory.
+        */
+
+        for (
+          const [
+            key,
+            oldItem,
+          ] of oldMap
+        ) {
+          if (
+            !newMap.has(
+              key
+            )
+          ) {
+            await removeInventoryLine({
+              purchase,
+
+              oldItem,
+
+              session,
+            });
+          }
+        }
+
+        purchase.items =
+          newItems;
+
+        purchase.totalAmount =
+          newItems.reduce(
+            (total, item) =>
+              total +
+              item.totalCost,
+            0
+          );
+      }
+
+      purchase.supplier =
+        supplier;
+
+      purchase.purchaseDate =
+        purchaseDate;
+
+      purchase.notes =
+        notes;
+
+      await purchase.save({
+        session,
+      });
+
+      /*
+        When only supplier/date metadata
+        was changed, also update the embedded
+        purchase history in materials/bottles.
+      */
+
+      if (!itemsWereProvided) {
+        await syncPurchaseMetadata({
+          purchase,
+
+          supplier,
+
+          purchaseDate,
+
+          session,
+        });
+      }
+
+      /*
+        Always normalize the cash-out record.
+      */
+
+      await syncPurchaseTransaction({
+        purchase,
+
+        session,
+      });
+
+      await session.commitTransaction();
+
+      const updated =
+        await Purchase.findById(
+          purchase._id
+        ).populate(
+          'items.item',
+          'name sku sizeMl type'
+        );
+
+      return res.json(
+        updated
+      );
+    } catch (error) {
+      await session.abortTransaction();
+
+      return sendError(
+        res,
+        error
+      );
+    } finally {
+      session.endSession();
+    }
+  };
+
+/* ========================================
+   DELETE PURCHASE INVENTORY
+======================================== */
+
+const reversePurchaseItem =
+  async ({
+    purchase,
+    item,
+    session,
+  }) => {
+    const quantity =
+      Number(
+        item.quantity
+      );
+
+    /* ------------------------------------
+       RAW MATERIAL
+    ------------------------------------ */
+
+    if (
+      item.itemType ===
+      'RawMaterial'
+    ) {
+      const material =
+        await RawMaterial.findById(
+          item.item
+        ).session(
+          session
+        );
+
+      if (!material) {
+        throw createError(
+          `Raw material ${item.item} not found`,
+          404
+        );
+      }
+
+      if (
+        material.currentStockMl <
+        quantity
+      ) {
+        throw createError(
+          `Cannot delete purchase ${purchase.invoiceNo}. ${material.name} currently has ${material.currentStockMl}ml but this purchase added ${quantity}ml. Some stock has already been consumed.`
+        );
+      }
+
+      material.currentStockMl -=
+        quantity;
+
+      material.purchases =
+        material.purchases.filter(
+          (entry) =>
+            entry.invoiceNo !==
+            purchase.invoiceNo
+        );
+
+      recalculateMaterialCost(
+        material
+      );
+
+      await material.save({
+        session,
+      });
+
+      await InventoryLog.create(
+        [
+          {
+            material:
+              material._id,
+
+            changeQuantity:
+              -quantity,
+
+            reason:
+              'adjustment',
+
+            reference:
+              null,
+
+            notes:
+              `Reversal of deleted purchase ${purchase.invoiceNo}`,
+          },
+        ],
+        {
+          session,
+        }
+      );
+
+      return;
+    }
+
+    /* ------------------------------------
+       BOTTLE
+    ------------------------------------ */
+
+    const bottle =
+      await Bottle.findById(
+        item.item
+      ).session(
+        session
+      );
+
+    if (!bottle) {
+      throw createError(
+        `Bottle ${item.item} not found`,
+        404
+      );
+    }
+
+    if (
+      bottle.currentStock <
+      quantity
+    ) {
+      throw createError(
+        `Cannot delete purchase ${purchase.invoiceNo}. Bottle stock is ${bottle.currentStock} but this purchase added ${quantity}. Some bottles have already been consumed.`
+      );
+    }
+
+    bottle.currentStock -=
+      quantity;
+
+    bottle.purchases =
+      bottle.purchases.filter(
+        (entry) =>
+          entry.invoiceNo !==
+          purchase.invoiceNo
+      );
+
+    recalculateBottleCost(
+      bottle
+    );
+
+    await bottle.save({
+      session,
+    });
+
+    await InventoryLog.create(
+      [
+        {
+          bottle:
+            bottle._id,
+
+          changeQuantity:
+            -quantity,
+
+          reason:
+            'adjustment',
+
+          reference:
+            null,
+
+          notes:
+            `Reversal of deleted purchase ${purchase.invoiceNo}`,
+        },
+      ],
+      {
+        session,
+      }
+    );
+  };
+
+/* ========================================
+   DELETE PURCHASE
+======================================== */
+
+exports.deletePurchase =
+  async (req, res) => {
+    const session =
+      await mongoose.startSession();
+
+    try {
+      session.startTransaction();
+
+      validateObjectId(
+        req.params.id,
+        'purchase ID'
+      );
+
+      const purchase =
+        await Purchase.findById(
+          req.params.id
+        ).session(
+          session
+        );
+
+      if (!purchase) {
+        throw createError(
+          'Purchase not found',
+          404
+        );
+      }
+
+      /*
+        First validate and reverse all
+        stock additions.
+
+        If any item cannot be reversed,
+        the complete transaction rolls back.
+      */
+
+      for (
+        const item of
+        purchase.items
+      ) {
+        await reversePurchaseItem({
+          purchase,
+
+          item,
+
+          session,
+        });
+      }
+
+      /*
+        Delete original purchase logs.
+
+        The adjustment reversal logs above
+        remain as an audit trail.
+      */
+
+      await InventoryLog.deleteMany({
+        reference:
+          purchase._id,
+
+        refModel:
+          'Purchase',
+
+        reason:
+          'purchase',
+      }).session(
+        session
+      );
+
+      /*
+        Remove purchase cash-out.
+      */
+
+      await Transaction.deleteMany({
+        reference:
+          purchase._id,
+
+        refModel:
+          'Purchase',
+      }).session(
+        session
+      );
+
+      await purchase.deleteOne({
+        session,
+      });
+
+      await session.commitTransaction();
+
+      return res.json({
+        message:
+          'Purchase deleted and stock reversed successfully',
+      });
+    } catch (error) {
+      await session.abortTransaction();
+
+      return sendError(
+        res,
+        error
+      );
+    } finally {
+      session.endSession();
+    }
+  };
+
+/* ========================================
+   BULK CREATE PURCHASES
+======================================== */
+
+exports.bulkCreatePurchases =
+  async (req, res) => {
+    try {
+      const purchases =
+        req.body?.purchases;
+
+      if (
+        !Array.isArray(
+          purchases
+        ) ||
+        purchases.length === 0
+      ) {
+        return res
+          .status(400)
+          .json({
+            message:
+              'No purchases provided',
+          });
+      }
+
+      const created = [];
+      const errors = [];
+
+      /*
+        Each spreadsheet row gets its own
+        MongoDB transaction.
+
+        One bad row will not corrupt the
+        successful rows.
+      */
+
+      for (
+        const purchaseData of
+        purchases
+      ) {
+        const session =
+          await mongoose.startSession();
+
+        try {
+          session.startTransaction();
+
+          const invoiceNo =
+            String(
+              purchaseData
+                ?.invoiceNo ||
+                ''
+            ).trim();
+
+          if (!invoiceNo) {
+            throw createError(
+              'Invoice number is required'
+            );
+          }
+
+          const purchase =
+            await createPurchaseInternal({
+              invoiceNo,
+
+              supplier:
+                purchaseData.supplier,
+
+              items:
+                purchaseData.items,
+
+              purchaseDate:
+                purchaseData.purchaseDate,
+
+              notes:
+                purchaseData.notes,
+
+              session,
+            });
+
+          await session.commitTransaction();
+
+          created.push(
+            purchase
+          );
+        } catch (error) {
+          await session.abortTransaction();
+
+          errors.push({
+            invoiceNo:
+              purchaseData
+                ?.invoiceNo ||
+              null,
+
+            error:
+              error.message,
+          });
+        } finally {
+          session.endSession();
+        }
+      }
+
+      return res
+        .status(
+          created.length
+            ? 201
+            : 400
+        )
+        .json({
+          message:
+            `Created ${created.length} purchases, ${errors.length} errors`,
+
+          created,
+
+          errors,
+        });
+    } catch (error) {
+      return sendError(
+        res,
+        error
+      );
+    }
+  };
