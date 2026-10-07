@@ -1,1159 +1,2157 @@
 import { useEffect, useState } from 'react';
+
 import { Link, useNavigate } from 'react-router-dom';
+
 import API from '../../api/axios';
+
 import {
+
   Plus, Search, Eye, Edit, Trash2,
+
   X, CheckCircle, AlertCircle, Upload, Save, Loader2
+
 } from 'lucide-react';
+
 import * as XLSX from 'xlsx';
+
 import toast from 'react-hot-toast';
 
 // ---------- Helper to format size for display ----------
+
 const formatSize = (sizeMl, bottleType) => {
+
   if (!sizeMl && !bottleType) return '';
+
   if (sizeMl && bottleType) return `${sizeMl}ml ${bottleType}`;
+
   if (sizeMl) return `${sizeMl}ml`;
+
   return bottleType || '';
+
 };
 
 // ---------- Helper to parse size string ----------
+
 const parseSize = (sizeStr) => {
+
   if (!sizeStr) return null;
-  const trimmed = String(sizeStr).trim();
-  const match = trimmed.match(/^([\d.]+)\s*ml\s*(.+)$/i);
+
+const trimmed = String(sizeStr).trim();
+
+const match = trimmed.match(/^([\d.]+)\s*ml\s*(.+)$/i);
+
   if (match) {
-    const sizeMl = parseFloat(match[1]);
-    let type = match[2].toLowerCase().trim();
+
+const sizeMl = parseFloat(match[1]);
+
+let type = match[2].toLowerCase().trim();
+
     if (type.includes('role') || type.includes('roll')) type = 'roll-on';
+
     else if (type.includes('spray')) type = 'spray';
+
     else type = 'spray';
+
     return { sizeMl, type };
+
   }
+
   return null;
+
 };
 
 // ---------- Helper to check if a product is missing its blend ----------
+
 // ✅ FIXED: blends are stored per-size now (product.sizes[].blendComponents)
+
 const isBlendMissing = (product) => {
-  // Roll-on needs a base oil
+
+// Roll-on needs a base oil
+
   if (product.type === 'roll-on') {
+
     return !product.baseOil;
+
   }
 
-  // Spray — blends are stored PER SIZE
+// Spray — blends are stored PER SIZE
+
   if (product.type === 'spray') {
+
     if (!product.sizes || product.sizes.length === 0) return true;
 
-    const sizesWithBlend = product.sizes.filter(
+const sizesWithBlend = product.sizes.filter(
+
       (s) => Array.isArray(s.blendComponents) && s.blendComponents.length > 0
+
     );
 
-    // Warn only if NO size has a blend at all
+// Warn only if NO size has a blend at all
+
     return sizesWithBlend.length === 0;
+
   }
 
   return false;
+
 };
 
 const ProductList = () => {
-  const navigate = useNavigate();
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [filterType, setFilterType] = useState('all');
-  const [filterIntensity, setFilterIntensity] = useState('all');
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [productToDelete, setProductToDelete] = useState(null);
 
-  // Edit Modal State
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [productToEdit, setProductToEdit] = useState(null);
-  const [editForm, setEditForm] = useState({
+const navigate = useNavigate();
+
+const [products, setProducts] = useState([]);
+
+const [loading, setLoading] = useState(true);
+
+const [search, setSearch] = useState('');
+
+const [filterType, setFilterType] = useState('all');
+
+const [filterIntensity, setFilterIntensity] = useState('all');
+
+const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+const [productToDelete, setProductToDelete] = useState(null);
+
+// Edit Modal State
+
+const [showEditModal, setShowEditModal] = useState(false);
+
+const [productToEdit, setProductToEdit] = useState(null);
+
+const [editForm, setEditForm] = useState({
+
     name: '',
+
     sku: '',
+
     description: '',
+
     intensity: 'medium',
+
     bestFor: '',
+
     notes: '',
+
     isBestseller: false,
+
     showOnClient: false,
+
     isStockOut: false,
+
     sizes: [],
+
     baseOil: '',
+
     blendComponents: [],
+
   });
-  const [editLoading, setEditLoading] = useState(false);
-  const [fetchingProduct, setFetchingProduct] = useState(false);
 
-  // Bulk Upload State
-  const [showUploadModal, setShowUploadModal] = useState(false);
-  const [uploadFile, setUploadFile] = useState(null);
-  const [uploading, setUploading] = useState(false);
-  const [uploadResult, setUploadResult] = useState(null);
+const [editLoading, setEditLoading] = useState(false);
 
-  // Materials for dropdowns
-  const [materials, setMaterials] = useState([]);
+const [fetchingProduct, setFetchingProduct] = useState(false);
+
+// Bulk Upload State
+
+const [showUploadModal, setShowUploadModal] = useState(false);
+
+const [uploadFile, setUploadFile] = useState(null);
+
+const [uploading, setUploading] = useState(false);
+
+const [uploadResult, setUploadResult] = useState(null);
+
+// Materials for dropdowns
+
+const [materials, setMaterials] = useState([]);
 
   useEffect(() => {
+
     fetchProducts();
+
     fetchMaterials();
+
   }, []);
 
-  const fetchProducts = async () => {
+const fetchProducts = async () => {
+
     setLoading(true);
+
     try {
-      const { data } = await API.get('/products');
+
+const { data } = await API.get('/products');
+
       setProducts(data);
+
     } catch (error) {
+
       toast.error('Failed to load products');
+
       console.error('Fetch error:', error);
+
     } finally {
+
       setLoading(false);
+
     }
+
   };
 
-  const fetchMaterials = async () => {
+const fetchMaterials = async () => {
+
     try {
-      const { data } = await API.get('/inventory/materials');
+
+const { data } = await API.get('/inventory/materials');
+
       setMaterials(data);
+
     } catch (error) {
+
       console.error('Failed to fetch materials', error);
+
     }
+
   };
 
-  // ---------- Toggle Show on Client ----------
-  const toggleShowOnClient = async (product) => {
+// ---------- Toggle Show on Client ----------
+
+const toggleShowOnClient = async (product) => {
+
     try {
-      const newValue = !product.showOnClient;
+
+const newValue = !product.showOnClient;
+
       await API.patch(`/products/${product._id}`, { showOnClient: newValue });
+
       setProducts(prev =>
+
         prev.map(p =>
+
           p._id === product._id ? { ...p, showOnClient: newValue } : p
+
         )
+
       );
+
       toast.success(newValue ? 'Visible on client ✅' : 'Hidden from client');
+
     } catch (error) {
+
       toast.error(error.response?.data?.message || 'Failed to update visibility');
+
     }
+
   };
 
-  // ---------- Toggle Stock Out ----------
-  const toggleStockOut = async (product) => {
+// ---------- Toggle Stock Out ----------
+
+const toggleStockOut = async (product) => {
+
     try {
-      const newValue = !product.isStockOut;
+
+const newValue = !product.isStockOut;
+
       await API.patch(`/products/${product._id}`, { isStockOut: newValue });
+
       setProducts(prev =>
+
         prev.map(p =>
+
           p._id === product._id ? { ...p, isStockOut: newValue } : p
+
         )
+
       );
+
       toast.success(newValue ? 'Marked as Stock Out' : 'Marked as In Stock');
+
     } catch (error) {
+
       toast.error(error.response?.data?.message || 'Failed to update stock status');
+
     }
+
   };
 
-  // ---------- Delete Handlers ----------
-  const handleDelete = async () => {
+// ---------- Delete Handlers ----------
+
+const handleDelete = async () => {
+
     if (!productToDelete) return;
+
     try {
+
       await API.delete(`/products/${productToDelete._id}`);
+
       toast.success('Product deactivated');
+
       setShowDeleteModal(false);
+
       fetchProducts();
+
     } catch (error) {
+
       toast.error(error.response?.data?.message || 'Delete failed');
+
     }
+
   };
 
-  // ---------- Edit Modal Handlers ----------
-  const openEditModal = async (product) => {
+// ---------- Edit Modal Handlers ----------
+
+const openEditModal = async (product) => {
+
     setFetchingProduct(true);
+
     try {
-      const { data } = await API.get(`/products/${product._id}`);
+
+const { data } = await API.get(`/products/${product._id}`);
+
       setProductToEdit(data);
+
       setEditForm({
+
         name: data.name || '',
+
         sku: data.sku || '',
+
         description: data.description || '',
+
         intensity: data.intensity || 'medium',
+
         bestFor: (data.bestFor || []).join(', '),
+
         notes: (data.notes || []).join(', '),
+
         isBestseller: data.isBestseller || false,
+
         showOnClient: data.showOnClient || false,
+
         isStockOut: data.isStockOut || false,
+
         sizes: (data.sizes || []).map(s => ({
+
           _id: s._id,
+
           sizeMl: s.sizeMl,
+
           sellingPrice: s.sellingPrice || 0,
+
           image: s.image || '',
+
           bottleId: s.bottle?._id || s.bottle || '',
+
         })),
+
         baseOil: data.baseOil?._id || data.baseOil || '',
+
         blendComponents: (data.blendComponents || []).map(c => ({
+
           material: c.material?._id || c.material || '',
+
           percentage: c.percentage || 0,
+
         })),
+
       });
+
       setShowEditModal(true);
+
     } catch (error) {
+
       toast.error('Failed to load product details');
+
     } finally {
+
       setFetchingProduct(false);
+
     }
+
   };
 
-  const handleEditChange = (e) => {
-    const { name, value, type, checked } = e.target;
+const handleEditChange = (e) => {
+
+const { name, value, type, checked } = e.target;
+
     setEditForm((prev) => ({
+
       ...prev,
+
       [name]: type === 'checkbox' ? checked : value,
+
     }));
+
   };
 
-  const handleSizeImageChange = (index, imageUrl) => {
-    const updatedSizes = [...editForm.sizes];
+const handleSizeImageChange = (index, imageUrl) => {
+
+const updatedSizes = [...editForm.sizes];
+
     updatedSizes[index].image = imageUrl;
+
     setEditForm({ ...editForm, sizes: updatedSizes });
+
   };
 
-  const handleSizeImageUpload = async (index, event) => {
-    const file = event.target.files[0];
+const handleSizeImageUpload = async (index, event) => {
+
+const file = event.target.files[0];
+
     if (!file) return;
 
-    const formData = new FormData();
+const formData = new FormData();
+
     formData.append('image', file);
 
     try {
-      const response = await API.post('/upload', formData, {
+
+const response = await API.post('/upload', formData, {
+
         headers: { 'Content-Type': 'multipart/form-data' },
+
       });
-      const imageUrl = response.data.url;
-      const updatedSizes = [...editForm.sizes];
+
+const imageUrl = response.data.url;
+
+const updatedSizes = [...editForm.sizes];
+
       updatedSizes[index].image = imageUrl;
+
       setEditForm({ ...editForm, sizes: updatedSizes });
+
       toast.success('Image uploaded!');
+
     } catch (error) {
+
       toast.error('Upload failed: ' + (error.response?.data?.message || error.message));
+
     }
+
     event.target.value = '';
+
   };
 
-  // Blend component handlers for edit modal
-  const addBlendComponentEdit = () => {
+// Blend component handlers for edit modal
+
+const addBlendComponentEdit = () => {
+
     setEditForm(prev => ({
+
       ...prev,
+
       blendComponents: [...prev.blendComponents, { material: '', percentage: 0 }],
+
     }));
+
   };
 
-  const updateBlendComponentEdit = (index, field, value) => {
-    const updated = [...editForm.blendComponents];
+const updateBlendComponentEdit = (index, field, value) => {
+
+const updated = [...editForm.blendComponents];
+
     updated[index][field] = field === 'percentage' ? parseFloat(value) || 0 : value;
+
     setEditForm(prev => ({ ...prev, blendComponents: updated }));
+
   };
 
-  const removeBlendComponentEdit = (index) => {
-    const updated = editForm.blendComponents.filter((_, i) => i !== index);
+const removeBlendComponentEdit = (index) => {
+
+const updated = editForm.blendComponents.filter((_, i) => i !== index);
+
     setEditForm(prev => ({ ...prev, blendComponents: updated }));
+
   };
 
-  const handleEditSubmit = async (e) => {
+const handleEditSubmit = async (e) => {
+
     e.preventDefault();
+
     if (!productToEdit) return;
 
-    // Validation — only warn when there's truly no blend anywhere
-    const type = productToEdit.type;
+// Validation — only warn when there's truly no blend anywhere
+
+const type = productToEdit.type;
+
     if (type === 'roll-on' && !editForm.baseOil) {
+
       toast.error('Please select a base oil for roll-on product');
+
       return;
+
     }
-    // For spray, we don't block the submit if per-size blends already exist —
-    // the backend preserves them. Only block if both product-level AND all per-size
-    // blends are empty.
+
+// For spray, we don't block the submit if per-size blends already exist —
+
+// the backend preserves them. Only block if both product-level AND all per-size
+
+// blends are empty.
+
     if (type === 'spray') {
-      const hasLegacyBlend = editForm.blendComponents.length > 0;
-      const hasAnySizeBlend = (productToEdit.sizes || []).some(
+
+const hasLegacyBlend = editForm.blendComponents.length > 0;
+
+const hasAnySizeBlend = (productToEdit.sizes || []).some(
+
         (s) => Array.isArray(s.blendComponents) && s.blendComponents.length > 0
+
       );
-      const hasIncomingBlend = editForm.blendComponents.some(
+
+const hasIncomingBlend = editForm.blendComponents.some(
+
         (c) => c.material && c.percentage > 0
+
       );
 
       if (!hasAnySizeBlend && !hasIncomingBlend) {
+
         toast.error(
+
           'This spray has no blend at all. Please add blend components or run Rebuild Stock.'
+
         );
+
         return;
+
       }
+
     }
 
     setEditLoading(true);
+
     try {
-      const payload = {
+
+const payload = {
+
         name: editForm.name.trim(),
+
         sku: editForm.sku.trim(),
+
         description: editForm.description.trim(),
+
         intensity: editForm.intensity,
+
         bestFor: editForm.bestFor.split(',').map(s => s.trim()).filter(Boolean),
+
         notes: editForm.notes.split(',').map(s => s.trim()).filter(Boolean),
+
         isBestseller: editForm.isBestseller,
+
         showOnClient: editForm.showOnClient,
+
         isStockOut: editForm.isStockOut,
+
         sizes: editForm.sizes.map(s => ({
+
           _id: s._id,
+
           sizeMl: s.sizeMl,
+
           bottle: s.bottleId,
+
           sellingPrice: s.sellingPrice,
+
           image: s.image || '',
+
           oilMlUsed: 0,
+
           ethanolMlUsed: 0,
+
           fixativeMlUsed: 0,
+
           makingCost: 0,
+
         })),
+
         baseOil: type === 'roll-on' ? editForm.baseOil : null,
-        // Only send legacy blendComponents if user actually edited them
+
+// Only send legacy blendComponents if user actually edited them
+
         ...(editForm.blendComponents.length > 0 ? { blendComponents: editForm.blendComponents } : {}),
+
       };
 
       await API.put(`/products/${productToEdit._id}`, payload);
+
       toast.success('Product updated successfully!');
+
       setShowEditModal(false);
+
       setProductToEdit(null);
+
       fetchProducts();
+
     } catch (error) {
+
       toast.error(error.response?.data?.message || 'Update failed');
+
     } finally {
+
       setEditLoading(false);
+
     }
+
   };
 
-  // ---------- Bulk Upload Handlers ----------
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
+// ---------- Bulk Upload Handlers ----------
+
+const handleFileChange = (e) => {
+
+const file = e.target.files[0];
+
     if (file) {
+
       setUploadFile(file);
+
       setUploadResult(null);
+
     }
+
   };
 
-  const handleUploadSubmit = async (e) => {
+const handleUploadSubmit = async (e) => {
+
     e.preventDefault();
+
     if (!uploadFile) {
+
       toast.error('Please select a file');
+
       return;
+
     }
 
     setUploading(true);
+
     setUploadResult(null);
 
     try {
-      const reader = new FileReader();
+
+const reader = new FileReader();
+
       reader.onload = async (event) => {
+
         try {
-          const data = new Uint8Array(event.target.result);
-          const workbook = XLSX.read(data, { type: 'array' });
-          const sheet = workbook.Sheets[workbook.SheetNames[0]];
-          const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+
+const data = new Uint8Array(event.target.result);
+
+const workbook = XLSX.read(data, { type: 'array' });
+
+const sheet = workbook.Sheets[workbook.SheetNames[0]];
+
+const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
 
           if (!rows.length) {
+
             setUploadResult({ success: false, message: 'File is empty' });
+
             setUploading(false);
+
             return;
+
           }
 
-          const firstRow = rows[0];
-          const columns = Object.keys(firstRow);
+const firstRow = rows[0];
 
-          const findCol = (possibleNames) => {
+const columns = Object.keys(firstRow);
+
+const findCol = (possibleNames) => {
+
             for (const name of possibleNames) {
-              const found = columns.find(
+
+const found = columns.find(
+
                 c => c.trim().toLowerCase().replace(/[^a-z0-9]/g, '') === name.toLowerCase().replace(/[^a-z0-9]/g, '')
+
               );
+
               if (found) return found;
+
             }
+
             return null;
+
           };
 
-          const nameCol = findCol(['product name', 'name', 'productname']);
-          const skuCol = findCol(['sku', 'code', 'sku code']);
-          const sizeCol = findCol(['size', 'sizeml', 'ml', 'sizeml']);
-          const priceCol = findCol(['price', 'sellingprice', 'sellingprice', 'unitprice']);
-          const descCol = findCol(['description', 'desc', 'descriptions']);
-          const intensityCol = findCol(['intensity', 'strength']);
-          const bestForCol = findCol(['best for', 'bestfor', 'occasion']);
-          const notesCol = findCol(['notes', 'scent notes', 'scentnotes']);
-          const bestsellerCol = findCol(['bestseller', 'isbestseller', 'bestseller']);
+const nameCol = findCol(['product name', 'name', 'productname']);
+
+const skuCol = findCol(['sku', 'code', 'sku code']);
+
+const sizeCol = findCol(['size', 'sizeml', 'ml', 'sizeml']);
+
+const priceCol = findCol(['price', 'sellingprice', 'sellingprice', 'unitprice']);
+
+const descCol = findCol(['description', 'desc', 'descriptions']);
+
+const intensityCol = findCol(['intensity', 'strength']);
+
+const bestForCol = findCol(['best for', 'bestfor', 'occasion']);
+
+const notesCol = findCol(['notes', 'scent notes', 'scentnotes']);
+
+const bestsellerCol = findCol(['bestseller', 'isbestseller', 'bestseller']);
 
           if (!nameCol || !skuCol || !sizeCol || !priceCol) {
+
             setUploadResult({
+
               success: false,
+
               message: `Missing required columns: Product Name, SKU, Size, Price. Found: ${columns.join(', ')}`
+
             });
+
             setUploading(false);
+
             return;
+
           }
 
-          const items = [];
-          const errors = [];
+const items = [];
+
+const errors = [];
 
           for (let i = 0; i < rows.length; i++) {
-            const row = rows[i];
+
+const row = rows[i];
+
             try {
-              const name = String(row[nameCol] || '').trim();
-              const sku = String(row[skuCol] || '').trim();
-              const price = parseFloat(row[priceCol]);
-              const sizeInfo = parseSize(String(row[sizeCol] || '').trim());
+
+const name = String(row[nameCol] || '').trim();
+
+const sku = String(row[skuCol] || '').trim();
+
+const price = parseFloat(row[priceCol]);
+
+const sizeInfo = parseSize(String(row[sizeCol] || '').trim());
 
               if (!name || !sku || isNaN(price) || price < 0 || !sizeInfo) {
+
                 errors.push(`Row ${i+2}: Missing or invalid data (name: "${name}", sku: "${sku}", price: "${price}", size: "${row[sizeCol]}")`);
+
                 continue;
+
               }
 
-              const bestForRaw = bestForCol ? String(row[bestForCol] || '').trim() : '';
-              const notesRaw = notesCol ? String(row[notesCol] || '').trim() : '';
+const bestForRaw = bestForCol ? String(row[bestForCol] || '').trim() : '';
 
-              const item = {
+const notesRaw = notesCol ? String(row[notesCol] || '').trim() : '';
+
+const item = {
+
                 name,
+
                 sku,
+
                 sellingPrice: price,
+
                 sizeMl: sizeInfo.sizeMl,
+
                 bottleType: sizeInfo.type,
+
                 description: descCol ? String(row[descCol] || '').trim() : '',
+
                 intensity: intensityCol ? String(row[intensityCol] || '').toLowerCase().trim() : 'medium',
+
                 bestFor: bestForRaw ? bestForRaw.split(',').map(s => s.trim()).filter(Boolean) : ['all'],
+
                 notes: notesRaw ? notesRaw.split(',').map(s => s.trim()).filter(Boolean) : [],
+
                 isBestseller: bestsellerCol ? String(row[bestsellerCol] || '').toLowerCase().trim() === 'true' : false,
+
               };
 
               if (!['light', 'medium', 'strong', 'fresh'].includes(item.intensity)) {
+
                 item.intensity = 'medium';
+
               }
 
               items.push(item);
+
             } catch (err) {
+
               errors.push(`Row ${i+2}: ${err.message}`);
+
             }
+
           }
 
           if (!items.length) {
+
             setUploadResult({
+
               success: false,
+
               message: `No valid rows. Errors: ${errors.join('; ')}`
+
             });
+
             setUploading(false);
+
             return;
+
           }
 
-          const response = await API.post('/products/bulk', { items });
+const response = await API.post('/products/bulk', { items });
+
           setUploadResult({
+
             success: true,
+
             data: response.data,
+
             errors: errors
+
           });
+
           fetchProducts();
+
           setUploadFile(null);
 
           setTimeout(() => {
+
             setShowUploadModal(false);
+
             setUploadResult(null);
+
           }, 3000);
 
         } catch (parseError) {
+
           setUploadResult({
+
             success: false,
+
             message: parseError.message || 'Failed to parse file'
+
           });
+
           setUploading(false);
+
         }
+
       };
 
       reader.onerror = () => {
+
         setUploadResult({ success: false, message: 'Failed to read file' });
+
         setUploading(false);
+
       };
 
       reader.readAsArrayBuffer(uploadFile);
+
     } catch (err) {
+
       setUploadResult({
+
         success: false,
+
         message: err.response?.data?.message || err.message || 'Upload failed'
+
       });
+
       setUploading(false);
+
     }
+
   };
 
-  // ---------- Filtering ----------
-  const filteredProducts = products.filter(p => {
-    const matchesSearch =
+// ---------- Filtering ----------
+
+const filteredProducts = products.filter(p => {
+
+const matchesSearch =
+
       p.name.toLowerCase().includes(search.toLowerCase()) ||
+
       p.sku.toLowerCase().includes(search.toLowerCase());
-    const matchesType = filterType === 'all' || p.type === filterType;
-    const matchesIntensity = filterIntensity === 'all' || p.intensity === filterIntensity;
+
+const matchesType = filterType === 'all' || p.type === filterType;
+
+const matchesIntensity = filterIntensity === 'all' || p.intensity === filterIntensity;
+
     return matchesSearch && matchesType && matchesIntensity;
+
   });
 
-  // ---------- Render ----------
+// ---------- Render ----------
+
   return (
+
     <div className="p-4 sm:p-6 max-w-7xl mx-auto">
+
       {/* Header */}
+
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+
         <div>
+
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Products</h1>
+
           <p className="text-gray-500 text-sm">Manage your product catalog</p>
+
         </div>
+
         <div className="flex flex-wrap gap-3">
+
           <button
+
             onClick={() => {
+
               setShowUploadModal(true);
+
               setUploadResult(null);
+
               setUploadFile(null);
+
             }}
+
             className="flex items-center gap-2 bg-green-600 text-white px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg hover:bg-green-700 transition shadow-md shadow-green-500/30 text-sm"
+
           >
+
             <Upload size={18} /> Bulk Upload
+
           </button>
+
           <Link
+
             to="/products/new"
+
             className="flex items-center gap-2 bg-amber-600 text-white px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg hover:bg-amber-700 transition shadow-md shadow-amber-500/30 text-sm"
+
           >
+
             <Plus size={18} /> Add Product
+
           </Link>
+
         </div>
+
       </div>
 
       {/* Filters */}
+
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-3 sm:p-4 mb-6 flex flex-wrap items-end gap-3 sm:gap-4">
+
         <div className="flex-1 min-w-[180px] sm:min-w-[200px]">
+
           <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
+
           <div className="relative">
+
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+
             <input
+
               type="text"
+
               placeholder="Name or SKU"
+
               value={search}
+
               onChange={(e) => setSearch(e.target.value)}
+
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-sm"
+
             />
+
           </div>
+
         </div>
 
         <div className="min-w-[140px] sm:min-w-[150px]">
+
           <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+
           <select
+
             value={filterType}
+
             onChange={(e) => setFilterType(e.target.value)}
+
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none bg-white text-sm"
+
           >
+
             <option value="all">All Types</option>
+
             <option value="spray">Spray</option>
+
             <option value="roll-on">Roll‑on</option>
+
           </select>
+
         </div>
 
         <div className="min-w-[140px] sm:min-w-[150px]">
+
           <label className="block text-sm font-medium text-gray-700 mb-1">Intensity</label>
+
           <select
+
             value={filterIntensity}
+
             onChange={(e) => setFilterIntensity(e.target.value)}
+
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none bg-white text-sm"
+
           >
+
             <option value="all">All</option>
+
             <option value="light">Light</option>
+
             <option value="medium">Medium</option>
+
             <option value="strong">Strong</option>
+
           </select>
+
         </div>
 
         <button
+
           onClick={() => { setSearch(''); setFilterType('all'); setFilterIntensity('all'); }}
+
           className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm whitespace-nowrap"
+
         >
+
           Clear
+
         </button>
+
       </div>
 
       {/* Table */}
+
       {loading ? (
+
         <div className="flex justify-center items-center h-64">
+
           <div className="animate-pulse flex flex-col items-center">
+
             <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
+
             <p className="text-gray-500 mt-4">Loading products...</p>
+
           </div>
+
         </div>
+
       ) : (
+
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-x-auto">
+
           <table className="min-w-full divide-y divide-gray-200">
+
             <thead className="bg-gray-50">
+
               <tr>
+
                 <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+
                 <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
+
                 <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+
                 <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+
                 <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Intensity</th>
+
                 <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Best For</th>
+
                 <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
+
                 <th className="px-4 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Bestseller</th>
+
                 <th className="px-4 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">On Client</th>
+
                 <th className="px-4 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+
                 <th className="px-4 sm:px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+
               </tr>
+
             </thead>
+
             <tbody className="divide-y divide-gray-200">
+
               {filteredProducts.length === 0 ? (
+
                 <tr>
+
                   <td colSpan="11" className="text-center py-8 text-gray-400">No products found</td>
+
                 </tr>
+
               ) : (
+
                 filteredProducts.map((p) => {
-                  const blendMissing = isBlendMissing(p);
+
+const blendMissing = isBlendMissing(p);
+
                   return (
+
                     <tr key={p._id} className="hover:bg-gray-50 transition">
+
                       <td className="px-4 sm:px-6 py-3 sm:py-4 font-medium text-gray-800 text-sm">
+
                         <div className="flex items-center gap-2 flex-wrap">
+
                           <span>{p.name}</span>
+
                           {blendMissing && (
+
                             <span
+
                               className="text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-semibold whitespace-nowrap"
+
                               title={
+
                                 p.type === 'roll-on'
+
                                   ? 'No base oil configured — sales will fail'
+
                                   : 'No blend components on any size — sales will fail'
+
                               }
+
                             >
+
                               ⚠ {p.type === 'roll-on' ? 'NO OIL' : 'NO BLEND'}
+
                             </span>
+
                           )}
+
                         </div>
+
                       </td>
+
                       <td className="px-4 sm:px-6 py-3 sm:py-4 text-gray-600 text-sm">{p.sku}</td>
+
                       <td className="px-4 sm:px-6 py-3 sm:py-4 capitalize text-sm">{p.type || '-'}</td>
+
                       <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-gray-500 max-w-xs truncate">{p.description || '-'}</td>
+
                       <td className="px-4 sm:px-6 py-3 sm:py-4 capitalize text-sm">{p.intensity || 'medium'}</td>
+
                       <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm">{p.bestFor?.join(', ') || 'all'}</td>
+
                       <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm">{p.notes?.join(', ') || '-'}</td>
+
                       <td className="px-4 sm:px-6 py-3 sm:py-4 text-center">
+
                         {p.isBestseller ? (
+
                           <span className="px-2 py-1 bg-amber-100 text-amber-800 text-xs font-semibold rounded-full">★</span>
+
                         ) : (
+
                           <span className="text-gray-400">-</span>
+
                         )}
+
                       </td>
+
                       <td className="px-4 sm:px-6 py-3 sm:py-4 text-center">
+
                         <button
+
                           onClick={(e) => {
+
                             e.stopPropagation();
+
                             toggleShowOnClient(p);
+
                           }}
+
                           className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${
+
                             p.showOnClient ? 'bg-emerald-500' : 'bg-gray-300'
+
                           }`}
+
                           title={p.showOnClient ? 'Visible on client' : 'Hidden from client'}
+
                         >
+
                           <span
+
                             className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
+
                               p.showOnClient ? 'translate-x-6' : 'translate-x-1'
+
                             }`}
+
                           />
+
                         </button>
+
                       </td>
+
                       <td className="px-4 sm:px-6 py-3 sm:py-4 text-center">
+
                         <button
+
                           onClick={(e) => {
+
                             e.stopPropagation();
+
                             toggleStockOut(p);
+
                           }}
+
                           className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${
+
                             p.isStockOut ? 'bg-red-500' : 'bg-emerald-500'
+
                           }`}
+
                           title={p.isStockOut ? 'Out of stock' : 'In stock'}
+
                         >
+
                           <span
+
                             className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
+
                               p.isStockOut ? 'translate-x-6' : 'translate-x-1'
+
                             }`}
+
                           />
+
                         </button>
+
                         <p className={`text-[10px] mt-0.5 font-medium ${p.isStockOut ? 'text-red-600' : 'text-emerald-600'}`}>
+
                           {p.isStockOut ? 'OUT' : 'IN'}
+
                         </p>
+
                       </td>
+
                       <td className="px-4 sm:px-6 py-3 sm:py-4 text-center">
+
                         <div className="flex justify-center items-center gap-1 sm:gap-2">
+
                           <button
+
                             onClick={() => openEditModal(p)}
+
                             className="text-blue-600 hover:text-blue-800 p-1"
+
                             title="Edit"
+
                           >
+
                             <Edit size={18} />
+
                           </button>
+
                           <button
+
                             onClick={() => {
+
                               setProductToDelete(p);
+
                               setShowDeleteModal(true);
+
                             }}
+
                             className="text-red-600 hover:text-red-800 p-1"
+
                             title="Deactivate"
+
                           >
+
                             <Trash2 size={18} />
+
                           </button>
+
                         </div>
+
                       </td>
+
                     </tr>
+
                   );
+
                 })
+
               )}
+
             </tbody>
+
           </table>
+
         </div>
+
       )}
 
       {/* ---------- DELETE CONFIRMATION MODAL ---------- */}
+
       {showDeleteModal && productToDelete && (
+
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+
             <h2 className="text-xl font-bold mb-2">Deactivate Product</h2>
+
             <p className="text-gray-600 mb-4">
+
               Are you sure you want to deactivate <strong>{productToDelete.name}</strong>?
+
               <br />
+
               <span className="text-sm text-gray-500">This will hide it from the storefront.</span>
+
             </p>
+
             <div className="flex flex-col sm:flex-row gap-3">
+
               <button
+
                 onClick={handleDelete}
+
                 className="w-full sm:flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 text-sm"
+
               >
+
                 Deactivate
+
               </button>
+
               <button
+
                 onClick={() => { setShowDeleteModal(false); setProductToDelete(null); }}
+
                 className="w-full sm:flex-1 border border-gray-300 py-2 rounded-lg hover:bg-gray-50 text-sm"
+
               >
+
                 Cancel
+
               </button>
+
             </div>
+
           </div>
+
         </div>
+
       )}
 
       {/* ---------- EDIT MODAL ---------- */}
+
       {showEditModal && productToEdit && (
+
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+
           <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-4 sm:p-6 relative">
+
             <button
+
               onClick={() => {
+
                 setShowEditModal(false);
+
                 setProductToEdit(null);
+
               }}
+
               className="absolute top-3 right-3 sm:top-4 sm:right-4 text-gray-400 hover:text-gray-600"
+
             >
+
               <X size={24} />
+
             </button>
 
             <h2 className="text-xl sm:text-2xl font-bold mb-1">Edit Product</h2>
+
             <p className="text-gray-500 text-sm mb-4">
+
               Update details and size images for <span className="font-medium">{productToEdit.name}</span>
+
             </p>
 
             {fetchingProduct ? (
+
               <div className="flex justify-center py-12">
+
                 <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
+
               </div>
+
             ) : (
+
               <form onSubmit={handleEditSubmit} className="space-y-4">
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
                   <div>
+
                     <label className="block text-sm font-medium text-gray-700 mb-1">Product Name *</label>
+
                     <input
+
                       type="text"
+
                       name="name"
+
                       value={editForm.name}
+
                       onChange={handleEditChange}
+
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-sm"
+
                       required
+
                     />
+
                   </div>
 
                   <div>
+
                     <label className="block text-sm font-medium text-gray-700 mb-1">SKU *</label>
+
                     <input
+
                       type="text"
+
                       name="sku"
+
                       value={editForm.sku}
+
                       onChange={handleEditChange}
+
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-sm"
+
                       required
+
                     />
+
                   </div>
 
                   <div>
+
                     <label className="block text-sm font-medium text-gray-700 mb-1">Intensity</label>
+
                     <select
+
                       name="intensity"
+
                       value={editForm.intensity}
+
                       onChange={handleEditChange}
+
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none bg-white text-sm"
+
                     >
+
                       <option value="light">Light</option>
+
                       <option value="medium">Medium</option>
+
                       <option value="strong">Strong</option>
+
                       <option value="fresh">Fresh</option>
+
                     </select>
+
                   </div>
 
                   <div className="flex items-end gap-6 flex-wrap">
+
                     <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
+
                       <input
+
                         type="checkbox"
+
                         name="isBestseller"
+
                         checked={editForm.isBestseller}
+
                         onChange={handleEditChange}
+
                         className="w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
+
                       />
+
                       Bestseller
+
                     </label>
 
                     <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
+
                       <input
+
                         type="checkbox"
+
                         name="showOnClient"
+
                         checked={editForm.showOnClient}
+
                         onChange={handleEditChange}
+
                         className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
+
                       />
+
                       Show on Client
+
                     </label>
 
                     <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
+
                       <input
+
                         type="checkbox"
+
                         name="isStockOut"
+
                         checked={editForm.isStockOut}
+
                         onChange={handleEditChange}
+
                         className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+
                       />
+
                       Stock Out
+
                     </label>
+
                   </div>
 
                   <div className="sm:col-span-2">
+
                     <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+
                     <textarea
+
                       name="description"
+
                       value={editForm.description}
+
                       onChange={handleEditChange}
+
                       rows="2"
+
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-sm"
+
                     />
+
                   </div>
 
                   <div>
+
                     <label className="block text-sm font-medium text-gray-700 mb-1">Best For</label>
+
                     <input
+
                       type="text"
+
                       name="bestFor"
+
                       value={editForm.bestFor}
+
                       onChange={handleEditChange}
+
                       placeholder="e.g. Women, Men, Unisex"
+
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-sm"
+
                     />
+
                     <p className="text-xs text-gray-400 mt-1">Comma-separated values</p>
+
                   </div>
 
                   <div>
+
                     <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+
                     <input
+
                       type="text"
+
                       name="notes"
+
                       value={editForm.notes}
+
                       onChange={handleEditChange}
+
                       placeholder="e.g. Floral, Woody, Fresh"
+
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-sm"
+
                     />
+
                     <p className="text-xs text-gray-400 mt-1">Comma-separated values</p>
+
                   </div>
+
                 </div>
 
                 {/* Raw Material Assignment */}
+
                 <div className="border-t border-gray-200 pt-4">
+
                   <h3 className="text-lg font-semibold text-gray-700 mb-3">Raw Material Assignment</h3>
+
                   {productToEdit.type === 'roll-on' ? (
+
                     <div>
+
                       <label className="block text-sm font-medium text-gray-700 mb-1">Base Oil *</label>
+
                       <select
+
                         name="baseOil"
+
                         value={editForm.baseOil}
+
                         onChange={handleEditChange}
+
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none bg-white text-sm"
+
                       >
+
                         <option value="">Select base oil</option>
+
                         {materials
+
                           .filter(m => m.type === 'oil')
+
                           .map(m => (
+
                             <option key={m._id} value={m._id}>
+
                               {m.name} ({m.sku}) – {m.currentStockMl || 0}ml
+
                             </option>
+
                           ))}
+
                       </select>
+
                     </div>
+
                   ) : (
+
                     <div>
+
                       {/* ✅ NEW: show per-size blend summary for sprays */}
+
                       <div className="mb-3 p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-xs text-emerald-800">
+
                         <p className="font-semibold mb-1">✅ Per-size blends are active for this spray</p>
+
                         {(productToEdit.sizes || []).map((s) => {
-                          const comps = s.blendComponents || [];
-                          const total = comps.reduce((sum, c) => sum + (c.percentage || 0), 0);
+
+const comps = s.blendComponents || [];
+
+const total = comps.reduce((sum, c) => sum + (c.percentage || 0), 0);
+
                           return (
+
                             <div key={s._id || s.sizeMl} className="flex justify-between py-0.5">
+
                               <span>{s.sizeMl}ml:</span>
+
                               <span>
+
                                 {comps.length} component{comps.length !== 1 && 's'}
+
                                 {comps.length > 0 && ` · ${total.toFixed(1)}%`}
+
                               </span>
+
                             </div>
+
                           );
+
                         })}
+
                         <p className="text-[10px] mt-1 opacity-75">
+
                           Blends are managed automatically by Rebuild Stock.
+
                         </p>
+
                       </div>
+
                     </div>
+
                   )}
+
                 </div>
 
                 {/* Size Variants Table */}
+
                 <div className="border-t border-gray-200 pt-4">
+
                   <h3 className="text-lg font-semibold text-gray-700 mb-3">Size Variants</h3>
+
                   <div className="overflow-x-auto">
+
                     <table className="min-w-full divide-y divide-gray-200">
+
                       <thead className="bg-gray-50">
+
                         <tr>
+
                           <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Size (ml)</th>
+
                           <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Selling Price (৳)</th>
+
                           <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Image URL</th>
+
                         </tr>
+
                       </thead>
+
                       <tbody className="divide-y divide-gray-200">
+
                         {editForm.sizes.map((size, index) => (
+
                           <tr key={size._id || index}>
+
                             <td className="px-4 py-2 text-sm">{size.sizeMl}</td>
+
                             <td className="px-4 py-2">
+
                               <input
+
                                 type="number"
+
                                 step="0.01"
+
                                 min="0"
+
                                 value={size.sellingPrice}
+
                                 onChange={(e) => {
-                                  const updated = [...editForm.sizes];
+
+const updated = [...editForm.sizes];
+
                                   updated[index].sellingPrice = parseFloat(e.target.value) || 0;
+
                                   setEditForm({ ...editForm, sizes: updated });
+
                                 }}
+
                                 className="w-24 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-amber-500 outline-none text-sm"
+
                               />
+
                             </td>
+
                             <td className="px-4 py-2">
+
                               <div className="flex flex-wrap items-center gap-2">
+
                                 <input
+
                                   type="text"
+
                                   value={size.image || ''}
+
                                   onChange={(e) => handleSizeImageChange(index, e.target.value)}
+
                                   placeholder="Image URL or upload"
+
                                   className="flex-1 min-w-[120px] px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-amber-500 outline-none text-sm"
+
                                 />
+
                                 <label className="cursor-pointer bg-amber-500 text-white px-3 py-1 rounded text-sm hover:bg-amber-600 transition whitespace-nowrap">
+
                                   Upload
+
                                   <input
+
                                     type="file"
+
                                     accept="image/*"
+
                                     className="hidden"
+
                                     onChange={(e) => handleSizeImageUpload(index, e)}
+
                                   />
+
                                 </label>
+
                               </div>
+
                               {size.image && (
+
                                 <img
+
                                   src={size.image}
+
                                   alt={`${productToEdit.name} ${size.sizeMl}ml`}
+
                                   className="mt-1 h-12 w-12 object-cover rounded border border-gray-200"
+
                                   onError={(e) => { e.target.style.display = 'none'; }}
+
                                 />
+
                               )}
+
                             </td>
+
                           </tr>
+
                         ))}
+
                         {editForm.sizes.length === 0 && (
+
                           <tr>
+
                             <td colSpan="3" className="text-center py-4 text-gray-400 text-sm">No sizes available</td>
+
                           </tr>
+
                         )}
+
                       </tbody>
+
                     </table>
+
                   </div>
+
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
+
                   <button
+
                     type="submit"
+
                     disabled={editLoading}
+
                     className="w-full sm:flex-1 bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
+
                   >
+
                     {editLoading ? (
+
                       <>
+
                         <Loader2 size={18} className="animate-spin" /> Saving...
+
                       </>
+
                     ) : (
+
                       <>
+
                         <Save size={18} /> Update Product
+
                       </>
+
                     )}
+
                   </button>
+
                   <button
+
                     type="button"
+
                     onClick={() => {
+
                       setShowEditModal(false);
+
                       setProductToEdit(null);
+
                     }}
+
                     className="w-full sm:flex-1 px-6 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
+
                   >
+
                     Cancel
+
                   </button>
+
                 </div>
+
               </form>
+
             )}
+
           </div>
+
         </div>
+
       )}
 
       {/* ---------- BULK UPLOAD MODAL ---------- */}
+
       {showUploadModal && (
+
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-4 sm:p-6 relative">
+
             <button
+
               onClick={() => {
+
                 setShowUploadModal(false);
+
                 setUploadResult(null);
+
                 setUploadFile(null);
+
               }}
+
               className="absolute top-3 right-3 sm:top-4 sm:right-4 text-gray-400 hover:text-gray-600"
+
             >
+
               <X size={24} />
+
             </button>
+
             <h2 className="text-xl sm:text-2xl font-bold mb-2">Bulk Upload Products</h2>
+
             <p className="text-gray-500 text-sm mb-4">
+
               Upload CSV/Excel with product data.
+
               <br />
+
               <span className="text-amber-600 font-medium">Required columns:</span>
+
               <br />
+
               <strong>Product Name</strong>, <strong>SKU</strong>, <strong>Size</strong> (e.g., "3.5ml Roll-on"), <strong>Price</strong> (selling price)
+
               <br />
+
               <span className="text-gray-400 font-medium">Optional columns:</span>
+
               <br />
+
               <strong>Description</strong>, <strong>Intensity</strong> (light/medium/strong/fresh), <strong>Best For</strong> (comma‑separated), <strong>Notes</strong> (comma‑separated), <strong>Bestseller</strong> (TRUE/FALSE)
+
               <br />
+
               <span className="text-xs text-gray-400 mt-1 block">
+
                 * If Bestseller is missing, it defaults to FALSE. Intensity defaults to "medium".
+
                 <br />
+
                 * Size format: "3.5ml Roll-on" or "6ml Spray" (case insensitive).
+
               </span>
+
             </p>
 
             <form onSubmit={handleUploadSubmit} className="space-y-4">
+
               <div>
+
                 <input
+
                   type="file"
+
                   accept=".csv,.xlsx,.xls"
+
                   onChange={handleFileChange}
+
                   className="w-full border rounded-lg p-2 cursor-pointer text-sm"
+
                   required
+
                 />
+
                 {uploadFile && (
+
                   <p className="text-sm text-green-600 mt-1">
+
                     ✅ File selected: {uploadFile.name} ({(uploadFile.size / 1024).toFixed(1)} KB)
+
                   </p>
+
                 )}
+
               </div>
 
               {uploadResult && (
+
                 <div
+
                   className={`p-3 rounded-lg text-sm ${
+
                     uploadResult.success ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+
                   }`}
+
                 >
+
                   {uploadResult.success ? (
+
                     <div className="flex items-start gap-2">
+
                       <CheckCircle size={20} className="mt-0.5 flex-shrink-0" />
+
                       <div>
+
                         <p className="font-medium">{uploadResult.data?.message || 'Upload successful!'}</p>
+
                         <p className="text-sm">Created: {uploadResult.data?.created?.length || 0}</p>
+
                         {uploadResult.data?.errors?.length > 0 && (
+
                           <details className="mt-1">
+
                             <summary className="cursor-pointer text-sm">
+
                               View errors ({uploadResult.data.errors.length})
+
                             </summary>
+
                             <ul className="text-xs mt-1 space-y-1 max-h-40 overflow-y-auto">
+
                               {uploadResult.data.errors.map((e, i) => {
-                                let errorMessage = '';
+
+let errorMessage = '';
+
                                 if (typeof e === 'string') errorMessage = e;
+
                                 else if (e && typeof e === 'object') {
+
                                   errorMessage = e.error || e.message || JSON.stringify(e);
+
                                 } else {
+
                                   errorMessage = String(e);
+
                                 }
+
                                 return <li key={i} className="text-red-600">• {errorMessage}</li>;
+
                               })}
+
                             </ul>
+
                           </details>
+
                         )}
+
                         {uploadResult.errors?.length > 0 && (
+
                           <details className="mt-1">
+
                             <summary className="cursor-pointer text-sm">
+
                               View warnings ({uploadResult.errors.length})
+
                             </summary>
+
                             <ul className="text-xs mt-1 space-y-1 max-h-40 overflow-y-auto">
+
                               {uploadResult.errors.map((e, i) => (
+
                                 <li key={i} className="text-amber-600">⚠️ {e}</li>
+
                               ))}
+
                             </ul>
+
                           </details>
+
                         )}
+
                       </div>
+
                     </div>
+
                   ) : (
+
                     <div className="flex items-start gap-2">
+
                       <AlertCircle size={20} className="mt-0.5 flex-shrink-0" />
+
                       <span>{uploadResult.message}</span>
+
                     </div>
+
                   )}
+
                 </div>
+
               )}
 
               <div className="flex flex-col sm:flex-row gap-3">
+
                 <button
+
                   type="submit"
+
                   disabled={uploading || !uploadFile}
+
                   className="w-full sm:flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+
                 >
+
                   {uploading ? 'Uploading...' : 'Upload'}
+
                 </button>
+
                 <button
+
                   type="button"
+
                   onClick={() => {
+
                     setShowUploadModal(false);
+
                     setUploadResult(null);
+
                     setUploadFile(null);
+
                   }}
+
                   className="w-full sm:flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
+
                 >
+
                   Cancel
+
                 </button>
+
               </div>
+
             </form>
+
           </div>
+
         </div>
+
       )}
+
     </div>
+
   );
+
 };
 
 export default ProductList;
