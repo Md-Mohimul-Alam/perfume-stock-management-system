@@ -7,7 +7,9 @@ export default defineConfig(({ mode }) => {
 
   const apiUrl =
     env.VITE_API_URL ||
-    (mode === 'development' ? 'http://localhost:5001' : undefined)
+    (mode === 'development'
+      ? 'http://localhost:5001'
+      : undefined)
 
   if (mode === 'production' && !apiUrl) {
     console.warn(
@@ -20,35 +22,74 @@ export default defineConfig(({ mode }) => {
       react(),
 
       VitePWA({
-        // Better for a business app:
-        // user chooses when to update instead of refreshing automatically.
+        /*
+          Prompt user before applying
+          a newly available PWA update.
+        */
         registerType: 'prompt',
 
+        /*
+          Static assets copied into
+          the production build.
+        */
         includeAssets: [
           'favicon.ico',
+
+          /*
+            Primary Apple Home Screen icon.
+          */
           'apple-touch-icon.png',
+
+          /*
+            Apple touch icons.
+          */
+          'apple-touch-icons/apple-touch-icon-180x180.png',
+          'apple-touch-icons/apple-touch-icon-167x167.png',
+          'apple-touch-icons/apple-touch-icon-152x152.png',
+          'apple-touch-icons/apple-touch-icon-120x120.png',
+          'apple-touch-icons/apple-touch-icon-76x76.png',
+          'apple-touch-icons/apple-touch-icon-57x57.png',
+
+          /*
+            Android / PWA icons.
+          */
           'icons/icon-192.png',
           'icons/icon-512.png',
           'icons/icon-512-maskable.png',
         ],
 
+        /*
+          vite-plugin-pwa generates:
+
+          /manifest.webmanifest
+
+          Do not maintain a separate
+          public/manifest.json.
+        */
         manifest: {
           name: 'LUXE Perfume Management',
+
           short_name: 'LUXE',
 
           description:
             'LUXE Perfume Stock, Sales, Inventory and Business Management System',
 
           start_url: '/',
+
           scope: '/',
 
           display: 'standalone',
+
           orientation: 'portrait',
 
           theme_color: '#111111',
+
           background_color: '#111111',
 
-          categories: ['business', 'productivity'],
+          categories: [
+            'business',
+            'productivity',
+          ],
 
           icons: [
             {
@@ -57,12 +98,14 @@ export default defineConfig(({ mode }) => {
               type: 'image/png',
               purpose: 'any',
             },
+
             {
               src: '/icons/icon-512.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'any',
             },
+
             {
               src: '/icons/icon-512-maskable.png',
               sizes: '512x512',
@@ -73,37 +116,65 @@ export default defineConfig(({ mode }) => {
         },
 
         workbox: {
+          /*
+            Remove old service-worker caches
+            after new deployments.
+          */
           cleanupOutdatedCaches: true,
 
           globPatterns: [
             '**/*.{js,css,html,ico,png,svg,jpg,jpeg,webp,woff,woff2}',
           ],
 
-          navigateFallback: '/index.html',
+          navigateFallback:
+            '/index.html',
 
           runtimeCaching: [
             {
-              urlPattern: ({ request }) =>
-                request.destination === 'image',
+              /*
+                Cache runtime images.
 
-              handler: 'CacheFirst',
+                This is mainly for product images.
+              */
+              urlPattern: ({
+                request,
+              }) =>
+                request.destination ===
+                'image',
+
+              handler:
+                'CacheFirst',
 
               options: {
-                cacheName: 'luxe-images',
+                cacheName:
+                  'luxe-images',
 
                 expiration: {
-                  maxEntries: 100,
-                  maxAgeSeconds: 60 * 60 * 24 * 30,
+                  maxEntries:
+                    100,
+
+                  maxAgeSeconds:
+                    60 *
+                    60 *
+                    24 *
+                    30,
                 },
 
                 cacheableResponse: {
-                  statuses: [0, 200],
+                  statuses: [
+                    0,
+                    200,
+                  ],
                 },
               },
             },
           ],
         },
 
+        /*
+          Useful while developing PWA
+          behavior locally.
+        */
         devOptions: {
           enabled: true,
         },
@@ -112,11 +183,15 @@ export default defineConfig(({ mode }) => {
 
     server: {
       proxy:
-        mode === 'development' && apiUrl
+        mode === 'development' &&
+        apiUrl
           ? {
               '/api': {
-                target: apiUrl,
-                changeOrigin: true,
+                target:
+                  apiUrl,
+
+                changeOrigin:
+                  true,
               },
             }
           : undefined,
@@ -126,11 +201,21 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         output: {
           manualChunks(id) {
-            if (id.includes('node_modules')) {
+            if (
+              id.includes(
+                'node_modules'
+              )
+            ) {
               if (
-                id.includes('react') ||
-                id.includes('react-dom') ||
-                id.includes('react-router-dom')
+                id.includes(
+                  'react'
+                ) ||
+                id.includes(
+                  'react-dom'
+                ) ||
+                id.includes(
+                  'react-router-dom'
+                )
               ) {
                 return 'vendor-react'
               }
@@ -141,11 +226,15 @@ export default defineConfig(({ mode }) => {
         },
       },
 
-      chunkSizeWarningLimit: 1000,
+      chunkSizeWarningLimit:
+        1000,
     },
 
     define: {
-      'import.meta.env.VITE_API_URL': JSON.stringify(apiUrl || ''),
+      'import.meta.env.VITE_API_URL':
+        JSON.stringify(
+          apiUrl || ''
+        ),
     },
   }
 })
