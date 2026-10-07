@@ -5,7 +5,6 @@ import { VitePWA } from 'vite-plugin-pwa'
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
 
-  // Ensure the API URL is set
   const apiUrl =
     env.VITE_API_URL ||
     (mode === 'development' ? 'http://localhost:5001' : undefined)
@@ -21,19 +20,22 @@ export default defineConfig(({ mode }) => {
       react(),
 
       VitePWA({
-        registerType: 'autoUpdate',
-        injectRegister: 'auto',
+        // Better for a business app:
+        // user chooses when to update instead of refreshing automatically.
+        registerType: 'prompt',
 
         includeAssets: [
           'favicon.ico',
           'apple-touch-icon.png',
           'icons/icon-192.png',
           'icons/icon-512.png',
+          'icons/icon-512-maskable.png',
         ],
 
         manifest: {
           name: 'LUXE Perfume Management',
           short_name: 'LUXE',
+
           description:
             'LUXE Perfume Stock, Sales, Inventory and Business Management System',
 
@@ -88,27 +90,10 @@ export default defineConfig(({ mode }) => {
 
               options: {
                 cacheName: 'luxe-images',
+
                 expiration: {
                   maxEntries: 100,
                   maxAgeSeconds: 60 * 60 * 24 * 30,
-                },
-              },
-            },
-
-            {
-              urlPattern: ({ url }) =>
-                url.pathname.startsWith('/api/'),
-
-              handler: 'NetworkFirst',
-
-              options: {
-                cacheName: 'luxe-api-cache',
-
-                networkTimeoutSeconds: 10,
-
-                expiration: {
-                  maxEntries: 50,
-                  maxAgeSeconds: 60 * 5,
                 },
 
                 cacheableResponse: {
@@ -119,8 +104,6 @@ export default defineConfig(({ mode }) => {
           ],
         },
 
-        // Helpful while testing locally.
-        // You can remove this later if you prefer.
         devOptions: {
           enabled: true,
         },
@@ -128,7 +111,6 @@ export default defineConfig(({ mode }) => {
     ],
 
     server: {
-      // Only proxy in development
       proxy:
         mode === 'development' && apiUrl
           ? {
@@ -163,7 +145,6 @@ export default defineConfig(({ mode }) => {
     },
 
     define: {
-      // Makes VITE_API_URL available as import.meta.env.VITE_API_URL
       'import.meta.env.VITE_API_URL': JSON.stringify(apiUrl || ''),
     },
   }
