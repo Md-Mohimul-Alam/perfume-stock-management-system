@@ -26,6 +26,8 @@ export default defineConfig(({ mode }) => {
 
         includeAssets: [
           'favicon.ico',
+          'apple-touch-icon.png',
+          'apple-touch-icon-test.png',
           'icons/icon-192.png',
           'icons/icon-512.png',
           'icons/icon-512-maskable.png',
