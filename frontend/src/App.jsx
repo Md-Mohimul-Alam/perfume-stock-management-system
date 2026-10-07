@@ -1,4 +1,10 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+} from 'react-router-dom';
+
 import { Toaster } from 'react-hot-toast';
 
 import PrivateRoute from './components/PrivateRoute';
@@ -8,6 +14,8 @@ import Layout from './components/Layout';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 import Materials from './pages/Inventory/Materials';
 import Bottles from './pages/Inventory/Bottles';
@@ -38,24 +46,109 @@ import Orders from './pages/Orders/Orders';
 function App() {
   return (
     <BrowserRouter>
-      <Toaster position="top-right" />
+      {/* ========================================
+          TOASTS
+      ======================================== */}
+
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 3500,
+        }}
+      />
 
       <Routes>
-        {/* Public routes */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        {/* ========================================
+            PUBLIC ROUTES
+        ======================================== */}
 
-        {/* Admin-only routes */}
+        <Route
+          path="/login"
+          element={<Login />}
+        />
+
+        <Route
+          path="/register"
+          element={<Register />}
+        />
+        <Route
+          path="/forgot-password"
+          element={<ForgotPassword />}
+        />
+
+        <Route
+          path="/reset-password"
+          element={<ResetPassword />}
+        />
+
+        <Route
+          path="/reset-password/:token"
+          element={<ResetPassword />}
+        />
+        {/* ========================================
+            ADMIN ROUTES
+        ======================================== */}
+
         <Route
           path="/admin/*"
           element={
             <AdminRoute>
-              <div>Admin area</div>
+              <div
+                className="
+                  flex
+                  min-h-screen
+                  min-h-[100dvh]
+                  items-center
+                  justify-center
+                  bg-gray-50
+                  p-6
+                  dark:bg-slate-900
+                "
+              >
+                <div
+                  className="
+                    rounded-2xl
+                    border
+                    border-gray-200
+                    bg-white
+                    p-6
+                    text-center
+                    shadow-sm
+                    dark:border-slate-700
+                    dark:bg-slate-800
+                  "
+                >
+                  <h1
+                    className="
+                      text-xl
+                      font-bold
+                      text-gray-900
+                      dark:text-white
+                    "
+                  >
+                    Admin Area
+                  </h1>
+
+                  <p
+                    className="
+                      mt-2
+                      text-sm
+                      text-gray-500
+                      dark:text-gray-400
+                    "
+                  >
+                    Admin-only pages can be added here.
+                  </p>
+                </div>
+              </div>
             </AdminRoute>
           }
         />
 
-        {/* Protected routes */}
+        {/* ========================================
+            PROTECTED APPLICATION
+        ======================================== */}
+
         <Route
           path="/"
           element={
@@ -64,45 +157,152 @@ function App() {
             </PrivateRoute>
           }
         >
-          <Route index element={<Dashboard />} />
+          {/* Dashboard */}
 
-          {/* Inventory */}
-          <Route path="inventory/materials" element={<Materials />} />
-          <Route path="inventory/bottles" element={<Bottles />} />
+          <Route
+            index
+            element={<Dashboard />}
+          />
 
-          {/* Production */}
-          <Route path="production/batches" element={<Batches />} />
+          {/* ====================================
+              INVENTORY
+          ===================================== */}
 
-          {/* Products */}
-          <Route path="products" element={<ProductList />} />
-          <Route path="products/new" element={<NewProduct />} />
+          <Route
+            path="inventory/materials"
+            element={<Materials />}
+          />
 
-          {/* Sales */}
-          <Route path="sales" element={<SaleList />} />
-          <Route path="sales/new" element={<NewSale />} />
-          <Route path="sales/count" element={<SalesCount />} />
-          <Route path="sales/by-product" element={<SalesByProduct />} />
+          <Route
+            path="inventory/bottles"
+            element={<Bottles />}
+          />
 
-          {/* Orders */}
-          <Route path="orders" element={<Orders />} />
+          {/* ====================================
+              PRODUCTION
+          ===================================== */}
 
-          {/* Purchases */}
-          <Route path="purchases" element={<PurchaseList />} />
-          <Route path="purchases/new" element={<NewPurchase />} />
+          <Route
+            path="production/batches"
+            element={<Batches />}
+          />
 
-          {/* Expenses */}
-          <Route path="expenses" element={<ExpensePage />} />
+          {/* ====================================
+              PRODUCTS
+          ===================================== */}
 
-          {/* Investors */}
-          <Route path="investors" element={<Investors />} />
+          <Route
+            path="products"
+            element={<ProductList />}
+          />
 
-          {/* Reports */}
-          <Route path="reports" element={<Reports />} />
+          <Route
+            path="products/new"
+            element={<NewProduct />}
+          />
 
-          {/* Wastage */}
-          <Route path="wastage" element={<WastageList />} />
-          <Route path="wastage/new" element={<WastageForm />} />
+          {/* ====================================
+              SALES
+          ===================================== */}
+
+          <Route
+            path="sales"
+            element={<SaleList />}
+          />
+
+          <Route
+            path="sales/new"
+            element={<NewSale />}
+          />
+
+          <Route
+            path="sales/count"
+            element={<SalesCount />}
+          />
+
+          <Route
+            path="sales/by-product"
+            element={<SalesByProduct />}
+          />
+
+          {/* ====================================
+              ORDERS
+          ===================================== */}
+
+          <Route
+            path="orders"
+            element={<Orders />}
+          />
+
+          {/* ====================================
+              PURCHASES
+          ===================================== */}
+
+          <Route
+            path="purchases"
+            element={<PurchaseList />}
+          />
+
+          <Route
+            path="purchases/new"
+            element={<NewPurchase />}
+          />
+
+          {/* ====================================
+              EXPENSES
+          ===================================== */}
+
+          <Route
+            path="expenses"
+            element={<ExpensePage />}
+          />
+
+          {/* ====================================
+              INVESTORS
+          ===================================== */}
+
+          <Route
+            path="investors"
+            element={<Investors />}
+          />
+
+          {/* ====================================
+              REPORTS
+          ===================================== */}
+
+          <Route
+            path="reports"
+            element={<Reports />}
+          />
+
+          {/* ====================================
+              WASTAGE
+          ===================================== */}
+
+          <Route
+            path="wastage"
+            element={<WastageList />}
+          />
+
+          <Route
+            path="wastage/new"
+            element={<WastageForm />}
+          />
         </Route>
+
+        {/* ========================================
+            UNKNOWN ROUTE
+        ======================================== */}
+
+        <Route
+          path="*"
+          element={
+            <Navigate
+              to="/"
+              replace
+            />
+          }
+        />
       </Routes>
     </BrowserRouter>
   );

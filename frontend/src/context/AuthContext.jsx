@@ -16,7 +16,7 @@ const TOKEN_KEY = 'token';
 const USER_KEY = 'user';
 
 /* ========================================
-   HELPERS
+   STORAGE HELPERS
 ======================================== */
 
 const clearStoredAuth = () => {
@@ -27,14 +27,18 @@ const clearStoredAuth = () => {
 const getStoredUser = () => {
   try {
     const storedUser =
-      localStorage.getItem(USER_KEY);
+      localStorage.getItem(
+        USER_KEY
+      );
 
     if (!storedUser) {
       return null;
     }
 
     const parsed =
-      JSON.parse(storedUser);
+      JSON.parse(
+        storedUser
+      );
 
     if (
       !parsed ||
@@ -46,7 +50,7 @@ const getStoredUser = () => {
     return parsed;
   } catch (error) {
     console.error(
-      'Failed to parse stored user:',
+      'Unable to parse stored user:',
       error
     );
 
@@ -54,14 +58,13 @@ const getStoredUser = () => {
   }
 };
 
-/*
-  Client-side expiration check only.
+/* ========================================
+   JWT EXPIRATION
+======================================== */
 
-  This does NOT replace backend
-  JWT verification.
-*/
-
-const isTokenExpired = (token) => {
+const isTokenExpired = (
+  token
+) => {
   if (!token) {
     return true;
   }
@@ -70,63 +73,56 @@ const isTokenExpired = (token) => {
     const parts =
       token.split('.');
 
+    /*
+      If backend is using a non-JWT
+      token, let the backend validate it.
+    */
     if (parts.length !== 3) {
-      /*
-        If your backend ever uses a
-        non-JWT token, do not treat it
-        as expired automatically.
-      */
       return false;
     }
 
-    const payloadPart =
+    const base64 =
       parts[1]
         .replace(/-/g, '+')
         .replace(/_/g, '/');
 
     const padded =
-      payloadPart.padEnd(
+      base64.padEnd(
         Math.ceil(
-          payloadPart.length / 4
+          base64.length / 4
         ) * 4,
         '='
       );
 
     const payload =
       JSON.parse(
-        window.atob(padded)
+        window.atob(
+          padded
+        )
       );
 
     if (!payload?.exp) {
       return false;
     }
 
-    const currentTime =
-      Math.floor(
-        Date.now() / 1000
-      );
-
     return (
       Number(payload.exp) <=
-      currentTime
+      Math.floor(
+        Date.now() / 1000
+      )
     );
   } catch (error) {
     console.warn(
-      'Could not inspect JWT expiration:',
+      'Unable to inspect auth token:',
       error
     );
 
-    /*
-      Let backend validation decide
-      rather than logging the user out
-      because of a parsing problem.
-    */
     return false;
   }
 };
 
 /* ========================================
-   PROVIDER
+   AUTH PROVIDER
 ======================================== */
 
 export const AuthProvider = ({
@@ -139,7 +135,7 @@ export const AuthProvider = ({
     useState(true);
 
   /* ========================================
-     RESTORE AUTH
+     RESTORE SESSION
   ======================================== */
 
   useEffect(() => {
@@ -158,26 +154,35 @@ export const AuthProvider = ({
           !storedUser
         ) {
           clearStoredAuth();
+
           setUser(null);
+
           return;
         }
 
         if (
-          isTokenExpired(token)
+          isTokenExpired(
+            token
+          )
         ) {
           clearStoredAuth();
+
           setUser(null);
+
           return;
         }
 
-        setUser(storedUser);
+        setUser(
+          storedUser
+        );
       } catch (error) {
         console.error(
-          'Failed to restore authentication:',
+          'Failed to restore session:',
           error
         );
 
         clearStoredAuth();
+
         setUser(null);
       } finally {
         setLoading(false);
@@ -188,7 +193,32 @@ export const AuthProvider = ({
   }, []);
 
   /* ========================================
-     SYNC BETWEEN TABS / WINDOWS
+     AXIOS 401 EVENT
+  ======================================== */
+
+  useEffect(() => {
+    const handleUnauthorized =
+      () => {
+        clearStoredAuth();
+
+        setUser(null);
+      };
+
+    window.addEventListener(
+      'luxe:unauthorized',
+      handleUnauthorized
+    );
+
+    return () => {
+      window.removeEventListener(
+        'luxe:unauthorized',
+        handleUnauthorized
+      );
+    };
+  }, []);
+
+  /* ========================================
+     MULTI TAB / WINDOW SYNC
   ======================================== */
 
   useEffect(() => {
@@ -213,22 +243,28 @@ export const AuthProvider = ({
 
       if (
         !token ||
-        !storedUser ||
-        isTokenExpired(token)
+        !storedUser
       ) {
         setUser(null);
-
-        if (
-          token &&
-          isTokenExpired(token)
-        ) {
-          clearStoredAuth();
-        }
 
         return;
       }
 
-      setUser(storedUser);
+      if (
+        isTokenExpired(
+          token
+        )
+      ) {
+        clearStoredAuth();
+
+        setUser(null);
+
+        return;
+      }
+
+      setUser(
+        storedUser
+      );
     };
 
     window.addEventListener(
@@ -245,19 +281,22 @@ export const AuthProvider = ({
   }, []);
 
   /* ========================================
-     STORE AUTH AFTER OTP
+     SET AUTH USER
   ======================================== */
 
   const setAuthUser =
     useCallback(
-      (userData, token) => {
+      (
+        userData,
+        token
+      ) => {
         if (
           !userData ||
           typeof userData !==
             'object'
         ) {
           throw new Error(
-            'Invalid user data.'
+            'Invalid user data'
           );
         }
 
@@ -267,19 +306,21 @@ export const AuthProvider = ({
             'string'
         ) {
           throw new Error(
-            'Authentication token is missing.'
+            'Authentication token is missing'
           );
         }
 
         if (
-          isTokenExpired(token)
+          isTokenExpired(
+            token
+          )
         ) {
           clearStoredAuth();
 
           setUser(null);
 
           throw new Error(
-            'Authentication token has expired.'
+            'Authentication token has expired'
           );
         }
 
@@ -295,38 +336,44 @@ export const AuthProvider = ({
           )
         );
 
-        setUser(userData);
+        setUser(
+          userData
+        );
       },
       []
     );
 
   /* ========================================
-     START LOGIN / OTP REQUEST
+     LOGIN
   ======================================== */
 
   /*
-    This helper does NOT consider the user
-    authenticated unless the backend actually
-    returns a token.
+    Your current OTP Login.jsx can continue
+    calling /auth/login directly and then use:
 
-    Your Login.jsx currently calls /auth/login
-    directly and then uses setAuthUser() after
-    /auth/verify-otp. That's perfectly fine.
+    setAuthUser(userData, token)
 
-    Keeping login() here prevents older
-    components from breaking.
+    after /auth/verify-otp succeeds.
+
+    This function is kept for compatibility
+    with any other component that uses login().
   */
 
   const login = useCallback(
-    async (email, password) => {
+    async (
+      email,
+      password
+    ) => {
       try {
         const response =
           await API.post(
             '/auth/login',
             {
               email:
-                email
-                  ?.trim()
+                String(
+                  email || ''
+                )
+                  .trim()
                   .toLowerCase(),
 
               password,
@@ -334,27 +381,29 @@ export const AuthProvider = ({
           );
 
         const data =
-          response?.data || {};
+          response?.data ||
+          {};
 
         /*
-          Backwards compatibility:
-          if backend ever returns a token
-          directly, authenticate normally.
+          Support direct-token login
+          if backend returns one.
         */
 
         if (data.token) {
           const {
             token,
-            ...userData
+            user:
+              nestedUser,
+            ...rest
           } = data;
+
+          const userData =
+            nestedUser ||
+            rest;
 
           setAuthUser(
             userData,
             token
-          );
-
-          toast.success(
-            'Login successful'
           );
         }
 
@@ -368,7 +417,9 @@ export const AuthProvider = ({
             ?.message ||
           'Login failed';
 
-        toast.error(message);
+        toast.error(
+          message
+        );
 
         return {
           success: false,
@@ -380,7 +431,7 @@ export const AuthProvider = ({
   );
 
   /* ========================================
-     UPDATE CURRENT USER
+     UPDATE AUTH USER
   ======================================== */
 
   const updateAuthUser =
@@ -400,7 +451,7 @@ export const AuthProvider = ({
               return previous;
             }
 
-            const updatedUser = {
+            const updated = {
               ...previous,
               ...updates,
             };
@@ -408,11 +459,11 @@ export const AuthProvider = ({
             localStorage.setItem(
               USER_KEY,
               JSON.stringify(
-                updatedUser
+                updated
               )
             );
 
-            return updatedUser;
+            return updated;
           }
         );
       },
@@ -424,9 +475,13 @@ export const AuthProvider = ({
   ======================================== */
 
   const logout = useCallback(
-    ({
-      showToast = true,
-    } = {}) => {
+    (
+      options = {}
+    ) => {
+      const {
+        showToast = true,
+      } = options;
+
       clearStoredAuth();
 
       setUser(null);
@@ -441,7 +496,7 @@ export const AuthProvider = ({
   );
 
   /* ========================================
-     DERIVED AUTH STATE
+     DERIVED VALUES
   ======================================== */
 
   const isAuthenticated =
@@ -467,6 +522,7 @@ export const AuthProvider = ({
       loading,
 
       isAuthenticated,
+
       isAdmin,
       isStaff,
       isInvestor,
@@ -483,6 +539,7 @@ export const AuthProvider = ({
       loading,
 
       isAuthenticated,
+
       isAdmin,
       isStaff,
       isInvestor,
@@ -504,16 +561,18 @@ export const AuthProvider = ({
 };
 
 /* ========================================
-   HOOK
+   AUTH HOOK
 ======================================== */
 
 export const useAuth = () => {
   const context =
-    useContext(AuthContext);
+    useContext(
+      AuthContext
+    );
 
   if (!context) {
     throw new Error(
-      'useAuth must be used within an AuthProvider'
+      'useAuth must be used within AuthProvider'
     );
   }
 
