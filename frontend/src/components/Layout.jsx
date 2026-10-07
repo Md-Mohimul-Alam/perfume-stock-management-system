@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
+
 import Navbar from './Navbar';
 import Sidebar from './Sidebar';
+import MobileBottomNav from './MobileBottomNav';
+
 import { useNotifications } from '../context/NotificationContext';
 
 const layoutStyles = `
@@ -10,6 +13,7 @@ const layoutStyles = `
       max-width: 1600px !important;
     }
   }
+
   @media (min-width: 2560px) {
     .main-content-container {
       max-width: 2000px !important;
@@ -21,6 +25,7 @@ const layoutStyles = `
 
 const Layout = () => {
   const { notifications } = useNotifications();
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
@@ -30,62 +35,137 @@ const Layout = () => {
         setSidebarOpen(false);
       }
     };
+
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
-  const closeDrawer = () => setSidebarOpen(false);
+  const closeDrawer = () => {
+    setSidebarOpen(false);
+  };
+
+  const openDrawer = () => {
+    setSidebarOpen(true);
+  };
 
   const handleToggle = () => {
     if (window.innerWidth >= 1024) {
-      setSidebarCollapsed(!sidebarCollapsed);
+      setSidebarCollapsed((prev) => !prev);
     } else {
-      setSidebarOpen(!sidebarOpen);
+      setSidebarOpen((prev) => !prev);
     }
   };
 
   return (
     <>
       <style>{layoutStyles}</style>
+
       <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-        {/* Desktop sidebar */}
+        {/* =========================
+            Desktop Sidebar
+        ========================== */}
         <div
           className={`hidden lg:block lg:shrink-0 transition-all duration-300 ${
-            sidebarCollapsed ? 'w-16 lg:w-20' : 'w-64 lg:w-72 2xl:w-80'
+            sidebarCollapsed
+              ? 'w-16 lg:w-20'
+              : 'w-64 lg:w-72 2xl:w-80'
           }`}
         >
           <Sidebar
             collapsed={sidebarCollapsed}
-            onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+            onToggleCollapse={() =>
+              setSidebarCollapsed((prev) => !prev)
+            }
           />
         </div>
 
-        {/* Mobile drawer overlay */}
+        {/* =========================
+            Mobile Drawer Overlay
+        ========================== */}
         {sidebarOpen && (
-          <div
-            className="fixed inset-0 z-40 bg-black/40 dark:bg-black/60 backdrop-blur-sm lg:hidden"
+          <button
+            type="button"
+            aria-label="Close navigation menu"
+            className="
+              fixed inset-0 z-40
+              bg-black/40
+              backdrop-blur-sm
+              dark:bg-black/60
+              lg:hidden
+            "
             onClick={closeDrawer}
           />
         )}
 
-        {/* Mobile drawer */}
+        {/* =========================
+            Mobile Drawer
+        ========================== */}
         <div
-          className={`fixed top-0 left-0 z-50 h-full w-64 bg-white dark:bg-gray-900 shadow-2xl dark:shadow-gray-900/50 transition-transform duration-300 ease-in-out lg:hidden ${
-            sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-          }`}
+          className={`
+            fixed left-0 top-0 z-50
+            h-full w-[85%] max-w-72
+            bg-white
+            shadow-2xl
+            transition-transform
+            duration-300
+            ease-in-out
+
+            dark:bg-gray-900
+            dark:shadow-gray-900/50
+
+            lg:hidden
+
+            ${
+              sidebarOpen
+                ? 'translate-x-0'
+                : '-translate-x-full'
+            }
+          `}
         >
-          <Sidebar closeDrawer={closeDrawer} isDrawer />
+          <Sidebar
+            closeDrawer={closeDrawer}
+            isDrawer
+          />
         </div>
 
-        {/* Main content */}
-        <div className="flex-1 flex flex-col min-w-0">
-          <Navbar onToggle={handleToggle} notifications={notifications} />
-          <main className="flex-1 overflow-y-auto p-4 sm:p-6 bg-gray-50 dark:bg-gray-900">
-            <div className="main-content-container max-w-7xl mx-auto">
+        {/* =========================
+            Main Application
+        ========================== */}
+        <div className="flex min-w-0 flex-1 flex-col">
+          <Navbar
+            onToggle={handleToggle}
+            notifications={notifications}
+          />
+
+          <main
+            className="
+              flex-1
+              overflow-y-auto
+              bg-gray-50
+              p-4
+              pb-24
+
+              dark:bg-gray-900
+
+              sm:p-6
+              sm:pb-24
+
+              lg:pb-6
+            "
+          >
+            <div className="main-content-container mx-auto max-w-7xl">
               <Outlet />
             </div>
           </main>
         </div>
+
+        {/* =========================
+            Mobile Bottom Navigation
+        ========================== */}
+        <MobileBottomNav onMore={openDrawer} />
       </div>
     </>
   );
