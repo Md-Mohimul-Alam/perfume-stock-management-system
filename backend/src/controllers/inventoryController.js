@@ -632,45 +632,31 @@ exports.getBottles =
 // @route   GET /api/inventory/bottles/public
 exports.getPublicBottles = async (req, res) => {
   try {
-    const bottles =
-      await Bottle.find()
-        .select(
-          [
-            'sizeMl',
-            'type',
-            'currentStock',
-            'sellingPrice',
-            'images',
-            'isStockOut',
-            'createdAt',
-            'updatedAt',
-          ].join(' ')
-        )
-        .sort({
-          type: 1,
-          sizeMl: 1,
-        })
-        .lean();
+    const bottles = await Bottle.find()
+      .select(
+        "sizeMl type currentStock sellingPrice images isStockOut createdAt updatedAt"
+      )
+      .sort({
+        type: 1,
+        sizeMl: 1,
+      })
+      .lean();
 
     console.log(
       `Public bottles found: ${bottles.length}`
     );
 
-    return res.json(
-      bottles
-    );
+    return res.status(200).json(bottles);
   } catch (error) {
     console.error(
-      'Public bottles error:',
+      "Get public bottles error:",
       error
     );
 
-    return res
-      .status(500)
-      .json({
-        message:
-          error.message,
-      });
+    return res.status(500).json({
+      message:
+        "Failed to load bottles",
+    });
   }
 };
 /* ========================================
