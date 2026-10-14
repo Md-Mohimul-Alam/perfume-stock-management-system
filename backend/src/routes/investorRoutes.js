@@ -1,24 +1,89 @@
-const express = require('express');
-const router = express.Router();
+const express =
+  require('express');
+
+const router =
+  express.Router();
+
 const {
   getInvestors,
   createInvestor,
   addContribution,
+  updateContribution,
+  deleteContribution,
   getShares,
   deleteInvestor,
-  getSettlements,            // 👈 NEW
-} = require('../controllers/investorController');
-const { protect } = require('../middlewares/authMiddleware');
+  getSettlements,
+} =
+  require('../controllers/investorController');
 
-router.route('/')
-  .get(protect, getInvestors)
-  .post(protect, createInvestor);
+const {
+  protect,
+} =
+  require('../middlewares/authMiddleware');
 
-router.post('/:id/contribute', protect, addContribution);
-router.get('/shares', protect, getShares);
-router.delete('/:id', protect, deleteInvestor);
+/* ========================================
+   BASE
+======================================== */
 
-// NEW: Get settlements total
-router.get('/settlements', protect, getSettlements);
+router
+  .route('/')
+  .get(
+    protect,
+    getInvestors
+  )
+  .post(
+    protect,
+    createInvestor
+  );
 
-module.exports = router;
+/* ========================================
+   STATIC ROUTES
+   Keep these before /:id
+======================================== */
+
+router.get(
+  '/shares',
+  protect,
+  getShares
+);
+
+router.get(
+  '/settlements',
+  protect,
+  getSettlements
+);
+
+/* ========================================
+   CONTRIBUTIONS
+======================================== */
+
+router.post(
+  '/:id/contribute',
+  protect,
+  addContribution
+);
+
+router.put(
+  '/:id/contributions/:contributionId',
+  protect,
+  updateContribution
+);
+
+router.delete(
+  '/:id/contributions/:contributionId',
+  protect,
+  deleteContribution
+);
+
+/* ========================================
+   INVESTOR
+======================================== */
+
+router.delete(
+  '/:id',
+  protect,
+  deleteInvestor
+);
+
+module.exports =
+  router;
