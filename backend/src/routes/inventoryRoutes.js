@@ -41,9 +41,9 @@ const {
 } = require('../middlewares/authMiddleware');
 
 /* ========================================
-   PUBLIC BOTTLE CATALOGUE
+   PUBLIC BOTTLES
 
-   Customer website can access this.
+   Must stay BEFORE /bottles/:id.
 ======================================== */
 
 router.get(
@@ -56,7 +56,9 @@ router.get(
 ======================================== */
 
 router
-  .route('/materials')
+  .route(
+    '/materials'
+  )
   .get(
     protect,
     getMaterials
@@ -67,7 +69,9 @@ router
   );
 
 router
-  .route('/materials/:id')
+  .route(
+    '/materials/:id'
+  )
   .get(
     protect,
     getMaterialById
@@ -81,19 +85,11 @@ router
     deleteMaterial
   );
 
-/* ========================================
-   MATERIAL STOCK OUT
-======================================== */
-
 router.post(
   '/materials/:id/stock-out',
   protect,
   stockOutMaterial
 );
-
-/* ========================================
-   MATERIAL ADJUSTMENT
-======================================== */
 
 router.post(
   '/materials/:id/adjust',
@@ -102,7 +98,7 @@ router.post(
 );
 
 /* ========================================
-   BOTTLES WITH SALES / USAGE
+   BOTTLE AGGREGATED DATA
 ======================================== */
 
 router.get(
@@ -116,7 +112,9 @@ router.get(
 ======================================== */
 
 router
-  .route('/bottles')
+  .route(
+    '/bottles'
+  )
   .get(
     protect,
     getBottles
@@ -127,7 +125,9 @@ router
   );
 
 router
-  .route('/bottles/:id')
+  .route(
+    '/bottles/:id'
+  )
   .put(
     protect,
     updateBottle
@@ -137,29 +137,17 @@ router
     deleteBottle
   );
 
-/* ========================================
-   BOTTLE PURCHASE
-======================================== */
-
 router.post(
   '/bottles/:id/purchase',
   protect,
   addBottlePurchase
 );
 
-/* ========================================
-   BOTTLE STOCK OUT
-======================================== */
-
 router.post(
   '/bottles/:id/stock-out',
   protect,
   stockOutBottle
 );
-
-/* ========================================
-   BOTTLE WASTAGE
-======================================== */
 
 router.post(
   '/bottles/:id/waste',

@@ -23,20 +23,10 @@ const sanitizeImages = (images) => {
   ].slice(0, 10);
 };
 
-const toNumber = (value, fallback = 0) => {
-  const parsed = Number(value);
-
-  return Number.isFinite(parsed)
-    ? parsed
-    : fallback;
-};
-
 /* ========================================
    RAW MATERIALS
 ======================================== */
 
-// @desc    Get all raw materials with stock and total purchase cost
-// @route   GET /api/inventory/materials
 exports.getMaterials = async (req, res) => {
   try {
     const materials =
@@ -76,11 +66,6 @@ exports.getMaterials = async (req, res) => {
         };
       });
 
-    /*
-      Existing special virtual-material
-      calculations.
-    */
-
     const sales =
       await Sale.find()
         .populate(
@@ -97,22 +82,32 @@ exports.getMaterials = async (req, res) => {
       const sizeVariant =
         product.sizes?.find(
           (size) =>
-            Number(size.sizeMl) ===
-            Number(sizeMl)
+            Number(
+              size.sizeMl
+            ) ===
+            Number(
+              sizeMl
+            )
         );
 
       let components = [];
 
       if (
-        sizeVariant?.blendComponents?.length
+        sizeVariant
+          ?.blendComponents
+          ?.length
       ) {
         components =
-          sizeVariant.blendComponents;
+          sizeVariant
+            .blendComponents;
       } else if (
-        product.blendComponents?.length
+        product
+          .blendComponents
+          ?.length
       ) {
         components =
-          product.blendComponents;
+          product
+            .blendComponents;
       }
 
       if (!components.length) {
@@ -121,10 +116,18 @@ exports.getMaterials = async (req, res) => {
 
       let totalOil = 0;
 
-      for (const component of components) {
+      for (
+        const component of
+        components
+      ) {
         const materialId =
-          component.material?._id?.toString() ||
-          component.material?.toString();
+          component
+            .material
+            ?._id
+            ?.toString() ||
+          component
+            .material
+            ?.toString();
 
         const material =
           materials.find(
@@ -135,11 +138,14 @@ exports.getMaterials = async (req, res) => {
 
         if (
           material &&
-          material.type === 'oil'
+          material.type ===
+            'oil'
         ) {
           totalOil +=
             Number(
-              component.percentage || 0
+              component
+                .percentage ||
+              0
             );
         }
       }
@@ -154,22 +160,32 @@ exports.getMaterials = async (req, res) => {
       const sizeVariant =
         product.sizes?.find(
           (size) =>
-            Number(size.sizeMl) ===
-            Number(sizeMl)
+            Number(
+              size.sizeMl
+            ) ===
+            Number(
+              sizeMl
+            )
         );
 
       let components = [];
 
       if (
-        sizeVariant?.blendComponents?.length
+        sizeVariant
+          ?.blendComponents
+          ?.length
       ) {
         components =
-          sizeVariant.blendComponents;
+          sizeVariant
+            .blendComponents;
       } else if (
-        product.blendComponents?.length
+        product
+          .blendComponents
+          ?.length
       ) {
         components =
-          product.blendComponents;
+          product
+            .blendComponents;
       }
 
       if (!components.length) {
@@ -179,10 +195,18 @@ exports.getMaterials = async (req, res) => {
       let totalWeight = 0;
       let weightedCost = 0;
 
-      for (const component of components) {
+      for (
+        const component of
+        components
+      ) {
         const materialId =
-          component.material?._id?.toString() ||
-          component.material?.toString();
+          component
+            .material
+            ?._id
+            ?.toString() ||
+          component
+            .material
+            ?.toString();
 
         const material =
           materials.find(
@@ -193,16 +217,21 @@ exports.getMaterials = async (req, res) => {
 
         if (
           material &&
-          material.type === 'oil'
+          material.type ===
+            'oil'
         ) {
           const percentage =
             Number(
-              component.percentage || 0
+              component
+                .percentage ||
+              0
             );
 
           weightedCost +=
             Number(
-              material.avgCostPerMl || 0
+              material
+                .avgCostPerMl ||
+              0
             ) *
             percentage;
 
@@ -211,24 +240,29 @@ exports.getMaterials = async (req, res) => {
         }
       }
 
-      return totalWeight > 0
-        ? weightedCost / totalWeight
+      return totalWeight >
+        0
+        ? weightedCost /
+            totalWeight
         : 0;
     }
 
     for (const sale of sales) {
-      if (!Array.isArray(sale.items)) {
+      if (
+        !Array.isArray(
+          sale.items
+        )
+      ) {
         continue;
       }
 
-      for (const item of sale.items) {
-        /*
-          Bottle-only sales don't use
-          raw materials.
-        */
-
+      for (
+        const item of
+        sale.items
+      ) {
         if (
-          item.itemType === 'bottle'
+          item.itemType ===
+          'bottle'
         ) {
           continue;
         }
@@ -254,12 +288,14 @@ exports.getMaterials = async (req, res) => {
 
         const sizeMl =
           Number(
-            item.sizeMl || 0
+            item.sizeMl ||
+            0
           );
 
         const quantity =
           Number(
-            item.quantity || 0
+            item.quantity ||
+            0
           );
 
         const oilPercentage =
@@ -269,14 +305,16 @@ exports.getMaterials = async (req, res) => {
           );
 
         if (
-          oilPercentage === 0
+          oilPercentage ===
+          0
         ) {
           continue;
         }
 
         const totalOilMl =
           sizeMl *
-          (oilPercentage / 100) *
+          (oilPercentage /
+            100) *
           quantity;
 
         if (!usageMap[sku]) {
@@ -296,10 +334,14 @@ exports.getMaterials = async (req, res) => {
       }
     }
 
-    for (const sku in usageMap) {
+    for (
+      const sku in
+      usageMap
+    ) {
       usageMap[sku] =
         Math.round(
-          usageMap[sku] * 100
+          usageMap[sku] *
+            100
         ) / 100;
     }
 
@@ -309,18 +351,27 @@ exports.getMaterials = async (req, res) => {
     ];
 
     const nameMap = {
-      SR_SP: 'SRK Spray',
-      LUXE1_SP: 'Luxe Special',
+      SR_SP:
+        'SRK Spray',
+
+      LUXE1_SP:
+        'Luxe Special',
     };
 
-    const virtualMaterials = [];
+    const virtualMaterials =
+      [];
 
-    for (const sku of specialSKUs) {
+    for (
+      const sku of
+      specialSKUs
+    ) {
       const used =
-        usageMap[sku] || 0;
+        usageMap[sku] ||
+        0;
 
       const cost =
-        costMap[sku] || 0;
+        costMap[sku] ||
+        0;
 
       virtualMaterials.push({
         _id:
@@ -374,8 +425,10 @@ exports.getMaterials = async (req, res) => {
   }
 };
 
-// @desc    Get single raw material
-// @route   GET /api/inventory/materials/:id
+/* ========================================
+   GET MATERIAL
+======================================== */
+
 exports.getMaterialById =
   async (req, res) => {
     try {
@@ -406,8 +459,10 @@ exports.getMaterialById =
     }
   };
 
-// @desc    Create material
-// @route   POST /api/inventory/materials
+/* ========================================
+   CREATE MATERIAL
+======================================== */
+
 exports.createMaterial =
   async (req, res) => {
     try {
@@ -439,8 +494,10 @@ exports.createMaterial =
     }
   };
 
-// @desc    Update material
-// @route   PUT /api/inventory/materials/:id
+/* ========================================
+   UPDATE MATERIAL
+======================================== */
+
 exports.updateMaterial =
   async (req, res) => {
     try {
@@ -465,15 +522,18 @@ exports.updateMaterial =
       }
 
       if (name) {
-        material.name = name;
+        material.name =
+          name;
       }
 
       if (sku) {
-        material.sku = sku;
+        material.sku =
+          sku;
       }
 
       if (type) {
-        material.type = type;
+        material.type =
+          type;
       }
 
       await material.save();
@@ -491,8 +551,10 @@ exports.updateMaterial =
     }
   };
 
-// @desc    Delete material
-// @route   DELETE /api/inventory/materials/:id
+/* ========================================
+   DELETE MATERIAL
+======================================== */
+
 exports.deleteMaterial =
   async (req, res) => {
     try {
@@ -527,11 +589,9 @@ exports.deleteMaterial =
   };
 
 /* ========================================
-   BOTTLES
+   GET ADMIN BOTTLES
 ======================================== */
 
-// @desc    Get all bottles - ADMIN
-// @route   GET /api/inventory/bottles
 exports.getBottles =
   async (req, res) => {
     try {
@@ -559,71 +619,64 @@ exports.getBottles =
   };
 
 /* ========================================
-   PUBLIC BOTTLE CATALOGUE
-======================================== */
+   PUBLIC BOTTLES
 
+   IMPORTANT:
+   Do NOT filter by sellingPrice here.
+
+   This lets the client display the
+   bottle section even while prices
+   are still being configured.
+======================================== */
 // @desc    Public bottle catalogue
 // @route   GET /api/inventory/bottles/public
-exports.getPublicBottles =
-  async (req, res) => {
-    try {
-      /*
-        Only bottles with a configured
-        customer selling price appear
-        on the storefront.
-
-        Purchase cost is intentionally
-        NOT exposed.
-      */
-
-      const bottles =
-        await Bottle.find({
-          sellingPrice: {
-            $gt: 0,
-          },
+exports.getPublicBottles = async (req, res) => {
+  try {
+    const bottles =
+      await Bottle.find()
+        .select(
+          [
+            'sizeMl',
+            'type',
+            'currentStock',
+            'sellingPrice',
+            'images',
+            'isStockOut',
+            'createdAt',
+            'updatedAt',
+          ].join(' ')
+        )
+        .sort({
+          type: 1,
+          sizeMl: 1,
         })
-          .select(
-            [
-              'sizeMl',
-              'type',
-              'currentStock',
-              'sellingPrice',
-              'images',
-              'isStockOut',
-              'createdAt',
-              'updatedAt',
-            ].join(' ')
-          )
-          .sort({
-            type: 1,
-            sizeMl: 1,
-          })
-          .lean();
+        .lean();
 
-      return res.json(
-        bottles
-      );
-    } catch (error) {
-      console.error(
-        'Public bottles error:',
-        error
-      );
+    console.log(
+      `Public bottles found: ${bottles.length}`
+    );
 
-      return res
-        .status(500)
-        .json({
-          message:
-            error.message,
-        });
-    }
-  };
+    return res.json(
+      bottles
+    );
+  } catch (error) {
+    console.error(
+      'Public bottles error:',
+      error
+    );
 
+    return res
+      .status(500)
+      .json({
+        message:
+          error.message,
+      });
+  }
+};
 /* ========================================
    CREATE BOTTLE
 ======================================== */
 
-// @desc    Create new bottle
-// @route   POST /api/inventory/bottles
 exports.createBottle =
   async (req, res) => {
     try {
@@ -637,7 +690,9 @@ exports.createBottle =
       } = req.body;
 
       const parsedSize =
-        Number(sizeMl);
+        Number(
+          sizeMl
+        );
 
       const parsedStock =
         Number(
@@ -672,7 +727,9 @@ exports.createBottle =
         ![
           'roll-on',
           'spray',
-        ].includes(type)
+        ].includes(
+          type
+        )
       ) {
         return res
           .status(400)
@@ -714,7 +771,8 @@ exports.createBottle =
         !Number.isFinite(
           parsedSellingPrice
         ) ||
-        parsedSellingPrice < 0
+        parsedSellingPrice <
+          0
       ) {
         return res
           .status(400)
@@ -763,7 +821,8 @@ exports.createBottle =
             ),
 
           isStockOut:
-            parsedStock <= 0,
+            parsedStock <=
+            0,
         });
 
       return res
@@ -790,8 +849,6 @@ exports.createBottle =
    UPDATE BOTTLE
 ======================================== */
 
-// @desc    Update bottle
-// @route   PUT /api/inventory/bottles/:id
 exports.updateBottle =
   async (req, res) => {
     try {
@@ -819,10 +876,13 @@ exports.updateBottle =
       }
 
       if (
-        sizeMl !== undefined
+        sizeMl !==
+        undefined
       ) {
         const parsed =
-          Number(sizeMl);
+          Number(
+            sizeMl
+          );
 
         if (
           !Number.isFinite(
@@ -843,13 +903,16 @@ exports.updateBottle =
       }
 
       if (
-        type !== undefined
+        type !==
+        undefined
       ) {
         if (
           ![
             'roll-on',
             'spray',
-          ].includes(type)
+          ].includes(
+            type
+          )
         ) {
           return res
             .status(400)
@@ -864,7 +927,8 @@ exports.updateBottle =
       }
 
       if (
-        currentStock !== undefined
+        currentStock !==
+        undefined
       ) {
         const parsed =
           Number(
@@ -947,7 +1011,8 @@ exports.updateBottle =
       }
 
       if (
-        images !== undefined
+        images !==
+        undefined
       ) {
         bottle.images =
           sanitizeImages(
@@ -1002,8 +1067,6 @@ exports.updateBottle =
    DELETE BOTTLE
 ======================================== */
 
-// @desc    Delete bottle
-// @route   DELETE /api/inventory/bottles/:id
 exports.deleteBottle =
   async (req, res) => {
     try {
@@ -1138,7 +1201,10 @@ exports.bulkCreateMaterials =
       const errors = [];
       const created = [];
 
-      for (const item of items) {
+      for (
+        const item of
+        items
+      ) {
         try {
           const {
             name,
@@ -1153,7 +1219,6 @@ exports.bulkCreateMaterials =
           ) {
             errors.push({
               item,
-
               error:
                 'Missing required fields (name, sku, type)',
             });
@@ -1169,7 +1234,6 @@ exports.bulkCreateMaterials =
           if (existing) {
             errors.push({
               item,
-
               error:
                 `SKU '${sku}' already exists`,
             });
@@ -1190,7 +1254,6 @@ exports.bulkCreateMaterials =
         } catch (error) {
           errors.push({
             item,
-
             error:
               error.message,
           });
@@ -1244,7 +1307,10 @@ exports.bulkCreateBottles =
       const errors = [];
       const created = [];
 
-      for (const item of items) {
+      for (
+        const item of
+        items
+      ) {
         try {
           const {
             sizeMl,
@@ -1279,7 +1345,8 @@ exports.bulkCreateBottles =
             !Number.isFinite(
               parsedSize
             ) ||
-            parsedSize <= 0
+            parsedSize <=
+              0
           ) {
             errors.push({
               item,
@@ -1294,7 +1361,9 @@ exports.bulkCreateBottles =
             ![
               'roll-on',
               'spray',
-            ].includes(type)
+            ].includes(
+              type
+            )
           ) {
             errors.push({
               item,
@@ -1316,7 +1385,6 @@ exports.bulkCreateBottles =
           if (existing) {
             errors.push({
               item,
-
               error:
                 `Bottle ${parsedSize}ml (${type}) already exists`,
             });
@@ -1335,7 +1403,8 @@ exports.bulkCreateBottles =
                 Number.isInteger(
                   parsedStock
                 ) &&
-                parsedStock > 0
+                parsedStock >
+                  0
                   ? parsedStock
                   : 0,
 
@@ -1369,7 +1438,8 @@ exports.bulkCreateBottles =
                   Number.isInteger(
                     parsedStock
                   ) &&
-                  parsedStock > 0
+                  parsedStock >
+                    0
                 ),
             });
 
@@ -1379,7 +1449,6 @@ exports.bulkCreateBottles =
         } catch (error) {
           errors.push({
             item,
-
             error:
               error.message,
           });
@@ -1433,7 +1502,10 @@ exports.importMaterialsWithPurchases =
       const errors = [];
       const created = [];
 
-      for (const item of items) {
+      for (
+        const item of
+        items
+      ) {
         try {
           const {
             name,
@@ -1449,7 +1521,6 @@ exports.importMaterialsWithPurchases =
           ) {
             errors.push({
               item,
-
               error:
                 'Missing name, sku, or type',
             });
@@ -1465,7 +1536,6 @@ exports.importMaterialsWithPurchases =
           if (existing) {
             errors.push({
               item,
-
               error:
                 `SKU '${sku}' already exists`,
             });
@@ -1478,34 +1548,39 @@ exports.importMaterialsWithPurchases =
               name,
               sku,
               type,
-
               currentStockMl:
                 0,
-
               avgCostPerMl:
                 0,
             });
 
-          for (const purchase of purchases) {
+          for (
+            const purchase of
+            purchases
+          ) {
             const quantity =
               Number(
-                purchase.quantityMl
+                purchase
+                  .quantityMl
               );
 
             const costPerMl =
               Number(
-                purchase.costPerMl
+                purchase
+                  .costPerMl
               );
 
             if (
               !Number.isFinite(
                 quantity
               ) ||
-              quantity <= 0 ||
+              quantity <=
+                0 ||
               !Number.isFinite(
                 costPerMl
               ) ||
-              costPerMl < 0
+              costPerMl <
+                0
             ) {
               continue;
             }
@@ -1518,9 +1593,11 @@ exports.importMaterialsWithPurchases =
               quantity,
               costPerMl,
               totalCost,
-              purchase.supplier ||
+              purchase
+                .supplier ||
                 '',
-              purchase.invoiceNo ||
+              purchase
+                .invoiceNo ||
                 ''
             );
           }
@@ -1533,7 +1610,6 @@ exports.importMaterialsWithPurchases =
         } catch (error) {
           errors.push({
             item,
-
             error:
               error.message,
           });
@@ -1587,7 +1663,10 @@ exports.bulkAddStockToBottles =
       const errors = [];
       const updated = [];
 
-      for (const item of items) {
+      for (
+        const item of
+        items
+      ) {
         try {
           const {
             sizeMl,
@@ -1602,7 +1681,8 @@ exports.bulkAddStockToBottles =
             );
 
           if (
-            sizeMl === undefined ||
+            sizeMl ===
+              undefined ||
             !type ||
             !Number.isInteger(
               qty
@@ -1611,7 +1691,6 @@ exports.bulkAddStockToBottles =
           ) {
             errors.push({
               item,
-
               error:
                 'Missing or invalid fields (sizeMl, type, quantity)',
             });
@@ -1632,7 +1711,6 @@ exports.bulkAddStockToBottles =
           if (!bottle) {
             errors.push({
               item,
-
               error:
                 `Bottle ${sizeMl}ml (${type}) not found`,
             });
@@ -1652,7 +1730,8 @@ exports.bulkAddStockToBottles =
             cost > 0
           ) {
             const totalCost =
-              qty * cost;
+              qty *
+              cost;
 
             bottle.addPurchase(
               qty,
@@ -1691,7 +1770,6 @@ exports.bulkAddStockToBottles =
         } catch (error) {
           errors.push({
             item,
-
             error:
               error.message,
           });
@@ -1719,7 +1797,6 @@ exports.bulkAddStockToBottles =
    BOTTLE PURCHASE
 ======================================== */
 
-// @route POST /api/inventory/bottles/:id/purchase
 exports.addBottlePurchase =
   async (req, res) => {
     try {
@@ -1783,7 +1860,8 @@ exports.addBottlePurchase =
       }
 
       const totalCost =
-        qty * cost;
+        qty *
+        cost;
 
       bottle.addPurchase(
         qty,
@@ -1859,7 +1937,8 @@ exports.stockOutMaterial =
         );
 
       if (
-        remainingStock > 0
+        remainingStock >
+        0
       ) {
         const wastageAmount =
           remainingStock *
@@ -2024,7 +2103,9 @@ exports.adjustMaterialStock =
         oldStock;
 
       if (
-        Math.abs(delta) <
+        Math.abs(
+          delta
+        ) <
         0.001
       ) {
         return res.json({
@@ -2057,7 +2138,9 @@ exports.adjustMaterialStock =
         recordAsWastage
       ) {
         const lossMl =
-          Math.abs(delta);
+          Math.abs(
+            delta
+          );
 
         wastageAmount =
           lossMl *
