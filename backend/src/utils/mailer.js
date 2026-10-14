@@ -1,17 +1,12 @@
 const nodemailer = require("nodemailer");
 
-/* ========================================
-   SMTP CONFIG
-======================================== */
-
 const host =
   process.env.SMTP_HOST?.trim() ||
   "smtp.gmail.com";
 
-const port =
-  Number(
-    process.env.SMTP_PORT || 465
-  );
+const port = Number(
+  process.env.SMTP_PORT || 587
+);
 
 const user =
   process.env.SMTP_USER?.trim();
@@ -19,15 +14,10 @@ const user =
 const pass =
   process.env.SMTP_PASS?.trim();
 
-/*
-  Port 465 uses implicit TLS,
-  so secure must be true.
-*/
-const secure = true;
-
-/* ========================================
-   VALIDATION
-======================================== */
+const secure =
+  process.env.SMTP_SECURE
+    ? process.env.SMTP_SECURE.toLowerCase() === "true"
+    : port === 465;
 
 if (!user) {
   throw new Error(
@@ -50,10 +40,6 @@ if (
     "SMTP_PORT is invalid"
   );
 }
-
-/* ========================================
-   TRANSPORTER
-======================================== */
 
 const transporter =
   nodemailer.createTransport({
