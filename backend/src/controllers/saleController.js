@@ -23,31 +23,53 @@ const getId = (value) => {
   return value?._id || value || null;
 };
 
-const toNumber = (value, label) => {
-  const parsed = Number(value);
+const toNumber = (
+  value,
+  label
+) => {
+  const parsed =
+    Number(value);
 
-  if (!Number.isFinite(parsed)) {
-    const error = new Error(
-      `${label} must be a valid number`
-    );
-    error.statusCode = 400;
+  if (
+    !Number.isFinite(
+      parsed
+    )
+  ) {
+    const error =
+      new Error(
+        `${label} must be a valid number`
+      );
+
+    error.statusCode =
+      400;
+
     throw error;
   }
 
   return parsed;
 };
 
-const positiveNumber = (value, label) => {
-  const parsed = toNumber(
-    value,
-    label
-  );
-
-  if (parsed <= 0) {
-    const error = new Error(
-      `${label} must be greater than 0`
+const positiveNumber = (
+  value,
+  label
+) => {
+  const parsed =
+    toNumber(
+      value,
+      label
     );
-    error.statusCode = 400;
+
+  if (
+    parsed <= 0
+  ) {
+    const error =
+      new Error(
+        `${label} must be greater than 0`
+      );
+
+    error.statusCode =
+      400;
+
     throw error;
   }
 
@@ -58,16 +80,25 @@ const positiveInteger = (
   value,
   label
 ) => {
-  const parsed = positiveNumber(
-    value,
-    label
-  );
-
-  if (!Number.isInteger(parsed)) {
-    const error = new Error(
-      `${label} must be a whole number`
+  const parsed =
+    positiveNumber(
+      value,
+      label
     );
-    error.statusCode = 400;
+
+  if (
+    !Number.isInteger(
+      parsed
+    )
+  ) {
+    const error =
+      new Error(
+        `${label} must be a whole number`
+      );
+
+    error.statusCode =
+      400;
+
     throw error;
   }
 
@@ -78,20 +109,64 @@ const nonNegativeNumber = (
   value,
   label
 ) => {
-  const parsed = toNumber(
-    value,
-    label
-  );
-
-  if (parsed < 0) {
-    const error = new Error(
-      `${label} cannot be negative`
+  const parsed =
+    toNumber(
+      value,
+      label
     );
-    error.statusCode = 400;
+
+  if (
+    parsed < 0
+  ) {
+    const error =
+      new Error(
+        `${label} cannot be negative`
+      );
+
+    error.statusCode =
+      400;
+
     throw error;
   }
 
   return parsed;
+};
+
+const normalizeItemType = (
+  value
+) => {
+  /*
+    Old sales do not contain itemType.
+    Treat them as normal Product sales.
+  */
+
+  const itemType =
+    String(
+      value || 'product'
+    )
+      .trim()
+      .toLowerCase();
+
+  if (
+    ![
+      'product',
+      'bottle',
+    ].includes(
+      itemType
+    )
+  ) {
+    const error =
+      new Error(
+        'Sale item type must be product or bottle'
+      );
+
+    error.statusCode =
+      400;
+
+    throw error;
+  }
+
+  return itemType;
 };
 
 /* ========================================
@@ -104,8 +179,12 @@ const getSizeVariant = (
 ) => {
   return product.sizes?.find(
     (size) =>
-      Number(size.sizeMl) ===
-      Number(sizeMl)
+      Number(
+        size.sizeMl
+      ) ===
+      Number(
+        sizeMl
+      )
   );
 };
 
@@ -120,13 +199,21 @@ const getSizeBlend = (
     );
 
   if (
-    sizeVariant?.blendComponents &&
-    sizeVariant.blendComponents.length > 0
+    sizeVariant
+      ?.blendComponents &&
+    sizeVariant
+      .blendComponents
+      .length > 0
   ) {
-    return sizeVariant.blendComponents;
+    return sizeVariant
+      .blendComponents;
   }
 
-  return product.blendComponents || [];
+  return (
+    product
+      .blendComponents ||
+    []
+  );
 };
 
 const getRollOnOilMlPerUnit = (
@@ -134,18 +221,22 @@ const getRollOnOilMlPerUnit = (
 ) => {
   const configured =
     Number(
-      sizeVariant?.oilMlUsed
+      sizeVariant
+        ?.oilMlUsed
     );
 
   if (
-    Number.isFinite(configured) &&
+    Number.isFinite(
+      configured
+    ) &&
     configured > 0
   ) {
     return configured;
   }
 
   return positiveNumber(
-    sizeVariant?.sizeMl,
+    sizeVariant
+      ?.sizeMl,
     'Roll-on size'
   );
 };
@@ -159,14 +250,21 @@ const assertProductHasBlend = (
   sizeMl
 ) => {
   if (
-    product.type === 'roll-on'
+    product.type ===
+    'roll-on'
   ) {
-    if (!getId(product.baseOil)) {
-      const error = new Error(
-        `Product "${product.name}" has no base oil configured.`
-      );
+    if (
+      !getId(
+        product.baseOil
+      )
+    ) {
+      const error =
+        new Error(
+          `Product "${product.name}" has no base oil configured.`
+        );
 
-      error.statusCode = 400;
+      error.statusCode =
+        400;
 
       throw error;
     }
@@ -175,13 +273,16 @@ const assertProductHasBlend = (
   }
 
   if (
-    product.type !== 'spray'
+    product.type !==
+    'spray'
   ) {
-    const error = new Error(
-      `Unsupported product type "${product.type}"`
-    );
+    const error =
+      new Error(
+        `Unsupported product type "${product.type}"`
+      );
 
-    error.statusCode = 400;
+    error.statusCode =
+      400;
 
     throw error;
   }
@@ -192,49 +293,67 @@ const assertProductHasBlend = (
       sizeMl
     );
 
-  if (!components.length) {
-    const error = new Error(
-      `Product "${product.name}" ${sizeMl}ml has no blend configured.`
-    );
+  if (
+    !components.length
+  ) {
+    const error =
+      new Error(
+        `Product "${product.name}" ${sizeMl}ml has no blend configured.`
+      );
 
-    error.statusCode = 400;
+    error.statusCode =
+      400;
 
     throw error;
   }
 
   const totalPercentage =
     components.reduce(
-      (total, component) =>
+      (
+        total,
+        component
+      ) =>
         total +
         Number(
-          component.percentage || 0
+          component
+            .percentage ||
+            0
         ),
       0
     );
 
   if (
     Math.abs(
-      totalPercentage - 100
-    ) > BLEND_TOLERANCE
+      totalPercentage -
+        100
+    ) >
+    BLEND_TOLERANCE
   ) {
-    const error = new Error(
-      `Product "${product.name}" ${sizeMl}ml blend totals ${totalPercentage}% instead of 100%.`
-    );
+    const error =
+      new Error(
+        `Product "${product.name}" ${sizeMl}ml blend totals ${totalPercentage}% instead of 100%.`
+      );
 
-    error.statusCode = 400;
+    error.statusCode =
+      400;
 
     throw error;
   }
 
   for (
-    const component of components
+    const component of
+    components
   ) {
     const percentage =
       Number(
-        component.percentage || 0
+        component
+          .percentage ||
+          0
       );
 
-    if (percentage <= 0) {
+    if (
+      percentage <= 0
+    ) {
       continue;
     }
 
@@ -243,11 +362,13 @@ const assertProductHasBlend = (
         component.material
       )
     ) {
-      const error = new Error(
-        `Product "${product.name}" has a blend component without a material.`
-      );
+      const error =
+        new Error(
+          `Product "${product.name}" has a blend component without a material.`
+        );
 
-      error.statusCode = 400;
+      error.statusCode =
+        400;
 
       throw error;
     }
@@ -255,21 +376,25 @@ const assertProductHasBlend = (
 };
 
 /* ========================================
-   SALE VALIDATION
+   GENERAL SALE VALIDATION
 ======================================== */
 
 const validateChannel = (
   value
 ) => {
   const channel =
-    String(value || '').trim();
+    String(
+      value || ''
+    ).trim();
 
   if (!channel) {
-    const error = new Error(
-      'Sales channel is required'
-    );
+    const error =
+      new Error(
+        'Sales channel is required'
+      );
 
-    error.statusCode = 400;
+    error.statusCode =
+      400;
 
     throw error;
   }
@@ -287,13 +412,17 @@ const validatePaymentStatus = (
     ![
       'paid',
       'due',
-    ].includes(status)
+    ].includes(
+      status
+    )
   ) {
-    const error = new Error(
-      'Payment status must be paid or due'
-    );
+    const error =
+      new Error(
+        'Payment status must be paid or due'
+      );
 
-    error.statusCode = 400;
+    error.statusCode =
+      400;
 
     throw error;
   }
@@ -316,11 +445,13 @@ const parseSaleDate = (
       date.getTime()
     )
   ) {
-    const error = new Error(
-      'Invalid sale date'
-    );
+    const error =
+      new Error(
+        'Invalid sale date'
+      );
 
-    error.statusCode = 400;
+    error.statusCode =
+      400;
 
     throw error;
   }
@@ -342,7 +473,8 @@ const sendError = (
   );
 
   if (
-    error?.code === 11000
+    error?.code ===
+    11000
   ) {
     return res
       .status(409)
@@ -353,7 +485,8 @@ const sendError = (
   }
 
   if (
-    error?.name === 'CastError'
+    error?.name ===
+    'CastError'
   ) {
     return res
       .status(400)
@@ -368,18 +501,23 @@ const sendError = (
     'Sale operation failed';
 
   let status =
-    error?.statusCode || 500;
+    error?.statusCode ||
+    500;
 
   if (
-    !error?.statusCode &&
-    /not found/i.test(message)
+    !error
+      ?.statusCode &&
+    /not found/i.test(
+      message
+    )
   ) {
     status = 404;
   }
 
   if (
-    !error?.statusCode &&
-    /insufficient|invalid|required|must|not available|no blend|no base oil/i.test(
+    !error
+      ?.statusCode &&
+    /insufficient|invalid|required|must|not available|no blend|no base oil|stock/i.test(
       message
     )
   ) {
@@ -397,45 +535,55 @@ const sendError = (
    INVOICE NUMBER
 ======================================== */
 
-const getNextInvoiceNo = async (
-  session
-) => {
-  const lastSale =
-    await Sale.findOne(
-      {
-        invoiceNo:
-          /^INV-\d+$/,
-      },
-      {
-        invoiceNo: 1,
+const getNextInvoiceNo =
+  async (
+    session
+  ) => {
+    const lastSale =
+      await Sale.findOne(
+        {
+          invoiceNo:
+            /^INV-\d+$/,
+        },
+        {
+          invoiceNo: 1,
+        }
+      )
+        .sort({
+          createdAt: -1,
+        })
+        .session(
+          session
+        )
+        .lean();
+
+    let nextNumber =
+      1;
+
+    if (
+      lastSale
+        ?.invoiceNo
+    ) {
+      const match =
+        lastSale.invoiceNo.match(
+          /^INV-(\d+)$/
+        );
+
+      if (match) {
+        nextNumber =
+          Number(
+            match[1]
+          ) + 1;
       }
-    )
-      .sort({
-        createdAt: -1,
-      })
-      .session(session)
-      .lean();
-
-  let nextNumber = 1;
-
-  if (
-    lastSale?.invoiceNo
-  ) {
-    const match =
-      lastSale.invoiceNo.match(
-        /^INV-(\d+)$/
-      );
-
-    if (match) {
-      nextNumber =
-        Number(match[1]) + 1;
     }
-  }
 
-  return `INV-${String(
-    nextNumber
-  ).padStart(4, '0')}`;
-};
+    return `INV-${String(
+      nextNumber
+    ).padStart(
+      4,
+      '0'
+    )}`;
+  };
 
 /* ========================================
    FIND PRODUCT
@@ -451,15 +599,18 @@ const findProductForSale =
 
     if (productId) {
       if (
-        !mongoose.isValidObjectId(
-          productId
-        )
+        !mongoose
+          .isValidObjectId(
+            productId
+          )
       ) {
-        const error = new Error(
-          `Invalid product ID: ${productId}`
-        );
+        const error =
+          new Error(
+            `Invalid product ID: ${productId}`
+          );
 
-        error.statusCode = 400;
+        error.statusCode =
+          400;
 
         throw error;
       }
@@ -480,14 +631,16 @@ const findProductForSale =
             'Product SKU is required'
           );
 
-        error.statusCode = 400;
+        error.statusCode =
+          400;
 
         throw error;
       }
 
       query =
         Product.findOne({
-          sku: cleanSku,
+          sku:
+            cleanSku,
         });
     }
 
@@ -496,7 +649,9 @@ const findProductForSale =
         .populate(
           'sizes.bottle'
         )
-        .session(session);
+        .session(
+          session
+        );
 
     if (!product) {
       const error =
@@ -506,24 +661,388 @@ const findProductForSale =
             : `Product SKU ${sku} not found`
         );
 
-      error.statusCode = 404;
+      error.statusCode =
+        404;
 
       throw error;
     }
 
     if (
-      product.isActive === false
+      product.isActive ===
+      false
     ) {
-      const error = new Error(
-        `Product "${product.name}" is inactive`
-      );
+      const error =
+        new Error(
+          `Product "${product.name}" is inactive`
+        );
 
-      error.statusCode = 400;
+      error.statusCode =
+        400;
 
       throw error;
     }
 
     return product;
+  };
+
+/* ========================================
+   FIND BOTTLE
+======================================== */
+
+const findBottleForSale =
+  async ({
+    bottleId,
+    sizeMl,
+    bottleType,
+    session,
+  }) => {
+    let bottle;
+
+    /*
+      Preferred way:
+      frontend sends Bottle._id
+    */
+
+    if (bottleId) {
+      if (
+        !mongoose
+          .isValidObjectId(
+            bottleId
+          )
+      ) {
+        const error =
+          new Error(
+            `Invalid bottle ID: ${bottleId}`
+          );
+
+        error.statusCode =
+          400;
+
+        throw error;
+      }
+
+      bottle =
+        await Bottle.findById(
+          bottleId
+        ).session(
+          session
+        );
+    } else {
+      /*
+        Fallback:
+        find by size + type.
+
+        Useful for CSV/import or simple
+        frontend payloads.
+      */
+
+      const cleanSize =
+        positiveNumber(
+          sizeMl,
+          'Bottle size'
+        );
+
+      const cleanType =
+        String(
+          bottleType || ''
+        )
+          .trim()
+          .toLowerCase();
+
+      if (
+        ![
+          'roll-on',
+          'spray',
+        ].includes(
+          cleanType
+        )
+      ) {
+        const error =
+          new Error(
+            'Bottle type must be roll-on or spray'
+          );
+
+        error.statusCode =
+          400;
+
+        throw error;
+      }
+
+      bottle =
+        await Bottle.findOne(
+          {
+            sizeMl:
+              cleanSize,
+
+            type:
+              cleanType,
+          }
+        ).session(
+          session
+        );
+    }
+
+    if (!bottle) {
+      const error =
+        new Error(
+          'Bottle not found'
+        );
+
+      error.statusCode =
+        404;
+
+      throw error;
+    }
+
+    return bottle;
+  };
+
+/* ========================================
+   PREPARE PRODUCT ITEM
+======================================== */
+
+const prepareProductSaleItem =
+  async ({
+    item,
+    index,
+    session,
+    lookupBySku,
+  }) => {
+    const quantity =
+      positiveInteger(
+        item.quantity,
+        `Item ${
+          index + 1
+        } quantity`
+      );
+
+    const sizeMl =
+      positiveNumber(
+        item.sizeMl,
+        `Item ${
+          index + 1
+        } size`
+      );
+
+    const unitPrice =
+      nonNegativeNumber(
+        item.unitPrice,
+        `Item ${
+          index + 1
+        } price`
+      );
+
+    const product =
+      await findProductForSale(
+        {
+          productId:
+            lookupBySku
+              ? null
+              : item.product,
+
+          sku:
+            lookupBySku
+              ? item.sku
+              : null,
+
+          session,
+        }
+      );
+
+    const sizeVariant =
+      getSizeVariant(
+        product,
+        sizeMl
+      );
+
+    if (!sizeVariant) {
+      const error =
+        new Error(
+          `${sizeMl}ml size is not available for "${product.name}"`
+        );
+
+      error.statusCode =
+        400;
+
+      throw error;
+    }
+
+    assertProductHasBlend(
+      product,
+      sizeMl
+    );
+
+    const bottleId =
+      getId(
+        sizeVariant.bottle
+      );
+
+    if (!bottleId) {
+      const error =
+        new Error(
+          `Bottle is not configured for "${product.name}" ${sizeMl}ml`
+        );
+
+      error.statusCode =
+        400;
+
+      throw error;
+    }
+
+    const totalPrice =
+      quantity *
+      unitPrice;
+
+    return {
+      itemType:
+        'product',
+
+      product,
+
+      sizeVariant,
+
+      quantity,
+
+      sizeMl,
+
+      unitPrice,
+
+      totalPrice,
+
+      saleItem: {
+        itemType:
+          'product',
+
+        product:
+          product._id,
+
+        bottle:
+          null,
+
+        sizeMl,
+
+        quantity,
+
+        unitPrice,
+
+        totalPrice,
+      },
+    };
+  };
+
+/* ========================================
+   PREPARE DIRECT BOTTLE ITEM
+======================================== */
+
+const prepareBottleSaleItem =
+  async ({
+    item,
+    index,
+    session,
+  }) => {
+    const quantity =
+      positiveInteger(
+        item.quantity,
+        `Item ${
+          index + 1
+        } quantity`
+      );
+
+    const unitPrice =
+      nonNegativeNumber(
+        item.unitPrice,
+        `Item ${
+          index + 1
+        } price`
+      );
+
+    const bottle =
+      await findBottleForSale(
+        {
+          bottleId:
+            item.bottle,
+
+          sizeMl:
+            item.sizeMl,
+
+          bottleType:
+            item.bottleType ||
+            item.type,
+
+          session,
+        }
+      );
+
+    const sizeMl =
+      Number(
+        bottle.sizeMl
+      );
+
+    /*
+      Early validation.
+
+      Actual deduction is still atomic
+      inside deductBottle().
+    */
+
+    const available =
+      Number(
+        bottle.currentStock ||
+          0
+      );
+
+    if (
+      available <
+      quantity
+    ) {
+      const error =
+        new Error(
+          `Insufficient bottle stock for ${sizeMl}ml ${bottle.type}. Available: ${available}, needed: ${quantity}`
+        );
+
+      error.statusCode =
+        400;
+
+      throw error;
+    }
+
+    const totalPrice =
+      quantity *
+      unitPrice;
+
+    return {
+      itemType:
+        'bottle',
+
+      bottle,
+
+      quantity,
+
+      sizeMl,
+
+      unitPrice,
+
+      totalPrice,
+
+      saleItem: {
+        itemType:
+          'bottle',
+
+        product:
+          null,
+
+        bottle:
+          bottle._id,
+
+        sizeMl,
+
+        quantity,
+
+        unitPrice,
+
+        totalPrice,
+      },
+    };
   };
 
 /* ========================================
@@ -537,138 +1056,255 @@ const prepareSaleItems =
     lookupBySku = false,
   }) => {
     if (
-      !Array.isArray(items) ||
-      items.length === 0
+      !Array.isArray(
+        items
+      ) ||
+      items.length ===
+        0
     ) {
       const error =
         new Error(
           'At least one sale item is required'
         );
 
-      error.statusCode = 400;
+      error.statusCode =
+        400;
 
       throw error;
     }
 
-    const preparedItems = [];
+    const preparedItems =
+      [];
 
-    let totalAmount = 0;
+    let totalAmount =
+      0;
 
     for (
       let index = 0;
-      index < items.length;
+      index <
+      items.length;
       index += 1
     ) {
       const item =
         items[index];
 
-      const quantity =
-        positiveInteger(
-          item.quantity,
-          `Item ${index + 1} quantity`
+      const itemType =
+        normalizeItemType(
+          item.itemType
         );
 
-      const sizeMl =
-        positiveNumber(
-          item.sizeMl,
-          `Item ${index + 1} size`
-        );
+      let preparedItem;
 
-      const unitPrice =
-        nonNegativeNumber(
-          item.unitPrice,
-          `Item ${index + 1} price`
-        );
-
-      const product =
-        await findProductForSale({
-          productId:
-            lookupBySku
-              ? null
-              : item.product,
-
-          sku:
-            lookupBySku
-              ? item.sku
-              : null,
-
-          session,
-        });
-
-      const sizeVariant =
-        getSizeVariant(
-          product,
-          sizeMl
-        );
-
-      if (!sizeVariant) {
-        const error =
-          new Error(
-            `${sizeMl}ml size is not available for "${product.name}"`
+      if (
+        itemType ===
+        'bottle'
+      ) {
+        preparedItem =
+          await prepareBottleSaleItem(
+            {
+              item,
+              index,
+              session,
+            }
           );
-
-        error.statusCode = 400;
-
-        throw error;
-      }
-
-      assertProductHasBlend(
-        product,
-        sizeMl
-      );
-
-      const bottleId =
-        getId(
-          sizeVariant.bottle
-        );
-
-      if (!bottleId) {
-        const error =
-          new Error(
-            `Bottle is not configured for "${product.name}" ${sizeMl}ml`
+      } else {
+        preparedItem =
+          await prepareProductSaleItem(
+            {
+              item,
+              index,
+              session,
+              lookupBySku,
+            }
           );
-
-        error.statusCode = 400;
-
-        throw error;
       }
-
-      const totalPrice =
-        quantity *
-        unitPrice;
 
       totalAmount +=
-        totalPrice;
+        preparedItem.totalPrice;
 
-      preparedItems.push({
-        product,
-        sizeVariant,
-        quantity,
-        sizeMl,
-
-        saleItem: {
-          product:
-            product._id,
-
-          sizeMl,
-
-          quantity,
-
-          unitPrice,
-
-          totalPrice,
-        },
-      });
+      preparedItems.push(
+        preparedItem
+      );
     }
 
     return {
       preparedItems,
+
       totalAmount,
     };
   };
 
 /* ========================================
-   DEDUCT INVENTORY
+   DEDUCT PRODUCT INVENTORY
+======================================== */
+
+const deductProductInventory =
+  async ({
+    item,
+    sale,
+    session,
+  }) => {
+    const {
+      product,
+      sizeVariant,
+      quantity,
+      sizeMl,
+    } = item;
+
+    /*
+      Roll-on product:
+      deduct perfume oil.
+    */
+
+    if (
+      product.type ===
+      'roll-on'
+    ) {
+      const oilPerUnit =
+        getRollOnOilMlPerUnit(
+          sizeVariant
+        );
+
+      await deductRawMaterial(
+        getId(
+          product.baseOil
+        ),
+
+        oilPerUnit *
+          quantity,
+
+        'sale',
+
+        sale,
+
+        session
+      );
+    }
+
+    /*
+      Spray product:
+      deduct every blend component.
+    */
+
+    if (
+      product.type ===
+      'spray'
+    ) {
+      const components =
+        getSizeBlend(
+          product,
+          sizeMl
+        );
+
+      for (
+        const component of
+        components
+      ) {
+        const percentage =
+          Number(
+            component
+              .percentage ||
+              0
+          );
+
+        if (
+          percentage <=
+          0
+        ) {
+          continue;
+        }
+
+        const materialId =
+          getId(
+            component.material
+          );
+
+        const mlUsed =
+          sizeMl *
+          (
+            percentage /
+            100
+          ) *
+          quantity;
+
+        if (
+          mlUsed <= 0
+        ) {
+          continue;
+        }
+
+        await deductRawMaterial(
+          materialId,
+
+          mlUsed,
+
+          'sale',
+
+          sale,
+
+          session
+        );
+      }
+    }
+
+    /*
+      Normal perfume sale also
+      consumes one bottle per unit.
+    */
+
+    await deductBottle(
+      getId(
+        sizeVariant.bottle
+      ),
+
+      quantity,
+
+      'sale',
+
+      sale,
+
+      session
+    );
+  };
+
+/* ========================================
+   DEDUCT DIRECT BOTTLE INVENTORY
+======================================== */
+
+const deductDirectBottleInventory =
+  async ({
+    item,
+    sale,
+    session,
+  }) => {
+    /*
+      IMPORTANT:
+
+      Direct bottle sale deducts ONLY
+      bottle stock.
+
+      It does NOT deduct perfume oil,
+      ethanol, fixative or any other
+      raw material.
+    */
+
+    await deductBottle(
+      getId(
+        item.bottle
+      ),
+
+      item.quantity,
+
+      'sale',
+
+      sale,
+
+      session
+    );
+  };
+
+/* ========================================
+   DEDUCT INVENTORY FOR SALE
 ======================================== */
 
 const deductInventoryForSale =
@@ -681,106 +1317,31 @@ const deductInventoryForSale =
       const item of
       preparedItems
     ) {
-      const {
-        product,
-        sizeVariant,
-        quantity,
-        sizeMl,
-      } = item;
-
-      /*
-        Roll-on
-      */
-
       if (
-        product.type ===
-        'roll-on'
+        item.itemType ===
+        'bottle'
       ) {
-        const oilPerUnit =
-          getRollOnOilMlPerUnit(
-            sizeVariant
-          );
+        await deductDirectBottleInventory(
+          {
+            item,
 
-        await deductRawMaterial(
-          getId(
-            product.baseOil
-          ),
-          oilPerUnit *
-            quantity,
-          'sale',
-          sale,
-          session
-        );
-      }
-
-      /*
-        Spray
-      */
-
-      if (
-        product.type ===
-        'spray'
-      ) {
-        const components =
-          getSizeBlend(
-            product,
-            sizeMl
-          );
-
-        for (
-          const component of
-          components
-        ) {
-          const percentage =
-            Number(
-              component.percentage ||
-                0
-            );
-
-          if (
-            percentage <= 0
-          ) {
-            continue;
-          }
-
-          const materialId =
-            getId(
-              component.material
-            );
-
-          const mlUsed =
-            sizeMl *
-            (percentage / 100) *
-            quantity;
-
-          if (
-            mlUsed <= 0
-          ) {
-            continue;
-          }
-
-          await deductRawMaterial(
-            materialId,
-            mlUsed,
-            'sale',
             sale,
-            session
-          );
-        }
+
+            session,
+          }
+        );
+
+        continue;
       }
 
-      /*
-        Bottle
-      */
+      await deductProductInventory(
+        {
+          item,
 
-      await deductBottle(
-        getId(
-          sizeVariant.bottle
-        ),
-        quantity,
-        'sale',
-        sale,
-        session
+          sale,
+
+          session,
+        }
       );
     }
   };
@@ -796,24 +1357,30 @@ const syncSaleCashTransaction =
     session,
   }) => {
     /*
-      Remove existing Sale cash entries first.
+      Exactly one Sale cash entry
+      for a paid sale.
 
-      This prevents duplicates when payment
-      status is changed repeatedly.
+      Due sale = no cash transaction.
     */
 
-    await Transaction.deleteMany({
-      reference:
-        sale._id,
+    await Transaction.deleteMany(
+      {
+        reference:
+          sale._id,
 
-      refModel:
-        'Sale',
+        refModel:
+          'Sale',
 
-      category:
-        'Sale',
-    }).session(session);
+        category:
+          'Sale',
+      }
+    ).session(
+      session
+    );
 
-    if (!shouldExist) {
+    if (
+      !shouldExist
+    ) {
       return;
     }
 
@@ -842,6 +1409,7 @@ const syncSaleCashTransaction =
             `Sale ${sale.invoiceNo} (${sale.channel})`,
         },
       ],
+
       {
         session,
       }
@@ -882,17 +1450,22 @@ const createSingleSale =
       preparedItems,
       totalAmount,
     } =
-      await prepareSaleItems({
-        items,
-        session,
-        lookupBySku,
-      });
+      await prepareSaleItems(
+        {
+          items,
+
+          session,
+
+          lookupBySku,
+        }
+      );
 
     /*
-      Create sale first inside transaction.
+      Sale and stock changes happen
+      inside one MongoDB transaction.
 
-      If stock deduction fails afterwards,
-      MongoDB rolls back this sale too.
+      If any material or bottle is
+      insufficient, everything rolls back.
     */
 
     const [sale] =
@@ -906,7 +1479,9 @@ const createSingleSale =
 
             items:
               preparedItems.map(
-                (item) =>
+                (
+                  item
+                ) =>
                   item.saleItem
               ),
 
@@ -920,33 +1495,26 @@ const createSingleSale =
 
             notes:
               String(
-                notes || ''
+                notes ||
+                  ''
               ).trim(),
           },
         ],
+
         {
           session,
         }
       );
 
-    /*
-      Deduct inventory.
-
-      inventoryService receives same
-      transaction session.
-    */
-
     await deductInventoryForSale(
       {
         preparedItems,
+
         sale,
+
         session,
       }
     );
-
-    /*
-      Cash transaction
-    */
 
     await syncSaleCashTransaction(
       {
@@ -968,12 +1536,10 @@ const createSingleSale =
 ======================================== */
 
 exports.createSale =
-  async (req, res) => {
-    /*
-      Retry if two requests generate
-      the same sequential invoice number.
-    */
-
+  async (
+    req,
+    res
+  ) => {
     for (
       let attempt = 1;
       attempt <=
@@ -992,40 +1558,57 @@ exports.createSale =
           );
 
         const sale =
-          await createSingleSale({
-            invoiceNo,
+          await createSingleSale(
+            {
+              invoiceNo,
 
-            channel:
-              req.body?.channel,
+              channel:
+                req.body
+                  ?.channel,
 
-            items:
-              req.body?.items,
+              items:
+                req.body
+                  ?.items,
 
-            saleDate:
-              req.body?.saleDate,
+              saleDate:
+                req.body
+                  ?.saleDate,
 
-            paymentStatus:
-              req.body
-                ?.paymentStatus,
+              paymentStatus:
+                req.body
+                  ?.paymentStatus,
 
-            notes:
-              req.body?.notes,
+              notes:
+                req.body
+                  ?.notes,
 
-            session,
-          });
+              session,
+            }
+          );
 
         await session.commitTransaction();
 
+        const populated =
+          await Sale.findById(
+            sale._id
+          )
+            .populate(
+              'items.product',
+              'name sku type description'
+            )
+            .populate(
+              'items.bottle',
+              'sizeMl type currentStock avgCostPerUnit'
+            );
+
         return res
           .status(201)
-          .json(sale);
+          .json(
+            populated ||
+              sale
+          );
       } catch (error) {
         await session.abortTransaction();
-
-        /*
-          Duplicate invoice:
-          retry with fresh transaction.
-        */
 
         if (
           error?.code ===
@@ -1058,7 +1641,10 @@ exports.createSale =
 ======================================== */
 
 exports.getSales =
-  async (req, res) => {
+  async (
+    req,
+    res
+  ) => {
     try {
       const {
         channel,
@@ -1074,7 +1660,9 @@ exports.getSales =
           channel;
       }
 
-      if (paymentStatus) {
+      if (
+        paymentStatus
+      ) {
         filter.paymentStatus =
           validatePaymentStatus(
             paymentStatus
@@ -1085,9 +1673,12 @@ exports.getSales =
         startDate ||
         endDate
       ) {
-        filter.saleDate = {};
+        filter.saleDate =
+          {};
 
-        if (startDate) {
+        if (
+          startDate
+        ) {
           const start =
             new Date(
               startDate
@@ -1109,11 +1700,15 @@ exports.getSales =
             throw error;
           }
 
-          filter.saleDate.$gte =
+          filter
+            .saleDate
+            .$gte =
             start;
         }
 
-        if (endDate) {
+        if (
+          endDate
+        ) {
           const end =
             new Date(
               endDate
@@ -1135,7 +1730,9 @@ exports.getSales =
             throw error;
           }
 
-          filter.saleDate.$lte =
+          filter
+            .saleDate
+            .$lte =
             end;
         }
       }
@@ -1148,8 +1745,13 @@ exports.getSales =
             'items.product',
             'name sku type description'
           )
+          .populate(
+            'items.bottle',
+            'sizeMl type currentStock avgCostPerUnit'
+          )
           .sort({
             saleDate: -1,
+
             createdAt: -1,
           });
 
@@ -1169,12 +1771,16 @@ exports.getSales =
 ======================================== */
 
 exports.getSaleById =
-  async (req, res) => {
+  async (
+    req,
+    res
+  ) => {
     try {
       if (
-        !mongoose.isValidObjectId(
-          req.params.id
-        )
+        !mongoose
+          .isValidObjectId(
+            req.params.id
+          )
       ) {
         return res
           .status(400)
@@ -1187,10 +1793,15 @@ exports.getSaleById =
       const sale =
         await Sale.findById(
           req.params.id
-        ).populate(
-          'items.product',
-          'name sku type description'
-        );
+        )
+          .populate(
+            'items.product',
+            'name sku type description'
+          )
+          .populate(
+            'items.bottle',
+            'sizeMl type currentStock avgCostPerUnit'
+          );
 
       if (!sale) {
         return res
@@ -1217,7 +1828,10 @@ exports.getSaleById =
 ======================================== */
 
 exports.updatePayment =
-  async (req, res) => {
+  async (
+    req,
+    res
+  ) => {
     const session =
       await mongoose.startSession();
 
@@ -1257,8 +1871,11 @@ exports.updatePayment =
       });
 
       /*
-        paid -> exactly one cash entry
-        due  -> no cash entry
+        paid:
+        exactly one cash-in.
+
+        due:
+        no cash-in yet.
       */
 
       await syncSaleCashTransaction(
@@ -1295,7 +1912,10 @@ exports.updatePayment =
 ======================================== */
 
 exports.bulkCreateSales =
-  async (req, res) => {
+  async (
+    req,
+    res
+  ) => {
     try {
       const sales =
         req.body?.sales;
@@ -1304,7 +1924,8 @@ exports.bulkCreateSales =
         !Array.isArray(
           sales
         ) ||
-        sales.length === 0
+        sales.length ===
+          0
       ) {
         return res
           .status(400)
@@ -1314,15 +1935,11 @@ exports.bulkCreateSales =
           });
       }
 
-      const created = [];
-      const errors = [];
+      const created =
+        [];
 
-      /*
-        Each imported sale has its own transaction.
-
-        If one row fails, other valid rows
-        can still be imported.
-      */
+      const errors =
+        [];
 
       for (
         const saleData of
@@ -1354,15 +1971,19 @@ exports.bulkCreateSales =
           }
 
           const existing =
-            await Sale.findOne({
-              invoiceNo,
-            })
+            await Sale.findOne(
+              {
+                invoiceNo,
+              }
+            )
               .session(
                 session
               )
               .lean();
 
-          if (existing) {
+          if (
+            existing
+          ) {
             const error =
               new Error(
                 `Invoice ${invoiceNo} already exists`
@@ -1375,30 +1996,41 @@ exports.bulkCreateSales =
           }
 
           const sale =
-            await createSingleSale({
-              invoiceNo,
+            await createSingleSale(
+              {
+                invoiceNo,
 
-              channel:
-                saleData.channel,
+                channel:
+                  saleData.channel,
 
-              items:
-                saleData.items,
+                items:
+                  saleData.items,
 
-              saleDate:
-                saleData.saleDate,
+                saleDate:
+                  saleData.saleDate,
 
-              paymentStatus:
-                saleData.paymentStatus ||
-                'paid',
+                paymentStatus:
+                  saleData.paymentStatus ||
+                  'paid',
 
-              notes:
-                saleData.notes,
+                notes:
+                  saleData.notes,
 
-              session,
+                session,
 
-              lookupBySku:
-                true,
-            });
+                /*
+                  Product bulk import
+                  can continue using SKU.
+
+                  Bottle entries can send:
+                  itemType: "bottle",
+                  sizeMl,
+                  bottleType.
+                */
+                lookupBySku:
+                  true,
+              }
+            );
 
           await session.commitTransaction();
 
@@ -1460,12 +2092,14 @@ const restoreMaterial =
           _id:
             materialId,
         },
+
         {
           $inc: {
             currentStockMl:
               quantity,
           },
         },
+
         {
           session,
         }
@@ -1480,7 +2114,8 @@ const restoreMaterial =
           `Material ${materialId} not found while reversing sale`
         );
 
-      error.statusCode = 404;
+      error.statusCode =
+        404;
 
       throw error;
     }
@@ -1502,12 +2137,19 @@ const restoreBottle =
           _id:
             bottleId,
         },
+
         {
           $inc: {
             currentStock:
               quantity,
           },
+
+          $set: {
+            isStockOut:
+              false,
+          },
         },
+
         {
           session,
         }
@@ -1522,7 +2164,8 @@ const restoreBottle =
           `Bottle ${bottleId} not found while reversing sale`
         );
 
-      error.statusCode = 404;
+      error.statusCode =
+        404;
 
       throw error;
     }
@@ -1557,11 +2200,6 @@ const createReversalLog =
           reason:
             'adjustment',
 
-          /*
-            Keep reference empty because
-            original Sale will be deleted.
-          */
-
           reference:
             null,
 
@@ -1569,6 +2207,7 @@ const createReversalLog =
             `Reversal of deleted sale ${invoiceNo}`,
         },
       ],
+
       {
         session,
       }
@@ -1585,18 +2224,24 @@ const reverseUsingInventoryLogs =
     logs,
     session,
   }) => {
+    /*
+      This works for BOTH:
+
+      1. normal perfume sale
+      2. direct bottle sale
+
+      because every inventory deduction is
+      linked to the Sale through InventoryLog.
+    */
+
     for (
-      const log of logs
+      const log of
+      logs
     ) {
       const change =
         Number(
           log.changeQuantity
         );
-
-      /*
-        Original sale deductions
-        should always be negative.
-      */
 
       if (
         !Number.isFinite(
@@ -1608,17 +2253,23 @@ const reverseUsingInventoryLogs =
       }
 
       const quantity =
-        Math.abs(change);
+        Math.abs(
+          change
+        );
 
-      if (log.material) {
-        await restoreMaterial({
-          materialId:
-            log.material,
+      if (
+        log.material
+      ) {
+        await restoreMaterial(
+          {
+            materialId:
+              log.material,
 
-          quantity,
+            quantity,
 
-          session,
-        });
+            session,
+          }
+        );
 
         await createReversalLog(
           {
@@ -1635,15 +2286,19 @@ const reverseUsingInventoryLogs =
         );
       }
 
-      if (log.bottle) {
-        await restoreBottle({
-          bottleId:
-            log.bottle,
+      if (
+        log.bottle
+      ) {
+        await restoreBottle(
+          {
+            bottleId:
+              log.bottle,
 
-          quantity,
+            quantity,
 
-          session,
-        });
+            session,
+          }
+        );
 
         await createReversalLog(
           {
@@ -1663,6 +2318,296 @@ const reverseUsingInventoryLogs =
   };
 
 /* ========================================
+   REVERSE LEGACY DIRECT BOTTLE ITEM
+======================================== */
+
+const reverseLegacyBottleItem =
+  async ({
+    sale,
+    item,
+    session,
+  }) => {
+    const bottleId =
+      getId(
+        item.bottle
+      );
+
+    if (
+      !bottleId
+    ) {
+      const error =
+        new Error(
+          `Bottle reference missing while reversing ${sale.invoiceNo}`
+        );
+
+      error.statusCode =
+        400;
+
+      throw error;
+    }
+
+    const quantity =
+      positiveInteger(
+        item.quantity,
+        'Bottle sale quantity'
+      );
+
+    await restoreBottle(
+      {
+        bottleId,
+
+        quantity,
+
+        session,
+      }
+    );
+
+    await createReversalLog(
+      {
+        bottle:
+          bottleId,
+
+        quantity,
+
+        invoiceNo:
+          sale.invoiceNo,
+
+        session,
+      }
+    );
+  };
+
+/* ========================================
+   LEGACY PRODUCT SALE REVERSAL
+======================================== */
+
+const reverseLegacyProductItem =
+  async ({
+    sale,
+    item,
+    session,
+  }) => {
+    const productId =
+      getId(
+        item.product
+      );
+
+    if (!productId) {
+      return;
+    }
+
+    const product =
+      await Product.findById(
+        productId
+      ).session(
+        session
+      );
+
+    if (!product) {
+      const error =
+        new Error(
+          `Product ${productId} not found while reversing ${sale.invoiceNo}`
+        );
+
+      error.statusCode =
+        404;
+
+      throw error;
+    }
+
+    const sizeVariant =
+      getSizeVariant(
+        product,
+        item.sizeMl
+      );
+
+    if (
+      !sizeVariant
+    ) {
+      const error =
+        new Error(
+          `${item.sizeMl}ml size no longer exists for ${product.name}`
+        );
+
+      error.statusCode =
+        400;
+
+      throw error;
+    }
+
+    const quantity =
+      positiveInteger(
+        item.quantity,
+        'Sale quantity'
+      );
+
+    /*
+      Restore bottle used by product.
+    */
+
+    const bottleId =
+      getId(
+        sizeVariant.bottle
+      );
+
+    if (
+      bottleId
+    ) {
+      await restoreBottle(
+        {
+          bottleId,
+
+          quantity,
+
+          session,
+        }
+      );
+
+      await createReversalLog(
+        {
+          bottle:
+            bottleId,
+
+          quantity,
+
+          invoiceNo:
+            sale.invoiceNo,
+
+          session,
+        }
+      );
+    }
+
+    /*
+      Restore roll-on perfume oil.
+    */
+
+    if (
+      product.type ===
+      'roll-on'
+    ) {
+      const materialId =
+        getId(
+          product.baseOil
+        );
+
+      if (
+        materialId
+      ) {
+        const oilMl =
+          getRollOnOilMlPerUnit(
+            sizeVariant
+          ) *
+          quantity;
+
+        await restoreMaterial(
+          {
+            materialId,
+
+            quantity:
+              oilMl,
+
+            session,
+          }
+        );
+
+        await createReversalLog(
+          {
+            material:
+              materialId,
+
+            quantity:
+              oilMl,
+
+            invoiceNo:
+              sale.invoiceNo,
+
+            session,
+          }
+        );
+      }
+
+      return;
+    }
+
+    /*
+      Restore spray materials.
+    */
+
+    const components =
+      getSizeBlend(
+        product,
+        item.sizeMl
+      );
+
+    for (
+      const component of
+      components
+    ) {
+      const percentage =
+        Number(
+          component
+            .percentage ||
+            0
+        );
+
+      const materialId =
+        getId(
+          component.material
+        );
+
+      if (
+        percentage <= 0 ||
+        !materialId
+      ) {
+        continue;
+      }
+
+      const mlUsed =
+        Number(
+          item.sizeMl
+        ) *
+        (
+          percentage /
+          100
+        ) *
+        quantity;
+
+      if (
+        mlUsed <= 0
+      ) {
+        continue;
+      }
+
+      await restoreMaterial(
+        {
+          materialId,
+
+          quantity:
+            mlUsed,
+
+          session,
+        }
+      );
+
+      await createReversalLog(
+        {
+          material:
+            materialId,
+
+          quantity:
+            mlUsed,
+
+          invoiceNo:
+            sale.invoiceNo,
+
+          session,
+        }
+      );
+    }
+  };
+
+/* ========================================
    LEGACY SALE REVERSAL
 ======================================== */
 
@@ -1671,217 +2616,41 @@ const reverseLegacySale =
     sale,
     session,
   }) => {
-    /*
-      Used only for old sales that do not
-      have proper linked inventory logs.
-    */
-
     for (
       const item of
       sale.items
     ) {
-      const productId =
-        getId(
-          item.product
+      const itemType =
+        normalizeItemType(
+          item.itemType
         );
-
-      if (!productId) {
-        continue;
-      }
-
-      const product =
-        await Product.findById(
-          productId
-        ).session(
-          session
-        );
-
-      if (!product) {
-        const error =
-          new Error(
-            `Product ${productId} not found while reversing ${sale.invoiceNo}`
-          );
-
-        error.statusCode =
-          404;
-
-        throw error;
-      }
-
-      const sizeVariant =
-        getSizeVariant(
-          product,
-          item.sizeMl
-        );
-
-      if (!sizeVariant) {
-        const error =
-          new Error(
-            `${item.sizeMl}ml size no longer exists for ${product.name}`
-          );
-
-        error.statusCode =
-          400;
-
-        throw error;
-      }
-
-      const quantity =
-        positiveInteger(
-          item.quantity,
-          'Sale quantity'
-        );
-
-      /*
-        Restore bottle
-      */
-
-      const bottleId =
-        getId(
-          sizeVariant.bottle
-        );
-
-      if (bottleId) {
-        await restoreBottle({
-          bottleId,
-
-          quantity,
-
-          session,
-        });
-
-        await createReversalLog(
-          {
-            bottle:
-              bottleId,
-
-            quantity,
-
-            invoiceNo:
-              sale.invoiceNo,
-
-            session,
-          }
-        );
-      }
-
-      /*
-        Restore roll-on oil
-      */
 
       if (
-        product.type ===
-        'roll-on'
+        itemType ===
+        'bottle'
       ) {
-        const materialId =
-          getId(
-            product.baseOil
-          );
-
-        if (materialId) {
-          const oilMl =
-            getRollOnOilMlPerUnit(
-              sizeVariant
-            ) *
-            quantity;
-
-          await restoreMaterial({
-            materialId,
-
-            quantity:
-              oilMl,
-
-            session,
-          });
-
-          await createReversalLog(
-            {
-              material:
-                materialId,
-
-              quantity:
-                oilMl,
-
-              invoiceNo:
-                sale.invoiceNo,
-
-              session,
-            }
-          );
-        }
-
-        continue;
-      }
-
-      /*
-        Restore spray materials
-      */
-
-      const components =
-        getSizeBlend(
-          product,
-          item.sizeMl
-        );
-
-      for (
-        const component of
-        components
-      ) {
-        const percentage =
-          Number(
-            component.percentage ||
-              0
-          );
-
-        const materialId =
-          getId(
-            component.material
-          );
-
-        if (
-          percentage <= 0 ||
-          !materialId
-        ) {
-          continue;
-        }
-
-        const mlUsed =
-          Number(
-            item.sizeMl
-          ) *
-          (percentage / 100) *
-          quantity;
-
-        if (
-          mlUsed <= 0
-        ) {
-          continue;
-        }
-
-        await restoreMaterial({
-          materialId,
-
-          quantity:
-            mlUsed,
-
-          session,
-        });
-
-        await createReversalLog(
+        await reverseLegacyBottleItem(
           {
-            material:
-              materialId,
+            sale,
 
-            quantity:
-              mlUsed,
-
-            invoiceNo:
-              sale.invoiceNo,
+            item,
 
             session,
           }
         );
+
+        continue;
       }
+
+      await reverseLegacyProductItem(
+        {
+          sale,
+
+          item,
+
+          session,
+        }
+      );
     }
   };
 
@@ -1890,7 +2659,10 @@ const reverseLegacySale =
 ======================================== */
 
 exports.deleteSale =
-  async (req, res) => {
+  async (
+    req,
+    res
+  ) => {
     const session =
       await mongoose.startSession();
 
@@ -1917,34 +2689,32 @@ exports.deleteSale =
       }
 
       /*
-        Find exact inventory deductions
-        linked to this sale.
+        Find exact deductions.
+
+        This is the safest reversal because
+        it restores exactly what this sale
+        deducted at sale time.
       */
 
       const saleLogs =
-        await InventoryLog.find({
-          reference:
-            sale._id,
+        await InventoryLog.find(
+          {
+            reference:
+              sale._id,
 
-          refModel:
-            'Sale',
+            refModel:
+              'Sale',
 
-          reason:
-            'sale',
-        }).session(
+            reason:
+              'sale',
+          }
+        ).session(
           session
         );
 
-      /*
-        New sales:
-        use exact historical logs.
-
-        Old sales:
-        fall back to current product configuration.
-      */
-
       if (
-        saleLogs.length > 0
+        saleLogs.length >
+        0
       ) {
         await reverseUsingInventoryLogs(
           {
@@ -1957,51 +2727,64 @@ exports.deleteSale =
           }
         );
       } else {
-        await reverseLegacySale({
-          sale,
+        /*
+          Fallback for old historical sales.
+        */
 
-          session,
-        });
+        await reverseLegacySale(
+          {
+            sale,
+
+            session,
+          }
+        );
       }
 
       /*
-        Delete original deduction logs.
+        Remove original sale deductions.
       */
 
-      await InventoryLog.deleteMany({
-        reference:
-          sale._id,
+      await InventoryLog.deleteMany(
+        {
+          reference:
+            sale._id,
 
-        refModel:
-          'Sale',
+          refModel:
+            'Sale',
 
-        reason:
-          'sale',
-      }).session(
+          reason:
+            'sale',
+        }
+      ).session(
         session
       );
 
       /*
-        Delete cash transactions.
+        Remove sale cash transaction.
       */
 
-      await Transaction.deleteMany({
-        reference:
-          sale._id,
+      await Transaction.deleteMany(
+        {
+          reference:
+            sale._id,
 
-        refModel:
-          'Sale',
-      }).session(
+          refModel:
+            'Sale',
+        }
+      ).session(
         session
       );
 
       /*
-        Delete sale.
+        Do NOT reset linked order.
+        Existing requested behaviour is kept.
       */
 
-      await sale.deleteOne({
-        session,
-      });
+      await sale.deleteOne(
+        {
+          session,
+        }
+      );
 
       await session.commitTransaction();
 
