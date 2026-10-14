@@ -16,7 +16,6 @@ exports.sendOtpEmail = async (to, otp) => {
       from: sender,
       to,
       subject: "Your OTP for Luxe Perfume",
-
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 500px;">
           <h2 style="color: #b8860b;">
@@ -55,12 +54,16 @@ exports.sendOtpEmail = async (to, otp) => {
 
     return result;
   } catch (error) {
-    console.error("❌ OTP email error:", {
+    console.error("❌ OTP SMTP ERROR", {
       message: error.message,
       code: error.code,
       command: error.command,
       response: error.response,
       responseCode: error.responseCode,
+      errno: error.errno,
+      syscall: error.syscall,
+      address: error.address,
+      port: error.port,
     });
 
     throw error;
@@ -88,7 +91,6 @@ exports.sendVerificationEmail = async (
       to,
       subject:
         "Verify Your Luxe Perfume Account",
-
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 500px;">
           <h2 style="color: #b8860b;">
@@ -131,13 +133,17 @@ exports.sendVerificationEmail = async (
     return result;
   } catch (error) {
     console.error(
-      "❌ Verification email error:",
+      "❌ VERIFICATION SMTP ERROR",
       {
         message: error.message,
         code: error.code,
         command: error.command,
         response: error.response,
         responseCode: error.responseCode,
+        errno: error.errno,
+        syscall: error.syscall,
+        address: error.address,
+        port: error.port,
       }
     );
 
@@ -163,7 +169,6 @@ exports.sendPasswordResetEmail = async (
       to,
       subject:
         "Reset Your Luxe Perfume Password",
-
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 500px;">
           <h2 style="color: #b8860b;">
@@ -206,13 +211,17 @@ exports.sendPasswordResetEmail = async (
     return result;
   } catch (error) {
     console.error(
-      "❌ Password reset email error:",
+      "❌ PASSWORD RESET SMTP ERROR",
       {
         message: error.message,
         code: error.code,
         command: error.command,
         response: error.response,
         responseCode: error.responseCode,
+        errno: error.errno,
+        syscall: error.syscall,
+        address: error.address,
+        port: error.port,
       }
     );
 
