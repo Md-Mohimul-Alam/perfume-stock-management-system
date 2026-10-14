@@ -1,11 +1,20 @@
-import { useEffect, useMemo, useState } from 'react';
-import * as XLSX from 'xlsx';
-import toast from 'react-hot-toast';
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
+
+import * as XLSX
+  from 'xlsx';
+
+import toast
+  from 'react-hot-toast';
 
 import {
   AlertCircle,
   CheckCircle,
   CircleDollarSign,
+  Image,
   Package,
   PackageCheck,
   PackageMinus,
@@ -20,33 +29,52 @@ import {
   XCircle,
 } from 'lucide-react';
 
-import API from '../../api/axios';
+import API
+  from '../../api/axios';
 
 const LOW_STOCK_LIMIT = 3;
-const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+
+const MAX_UPLOAD_BYTES =
+  5 * 1024 * 1024;
 
 /* ========================================
    HELPERS
 ======================================== */
 
 const number = (value) => {
-  const parsed = Number(value);
+  const parsed =
+    Number(value);
 
-  return Number.isFinite(parsed)
+  return Number.isFinite(
+    parsed
+  )
     ? parsed
     : 0;
 };
 
 const money = (value) =>
-  new Intl.NumberFormat('en-BD', {
-    style: 'currency',
-    currency: 'BDT',
-    minimumFractionDigits: 2,
-  }).format(number(value));
+  new Intl.NumberFormat(
+    'en-BD',
+    {
+      style:
+        'currency',
 
-const bottleLabel = (bottle) => {
+      currency:
+        'BDT',
+
+      minimumFractionDigits:
+        2,
+    }
+  ).format(
+    number(value)
+  );
+
+const bottleLabel = (
+  bottle
+) => {
   const type =
-    bottle?.type === 'roll-on'
+    bottle?.type ===
+    'roll-on'
       ? 'Roll-on'
       : 'Spray';
 
@@ -55,7 +83,36 @@ const bottleLabel = (bottle) => {
   )}ml ${type}`;
 };
 
-const normalizeBottle = (bottle = {}) => ({
+const cleanImages = (
+  images
+) => {
+  if (
+    !Array.isArray(
+      images
+    )
+  ) {
+    return [];
+  }
+
+  return [
+    ...new Set(
+      images
+        .map((image) =>
+          String(
+            image || ''
+          ).trim()
+        )
+        .filter(Boolean)
+    ),
+  ].slice(
+    0,
+    10
+  );
+};
+
+const normalizeBottle = (
+  bottle = {}
+) => ({
   ...bottle,
 
   currentStock:
@@ -67,6 +124,18 @@ const normalizeBottle = (bottle = {}) => ({
     number(
       bottle.avgCostPerUnit
     ),
+
+  sellingPrice:
+    number(
+      bottle.sellingPrice
+    ),
+
+  images:
+    Array.isArray(
+      bottle.images
+    )
+      ? bottle.images
+      : [],
 
   totalPurchased:
     number(
@@ -88,11 +157,6 @@ const normalizeBottle = (bottle = {}) => ({
       bottle.bottleSalesRevenue
     ),
 
-  sold:
-    number(
-      bottle.sold
-    ),
-
   wasted:
     number(
       bottle.wasted
@@ -108,70 +172,87 @@ const normalizeBottle = (bottle = {}) => ({
    FILE READER
 ======================================== */
 
-const readSheetRows = (file) =>
-  new Promise(
-    (resolve, reject) => {
-      const reader =
-        new FileReader();
-
-      reader.onerror = () =>
-        reject(
-          new Error(
-            'Could not read the selected file.'
-          )
-        );
-
-      reader.onload = (
-        event
+const readSheetRows =
+  (file) =>
+    new Promise(
+      (
+        resolve,
+        reject
       ) => {
-        try {
-          const data =
-            new Uint8Array(
-              event.target.result
-            );
+        const reader =
+          new FileReader();
 
-          const workbook =
-            XLSX.read(
-              data,
-              {
-                type: 'array',
-              }
-            );
-
-          const firstSheet =
-            workbook
-              .SheetNames[0];
-
-          if (!firstSheet) {
+        reader.onerror =
+          () =>
             reject(
               new Error(
-                'The spreadsheet does not contain a worksheet.'
+                'Could not read the selected file.'
               )
             );
 
-            return;
-          }
+        reader.onload =
+          (
+            event
+          ) => {
+            try {
+              const data =
+                new Uint8Array(
+                  event
+                    .target
+                    .result
+                );
 
-          resolve(
-            XLSX.utils.sheet_to_json(
-              workbook.Sheets[
-                firstSheet
-              ],
-              {
-                defval: '',
+              const workbook =
+                XLSX.read(
+                  data,
+                  {
+                    type:
+                      'array',
+                  }
+                );
+
+              const firstSheet =
+                workbook
+                  .SheetNames[0];
+
+              if (
+                !firstSheet
+              ) {
+                reject(
+                  new Error(
+                    'The spreadsheet does not contain a worksheet.'
+                  )
+                );
+
+                return;
               }
-            )
-          );
-        } catch (error) {
-          reject(error);
-        }
-      };
 
-      reader.readAsArrayBuffer(
-        file
-      );
-    }
-  );
+              resolve(
+                XLSX.utils.sheet_to_json(
+                  workbook
+                    .Sheets[
+                      firstSheet
+                    ],
+                  {
+                    defval:
+                      '',
+                  }
+                )
+              );
+            } catch (
+              error
+            ) {
+              reject(
+                error
+              );
+            }
+          };
+
+        reader.readAsArrayBuffer(
+          file
+        );
+      }
+    );
 
 /* ========================================
    MODAL
@@ -212,7 +293,206 @@ const fieldClass =
   'w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-[16px] text-gray-900 outline-none transition focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-600 dark:bg-slate-800 dark:text-gray-100';
 
 /* ========================================
-   BOTTLES PAGE
+   MULTIPLE IMAGE INPUT
+======================================== */
+
+const BottleImagesInput = ({
+  images,
+  setImages,
+}) => {
+  const safeImages =
+    Array.isArray(
+      images
+    ) &&
+    images.length
+      ? images
+      : [''];
+
+  const changeImage = (
+    index,
+    value
+  ) => {
+    const updated =
+      [
+        ...safeImages,
+      ];
+
+    updated[index] =
+      value;
+
+    setImages(
+      updated
+    );
+  };
+
+  const removeImage = (
+    index
+  ) => {
+    const updated =
+      safeImages.filter(
+        (
+          _,
+          rowIndex
+        ) =>
+          rowIndex !==
+          index
+      );
+
+    setImages(
+      updated.length
+        ? updated
+        : ['']
+    );
+  };
+
+  const addImage =
+    () => {
+      if (
+        safeImages.length >=
+        10
+      ) {
+        toast.error(
+          'Maximum 10 images per bottle'
+        );
+
+        return;
+      }
+
+      setImages([
+        ...safeImages,
+        '',
+      ]);
+    };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between">
+        <label className="text-sm font-medium">
+          Bottle Images
+        </label>
+
+        <span className="text-xs text-gray-500 dark:text-gray-400">
+          {cleanImages(
+            safeImages
+          ).length}
+          /10
+        </span>
+      </div>
+
+      <div className="mt-2 space-y-3">
+        {safeImages.map(
+          (
+            image,
+            index
+          ) => (
+            <div
+              key={
+                index
+              }
+              className="rounded-xl border border-gray-200 p-3 dark:border-slate-700"
+            >
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  value={
+                    image
+                  }
+                  onChange={(
+                    event
+                  ) =>
+                    changeImage(
+                      index,
+                      event
+                        .target
+                        .value
+                    )
+                  }
+                  placeholder={`Image ${index + 1} URL`}
+                  className={
+                    fieldClass
+                  }
+                />
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    removeImage(
+                      index
+                    )
+                  }
+                  disabled={
+                    safeImages.length ===
+                      1 &&
+                    !image
+                  }
+                  className="rounded-xl border border-red-200 px-3 text-red-600 hover:bg-red-50 disabled:opacity-30 dark:border-red-900 dark:hover:bg-red-950/30"
+                  title="Remove image"
+                >
+                  <Trash2
+                    size={
+                      17
+                    }
+                  />
+                </button>
+              </div>
+
+              {image && (
+                <div className="mt-3 flex h-32 items-center justify-center overflow-hidden rounded-xl bg-gray-50 dark:bg-slate-800">
+                  <img
+                    src={
+                      image
+                    }
+                    alt={`Bottle preview ${index + 1}`}
+                    className="h-full w-full object-contain p-2"
+                    onError={(
+                      event
+                    ) => {
+                      event.currentTarget.style.opacity =
+                        '0.25';
+                    }}
+                    onLoad={(
+                      event
+                    ) => {
+                      event.currentTarget.style.opacity =
+                        '1';
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          )
+        )}
+      </div>
+
+      <button
+        type="button"
+        onClick={
+          addImage
+        }
+        disabled={
+          safeImages.length >=
+          10
+        }
+        className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-brand-primary disabled:opacity-40"
+      >
+        <Plus
+          size={
+            15
+          }
+        />
+
+        Add another image
+      </button>
+
+      <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+        The first image will be the main image on the customer website.
+      </p>
+    </div>
+  );
+};
+
+/* ========================================
+   PAGE
 ======================================== */
 
 const Bottles = () => {
@@ -226,10 +506,6 @@ const Bottles = () => {
     setLoading,
   ] = useState(true);
 
-  /* ======================================
-     FILTERS
-  ====================================== */
-
   const [
     search,
     setSearch,
@@ -238,12 +514,16 @@ const Bottles = () => {
   const [
     typeFilter,
     setTypeFilter,
-  ] = useState('all');
+  ] = useState(
+    'all'
+  );
 
   const [
     statusFilter,
     setStatusFilter,
-  ] = useState('all');
+  ] = useState(
+    'all'
+  );
 
   /* ======================================
      ADD
@@ -262,6 +542,8 @@ const Bottles = () => {
     type: 'spray',
     currentStock: 0,
     avgCostPerUnit: 0,
+    sellingPrice: 0,
+    images: [''],
   });
 
   const [
@@ -291,6 +573,8 @@ const Bottles = () => {
     type: 'spray',
     currentStock: 0,
     avgCostPerUnit: 0,
+    sellingPrice: 0,
+    images: [''],
   });
 
   const [
@@ -316,30 +600,6 @@ const Bottles = () => {
     deleting,
     setDeleting,
   ] = useState(false);
-
-  /* ======================================
-     UPLOAD
-  ====================================== */
-
-  const [
-    showUploadModal,
-    setShowUploadModal,
-  ] = useState(false);
-
-  const [
-    file,
-    setFile,
-  ] = useState(null);
-
-  const [
-    uploading,
-    setUploading,
-  ] = useState(false);
-
-  const [
-    uploadResult,
-    setUploadResult,
-  ] = useState(null);
 
   /* ======================================
      PURCHASE
@@ -385,7 +645,7 @@ const Bottles = () => {
   ] = useState(false);
 
   /* ======================================
-     WASTAGE
+     WASTE
   ====================================== */
 
   const [
@@ -411,55 +671,87 @@ const Bottles = () => {
     setWasteError,
   ] = useState('');
 
+  /* ======================================
+     UPLOAD
+  ====================================== */
+
+  const [
+    showUploadModal,
+    setShowUploadModal,
+  ] = useState(false);
+
+  const [
+    file,
+    setFile,
+  ] = useState(null);
+
+  const [
+    uploading,
+    setUploading,
+  ] = useState(false);
+
+  const [
+    uploadResult,
+    setUploadResult,
+  ] = useState(null);
+
   /* ========================================
      FETCH
   ======================================== */
 
-  const fetchBottlesWithSales =
+  const fetchBottles =
     async ({
       silent = false,
     } = {}) => {
       if (!silent) {
-        setLoading(true);
+        setLoading(
+          true
+        );
       }
 
       try {
         const {
           data,
-        } = await API.get(
-          '/inventory/bottles/with-sales'
-        );
-
-        const rows =
-          Array.isArray(data)
-            ? data
-            : [];
+        } =
+          await API.get(
+            '/inventory/bottles/with-sales'
+          );
 
         setBottles(
-          rows.map(
+          (
+            Array.isArray(
+              data
+            )
+              ? data
+              : []
+          ).map(
             normalizeBottle
           )
         );
-      } catch (error) {
+      } catch (
+        error
+      ) {
         console.error(
-          'Failed to load bottles',
           error
         );
 
         toast.error(
           error.response
-            ?.data?.message ||
+            ?.data
+            ?.message ||
             'Failed to load bottles'
         );
       } finally {
         if (!silent) {
-          setLoading(false);
+          setLoading(
+            false
+          );
         }
       }
     };
 
   useEffect(() => {
-    fetchBottlesWithSales();
+    fetchBottles();
   }, []);
 
   /* ========================================
@@ -474,15 +766,17 @@ const Bottles = () => {
           .toLowerCase();
 
       return bottles.filter(
-        (bottle) => {
-          const available =
+        (
+          bottle
+        ) => {
+          const stock =
             number(
               bottle.currentStock
             );
 
           const isOut =
             bottle.isStockOut ||
-            available <= 0;
+            stock <= 0;
 
           const matchesSearch =
             !query ||
@@ -512,15 +806,15 @@ const Bottles = () => {
               statusFilter ===
                 'available' &&
               !isOut &&
-              available >=
+              stock >=
                 LOW_STOCK_LIMIT
             ) ||
             (
               statusFilter ===
                 'low' &&
               !isOut &&
-              available > 0 &&
-              available <
+              stock > 0 &&
+              stock <
                 LOW_STOCK_LIMIT
             ) ||
             (
@@ -547,12 +841,12 @@ const Bottles = () => {
      SUMMARY
   ======================================== */
 
-  const inventorySummary =
+  const summary =
     useMemo(
       () =>
         bottles.reduce(
           (
-            summary,
+            result,
             bottle
           ) => {
             const stock =
@@ -560,67 +854,43 @@ const Bottles = () => {
                 bottle.currentStock
               );
 
-            summary.purchased +=
-              number(
-                bottle.totalPurchased
-              );
-
-            summary.usedForPerfume +=
+            result.used +=
               number(
                 bottle.usedForPerfume
               );
 
-            summary.bottleSales +=
+            result.sold +=
               number(
                 bottle.bottleSales
               );
 
-            summary.bottleSalesRevenue +=
-              number(
-                bottle.bottleSalesRevenue
-              );
-
-            summary.wasted +=
+            result.wasted +=
               number(
                 bottle.wasted
               );
 
-            summary.available +=
+            result.available +=
               stock;
 
-            summary.value +=
+            result.value +=
               stock *
               number(
                 bottle.avgCostPerUnit
               );
 
-            if (
-              bottle.isStockOut ||
-              stock <= 0
-            ) {
-              summary.out += 1;
-            } else if (
-              stock <
-              LOW_STOCK_LIMIT
-            ) {
-              summary.low += 1;
-            }
-
-            return summary;
+            return result;
           },
           {
-            purchased: 0,
-            usedForPerfume: 0,
-            bottleSales: 0,
-            bottleSalesRevenue: 0,
+            used: 0,
+            sold: 0,
             wasted: 0,
             available: 0,
             value: 0,
-            low: 0,
-            out: 0,
           }
         ),
-      [bottles]
+      [
+        bottles,
+      ]
     );
 
   /* ========================================
@@ -648,6 +918,11 @@ const Bottles = () => {
           newBottle.avgCostPerUnit
         );
 
+      const sellingPrice =
+        Number(
+          newBottle.sellingPrice
+        );
+
       if (
         !Number.isFinite(
           sizeMl
@@ -668,7 +943,7 @@ const Bottles = () => {
         currentStock < 0
       ) {
         setModalError(
-          'Opening stock must be a whole number.'
+          'Stock must be a non-negative whole number.'
         );
 
         return;
@@ -678,17 +953,32 @@ const Bottles = () => {
         !Number.isFinite(
           avgCostPerUnit
         ) ||
-        avgCostPerUnit <
-          0
+        avgCostPerUnit < 0
       ) {
         setModalError(
-          'Per-unit cost cannot be negative.'
+          'Unit cost cannot be negative.'
         );
 
         return;
       }
 
-      setSubmitting(true);
+      if (
+        !Number.isFinite(
+          sellingPrice
+        ) ||
+        sellingPrice < 0
+      ) {
+        setModalError(
+          'Selling price cannot be negative.'
+        );
+
+        return;
+      }
+
+      setSubmitting(
+        true
+      );
+
       setModalError('');
 
       try {
@@ -703,11 +993,18 @@ const Bottles = () => {
             currentStock,
 
             avgCostPerUnit,
+
+            sellingPrice,
+
+            images:
+              cleanImages(
+                newBottle.images
+              ),
           }
         );
 
         toast.success(
-          'Bottle added successfully'
+          'Bottle added'
         );
 
         setShowAddModal(
@@ -719,19 +1016,26 @@ const Bottles = () => {
           type: 'spray',
           currentStock: 0,
           avgCostPerUnit: 0,
+          sellingPrice: 0,
+          images: [''],
         });
 
-        await fetchBottlesWithSales({
+        await fetchBottles({
           silent: true,
         });
-      } catch (error) {
+      } catch (
+        error
+      ) {
         setModalError(
           error.response
-            ?.data?.message ||
+            ?.data
+            ?.message ||
             'Failed to create bottle'
         );
       } finally {
-        setSubmitting(false);
+        setSubmitting(
+          false
+        );
       }
     };
 
@@ -740,7 +1044,9 @@ const Bottles = () => {
   ======================================== */
 
   const handleEditClick =
-    (bottle) => {
+    (
+      bottle
+    ) => {
       setEditingBottle(
         bottle
       );
@@ -761,6 +1067,19 @@ const Bottles = () => {
           number(
             bottle.avgCostPerUnit
           ),
+
+        sellingPrice:
+          number(
+            bottle.sellingPrice
+          ),
+
+        images:
+          bottle.images
+            ?.length
+            ? [
+                ...bottle.images,
+              ]
+            : [''],
       });
 
       setEditError('');
@@ -772,7 +1091,9 @@ const Bottles = () => {
     ) => {
       event.preventDefault();
 
-      if (!editingBottle) {
+      if (
+        !editingBottle
+      ) {
         return;
       }
 
@@ -789,6 +1110,11 @@ const Bottles = () => {
       const avgCostPerUnit =
         Number(
           editForm.avgCostPerUnit
+        );
+
+      const sellingPrice =
+        Number(
+          editForm.sellingPrice
         );
 
       if (
@@ -811,26 +1137,44 @@ const Bottles = () => {
         currentStock < 0
       ) {
         setEditError(
-          'Stock must be a whole number.'
+          'Stock must be a non-negative whole number.'
         );
 
         return;
       }
 
       if (
+        avgCostPerUnit <
+          0 ||
         !Number.isFinite(
           avgCostPerUnit
-        ) ||
-        avgCostPerUnit < 0
+        )
       ) {
         setEditError(
-          'Per-unit cost cannot be negative.'
+          'Unit cost cannot be negative.'
         );
 
         return;
       }
 
-      setEditSubmitting(true);
+      if (
+        sellingPrice <
+          0 ||
+        !Number.isFinite(
+          sellingPrice
+        )
+      ) {
+        setEditError(
+          'Selling price cannot be negative.'
+        );
+
+        return;
+      }
+
+      setEditSubmitting(
+        true
+      );
+
       setEditError('');
 
       try {
@@ -845,6 +1189,13 @@ const Bottles = () => {
             currentStock,
 
             avgCostPerUnit,
+
+            sellingPrice,
+
+            images:
+              cleanImages(
+                editForm.images
+              ),
           }
         );
 
@@ -856,17 +1207,22 @@ const Bottles = () => {
           null
         );
 
-        await fetchBottlesWithSales({
+        await fetchBottles({
           silent: true,
         });
-      } catch (error) {
+      } catch (
+        error
+      ) {
         setEditError(
           error.response
-            ?.data?.message ||
+            ?.data
+            ?.message ||
             'Update failed'
         );
       } finally {
-        setEditSubmitting(false);
+        setEditSubmitting(
+          false
+        );
       }
     };
 
@@ -883,7 +1239,9 @@ const Bottles = () => {
         return;
       }
 
-      setDeleting(true);
+      setDeleting(
+        true
+      );
 
       try {
         await API.delete(
@@ -898,17 +1256,22 @@ const Bottles = () => {
           null
         );
 
-        await fetchBottlesWithSales({
+        await fetchBottles({
           silent: true,
         });
-      } catch (error) {
+      } catch (
+        error
+      ) {
         toast.error(
           error.response
-            ?.data?.message ||
+            ?.data
+            ?.message ||
             'Delete failed'
         );
       } finally {
-        setDeleting(false);
+        setDeleting(
+          false
+        );
       }
     };
 
@@ -916,8 +1279,10 @@ const Bottles = () => {
      PURCHASE
   ======================================== */
 
-  const handlePurchaseClick =
-    (bottle) => {
+  const openPurchase =
+    (
+      bottle
+    ) => {
       setPurchaseBottle(
         bottle
       );
@@ -937,10 +1302,6 @@ const Bottles = () => {
       event
     ) => {
       event.preventDefault();
-
-      if (!purchaseBottle) {
-        return;
-      }
 
       const quantity =
         Number(
@@ -972,13 +1333,16 @@ const Bottles = () => {
         costPerUnit < 0
       ) {
         setPurchaseError(
-          'Cost per unit cannot be negative.'
+          'Cost cannot be negative.'
         );
 
         return;
       }
 
-      setPurchasing(true);
+      setPurchasing(
+        true
+      );
+
       setPurchaseError('');
 
       try {
@@ -991,13 +1355,11 @@ const Bottles = () => {
 
             supplier:
               purchaseData.supplier
-                .trim() ||
-              undefined,
+                .trim(),
 
             invoiceNo:
               purchaseData.invoiceNo
-                .trim() ||
-              undefined,
+                .trim(),
           }
         );
 
@@ -1009,70 +1371,33 @@ const Bottles = () => {
           null
         );
 
-        await fetchBottlesWithSales({
+        await fetchBottles({
           silent: true,
         });
-      } catch (error) {
+      } catch (
+        error
+      ) {
         setPurchaseError(
           error.response
-            ?.data?.message ||
+            ?.data
+            ?.message ||
             'Purchase failed'
         );
       } finally {
-        setPurchasing(false);
+        setPurchasing(
+          false
+        );
       }
     };
 
   /* ========================================
-     STOCK OUT
+     WASTE
   ======================================== */
 
-  const handleStockOutConfirm =
-    async () => {
-      if (
-        !stockOutBottle ||
-        stockingOut
-      ) {
-        return;
-      }
-
-      setStockingOut(true);
-
-      try {
-        await API.post(
-          `/inventory/bottles/${stockOutBottle._id}/stock-out`
-        );
-
-        toast.success(
-          `${bottleLabel(
-            stockOutBottle
-          )} marked as stock out`
-        );
-
-        setStockOutBottle(
-          null
-        );
-
-        await fetchBottlesWithSales({
-          silent: true,
-        });
-      } catch (error) {
-        toast.error(
-          error.response
-            ?.data?.message ||
-            'Stock-out failed'
-        );
-      } finally {
-        setStockingOut(false);
-      }
-    };
-
-  /* ========================================
-     WASTAGE
-  ======================================== */
-
-  const handleWasteClick =
-    (bottle) => {
+  const openWaste =
+    (
+      bottle
+    ) => {
       setWasteBottleTarget(
         bottle
       );
@@ -1091,18 +1416,9 @@ const Bottles = () => {
     ) => {
       event.preventDefault();
 
-      if (!wasteBottleTarget) {
-        return;
-      }
-
       const quantity =
         Number(
           wasteData.quantity
-        );
-
-      const available =
-        number(
-          wasteBottleTarget.currentStock
         );
 
       if (
@@ -1120,17 +1436,20 @@ const Bottles = () => {
 
       if (
         quantity >
-        available
+        number(
+          wasteBottleTarget.currentStock
+        )
       ) {
         setWasteError(
-          `Only ${available} bottle(s) are available.`
+          'Quantity exceeds available stock.'
         );
 
         return;
       }
 
-      setWasting(true);
-      setWasteError('');
+      setWasting(
+        true
+      );
 
       try {
         await API.post(
@@ -1140,48 +1459,108 @@ const Bottles = () => {
 
             notes:
               wasteData.notes
-                .trim() ||
-              undefined,
+                .trim(),
           }
         );
 
         toast.success(
-          `Recorded ${quantity} bottle(s) as wastage`
+          'Wastage recorded'
         );
 
         setWasteBottleTarget(
           null
         );
 
-        await fetchBottlesWithSales({
+        await fetchBottles({
           silent: true,
         });
-      } catch (error) {
+      } catch (
+        error
+      ) {
         setWasteError(
           error.response
-            ?.data?.message ||
-            'Waste failed'
+            ?.data
+            ?.message ||
+            'Wastage failed'
         );
       } finally {
-        setWasting(false);
+        setWasting(
+          false
+        );
       }
     };
 
   /* ========================================
-     FILE
+     STOCK OUT
+  ======================================== */
+
+  const handleStockOut =
+    async () => {
+      if (
+        !stockOutBottle ||
+        stockingOut
+      ) {
+        return;
+      }
+
+      setStockingOut(
+        true
+      );
+
+      try {
+        await API.post(
+          `/inventory/bottles/${stockOutBottle._id}/stock-out`
+        );
+
+        toast.success(
+          'Bottle marked stock out'
+        );
+
+        setStockOutBottle(
+          null
+        );
+
+        await fetchBottles({
+          silent: true,
+        });
+      } catch (
+        error
+      ) {
+        toast.error(
+          error.response
+            ?.data
+            ?.message ||
+            'Stock out failed'
+        );
+      } finally {
+        setStockingOut(
+          false
+        );
+      }
+    };
+
+  /* ========================================
+     BULK UPLOAD
   ======================================== */
 
   const handleFileChange =
-    (event) => {
+    (
+      event
+    ) => {
       const selected =
         event.target
           .files?.[0] ||
         null;
 
-      setUploadResult(null);
+      setUploadResult(
+        null
+      );
 
       if (!selected) {
-        setFile(null);
+        setFile(
+          null
+        );
+
         return;
       }
 
@@ -1189,22 +1568,24 @@ const Bottles = () => {
         selected.size >
         MAX_UPLOAD_BYTES
       ) {
-        setFile(null);
-
         setUploadResult({
-          success: false,
+          success:
+            false,
 
           message:
-            'File is too large. Maximum upload size is 5 MB.',
+            'Maximum file size is 5 MB.',
         });
 
-        event.target.value =
-          '';
+        setFile(
+          null
+        );
 
         return;
       }
 
-      setFile(selected);
+      setFile(
+        selected
+      );
     };
 
   const handleUploadSubmit =
@@ -1220,8 +1601,13 @@ const Bottles = () => {
         return;
       }
 
-      setUploading(true);
-      setUploadResult(null);
+      setUploading(
+        true
+      );
+
+      setUploadResult(
+        null
+      );
 
       try {
         const rows =
@@ -1229,192 +1615,111 @@ const Bottles = () => {
             file
           );
 
-        if (!rows.length) {
-          throw new Error(
-            'The spreadsheet does not contain any data rows.'
-          );
-        }
-
-        const findColumn = (
-          row,
-          names
-        ) => {
-          const keys =
-            Object.keys(row);
-
-          for (
-            const name of
-            names
-          ) {
-            const normalizedName =
-              name.toLowerCase();
-
-            const found =
-              keys.find(
-                (key) =>
-                  key
-                    .trim()
-                    .toLowerCase()
-                    .includes(
-                      normalizedName
-                    )
-              );
-
-            if (found) {
-              return found;
-            }
-          }
-
-          return null;
-        };
-
-        const firstRow =
-          rows[0] || {};
-
-        const sizeCol =
-          findColumn(
-            firstRow,
-            [
-              'sizeml',
-              'size',
-              'ml',
-            ]
-          );
-
-        const typeCol =
-          findColumn(
-            firstRow,
-            [
-              'bottle type',
-              'type',
-            ]
-          );
-
-        const stockCol =
-          findColumn(
-            firstRow,
-            [
-              'stock',
-              'qty',
-              'quantity',
-            ]
-          );
-
-        const costCol =
-          findColumn(
-            firstRow,
-            [
-              'per unit cost',
-              'unit cost',
-              'avg cost',
-              'cost',
-            ]
-          );
-
-        if (!sizeCol) {
-          throw new Error(
-            'Could not find bottle size column.'
-          );
-        }
-
         const items =
           rows
             .map(
-              (row) => {
-                const sizeRaw =
-                  String(
-                    row[
-                      sizeCol
-                    ] ??
-                      ''
-                  ).trim();
-
-                const sizeMatch =
-                  sizeRaw.match(
-                    /([\d.]+)/
-                  );
-
+              (
+                row
+              ) => {
                 const sizeMl =
-                  sizeMatch
-                    ? Number(
-                        sizeMatch[1]
-                      )
-                    : NaN;
+                  number(
+                    row.sizeMl ??
+                    row.Size ??
+                    row['Size (ml)']
+                  );
 
-                let type =
-                  'spray';
-
-                const typeRaw =
+                const rawType =
                   String(
-                    typeCol
-                      ? row[
-                          typeCol
-                        ]
-                      : sizeRaw
+                    row.type ??
+                    row.Type ??
+                    'spray'
                   )
-                    .toLowerCase()
-                    .trim();
+                    .trim()
+                    .toLowerCase();
 
-                if (
-                  typeRaw.includes(
+                const type =
+                  rawType.includes(
                     'roll'
-                  ) ||
-                  typeRaw.includes(
-                    'role'
                   )
+                    ? 'roll-on'
+                    : 'spray';
+
+                const images = [];
+
+                for (
+                  let index = 1;
+                  index <= 10;
+                  index += 1
                 ) {
-                  type =
-                    'roll-on';
+                  const image =
+                    row[
+                      `Image${index}`
+                    ] ??
+                    row[
+                      `Image ${index}`
+                    ];
+
+                  if (image) {
+                    images.push(
+                      String(
+                        image
+                      ).trim()
+                    );
+                  }
                 }
-
-                const currentStock =
-                  Math.max(
-                    0,
-                    number(
-                      stockCol
-                        ? row[
-                            stockCol
-                          ]
-                        : 0
-                    )
-                  );
-
-                const avgCostPerUnit =
-                  Math.max(
-                    0,
-                    number(
-                      costCol
-                        ? row[
-                            costCol
-                          ]
-                        : 0
-                    )
-                  );
 
                 return {
                   sizeMl,
+
                   type,
-                  currentStock,
-                  avgCostPerUnit,
+
+                  currentStock:
+                    number(
+                      row.currentStock ??
+                      row.Stock ??
+                      row.Quantity
+                    ),
+
+                  avgCostPerUnit:
+                    number(
+                      row.avgCostPerUnit ??
+                      row.Cost ??
+                      row['Unit Cost']
+                    ),
+
+                  sellingPrice:
+                    number(
+                      row.sellingPrice ??
+                      row['Selling Price'] ??
+                      row.Price
+                    ),
+
+                  images:
+                    cleanImages(
+                      images
+                    ),
                 };
               }
             )
             .filter(
-              (item) =>
-                Number.isFinite(
-                  item.sizeMl
-                ) &&
-                item.sizeMl >
-                  0
+              (
+                row
+              ) =>
+                row.sizeMl >
+                0
             );
 
-        if (!items.length) {
+        if (
+          !items.length
+        ) {
           throw new Error(
             'No valid bottle rows found.'
           );
         }
 
-        const response =
+        const {
+          data,
+        } =
           await API.post(
             '/inventory/bottles/bulk',
             {
@@ -1423,32 +1728,43 @@ const Bottles = () => {
           );
 
         setUploadResult({
-          success: true,
-          data:
-            response.data,
-        });
+          success:
+            true,
 
-        setFile(null);
+          message:
+            data.message,
+        });
 
         toast.success(
-          'Bottles uploaded'
+          data.message ||
+          'Upload completed'
         );
 
-        await fetchBottlesWithSales({
+        setFile(
+          null
+        );
+
+        await fetchBottles({
           silent: true,
         });
-      } catch (error) {
+      } catch (
+        error
+      ) {
         setUploadResult({
-          success: false,
+          success:
+            false,
 
           message:
             error.response
-              ?.data?.message ||
+              ?.data
+              ?.message ||
             error.message ||
             'Upload failed',
         });
       } finally {
-        setUploading(false);
+        setUploading(
+          false
+        );
       }
     };
 
@@ -1457,27 +1773,25 @@ const Bottles = () => {
   ======================================== */
 
   const renderActions =
-    (bottle) => {
-      const available =
+    (
+      bottle
+    ) => {
+      const stock =
         number(
           bottle.currentStock
         );
 
-      const isStockOut =
-        bottle.isStockOut ||
-        available <= 0;
-
       return (
-        <div className="flex flex-wrap items-center gap-1">
+        <div className="flex flex-wrap gap-1">
           <button
             type="button"
             onClick={() =>
-              handlePurchaseClick(
+              openPurchase(
                 bottle
               )
             }
             className="rounded-lg p-2 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
-            title="Record purchase"
+            title="Purchase"
           >
             <CircleDollarSign
               size={
@@ -1488,16 +1802,16 @@ const Bottles = () => {
 
           <button
             type="button"
+            disabled={
+              stock <= 0
+            }
             onClick={() =>
-              handleWasteClick(
+              openWaste(
                 bottle
               )
             }
-            disabled={
-              available <= 0
-            }
-            className="rounded-lg p-2 text-orange-600 hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-orange-950/30"
-            title="Record wastage"
+            className="rounded-lg p-2 text-orange-600 hover:bg-orange-50 disabled:opacity-30 dark:hover:bg-orange-950/30"
+            title="Wastage"
           >
             <PackageX
               size={
@@ -1525,20 +1839,16 @@ const Bottles = () => {
 
           <button
             type="button"
+            disabled={
+              stock <= 0
+            }
             onClick={() =>
               setStockOutBottle(
                 bottle
               )
             }
-            disabled={
-              isStockOut
-            }
-            className="rounded-lg p-2 text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-red-950/30"
-            title={
-              isStockOut
-                ? 'Already stock out'
-                : 'Stock out'
-            }
+            className="rounded-lg p-2 text-red-600 hover:bg-red-50 disabled:opacity-30 dark:hover:bg-red-950/30"
+            title="Stock out"
           >
             <XCircle
               size={
@@ -1583,9 +1893,7 @@ const Bottles = () => {
           </h1>
 
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Track purchased bottles,
-            perfume usage, direct bottle
-            sales, wastage and stock.
+            Manage bottle stock, selling prices, images, usage and direct bottle sales.
           </p>
         </div>
 
@@ -1593,12 +1901,9 @@ const Bottles = () => {
           <button
             type="button"
             onClick={() =>
-              fetchBottlesWithSales()
+              fetchBottles()
             }
-            disabled={
-              loading
-            }
-            className="inline-flex items-center gap-2 rounded-xl border border-gray-300 px-3 py-2 text-sm font-medium hover:bg-gray-50 disabled:opacity-50 dark:border-slate-600 dark:hover:bg-slate-800"
+            className="inline-flex items-center gap-2 rounded-xl border border-gray-300 px-3 py-2 text-sm font-medium dark:border-slate-600"
           >
             <RefreshCw
               size={
@@ -1616,16 +1921,12 @@ const Bottles = () => {
 
           <button
             type="button"
-            onClick={() => {
-              setModalError(
-                ''
-              );
-
+            onClick={() =>
               setShowAddModal(
                 true
-              );
-            }}
-            className="inline-flex items-center gap-2 rounded-xl bg-brand-primary px-3 py-2 text-sm font-semibold text-white hover:brightness-95"
+              )
+            }
+            className="inline-flex items-center gap-2 rounded-xl bg-brand-primary px-3 py-2 text-sm font-semibold text-white"
           >
             <Plus
               size={
@@ -1638,20 +1939,12 @@ const Bottles = () => {
 
           <button
             type="button"
-            onClick={() => {
-              setUploadResult(
-                null
-              );
-
-              setFile(
-                null
-              );
-
+            onClick={() =>
               setShowUploadModal(
                 true
-              );
-            }}
-            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+              )
+            }
+            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-3 py-2 text-sm font-semibold text-white"
           >
             <Upload
               size={
@@ -1664,95 +1957,67 @@ const Bottles = () => {
         </div>
       </div>
 
-      {/* SUMMARY — SAME STYLE AS MATERIALS */}
+      {/* SUMMARY */}
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
         {[
           {
             label:
               'Used for perfume',
-
             value:
-              `${inventorySummary.usedForPerfume} pcs`,
-
+              `${summary.used} pcs`,
             icon:
-              <PackageMinus
-                size={
-                  16
-                }
-              />,
+              <PackageMinus size={16} />,
           },
 
           {
             label:
               'Bottle sales',
-
             value:
-              `${inventorySummary.bottleSales} pcs`,
-
+              `${summary.sold} pcs`,
             icon:
-              <CircleDollarSign
-                size={
-                  16
-                }
-              />,
+              <CircleDollarSign size={16} />,
           },
 
           {
             label:
               'Wasted',
-
             value:
-              `${inventorySummary.wasted} pcs`,
-
+              `${summary.wasted} pcs`,
             icon:
-              <PackageX
-                size={
-                  16
-                }
-              />,
+              <PackageX size={16} />,
           },
 
           {
             label:
               'Available stock',
-
             value:
-              `${inventorySummary.available} pcs`,
-
+              `${summary.available} pcs`,
             icon:
-              <PackageCheck
-                size={
-                  16
-                }
-              />,
+              <PackageCheck size={16} />,
           },
 
           {
             label:
               'Inventory value',
-
             value:
               money(
-                inventorySummary.value
+                summary.value
               ),
-
             icon:
-              <Package
-                size={
-                  16
-                }
-              />,
+              <Package size={16} />,
           },
         ].map(
-          (card) => (
+          (
+            card
+          ) => (
             <div
               key={
                 card.label
               }
               className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900"
             >
-              <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+              <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-gray-500">
                 {
                   card.icon
                 }
@@ -1772,7 +2037,7 @@ const Bottles = () => {
         )}
       </div>
 
-      {/* FILTERS — SAME STYLE AS MATERIALS */}
+      {/* FILTER */}
 
       <div className="grid gap-3 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 md:grid-cols-[1fr_auto_auto]">
         <label className="relative">
@@ -1780,7 +2045,7 @@ const Bottles = () => {
             size={
               18
             }
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
           />
 
           <input
@@ -1791,11 +2056,12 @@ const Bottles = () => {
               event
             ) =>
               setSearch(
-                event.target
+                event
+                  .target
                   .value
               )
             }
-            placeholder="Search bottle size or type..."
+            placeholder="Search bottle..."
             className={`${fieldClass} pl-10`}
           />
         </label>
@@ -1808,7 +2074,8 @@ const Bottles = () => {
             event
           ) =>
             setTypeFilter(
-              event.target
+              event
+                .target
                 .value
             )
           }
@@ -1820,12 +2087,12 @@ const Bottles = () => {
             All types
           </option>
 
-          <option value="roll-on">
-            Roll-on / Oil
-          </option>
-
           <option value="spray">
             Spray
+          </option>
+
+          <option value="roll-on">
+            Roll-on / Oil
           </option>
         </select>
 
@@ -1837,7 +2104,8 @@ const Bottles = () => {
             event
           ) =>
             setStatusFilter(
-              event.target
+              event
+                .target
                 .value
             )
           }
@@ -1866,7 +2134,7 @@ const Bottles = () => {
       {/* DATA */}
 
       {loading ? (
-        <div className="flex min-h-[260px] items-center justify-center">
+        <div className="flex min-h-[240px] items-center justify-center">
           <RefreshCw
             size={
               30
@@ -1874,14 +2142,9 @@ const Bottles = () => {
             className="animate-spin text-brand-primary"
           />
         </div>
-      ) : filteredBottles.length ===
-        0 ? (
-        <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center text-gray-500 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-gray-400">
-          No bottles found.
-        </div>
       ) : (
         <>
-          {/* MOBILE CARDS — SAME AS MATERIALS */}
+          {/* MOBILE */}
 
           <div className="grid gap-3 md:hidden">
             {filteredBottles.map(
@@ -1893,80 +2156,65 @@ const Bottles = () => {
                     bottle.currentStock
                   );
 
-                const stockValue =
-                  stock *
-                  number(
-                    bottle.avgCostPerUnit
-                  );
-
-                const isOut =
-                  bottle.isStockOut ||
-                  stock <= 0;
-
                 return (
                   <article
                     key={
                       bottle._id
                     }
-                    className={`rounded-2xl border bg-white p-4 shadow-sm dark:bg-slate-900 ${
-                      isOut
-                        ? 'border-red-200 dark:border-red-900'
-                        : 'border-gray-200 dark:border-slate-700'
-                    }`}
+                    className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900"
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <h3 className="font-semibold">
-                          {number(
-                            bottle.sizeMl
-                          )}{' '}
-                          ml
-                        </h3>
-
-                        <p className="mt-0.5 text-xs capitalize text-gray-500 dark:text-gray-400">
-                          {bottle.type ===
-                          'roll-on'
-                            ? 'Roll-on / Oil'
-                            : 'Spray'}
-                        </p>
+                    <div className="flex gap-3">
+                      <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gray-50 dark:bg-slate-800">
+                        {bottle.images?.[0] ? (
+                          <img
+                            src={
+                              bottle.images[0]
+                            }
+                            alt={
+                              bottleLabel(
+                                bottle
+                              )
+                            }
+                            className="h-full w-full object-contain p-1"
+                          />
+                        ) : (
+                          <Image
+                            size={
+                              25
+                            }
+                            className="text-gray-400"
+                          />
+                        )}
                       </div>
 
-                      <span
-                        className={`rounded-full px-2 py-1 text-xs font-semibold ${
-                          isOut
-                            ? 'bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-300'
-                            : stock <
-                                LOW_STOCK_LIMIT
-                              ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300'
-                              : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
-                        }`}
-                      >
-                        {isOut
-                          ? 'Stock out'
-                          : stock <
-                              LOW_STOCK_LIMIT
-                            ? 'Low'
-                            : 'OK'}
-                      </span>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-semibold">
+                          {bottleLabel(
+                            bottle
+                          )}
+                        </h3>
+
+                        <p className="text-sm text-gray-500">
+                          Selling:{' '}
+                          <strong className="text-emerald-600">
+                            {money(
+                              bottle.sellingPrice
+                            )}
+                          </strong>
+                        </p>
+
+                        <p className="text-xs text-gray-500">
+                          {bottle.images?.length || 0}{' '}
+                          images
+                        </p>
+                      </div>
                     </div>
 
                     <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                       <div>
-                        <p className="text-gray-500 dark:text-gray-400">
-                          Purchased
-                        </p>
-
-                        <p className="font-semibold">
-                          {number(
-                            bottle.totalPurchased
-                          )}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-gray-500 dark:text-gray-400">
+                        <span className="text-gray-500">
                           Available
-                        </p>
+                        </span>
 
                         <p className="font-semibold">
                           {
@@ -1976,57 +2224,9 @@ const Bottles = () => {
                       </div>
 
                       <div>
-                        <p className="text-gray-500 dark:text-gray-400">
-                          Used for perfume
-                        </p>
-
-                        <p>
-                          {number(
-                            bottle.usedForPerfume
-                          )}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-gray-500 dark:text-gray-400">
-                          Bottle sales
-                        </p>
-
-                        <p>
-                          {number(
-                            bottle.bottleSales
-                          )}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-gray-500 dark:text-gray-400">
-                          Wasted
-                        </p>
-
-                        <p className="text-red-600">
-                          {number(
-                            bottle.wasted
-                          )}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-gray-500 dark:text-gray-400">
-                          Stock value
-                        </p>
-
-                        <p className="font-semibold">
-                          {money(
-                            stockValue
-                          )}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-gray-500 dark:text-gray-400">
+                        <span className="text-gray-500">
                           Unit cost
-                        </p>
+                        </span>
 
                         <p>
                           {money(
@@ -2036,13 +2236,25 @@ const Bottles = () => {
                       </div>
 
                       <div>
-                        <p className="text-gray-500 dark:text-gray-400">
-                          Bottle revenue
-                        </p>
+                        <span className="text-gray-500">
+                          Used
+                        </span>
 
-                        <p className="font-semibold text-emerald-600">
-                          {money(
-                            bottle.bottleSalesRevenue
+                        <p>
+                          {number(
+                            bottle.usedForPerfume
+                          )}
+                        </p>
+                      </div>
+
+                      <div>
+                        <span className="text-gray-500">
+                          Bottle sales
+                        </span>
+
+                        <p>
+                          {number(
+                            bottle.bottleSales
                           )}
                         </p>
                       </div>
@@ -2059,11 +2271,11 @@ const Bottles = () => {
             )}
           </div>
 
-          {/* DESKTOP TABLE — SAME STYLE AS MATERIALS */}
+          {/* DESKTOP */}
 
           <div className="hidden overflow-x-auto rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900 md:block">
             <table className="min-w-full text-sm">
-              <thead className="bg-gray-50 text-xs uppercase text-gray-500 dark:bg-slate-800 dark:text-gray-400">
+              <thead className="bg-gray-50 text-xs uppercase text-gray-500 dark:bg-slate-800">
                 <tr>
                   <th className="px-4 py-3 text-left">
                     Bottle
@@ -2090,26 +2302,22 @@ const Bottles = () => {
                   </th>
 
                   <th className="px-4 py-3 text-right">
-                    Stock
+                    Available
                   </th>
 
                   <th className="px-4 py-3 text-right">
-                    Per unit
+                    Unit cost
                   </th>
 
                   <th className="px-4 py-3 text-right">
-                    Stock value
-                  </th>
-
-                  <th className="px-4 py-3 text-right">
-                    Revenue
+                    Selling price
                   </th>
 
                   <th className="px-4 py-3 text-center">
                     Status
                   </th>
 
-                  <th className="px-4 py-3 text-center">
+                  <th className="px-4 py-3">
                     Actions
                   </th>
                 </tr>
@@ -2125,11 +2333,6 @@ const Bottles = () => {
                         bottle.currentStock
                       );
 
-                    const perUnit =
-                      number(
-                        bottle.avgCostPerUnit
-                      );
-
                     const isOut =
                       bottle.isStockOut ||
                       stock <= 0;
@@ -2139,22 +2342,53 @@ const Bottles = () => {
                         key={
                           bottle._id
                         }
-                        className={`${
-                          isOut
-                            ? 'bg-red-50/30 dark:bg-red-950/10'
-                            : ''
-                        } hover:bg-gray-50/70 dark:hover:bg-slate-800/60`}
+                        className="hover:bg-gray-50 dark:hover:bg-slate-800/60"
                       >
                         <td className="px-4 py-3">
-                          <div className="font-medium">
-                            {number(
-                              bottle.sizeMl
-                            )}{' '}
-                            ml
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl border border-gray-200 bg-gray-50 dark:border-slate-700 dark:bg-slate-800">
+                              {bottle.images?.[0] ? (
+                                <img
+                                  src={
+                                    bottle.images[0]
+                                  }
+                                  alt={
+                                    bottleLabel(
+                                      bottle
+                                    )
+                                  }
+                                  className="h-full w-full object-contain p-1"
+                                />
+                              ) : (
+                                <Image
+                                  size={
+                                    20
+                                  }
+                                  className="text-gray-400"
+                                />
+                              )}
+                            </div>
+
+                            <div>
+                              <p className="font-semibold">
+                                {number(
+                                  bottle.sizeMl
+                                )}
+                                ml
+                              </p>
+
+                              <p className="text-xs text-gray-500">
+                                {bottle.images?.length || 0}{' '}
+                                image
+                                {(bottle.images?.length || 0) === 1
+                                  ? ''
+                                  : 's'}
+                              </p>
+                            </div>
                           </div>
                         </td>
 
-                        <td className="px-4 py-3 capitalize">
+                        <td className="px-4 py-3">
                           {bottle.type ===
                           'roll-on'
                             ? 'Roll-on / Oil'
@@ -2193,20 +2427,13 @@ const Bottles = () => {
 
                         <td className="px-4 py-3 text-right">
                           {money(
-                            perUnit
+                            bottle.avgCostPerUnit
                           )}
                         </td>
 
-                        <td className="px-4 py-3 text-right font-semibold">
+                        <td className="px-4 py-3 text-right font-semibold text-emerald-600">
                           {money(
-                            stock *
-                              perUnit
-                          )}
-                        </td>
-
-                        <td className="px-4 py-3 text-right text-emerald-600">
-                          {money(
-                            bottle.bottleSalesRevenue
+                            bottle.sellingPrice
                           )}
                         </td>
 
@@ -2214,11 +2441,11 @@ const Bottles = () => {
                           <span
                             className={`rounded-full px-2 py-1 text-xs font-semibold ${
                               isOut
-                                ? 'bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-300'
+                                ? 'bg-red-100 text-red-700'
                                 : stock <
                                     LOW_STOCK_LIMIT
-                                  ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300'
-                                  : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
+                                  ? 'bg-amber-100 text-amber-700'
+                                  : 'bg-emerald-100 text-emerald-700'
                             }`}
                           >
                             {isOut
@@ -2245,10 +2472,11 @@ const Bottles = () => {
         </>
       )}
 
-      {/* ADD MODAL */}
+      {/* ADD */}
 
       {showAddModal && (
         <Modal
+          maxWidth="max-w-xl"
           onClose={() =>
             !submitting &&
             setShowAddModal(
@@ -2281,10 +2509,9 @@ const Bottles = () => {
                 ) =>
                   setNewBottle(
                     (
-                      previous
+                      old
                     ) => ({
-                      ...previous,
-
+                      ...old,
                       sizeMl:
                         event
                           .target
@@ -2309,10 +2536,9 @@ const Bottles = () => {
                 ) =>
                   setNewBottle(
                     (
-                      previous
+                      old
                     ) => ({
-                      ...previous,
-
+                      ...old,
                       type:
                         event
                           .target
@@ -2333,7 +2559,7 @@ const Bottles = () => {
             </label>
 
             <label className="block text-sm font-medium">
-              Opening stock
+              Opening Stock
 
               <input
                 type="number"
@@ -2347,10 +2573,9 @@ const Bottles = () => {
                 ) =>
                   setNewBottle(
                     (
-                      previous
+                      old
                     ) => ({
-                      ...previous,
-
+                      ...old,
                       currentStock:
                         event
                           .target
@@ -2363,7 +2588,7 @@ const Bottles = () => {
             </label>
 
             <label className="block text-sm font-medium">
-              Per-unit cost (৳)
+              Cost Per Unit (৳)
 
               <input
                 type="number"
@@ -2377,10 +2602,9 @@ const Bottles = () => {
                 ) =>
                   setNewBottle(
                     (
-                      previous
+                      old
                     ) => ({
-                      ...previous,
-
+                      ...old,
                       avgCostPerUnit:
                         event
                           .target
@@ -2391,6 +2615,58 @@ const Bottles = () => {
                 className={`${fieldClass} mt-1`}
               />
             </label>
+
+            <label className="block text-sm font-medium">
+              Empty Bottle Selling Price (৳)
+
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={
+                  newBottle.sellingPrice
+                }
+                onChange={(
+                  event
+                ) =>
+                  setNewBottle(
+                    (
+                      old
+                    ) => ({
+                      ...old,
+                      sellingPrice:
+                        event
+                          .target
+                          .value,
+                    })
+                  )
+                }
+                placeholder="Example: 80"
+                className={`${fieldClass} mt-1`}
+              />
+
+              <span className="mt-1 block text-xs text-gray-500">
+                Set 0 if this bottle should not be sold separately.
+              </span>
+            </label>
+
+            <BottleImagesInput
+              images={
+                newBottle.images
+              }
+              setImages={(
+                images
+              ) =>
+                setNewBottle(
+                  (
+                    old
+                  ) => ({
+                    ...old,
+                    images,
+                  })
+                )
+              }
+            />
 
             {modalError && (
               <p className="text-sm text-red-600">
@@ -2415,10 +2691,11 @@ const Bottles = () => {
         </Modal>
       )}
 
-      {/* EDIT MODAL */}
+      {/* EDIT */}
 
       {editingBottle && (
         <Modal
+          maxWidth="max-w-xl"
           onClose={() =>
             !editSubmitting &&
             setEditingBottle(
@@ -2451,10 +2728,9 @@ const Bottles = () => {
                 ) =>
                   setEditForm(
                     (
-                      previous
+                      old
                     ) => ({
-                      ...previous,
-
+                      ...old,
                       sizeMl:
                         event
                           .target
@@ -2479,10 +2755,9 @@ const Bottles = () => {
                 ) =>
                   setEditForm(
                     (
-                      previous
+                      old
                     ) => ({
-                      ...previous,
-
+                      ...old,
                       type:
                         event
                           .target
@@ -2503,7 +2778,7 @@ const Bottles = () => {
             </label>
 
             <label className="block text-sm font-medium">
-              Current stock
+              Current Stock
 
               <input
                 type="number"
@@ -2517,10 +2792,9 @@ const Bottles = () => {
                 ) =>
                   setEditForm(
                     (
-                      previous
+                      old
                     ) => ({
-                      ...previous,
-
+                      ...old,
                       currentStock:
                         event
                           .target
@@ -2533,7 +2807,7 @@ const Bottles = () => {
             </label>
 
             <label className="block text-sm font-medium">
-              Per-unit cost (৳)
+              Cost Per Unit (৳)
 
               <input
                 type="number"
@@ -2547,10 +2821,9 @@ const Bottles = () => {
                 ) =>
                   setEditForm(
                     (
-                      previous
+                      old
                     ) => ({
-                      ...previous,
-
+                      ...old,
                       avgCostPerUnit:
                         event
                           .target
@@ -2562,55 +2835,52 @@ const Bottles = () => {
               />
             </label>
 
-            <div className="grid grid-cols-2 gap-3 rounded-xl bg-gray-50 p-3 text-sm dark:bg-slate-800">
-              <div>
-                <span className="text-gray-500">
-                  Purchased
-                </span>
+            <label className="block text-sm font-medium">
+              Empty Bottle Selling Price (৳)
 
-                <p className="font-semibold">
-                  {number(
-                    editingBottle.totalPurchased
-                  )}
-                </p>
-              </div>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={
+                  editForm.sellingPrice
+                }
+                onChange={(
+                  event
+                ) =>
+                  setEditForm(
+                    (
+                      old
+                    ) => ({
+                      ...old,
+                      sellingPrice:
+                        event
+                          .target
+                          .value,
+                    })
+                  )
+                }
+                className={`${fieldClass} mt-1`}
+              />
+            </label>
 
-              <div>
-                <span className="text-gray-500">
-                  Used
-                </span>
-
-                <p className="font-semibold">
-                  {number(
-                    editingBottle.usedForPerfume
-                  )}
-                </p>
-              </div>
-
-              <div>
-                <span className="text-gray-500">
-                  Bottle sales
-                </span>
-
-                <p className="font-semibold">
-                  {number(
-                    editingBottle.bottleSales
-                  )}
-                </p>
-              </div>
-
-              <div>
-                <span className="text-gray-500">
-                  Wasted
-                </span>
-
-                <p className="font-semibold">
-                  {number(
-                    editingBottle.wasted
-                  )}
-                </p>
-              </div>
-            </div>
+            <BottleImagesInput
+              images={
+                editForm.images
+              }
+              setImages={(
+                images
+              ) =>
+                setEditForm(
+                  (
+                    old
+                  ) => ({
+                    ...old,
+                    images,
+                  })
+                )
+              }
+            />
 
             {editError && (
               <p className="text-sm text-red-600">
@@ -2635,7 +2905,7 @@ const Bottles = () => {
         </Modal>
       )}
 
-      {/* PURCHASE MODAL */}
+      {/* PURCHASE */}
 
       {purchaseBottle && (
         <Modal
@@ -2646,11 +2916,11 @@ const Bottles = () => {
             )
           }
         >
-          <h2 className="pr-10 text-xl font-bold">
+          <h2 className="text-xl font-bold">
             Record Purchase
           </h2>
 
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          <p className="mt-1 text-sm text-gray-500">
             {bottleLabel(
               purchaseBottle
             )}
@@ -2677,10 +2947,9 @@ const Bottles = () => {
                 ) =>
                   setPurchaseData(
                     (
-                      previous
+                      old
                     ) => ({
-                      ...previous,
-
+                      ...old,
                       quantity:
                         event
                           .target
@@ -2694,7 +2963,7 @@ const Bottles = () => {
             </label>
 
             <label className="block text-sm font-medium">
-              Cost per unit (৳)
+              Cost per unit
 
               <input
                 type="number"
@@ -2708,10 +2977,9 @@ const Bottles = () => {
                 ) =>
                   setPurchaseData(
                     (
-                      previous
+                      old
                     ) => ({
-                      ...previous,
-
+                      ...old,
                       costPerUnit:
                         event
                           .target
@@ -2736,10 +3004,9 @@ const Bottles = () => {
                 ) =>
                   setPurchaseData(
                     (
-                      previous
+                      old
                     ) => ({
-                      ...previous,
-
+                      ...old,
                       supplier:
                         event
                           .target
@@ -2752,7 +3019,7 @@ const Bottles = () => {
             </label>
 
             <label className="block text-sm font-medium">
-              Invoice No.
+              Invoice No
 
               <input
                 value={
@@ -2763,10 +3030,9 @@ const Bottles = () => {
                 ) =>
                   setPurchaseData(
                     (
-                      previous
+                      old
                     ) => ({
-                      ...previous,
-
+                      ...old,
                       invoiceNo:
                         event
                           .target
@@ -2791,7 +3057,7 @@ const Bottles = () => {
               disabled={
                 purchasing
               }
-              className="w-full rounded-xl bg-emerald-600 py-2.5 font-semibold text-white disabled:opacity-50"
+              className="w-full rounded-xl bg-emerald-600 py-2.5 font-semibold text-white"
             >
               {purchasing
                 ? 'Recording...'
@@ -2801,7 +3067,7 @@ const Bottles = () => {
         </Modal>
       )}
 
-      {/* WASTE MODAL */}
+      {/* WASTAGE */}
 
       {wasteBottleTarget && (
         <Modal
@@ -2812,19 +3078,9 @@ const Bottles = () => {
             )
           }
         >
-          <h2 className="pr-10 text-xl font-bold">
+          <h2 className="text-xl font-bold">
             Record Wastage
           </h2>
-
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            {bottleLabel(
-              wasteBottleTarget
-            )}{' '}
-            · Available:{' '}
-            {number(
-              wasteBottleTarget.currentStock
-            )}
-          </p>
 
           <form
             onSubmit={
@@ -2838,10 +3094,10 @@ const Bottles = () => {
               <input
                 type="number"
                 min="1"
+                step="1"
                 max={number(
                   wasteBottleTarget.currentStock
                 )}
-                step="1"
                 value={
                   wasteData.quantity
                 }
@@ -2850,10 +3106,9 @@ const Bottles = () => {
                 ) =>
                   setWasteData(
                     (
-                      previous
+                      old
                     ) => ({
-                      ...previous,
-
+                      ...old,
                       quantity:
                         event
                           .target
@@ -2878,10 +3133,9 @@ const Bottles = () => {
                 ) =>
                   setWasteData(
                     (
-                      previous
+                      old
                     ) => ({
-                      ...previous,
-
+                      ...old,
                       notes:
                         event
                           .target
@@ -2889,7 +3143,6 @@ const Bottles = () => {
                     })
                   )
                 }
-                placeholder="Broken, damaged..."
                 className={`${fieldClass} mt-1`}
               />
             </label>
@@ -2907,7 +3160,7 @@ const Bottles = () => {
               disabled={
                 wasting
               }
-              className="w-full rounded-xl bg-orange-600 py-2.5 font-semibold text-white disabled:opacity-50"
+              className="w-full rounded-xl bg-orange-600 py-2.5 font-semibold text-white"
             >
               {wasting
                 ? 'Recording...'
@@ -2917,7 +3170,7 @@ const Bottles = () => {
         </Modal>
       )}
 
-      {/* STOCK OUT MODAL */}
+      {/* STOCK OUT */}
 
       {stockOutBottle && (
         <Modal
@@ -2928,36 +3181,19 @@ const Bottles = () => {
             )
           }
         >
-          <h3 className="pr-10 text-xl font-bold">
-            Stock Out Bottle
+          <h3 className="text-xl font-bold">
+            Stock Out Bottle?
           </h3>
 
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-            Mark{' '}
+          <p className="mt-3 text-sm text-gray-500">
+            Remaining{' '}
             <strong>
-              {bottleLabel(
-                stockOutBottle
+              {number(
+                stockOutBottle.currentStock
               )}
             </strong>{' '}
-            as stock out?
+            bottle(s) will be recorded as wastage.
           </p>
-
-          {number(
-            stockOutBottle.currentStock
-          ) >
-            0 && (
-            <div className="mt-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-700 dark:bg-amber-950/30 dark:text-amber-300">
-              Remaining{' '}
-              <strong>
-                {number(
-                  stockOutBottle.currentStock
-                )}{' '}
-                pcs
-              </strong>{' '}
-              will be recorded
-              as wastage.
-            </div>
-          )}
 
           <div className="mt-6 flex justify-end gap-2">
             <button
@@ -2967,10 +3203,7 @@ const Bottles = () => {
                   null
                 )
               }
-              disabled={
-                stockingOut
-              }
-              className="rounded-xl border border-gray-300 px-4 py-2 dark:border-slate-600"
+              className="rounded-xl border px-4 py-2"
             >
               Cancel
             </button>
@@ -2978,22 +3211,20 @@ const Bottles = () => {
             <button
               type="button"
               onClick={
-                handleStockOutConfirm
+                handleStockOut
               }
               disabled={
                 stockingOut
               }
-              className="rounded-xl bg-red-600 px-4 py-2 font-semibold text-white disabled:opacity-50"
+              className="rounded-xl bg-red-600 px-4 py-2 font-semibold text-white"
             >
-              {stockingOut
-                ? 'Processing...'
-                : 'Confirm Stock Out'}
+              Confirm
             </button>
           </div>
         </Modal>
       )}
 
-      {/* DELETE MODAL */}
+      {/* DELETE */}
 
       {deleteTarget && (
         <Modal
@@ -3004,19 +3235,18 @@ const Bottles = () => {
             )
           }
         >
-          <h3 className="pr-10 text-xl font-bold">
+          <h3 className="text-xl font-bold">
             Delete Bottle?
           </h3>
 
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+          <p className="mt-3 text-sm text-gray-500">
             Delete{' '}
             <strong>
               {bottleLabel(
                 deleteTarget
               )}
             </strong>
-            ? This action
-            cannot be undone.
+            ?
           </p>
 
           <div className="mt-6 flex justify-end gap-2">
@@ -3027,10 +3257,7 @@ const Bottles = () => {
                   null
                 )
               }
-              disabled={
-                deleting
-              }
-              className="rounded-xl border border-gray-300 px-4 py-2 dark:border-slate-600"
+              className="rounded-xl border px-4 py-2"
             >
               Cancel
             </button>
@@ -3043,45 +3270,32 @@ const Bottles = () => {
               disabled={
                 deleting
               }
-              className="rounded-xl bg-red-600 px-4 py-2 font-semibold text-white disabled:opacity-50"
+              className="rounded-xl bg-red-600 px-4 py-2 font-semibold text-white"
             >
-              {deleting
-                ? 'Deleting...'
-                : 'Delete'}
+              Delete
             </button>
           </div>
         </Modal>
       )}
 
-      {/* UPLOAD MODAL */}
+      {/* UPLOAD */}
 
       {showUploadModal && (
         <Modal
           maxWidth="max-w-xl"
-          onClose={() => {
-            if (uploading) {
-              return;
-            }
-
+          onClose={() =>
+            !uploading &&
             setShowUploadModal(
               false
-            );
-
-            setUploadResult(
-              null
-            );
-
-            setFile(null);
-          }}
+            )
+          }
         >
-          <h2 className="pr-10 text-xl font-bold">
+          <h2 className="text-xl font-bold">
             Bulk Import Bottles
           </h2>
 
-          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-            Upload bottle size,
-            type, stock and
-            per-unit cost.
+          <p className="mt-2 text-sm text-gray-500">
+            Supported columns: sizeMl, Type, Stock, Unit Cost, Selling Price, Image1...Image10.
           </p>
 
           <form
@@ -3096,24 +3310,20 @@ const Bottles = () => {
               onChange={
                 handleFileChange
               }
-              disabled={
-                uploading
-              }
               className={
                 fieldClass
               }
-              required
             />
 
             {uploadResult && (
               <div
                 className={`rounded-xl p-3 text-sm ${
                   uploadResult.success
-                    ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300'
-                    : 'bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-300'
+                    ? 'bg-emerald-50 text-emerald-700'
+                    : 'bg-red-50 text-red-700'
                 }`}
               >
-                <div className="flex items-start gap-2">
+                <div className="flex gap-2">
                   {uploadResult.success ? (
                     <CheckCircle
                       size={
@@ -3128,14 +3338,9 @@ const Bottles = () => {
                     />
                   )}
 
-                  <span>
-                    {uploadResult.success
-                      ? uploadResult
-                          .data
-                          ?.message ||
-                        'Upload completed successfully.'
-                      : uploadResult.message}
-                  </span>
+                  {
+                    uploadResult.message
+                  }
                 </div>
               </div>
             )}
@@ -3143,8 +3348,8 @@ const Bottles = () => {
             <button
               type="submit"
               disabled={
-                uploading ||
-                !file
+                !file ||
+                uploading
               }
               className="w-full rounded-xl bg-emerald-600 py-2.5 font-semibold text-white disabled:opacity-50"
             >
