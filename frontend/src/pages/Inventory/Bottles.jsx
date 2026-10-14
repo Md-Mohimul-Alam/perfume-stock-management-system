@@ -1,17 +1,14 @@
-import {
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
-
+import { useEffect, useMemo, useState } from 'react';
 import * as XLSX from 'xlsx';
-
 import toast from 'react-hot-toast';
 
 import {
   AlertCircle,
   CheckCircle,
-  DollarSign,
+  CircleDollarSign,
+  Package,
+  PackageCheck,
+  PackageMinus,
   PackageX,
   Pencil,
   Plus,
@@ -26,17 +23,14 @@ import {
 import API from '../../api/axios';
 
 const LOW_STOCK_LIMIT = 3;
-
-const MAX_UPLOAD_BYTES =
-  5 * 1024 * 1024;
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 
 /* ========================================
    HELPERS
 ======================================== */
 
 const number = (value) => {
-  const parsed =
-    Number(value);
+  const parsed = Number(value);
 
   return Number.isFinite(parsed)
     ? parsed
@@ -44,35 +38,24 @@ const number = (value) => {
 };
 
 const money = (value) =>
-  new Intl.NumberFormat(
-    'en-BD',
-    {
-      style:
-        'currency',
+  new Intl.NumberFormat('en-BD', {
+    style: 'currency',
+    currency: 'BDT',
+    minimumFractionDigits: 2,
+  }).format(number(value));
 
-      currency:
-        'BDT',
+const bottleLabel = (bottle) => {
+  const type =
+    bottle?.type === 'roll-on'
+      ? 'Roll-on'
+      : 'Spray';
 
-      minimumFractionDigits:
-        2,
-    }
-  ).format(
-    number(value)
-  );
-
-const bottleLabel = (
-  bottle
-) =>
-  `${number(
+  return `${number(
     bottle?.sizeMl
-  )}ml ${
-    bottle?.type ||
-    ''
-  }`.trim();
+  )}ml ${type}`;
+};
 
-const normalizeBottle = (
-  bottle = {}
-) => ({
+const normalizeBottle = (bottle = {}) => ({
   ...bottle,
 
   currentStock:
@@ -105,9 +88,6 @@ const normalizeBottle = (
       bottle.bottleSalesRevenue
     ),
 
-  /*
-    Backward compatibility.
-  */
   sold:
     number(
       bottle.sold
@@ -125,88 +105,73 @@ const normalizeBottle = (
 });
 
 /* ========================================
-   READ EXCEL / CSV
+   FILE READER
 ======================================== */
 
-const readSheetRows =
-  (file) =>
-    new Promise(
-      (
-        resolve,
-        reject
-      ) => {
-        const reader =
-          new FileReader();
+const readSheetRows = (file) =>
+  new Promise(
+    (resolve, reject) => {
+      const reader =
+        new FileReader();
 
-        reader.onerror =
-          () =>
+      reader.onerror = () =>
+        reject(
+          new Error(
+            'Could not read the selected file.'
+          )
+        );
+
+      reader.onload = (
+        event
+      ) => {
+        try {
+          const data =
+            new Uint8Array(
+              event.target.result
+            );
+
+          const workbook =
+            XLSX.read(
+              data,
+              {
+                type: 'array',
+              }
+            );
+
+          const firstSheet =
+            workbook
+              .SheetNames[0];
+
+          if (!firstSheet) {
             reject(
               new Error(
-                'Could not read the selected file.'
+                'The spreadsheet does not contain a worksheet.'
               )
             );
 
-        reader.onload =
-          (
-            event
-          ) => {
-            try {
-              const data =
-                new Uint8Array(
-                  event.target
-                    .result
-                );
+            return;
+          }
 
-              const workbook =
-                XLSX.read(
-                  data,
-                  {
-                    type:
-                      'array',
-                  }
-                );
-
-              const firstSheet =
-                workbook
-                  .SheetNames[0];
-
-              if (!firstSheet) {
-                reject(
-                  new Error(
-                    'The spreadsheet does not contain a worksheet.'
-                  )
-                );
-
-                return;
+          resolve(
+            XLSX.utils.sheet_to_json(
+              workbook.Sheets[
+                firstSheet
+              ],
+              {
+                defval: '',
               }
+            )
+          );
+        } catch (error) {
+          reject(error);
+        }
+      };
 
-              resolve(
-                XLSX.utils
-                  .sheet_to_json(
-                    workbook
-                      .Sheets[
-                      firstSheet
-                    ],
-                    {
-                      defval:
-                        '',
-                    }
-                  )
-              );
-            } catch (
-              error
-            ) {
-              reject(
-                error
-              );
-            }
-          };
-
-        reader.readAsArrayBuffer(
-          file
-        );
-      }
-    );
+      reader.readAsArrayBuffer(
+        file
+      );
+    }
+  );
 
 /* ========================================
    MODAL
@@ -247,21 +212,19 @@ const fieldClass =
   'w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-[16px] text-gray-900 outline-none transition focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-600 dark:bg-slate-800 dark:text-gray-100';
 
 /* ========================================
-   PAGE
+   BOTTLES PAGE
 ======================================== */
 
 const Bottles = () => {
   const [
     bottles,
     setBottles,
-  ] =
-    useState([]);
+  ] = useState([]);
 
   const [
     loading,
     setLoading,
-  ] =
-    useState(true);
+  ] = useState(true);
 
   /* ======================================
      FILTERS
@@ -270,24 +233,17 @@ const Bottles = () => {
   const [
     search,
     setSearch,
-  ] =
-    useState('');
+  ] = useState('');
 
   const [
     typeFilter,
     setTypeFilter,
-  ] =
-    useState(
-      'all'
-    );
+  ] = useState('all');
 
   const [
     statusFilter,
     setStatusFilter,
-  ] =
-    useState(
-      'all'
-    );
+  ] = useState('all');
 
   /* ======================================
      ADD
@@ -296,38 +252,27 @@ const Bottles = () => {
   const [
     showAddModal,
     setShowAddModal,
-  ] =
-    useState(false);
+  ] = useState(false);
 
   const [
     newBottle,
     setNewBottle,
-  ] =
-    useState({
-      sizeMl:
-        '',
-
-      type:
-        'spray',
-
-      currentStock:
-        0,
-
-      avgCostPerUnit:
-        0,
-    });
+  ] = useState({
+    sizeMl: '',
+    type: 'spray',
+    currentStock: 0,
+    avgCostPerUnit: 0,
+  });
 
   const [
     submitting,
     setSubmitting,
-  ] =
-    useState(false);
+  ] = useState(false);
 
   const [
     modalError,
     setModalError,
-  ] =
-    useState('');
+  ] = useState('');
 
   /* ======================================
      EDIT
@@ -336,38 +281,27 @@ const Bottles = () => {
   const [
     editingBottle,
     setEditingBottle,
-  ] =
-    useState(null);
+  ] = useState(null);
 
   const [
     editForm,
     setEditForm,
-  ] =
-    useState({
-      sizeMl:
-        '',
-
-      type:
-        'spray',
-
-      currentStock:
-        0,
-
-      avgCostPerUnit:
-        0,
-    });
+  ] = useState({
+    sizeMl: '',
+    type: 'spray',
+    currentStock: 0,
+    avgCostPerUnit: 0,
+  });
 
   const [
     editSubmitting,
     setEditSubmitting,
-  ] =
-    useState(false);
+  ] = useState(false);
 
   const [
     editError,
     setEditError,
-  ] =
-    useState('');
+  ] = useState('');
 
   /* ======================================
      DELETE
@@ -376,14 +310,12 @@ const Bottles = () => {
   const [
     deleteTarget,
     setDeleteTarget,
-  ] =
-    useState(null);
+  ] = useState(null);
 
   const [
     deleting,
     setDeleting,
-  ] =
-    useState(false);
+  ] = useState(false);
 
   /* ======================================
      UPLOAD
@@ -392,26 +324,22 @@ const Bottles = () => {
   const [
     showUploadModal,
     setShowUploadModal,
-  ] =
-    useState(false);
+  ] = useState(false);
 
   const [
     file,
     setFile,
-  ] =
-    useState(null);
+  ] = useState(null);
 
   const [
     uploading,
     setUploading,
-  ] =
-    useState(false);
+  ] = useState(false);
 
   const [
     uploadResult,
     setUploadResult,
-  ] =
-    useState(null);
+  ] = useState(null);
 
   /* ======================================
      PURCHASE
@@ -420,38 +348,27 @@ const Bottles = () => {
   const [
     purchaseBottle,
     setPurchaseBottle,
-  ] =
-    useState(null);
+  ] = useState(null);
 
   const [
     purchaseData,
     setPurchaseData,
-  ] =
-    useState({
-      quantity:
-        '',
-
-      costPerUnit:
-        '',
-
-      supplier:
-        '',
-
-      invoiceNo:
-        '',
-    });
+  ] = useState({
+    quantity: '',
+    costPerUnit: '',
+    supplier: '',
+    invoiceNo: '',
+  });
 
   const [
     purchasing,
     setPurchasing,
-  ] =
-    useState(false);
+  ] = useState(false);
 
   const [
     purchaseError,
     setPurchaseError,
-  ] =
-    useState('');
+  ] = useState('');
 
   /* ======================================
      STOCK OUT
@@ -460,14 +377,12 @@ const Bottles = () => {
   const [
     stockOutBottle,
     setStockOutBottle,
-  ] =
-    useState(null);
+  ] = useState(null);
 
   const [
     stockingOut,
     setStockingOut,
-  ] =
-    useState(false);
+  ] = useState(false);
 
   /* ======================================
      WASTAGE
@@ -476,32 +391,25 @@ const Bottles = () => {
   const [
     wasteBottleTarget,
     setWasteBottleTarget,
-  ] =
-    useState(null);
+  ] = useState(null);
 
   const [
     wasteData,
     setWasteData,
-  ] =
-    useState({
-      quantity:
-        '',
-
-      notes:
-        '',
-    });
+  ] = useState({
+    quantity: '',
+    notes: '',
+  });
 
   const [
     wasting,
     setWasting,
-  ] =
-    useState(false);
+  ] = useState(false);
 
   const [
     wasteError,
     setWasteError,
-  ] =
-    useState('');
+  ] = useState('');
 
   /* ========================================
      FETCH
@@ -511,26 +419,19 @@ const Bottles = () => {
     async ({
       silent = false,
     } = {}) => {
-      if (
-        !silent
-      ) {
-        setLoading(
-          true
-        );
+      if (!silent) {
+        setLoading(true);
       }
 
       try {
         const {
           data,
-        } =
-          await API.get(
-            '/inventory/bottles/with-sales'
-          );
+        } = await API.get(
+          '/inventory/bottles/with-sales'
+        );
 
         const rows =
-          Array.isArray(
-            data
-          )
+          Array.isArray(data)
             ? data
             : [];
 
@@ -539,27 +440,20 @@ const Bottles = () => {
             normalizeBottle
           )
         );
-      } catch (
-        error
-      ) {
+      } catch (error) {
         console.error(
-          'Failed to fetch bottles with sales',
+          'Failed to load bottles',
           error
         );
 
         toast.error(
           error.response
-            ?.data
-            ?.message ||
+            ?.data?.message ||
             'Failed to load bottles'
         );
       } finally {
-        if (
-          !silent
-        ) {
-          setLoading(
-            false
-          );
+        if (!silent) {
+          setLoading(false);
         }
       }
     };
@@ -569,7 +463,7 @@ const Bottles = () => {
   }, []);
 
   /* ========================================
-     FILTERED BOTTLES
+     FILTER
   ======================================== */
 
   const filteredBottles =
@@ -580,13 +474,15 @@ const Bottles = () => {
           .toLowerCase();
 
       return bottles.filter(
-        (
-          bottle
-        ) => {
+        (bottle) => {
           const available =
             number(
               bottle.currentStock
             );
+
+          const isOut =
+            bottle.isStockOut ||
+            available <= 0;
 
           const matchesSearch =
             !query ||
@@ -615,27 +511,22 @@ const Bottles = () => {
             (
               statusFilter ===
                 'available' &&
+              !isOut &&
               available >=
-                LOW_STOCK_LIMIT &&
-              !bottle.isStockOut
+                LOW_STOCK_LIMIT
             ) ||
             (
               statusFilter ===
                 'low' &&
-              available >
-                0 &&
+              !isOut &&
+              available > 0 &&
               available <
-                LOW_STOCK_LIMIT &&
-              !bottle.isStockOut
+                LOW_STOCK_LIMIT
             ) ||
             (
               statusFilter ===
                 'out' &&
-              (
-                available <=
-                  0 ||
-                bottle.isStockOut
-              )
+              isOut
             );
 
           return (
@@ -653,10 +544,10 @@ const Bottles = () => {
     ]);
 
   /* ========================================
-     TOTALS
+     SUMMARY
   ======================================== */
 
-  const totals =
+  const inventorySummary =
     useMemo(
       () =>
         bottles.reduce(
@@ -664,7 +555,7 @@ const Bottles = () => {
             summary,
             bottle
           ) => {
-            const available =
+            const stock =
               number(
                 bottle.currentStock
               );
@@ -672,11 +563,6 @@ const Bottles = () => {
             summary.purchased +=
               number(
                 bottle.totalPurchased
-              );
-
-            summary.produced +=
-              number(
-                bottle.produced
               );
 
             summary.usedForPerfume +=
@@ -700,70 +586,45 @@ const Bottles = () => {
               );
 
             summary.available +=
-              available;
+              stock;
 
             summary.value +=
-              available *
+              stock *
               number(
                 bottle.avgCostPerUnit
               );
 
             if (
-              available <=
-                0 ||
-              bottle.isStockOut
+              bottle.isStockOut ||
+              stock <= 0
             ) {
-              summary.out +=
-                1;
+              summary.out += 1;
             } else if (
-              available <
+              stock <
               LOW_STOCK_LIMIT
             ) {
-              summary.low +=
-                1;
+              summary.low += 1;
             }
 
             return summary;
           },
           {
-            purchased:
-              0,
-
-            produced:
-              0,
-
-            usedForPerfume:
-              0,
-
-            bottleSales:
-              0,
-
-            bottleSalesRevenue:
-              0,
-
-            wasted:
-              0,
-
-            available:
-              0,
-
-            value:
-              0,
-
-            low:
-              0,
-
-            out:
-              0,
+            purchased: 0,
+            usedForPerfume: 0,
+            bottleSales: 0,
+            bottleSalesRevenue: 0,
+            wasted: 0,
+            available: 0,
+            value: 0,
+            low: 0,
+            out: 0,
           }
         ),
-      [
-        bottles,
-      ]
+      [bottles]
     );
 
   /* ========================================
-     ADD BOTTLE
+     ADD
   ======================================== */
 
   const handleAddSubmit =
@@ -801,13 +662,13 @@ const Bottles = () => {
       }
 
       if (
-        !Number.isFinite(
+        !Number.isInteger(
           currentStock
         ) ||
         currentStock < 0
       ) {
         setModalError(
-          'Stock cannot be negative.'
+          'Opening stock must be a whole number.'
         );
 
         return;
@@ -827,13 +688,8 @@ const Bottles = () => {
         return;
       }
 
-      setSubmitting(
-        true
-      );
-
-      setModalError(
-        ''
-      );
+      setSubmitting(true);
+      setModalError('');
 
       try {
         await API.post(
@@ -859,49 +715,32 @@ const Bottles = () => {
         );
 
         setNewBottle({
-          sizeMl:
-            '',
-
-          type:
-            'spray',
-
-          currentStock:
-            0,
-
-          avgCostPerUnit:
-            0,
+          sizeMl: '',
+          type: 'spray',
+          currentStock: 0,
+          avgCostPerUnit: 0,
         });
 
-        await fetchBottlesWithSales(
-          {
-            silent:
-              true,
-          }
-        );
-      } catch (
-        error
-      ) {
+        await fetchBottlesWithSales({
+          silent: true,
+        });
+      } catch (error) {
         setModalError(
           error.response
-            ?.data
-            ?.message ||
+            ?.data?.message ||
             'Failed to create bottle'
         );
       } finally {
-        setSubmitting(
-          false
-        );
+        setSubmitting(false);
       }
     };
 
   /* ========================================
-     EDIT BOTTLE
+     EDIT
   ======================================== */
 
   const handleEditClick =
-    (
-      bottle
-    ) => {
+    (bottle) => {
       setEditingBottle(
         bottle
       );
@@ -924,9 +763,7 @@ const Bottles = () => {
           ),
       });
 
-      setEditError(
-        ''
-      );
+      setEditError('');
     };
 
   const handleEditSubmit =
@@ -935,9 +772,7 @@ const Bottles = () => {
     ) => {
       event.preventDefault();
 
-      if (
-        !editingBottle
-      ) {
+      if (!editingBottle) {
         return;
       }
 
@@ -970,13 +805,13 @@ const Bottles = () => {
       }
 
       if (
-        !Number.isFinite(
+        !Number.isInteger(
           currentStock
         ) ||
         currentStock < 0
       ) {
         setEditError(
-          'Stock cannot be negative.'
+          'Stock must be a whole number.'
         );
 
         return;
@@ -986,8 +821,7 @@ const Bottles = () => {
         !Number.isFinite(
           avgCostPerUnit
         ) ||
-        avgCostPerUnit <
-          0
+        avgCostPerUnit < 0
       ) {
         setEditError(
           'Per-unit cost cannot be negative.'
@@ -996,13 +830,8 @@ const Bottles = () => {
         return;
       }
 
-      setEditSubmitting(
-        true
-      );
-
-      setEditError(
-        ''
-      );
+      setEditSubmitting(true);
+      setEditError('');
 
       try {
         await API.put(
@@ -1020,37 +849,29 @@ const Bottles = () => {
         );
 
         toast.success(
-          'Bottle updated successfully'
+          'Bottle updated'
         );
 
         setEditingBottle(
           null
         );
 
-        await fetchBottlesWithSales(
-          {
-            silent:
-              true,
-          }
-        );
-      } catch (
-        error
-      ) {
+        await fetchBottlesWithSales({
+          silent: true,
+        });
+      } catch (error) {
         setEditError(
           error.response
-            ?.data
-            ?.message ||
+            ?.data?.message ||
             'Update failed'
         );
       } finally {
-        setEditSubmitting(
-          false
-        );
+        setEditSubmitting(false);
       }
     };
 
   /* ========================================
-     DELETE BOTTLE
+     DELETE
   ======================================== */
 
   const handleDeleteConfirm =
@@ -1062,9 +883,7 @@ const Bottles = () => {
         return;
       }
 
-      setDeleting(
-        true
-      );
+      setDeleting(true);
 
       try {
         await API.delete(
@@ -1079,25 +898,17 @@ const Bottles = () => {
           null
         );
 
-        await fetchBottlesWithSales(
-          {
-            silent:
-              true,
-          }
-        );
-      } catch (
-        error
-      ) {
+        await fetchBottlesWithSales({
+          silent: true,
+        });
+      } catch (error) {
         toast.error(
           error.response
-            ?.data
-            ?.message ||
+            ?.data?.message ||
             'Delete failed'
         );
       } finally {
-        setDeleting(
-          false
-        );
+        setDeleting(false);
       }
     };
 
@@ -1106,30 +917,19 @@ const Bottles = () => {
   ======================================== */
 
   const handlePurchaseClick =
-    (
-      bottle
-    ) => {
+    (bottle) => {
       setPurchaseBottle(
         bottle
       );
 
       setPurchaseData({
-        quantity:
-          '',
-
-        costPerUnit:
-          '',
-
-        supplier:
-          '',
-
-        invoiceNo:
-          '',
+        quantity: '',
+        costPerUnit: '',
+        supplier: '',
+        invoiceNo: '',
       });
 
-      setPurchaseError(
-        ''
-      );
+      setPurchaseError('');
     };
 
   const handlePurchaseSubmit =
@@ -1138,9 +938,7 @@ const Bottles = () => {
     ) => {
       event.preventDefault();
 
-      if (
-        !purchaseBottle
-      ) {
+      if (!purchaseBottle) {
         return;
       }
 
@@ -1171,8 +969,7 @@ const Bottles = () => {
         !Number.isFinite(
           costPerUnit
         ) ||
-        costPerUnit <
-          0
+        costPerUnit < 0
       ) {
         setPurchaseError(
           'Cost per unit cannot be negative.'
@@ -1181,13 +978,8 @@ const Bottles = () => {
         return;
       }
 
-      setPurchasing(
-        true
-      );
-
-      setPurchaseError(
-        ''
-      );
+      setPurchasing(true);
+      setPurchaseError('');
 
       try {
         await API.post(
@@ -1217,25 +1009,17 @@ const Bottles = () => {
           null
         );
 
-        await fetchBottlesWithSales(
-          {
-            silent:
-              true,
-          }
-        );
-      } catch (
-        error
-      ) {
+        await fetchBottlesWithSales({
+          silent: true,
+        });
+      } catch (error) {
         setPurchaseError(
           error.response
-            ?.data
-            ?.message ||
+            ?.data?.message ||
             'Purchase failed'
         );
       } finally {
-        setPurchasing(
-          false
-        );
+        setPurchasing(false);
       }
     };
 
@@ -1252,9 +1036,7 @@ const Bottles = () => {
         return;
       }
 
-      setStockingOut(
-        true
-      );
+      setStockingOut(true);
 
       try {
         await API.post(
@@ -1271,25 +1053,17 @@ const Bottles = () => {
           null
         );
 
-        await fetchBottlesWithSales(
-          {
-            silent:
-              true,
-          }
-        );
-      } catch (
-        error
-      ) {
+        await fetchBottlesWithSales({
+          silent: true,
+        });
+      } catch (error) {
         toast.error(
           error.response
-            ?.data
-            ?.message ||
+            ?.data?.message ||
             'Stock-out failed'
         );
       } finally {
-        setStockingOut(
-          false
-        );
+        setStockingOut(false);
       }
     };
 
@@ -1298,24 +1072,17 @@ const Bottles = () => {
   ======================================== */
 
   const handleWasteClick =
-    (
-      bottle
-    ) => {
+    (bottle) => {
       setWasteBottleTarget(
         bottle
       );
 
       setWasteData({
-        quantity:
-          '',
-
-        notes:
-          '',
+        quantity: '',
+        notes: '',
       });
 
-      setWasteError(
-        ''
-      );
+      setWasteError('');
     };
 
   const handleWasteSubmit =
@@ -1324,9 +1091,7 @@ const Bottles = () => {
     ) => {
       event.preventDefault();
 
-      if (
-        !wasteBottleTarget
-      ) {
+      if (!wasteBottleTarget) {
         return;
       }
 
@@ -1358,19 +1123,14 @@ const Bottles = () => {
         available
       ) {
         setWasteError(
-          `Only ${available} bottle(s) are currently available.`
+          `Only ${available} bottle(s) are available.`
         );
 
         return;
       }
 
-      setWasting(
-        true
-      );
-
-      setWasteError(
-        ''
-      );
+      setWasting(true);
+      setWasteError('');
 
       try {
         await API.post(
@@ -1393,50 +1153,35 @@ const Bottles = () => {
           null
         );
 
-        await fetchBottlesWithSales(
-          {
-            silent:
-              true,
-          }
-        );
-      } catch (
-        error
-      ) {
+        await fetchBottlesWithSales({
+          silent: true,
+        });
+      } catch (error) {
         setWasteError(
           error.response
-            ?.data
-            ?.message ||
+            ?.data?.message ||
             'Waste failed'
         );
       } finally {
-        setWasting(
-          false
-        );
+        setWasting(false);
       }
     };
 
   /* ========================================
-     BULK UPLOAD
+     FILE
   ======================================== */
 
   const handleFileChange =
-    (
-      event
-    ) => {
+    (event) => {
       const selected =
         event.target
           .files?.[0] ||
         null;
 
-      setUploadResult(
-        null
-      );
+      setUploadResult(null);
 
       if (!selected) {
-        setFile(
-          null
-        );
-
+        setFile(null);
         return;
       }
 
@@ -1444,19 +1189,14 @@ const Bottles = () => {
         selected.size >
         MAX_UPLOAD_BYTES
       ) {
-        setFile(
-          null
-        );
+        setFile(null);
 
-        setUploadResult(
-          {
-            success:
-              false,
+        setUploadResult({
+          success: false,
 
-            message:
-              'File is too large. Maximum upload size is 5 MB.',
-          }
-        );
+          message:
+            'File is too large. Maximum upload size is 5 MB.',
+        });
 
         event.target.value =
           '';
@@ -1464,9 +1204,7 @@ const Bottles = () => {
         return;
       }
 
-      setFile(
-        selected
-      );
+      setFile(selected);
     };
 
   const handleUploadSubmit =
@@ -1482,13 +1220,8 @@ const Bottles = () => {
         return;
       }
 
-      setUploading(
-        true
-      );
-
-      setUploadResult(
-        null
-      );
+      setUploading(true);
+      setUploadResult(null);
 
       try {
         const rows =
@@ -1496,57 +1229,47 @@ const Bottles = () => {
             file
           );
 
-        if (
-          !rows.length
-        ) {
+        if (!rows.length) {
           throw new Error(
             'The spreadsheet does not contain any data rows.'
           );
         }
 
-        const findColumn =
-          (
-            row,
+        const findColumn = (
+          row,
+          names
+        ) => {
+          const keys =
+            Object.keys(row);
+
+          for (
+            const name of
             names
-          ) => {
-            const keys =
-              Object.keys(
-                row
+          ) {
+            const normalizedName =
+              name.toLowerCase();
+
+            const found =
+              keys.find(
+                (key) =>
+                  key
+                    .trim()
+                    .toLowerCase()
+                    .includes(
+                      normalizedName
+                    )
               );
 
-            for (
-              const name of
-              names
-            ) {
-              const normalizedName =
-                name.toLowerCase();
-
-              const found =
-                keys.find(
-                  (
-                    key
-                  ) =>
-                    key
-                      .trim()
-                      .toLowerCase()
-                      .includes(
-                        normalizedName
-                      )
-                );
-
-              if (
-                found
-              ) {
-                return found;
-              }
+            if (found) {
+              return found;
             }
+          }
 
-            return null;
-          };
+          return null;
+        };
 
         const firstRow =
-          rows[0] ||
-          {};
+          rows[0] || {};
 
         const sizeCol =
           findColumn(
@@ -1588,27 +1311,16 @@ const Bottles = () => {
             ]
           );
 
-        if (
-          !sizeCol
-        ) {
+        if (!sizeCol) {
           throw new Error(
-            `Could not find a bottle size column. Found: ${
-              Object.keys(
-                firstRow
-              ).join(
-                ', '
-              ) ||
-              'none'
-            }.`
+            'Could not find bottle size column.'
           );
         }
 
         const items =
           rows
             .map(
-              (
-                row
-              ) => {
+              (row) => {
                 const sizeRaw =
                   String(
                     row[
@@ -1653,13 +1365,6 @@ const Bottles = () => {
                 ) {
                   type =
                     'roll-on';
-                } else if (
-                  typeRaw.includes(
-                    'spray'
-                  )
-                ) {
-                  type =
-                    'spray';
                 }
 
                 const currentStock =
@@ -1688,37 +1393,24 @@ const Bottles = () => {
 
                 return {
                   sizeMl,
-
                   type,
-
                   currentStock,
-
                   avgCostPerUnit,
                 };
               }
             )
             .filter(
-              (
-                item
-              ) =>
+              (item) =>
                 Number.isFinite(
                   item.sizeMl
                 ) &&
                 item.sizeMl >
-                  0 &&
-                [
-                  'spray',
-                  'roll-on',
-                ].includes(
-                  item.type
-                )
+                  0
             );
 
-        if (
-          !items.length
-        ) {
+        if (!items.length) {
           throw new Error(
-            'No valid bottle rows were found in the spreadsheet.'
+            'No valid bottle rows found.'
           );
         }
 
@@ -1730,69 +1422,50 @@ const Bottles = () => {
             }
           );
 
-        setUploadResult(
-          {
-            success:
-              true,
+        setUploadResult({
+          success: true,
+          data:
+            response.data,
+        });
 
-            data:
-              response.data,
-          }
-        );
-
-        setFile(
-          null
-        );
+        setFile(null);
 
         toast.success(
-          'Bottles uploaded successfully'
+          'Bottles uploaded'
         );
 
-        await fetchBottlesWithSales(
-          {
-            silent:
-              true,
-          }
-        );
-      } catch (
-        error
-      ) {
-        setUploadResult(
-          {
-            success:
-              false,
+        await fetchBottlesWithSales({
+          silent: true,
+        });
+      } catch (error) {
+        setUploadResult({
+          success: false,
 
-            message:
-              error.response
-                ?.data
-                ?.message ||
-              error.message ||
-              'Upload failed',
-          }
-        );
+          message:
+            error.response
+              ?.data?.message ||
+            error.message ||
+            'Upload failed',
+        });
       } finally {
-        setUploading(
-          false
-        );
+        setUploading(false);
       }
     };
 
   /* ========================================
-     ACTION BUTTONS
+     ACTIONS
   ======================================== */
 
   const renderActions =
-    (
-      bottle
-    ) => {
+    (bottle) => {
       const available =
         number(
           bottle.currentStock
         );
 
-      const stockOutDisabled =
+      const isStockOut =
         bottle.isStockOut ||
-        stockingOut;
+        available <= 0;
 
       return (
         <div className="flex flex-wrap items-center gap-1">
@@ -1806,7 +1479,7 @@ const Bottles = () => {
             className="rounded-lg p-2 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
             title="Record purchase"
           >
-            <DollarSign
+            <CircleDollarSign
               size={
                 18
               }
@@ -1821,11 +1494,10 @@ const Bottles = () => {
               )
             }
             disabled={
-              available <=
-              0
+              available <= 0
             }
             className="rounded-lg p-2 text-orange-600 hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-orange-950/30"
-            title="Record partial wastage"
+            title="Record wastage"
           >
             <PackageX
               size={
@@ -1859,13 +1531,13 @@ const Bottles = () => {
               )
             }
             disabled={
-              stockOutDisabled
+              isStockOut
             }
             className="rounded-lg p-2 text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-red-950/30"
             title={
-              bottle.isStockOut
+              isStockOut
                 ? 'Already stock out'
-                : 'Stock out all remaining'
+                : 'Stock out'
             }
           >
             <XCircle
@@ -1896,11 +1568,12 @@ const Bottles = () => {
     };
 
   /* ========================================
-     RENDER
+     UI
   ======================================== */
 
   return (
     <div className="space-y-6 text-gray-900 dark:text-gray-100">
+
       {/* HEADER */}
 
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
@@ -1910,10 +1583,9 @@ const Bottles = () => {
           </h1>
 
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Track bottles purchased,
-            used with perfume,
-            sold separately,
-            wasted and currently available.
+            Track purchased bottles,
+            perfume usage, direct bottle
+            sales, wastage and stock.
           </p>
         </div>
 
@@ -1945,6 +1617,28 @@ const Bottles = () => {
           <button
             type="button"
             onClick={() => {
+              setModalError(
+                ''
+              );
+
+              setShowAddModal(
+                true
+              );
+            }}
+            className="inline-flex items-center gap-2 rounded-xl bg-brand-primary px-3 py-2 text-sm font-semibold text-white hover:brightness-95"
+          >
+            <Plus
+              size={
+                17
+              }
+            />
+
+            Add Bottle
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
               setUploadResult(
                 null
               );
@@ -1957,7 +1651,7 @@ const Bottles = () => {
                 true
               );
             }}
-            className="inline-flex items-center gap-2 rounded-xl border border-gray-300 px-3 py-2 text-sm font-medium hover:bg-gray-50 dark:border-slate-600 dark:hover:bg-slate-800"
+            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
           >
             <Upload
               size={
@@ -1965,130 +1659,128 @@ const Bottles = () => {
               }
             />
 
-            Upload
+            Upload Sheet
           </button>
+        </div>
+      </div>
 
-          <button
-            type="button"
-            onClick={() => {
-              setModalError(
-                ''
-              );
+      {/* SUMMARY — SAME STYLE AS MATERIALS */}
 
-              setShowAddModal(
-                true
-              );
-            }}
-            className="inline-flex items-center gap-2 rounded-xl bg-brand-primary px-3 py-2 text-sm font-semibold text-white"
-          >
-            <Plus
-              size={
-                17
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+        {[
+          {
+            label:
+              'Used for perfume',
+
+            value:
+              `${inventorySummary.usedForPerfume} pcs`,
+
+            icon:
+              <PackageMinus
+                size={
+                  16
+                }
+              />,
+          },
+
+          {
+            label:
+              'Bottle sales',
+
+            value:
+              `${inventorySummary.bottleSales} pcs`,
+
+            icon:
+              <CircleDollarSign
+                size={
+                  16
+                }
+              />,
+          },
+
+          {
+            label:
+              'Wasted',
+
+            value:
+              `${inventorySummary.wasted} pcs`,
+
+            icon:
+              <PackageX
+                size={
+                  16
+                }
+              />,
+          },
+
+          {
+            label:
+              'Available stock',
+
+            value:
+              `${inventorySummary.available} pcs`,
+
+            icon:
+              <PackageCheck
+                size={
+                  16
+                }
+              />,
+          },
+
+          {
+            label:
+              'Inventory value',
+
+            value:
+              money(
+                inventorySummary.value
+              ),
+
+            icon:
+              <Package
+                size={
+                  16
+                }
+              />,
+          },
+        ].map(
+          (card) => (
+            <div
+              key={
+                card.label
               }
-            />
+              className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900"
+            >
+              <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                {
+                  card.icon
+                }
 
-            Add Bottle
-          </button>
-        </div>
+                {
+                  card.label
+                }
+              </div>
+
+              <p className="mt-2 text-xl font-bold">
+                {
+                  card.value
+                }
+              </p>
+            </div>
+          )
+        )}
       </div>
 
-      {/* SUMMARY */}
+      {/* FILTERS — SAME STYLE AS MATERIALS */}
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-7">
-        <div className="rounded-2xl border bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
-          <p className="text-xs text-gray-500">
-            Purchased
-          </p>
-
-          <p className="mt-1 text-xl font-bold">
-            {
-              totals.purchased
-            }
-          </p>
-        </div>
-
-        <div className="rounded-2xl border bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
-          <p className="text-xs text-gray-500">
-            Used for Perfume
-          </p>
-
-          <p className="mt-1 text-xl font-bold text-blue-600">
-            {
-              totals.usedForPerfume
-            }
-          </p>
-        </div>
-
-        <div className="rounded-2xl border bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
-          <p className="text-xs text-gray-500">
-            Bottle Sales
-          </p>
-
-          <p className="mt-1 text-xl font-bold text-purple-600">
-            {
-              totals.bottleSales
-            }
-          </p>
-        </div>
-
-        <div className="rounded-2xl border bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
-          <p className="text-xs text-gray-500">
-            Bottle Revenue
-          </p>
-
-          <p className="mt-1 text-xl font-bold text-emerald-600">
-            {money(
-              totals.bottleSalesRevenue
-            )}
-          </p>
-        </div>
-
-        <div className="rounded-2xl border bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
-          <p className="text-xs text-gray-500">
-            Wasted
-          </p>
-
-          <p className="mt-1 text-xl font-bold text-orange-600">
-            {
-              totals.wasted
-            }
-          </p>
-        </div>
-
-        <div className="rounded-2xl border bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
-          <p className="text-xs text-gray-500">
-            Available
-          </p>
-
-          <p className="mt-1 text-xl font-bold text-emerald-600">
-            {
-              totals.available
-            }
-          </p>
-        </div>
-
-        <div className="rounded-2xl border bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
-          <p className="text-xs text-gray-500">
-            Stock Value
-          </p>
-
-          <p className="mt-1 text-xl font-bold">
-            {money(
-              totals.value
-            )}
-          </p>
-        </div>
-      </div>
-
-      {/* FILTERS */}
-
-      <div className="grid gap-3 rounded-2xl border bg-white p-4 dark:border-slate-700 dark:bg-slate-900 md:grid-cols-3">
-        <div className="relative">
+      <div className="grid gap-3 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900 md:grid-cols-[1fr_auto_auto]">
+        <label className="relative">
           <Search
             size={
-              17
+              18
             }
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
           />
 
           <input
@@ -2103,10 +1795,10 @@ const Bottles = () => {
                   .value
               )
             }
-            placeholder="Search size or type..."
+            placeholder="Search bottle size or type..."
             className={`${fieldClass} pl-10`}
           />
-        </div>
+        </label>
 
         <select
           value={
@@ -2162,19 +1854,19 @@ const Bottles = () => {
           </option>
 
           <option value="low">
-            Low Stock
+            Low
           </option>
 
           <option value="out">
-            Stock Out
+            Stock out
           </option>
         </select>
       </div>
 
-      {/* TABLE */}
+      {/* DATA */}
 
       {loading ? (
-        <div className="flex min-h-[250px] items-center justify-center">
+        <div className="flex min-h-[260px] items-center justify-center">
           <RefreshCw
             size={
               30
@@ -2182,14 +1874,199 @@ const Bottles = () => {
             className="animate-spin text-brand-primary"
           />
         </div>
+      ) : filteredBottles.length ===
+        0 ? (
+        <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center text-gray-500 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-gray-400">
+          No bottles found.
+        </div>
       ) : (
-        <div className="overflow-hidden rounded-2xl border bg-white dark:border-slate-700 dark:bg-slate-900">
-          <div className="overflow-x-auto">
-            <table className="min-w-[1250px] w-full">
-              <thead className="bg-gray-50 text-xs uppercase text-gray-500 dark:bg-slate-800">
+        <>
+          {/* MOBILE CARDS — SAME AS MATERIALS */}
+
+          <div className="grid gap-3 md:hidden">
+            {filteredBottles.map(
+              (
+                bottle
+              ) => {
+                const stock =
+                  number(
+                    bottle.currentStock
+                  );
+
+                const stockValue =
+                  stock *
+                  number(
+                    bottle.avgCostPerUnit
+                  );
+
+                const isOut =
+                  bottle.isStockOut ||
+                  stock <= 0;
+
+                return (
+                  <article
+                    key={
+                      bottle._id
+                    }
+                    className={`rounded-2xl border bg-white p-4 shadow-sm dark:bg-slate-900 ${
+                      isOut
+                        ? 'border-red-200 dark:border-red-900'
+                        : 'border-gray-200 dark:border-slate-700'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="font-semibold">
+                          {number(
+                            bottle.sizeMl
+                          )}{' '}
+                          ml
+                        </h3>
+
+                        <p className="mt-0.5 text-xs capitalize text-gray-500 dark:text-gray-400">
+                          {bottle.type ===
+                          'roll-on'
+                            ? 'Roll-on / Oil'
+                            : 'Spray'}
+                        </p>
+                      </div>
+
+                      <span
+                        className={`rounded-full px-2 py-1 text-xs font-semibold ${
+                          isOut
+                            ? 'bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-300'
+                            : stock <
+                                LOW_STOCK_LIMIT
+                              ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300'
+                              : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
+                        }`}
+                      >
+                        {isOut
+                          ? 'Stock out'
+                          : stock <
+                              LOW_STOCK_LIMIT
+                            ? 'Low'
+                            : 'OK'}
+                      </span>
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <p className="text-gray-500 dark:text-gray-400">
+                          Purchased
+                        </p>
+
+                        <p className="font-semibold">
+                          {number(
+                            bottle.totalPurchased
+                          )}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-gray-500 dark:text-gray-400">
+                          Available
+                        </p>
+
+                        <p className="font-semibold">
+                          {
+                            stock
+                          }
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-gray-500 dark:text-gray-400">
+                          Used for perfume
+                        </p>
+
+                        <p>
+                          {number(
+                            bottle.usedForPerfume
+                          )}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-gray-500 dark:text-gray-400">
+                          Bottle sales
+                        </p>
+
+                        <p>
+                          {number(
+                            bottle.bottleSales
+                          )}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-gray-500 dark:text-gray-400">
+                          Wasted
+                        </p>
+
+                        <p className="text-red-600">
+                          {number(
+                            bottle.wasted
+                          )}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-gray-500 dark:text-gray-400">
+                          Stock value
+                        </p>
+
+                        <p className="font-semibold">
+                          {money(
+                            stockValue
+                          )}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-gray-500 dark:text-gray-400">
+                          Unit cost
+                        </p>
+
+                        <p>
+                          {money(
+                            bottle.avgCostPerUnit
+                          )}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-gray-500 dark:text-gray-400">
+                          Bottle revenue
+                        </p>
+
+                        <p className="font-semibold text-emerald-600">
+                          {money(
+                            bottle.bottleSalesRevenue
+                          )}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 border-t border-gray-100 pt-2 dark:border-slate-800">
+                      {renderActions(
+                        bottle
+                      )}
+                    </div>
+                  </article>
+                );
+              }
+            )}
+          </div>
+
+          {/* DESKTOP TABLE — SAME STYLE AS MATERIALS */}
+
+          <div className="hidden overflow-x-auto rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900 md:block">
+            <table className="min-w-full text-sm">
+              <thead className="bg-gray-50 text-xs uppercase text-gray-500 dark:bg-slate-800 dark:text-gray-400">
                 <tr>
                   <th className="px-4 py-3 text-left">
-                    Size
+                    Bottle
                   </th>
 
                   <th className="px-4 py-3 text-left">
@@ -2201,11 +2078,11 @@ const Bottles = () => {
                   </th>
 
                   <th className="px-4 py-3 text-right">
-                    Used for Perfume
+                    Used
                   </th>
 
                   <th className="px-4 py-3 text-right">
-                    Bottle Sales
+                    Bottle sales
                   </th>
 
                   <th className="px-4 py-3 text-right">
@@ -2213,19 +2090,19 @@ const Bottles = () => {
                   </th>
 
                   <th className="px-4 py-3 text-right">
-                    Available
+                    Stock
                   </th>
 
                   <th className="px-4 py-3 text-right">
-                    Unit Cost
+                    Per unit
                   </th>
 
                   <th className="px-4 py-3 text-right">
-                    Stock Value
+                    Stock value
                   </th>
 
                   <th className="px-4 py-3 text-right">
-                    Bottle Revenue
+                    Revenue
                   </th>
 
                   <th className="px-4 py-3 text-center">
@@ -2239,275 +2116,136 @@ const Bottles = () => {
               </thead>
 
               <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
-                {filteredBottles.length ===
-                0 ? (
-                  <tr>
-                    <td
-                      colSpan={
-                        12
-                      }
-                      className="px-4 py-10 text-center text-gray-400"
-                    >
-                      No bottles
-                      found
-                    </td>
-                  </tr>
-                ) : (
-                  filteredBottles.map(
-                    (
-                      bottle
-                    ) => {
-                      const purchased =
-                        number(
-                          bottle.totalPurchased
-                        );
+                {filteredBottles.map(
+                  (
+                    bottle
+                  ) => {
+                    const stock =
+                      number(
+                        bottle.currentStock
+                      );
 
-                      const produced =
-                        number(
-                          bottle.produced
-                        );
+                    const perUnit =
+                      number(
+                        bottle.avgCostPerUnit
+                      );
 
-                      const usedForPerfume =
-                        number(
-                          bottle.usedForPerfume
-                        );
+                    const isOut =
+                      bottle.isStockOut ||
+                      stock <= 0;
 
-                      const bottleSales =
-                        number(
-                          bottle.bottleSales
-                        );
-
-                      const wasted =
-                        number(
-                          bottle.wasted
-                        );
-
-                      const available =
-                        number(
-                          bottle.currentStock
-                        );
-
-                      const expected =
-                        purchased -
-                        usedForPerfume -
-                        bottleSales -
-                        wasted;
-
-                      /*
-                        If your totalPurchased includes
-                        production additions, this formula
-                        is correct.
-
-                        Backend rebuild currently sets:
-                        totalPurchased =
-                        purchases + production.
-                      */
-
-                      const mismatch =
-                        Math.abs(
-                          available -
-                            expected
-                        ) >
-                        0.001;
-
-                      const stockValue =
-                        available *
-                        number(
-                          bottle.avgCostPerUnit
-                        );
-
-                      return (
-                        <tr
-                          key={
-                            bottle._id
-                          }
-                          className="hover:bg-gray-50/70 dark:hover:bg-slate-800/60"
-                        >
-                          <td className="px-4 py-3 font-semibold">
+                    return (
+                      <tr
+                        key={
+                          bottle._id
+                        }
+                        className={`${
+                          isOut
+                            ? 'bg-red-50/30 dark:bg-red-950/10'
+                            : ''
+                        } hover:bg-gray-50/70 dark:hover:bg-slate-800/60`}
+                      >
+                        <td className="px-4 py-3">
+                          <div className="font-medium">
                             {number(
                               bottle.sizeMl
                             )}{' '}
                             ml
-                          </td>
+                          </div>
+                        </td>
 
-                          <td className="px-4 py-3 capitalize">
-                            {bottle.type ===
-                            'roll-on'
-                              ? 'Roll-on / Oil'
-                              : 'Spray'}
-                          </td>
+                        <td className="px-4 py-3 capitalize">
+                          {bottle.type ===
+                          'roll-on'
+                            ? 'Roll-on / Oil'
+                            : 'Spray'}
+                        </td>
 
-                          <td className="px-4 py-3 text-right">
-                            {
-                              purchased
-                            }
+                        <td className="px-4 py-3 text-right">
+                          {number(
+                            bottle.totalPurchased
+                          )}
+                        </td>
 
-                            {produced >
-                              0 && (
-                              <span
-                                className="ml-1 text-xs text-gray-400"
-                                title={`${produced} added through production`}
-                              >
-                                *
-                              </span>
-                            )}
-                          </td>
+                        <td className="px-4 py-3 text-right text-amber-600">
+                          {number(
+                            bottle.usedForPerfume
+                          )}
+                        </td>
 
-                          <td className="px-4 py-3 text-right font-medium text-blue-600">
-                            {
-                              usedForPerfume
-                            }
-                          </td>
+                        <td className="px-4 py-3 text-right text-purple-600">
+                          {number(
+                            bottle.bottleSales
+                          )}
+                        </td>
 
-                          <td className="px-4 py-3 text-right font-medium text-purple-600">
-                            {
-                              bottleSales
-                            }
-                          </td>
+                        <td className="px-4 py-3 text-right text-red-600">
+                          {number(
+                            bottle.wasted
+                          )}
+                        </td>
 
-                          <td className="px-4 py-3 text-right text-orange-600">
-                            {
-                              wasted
-                            }
-                          </td>
+                        <td className="px-4 py-3 text-right font-semibold">
+                          {
+                            stock
+                          }
+                        </td>
 
-                          <td className="px-4 py-3 text-right font-bold">
-                            {
-                              available
-                            }
+                        <td className="px-4 py-3 text-right">
+                          {money(
+                            perUnit
+                          )}
+                        </td>
 
-                            {mismatch && (
-                              <span
-                                className="ml-1 cursor-help text-amber-500"
-                                title={`Mismatch: ${purchased} - ${usedForPerfume} - ${bottleSales} - ${wasted} = ${expected}, actual = ${available}`}
-                              >
-                                ⚠️
-                              </span>
-                            )}
-                          </td>
+                        <td className="px-4 py-3 text-right font-semibold">
+                          {money(
+                            stock *
+                              perUnit
+                          )}
+                        </td>
 
-                          <td className="px-4 py-3 text-right">
-                            {money(
-                              bottle.avgCostPerUnit
-                            )}
-                          </td>
+                        <td className="px-4 py-3 text-right text-emerald-600">
+                          {money(
+                            bottle.bottleSalesRevenue
+                          )}
+                        </td>
 
-                          <td className="px-4 py-3 text-right font-semibold">
-                            {money(
-                              stockValue
-                            )}
-                          </td>
-
-                          <td className="px-4 py-3 text-right font-semibold text-emerald-600">
-                            {money(
-                              bottle.bottleSalesRevenue
-                            )}
-                          </td>
-
-                          <td className="px-4 py-3 text-center">
-                            <span
-                              className={`rounded-full px-2 py-1 text-xs font-semibold ${
-                                bottle.isStockOut ||
-                                available <=
-                                  0
-                                  ? 'bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-300'
-                                  : available <
-                                      LOW_STOCK_LIMIT
-                                    ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300'
-                                    : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
-                              }`}
-                            >
-                              {bottle.isStockOut ||
-                              available <=
-                                0
-                                ? 'Stock out'
-                                : available <
+                        <td className="px-4 py-3 text-center">
+                          <span
+                            className={`rounded-full px-2 py-1 text-xs font-semibold ${
+                              isOut
+                                ? 'bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-300'
+                                : stock <
                                     LOW_STOCK_LIMIT
-                                  ? 'Low'
-                                  : 'OK'}
-                            </span>
-                          </td>
+                                  ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300'
+                                  : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
+                            }`}
+                          >
+                            {isOut
+                              ? 'Stock out'
+                              : stock <
+                                  LOW_STOCK_LIMIT
+                                ? 'Low'
+                                : 'OK'}
+                          </span>
+                        </td>
 
-                          <td className="px-4 py-3">
-                            {renderActions(
-                              bottle
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    }
-                  )
+                        <td className="px-4 py-3">
+                          {renderActions(
+                            bottle
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  }
                 )}
               </tbody>
-
-              <tfoot className="bg-gray-50 font-semibold dark:bg-slate-800">
-                <tr>
-                  <td
-                    colSpan={
-                      2
-                    }
-                    className="px-4 py-3 text-right"
-                  >
-                    All Inventory
-                  </td>
-
-                  <td className="px-4 py-3 text-right">
-                    {
-                      totals.purchased
-                    }
-                  </td>
-
-                  <td className="px-4 py-3 text-right text-blue-600">
-                    {
-                      totals.usedForPerfume
-                    }
-                  </td>
-
-                  <td className="px-4 py-3 text-right text-purple-600">
-                    {
-                      totals.bottleSales
-                    }
-                  </td>
-
-                  <td className="px-4 py-3 text-right text-orange-600">
-                    {
-                      totals.wasted
-                    }
-                  </td>
-
-                  <td className="px-4 py-3 text-right">
-                    {
-                      totals.available
-                    }
-                  </td>
-
-                  <td />
-
-                  <td className="px-4 py-3 text-right">
-                    {money(
-                      totals.value
-                    )}
-                  </td>
-
-                  <td className="px-4 py-3 text-right text-emerald-600">
-                    {money(
-                      totals.bottleSalesRevenue
-                    )}
-                  </td>
-
-                  <td
-                    colSpan={
-                      2
-                    }
-                  />
-                </tr>
-              </tfoot>
             </table>
           </div>
-        </div>
+        </>
       )}
 
-      {/* ADD */}
+      {/* ADD MODAL */}
 
       {showAddModal && (
         <Modal
@@ -2519,7 +2257,7 @@ const Bottles = () => {
           }
         >
           <h2 className="pr-10 text-xl font-bold">
-            Add Bottle Type
+            Add Bottle
           </h2>
 
           <form
@@ -2625,8 +2363,7 @@ const Bottles = () => {
             </label>
 
             <label className="block text-sm font-medium">
-              Per-unit cost
-              (৳)
+              Per-unit cost (৳)
 
               <input
                 type="number"
@@ -2678,7 +2415,7 @@ const Bottles = () => {
         </Modal>
       )}
 
-      {/* EDIT */}
+      {/* EDIT MODAL */}
 
       {editingBottle && (
         <Modal
@@ -2793,16 +2530,10 @@ const Bottles = () => {
                 }
                 className={`${fieldClass} mt-1`}
               />
-
-              <span className="mt-1 block text-xs text-gray-500 dark:text-gray-400">
-                Manual stock
-                override.
-              </span>
             </label>
 
             <label className="block text-sm font-medium">
-              Per-unit cost
-              (৳)
+              Per-unit cost (৳)
 
               <input
                 type="number"
@@ -2846,11 +2577,10 @@ const Bottles = () => {
 
               <div>
                 <span className="text-gray-500">
-                  Used for
-                  Perfume
+                  Used
                 </span>
 
-                <p className="font-semibold text-blue-600">
+                <p className="font-semibold">
                   {number(
                     editingBottle.usedForPerfume
                   )}
@@ -2859,10 +2589,10 @@ const Bottles = () => {
 
               <div>
                 <span className="text-gray-500">
-                  Bottle Sales
+                  Bottle sales
                 </span>
 
-                <p className="font-semibold text-purple-600">
+                <p className="font-semibold">
                   {number(
                     editingBottle.bottleSales
                   )}
@@ -2874,33 +2604,9 @@ const Bottles = () => {
                   Wasted
                 </span>
 
-                <p className="font-semibold text-orange-600">
-                  {number(
-                    editingBottle.wasted
-                  )}
-                </p>
-              </div>
-
-              <div>
-                <span className="text-gray-500">
-                  Current
-                </span>
-
                 <p className="font-semibold">
                   {number(
-                    editingBottle.currentStock
-                  )}
-                </p>
-              </div>
-
-              <div>
-                <span className="text-gray-500">
-                  Bottle Revenue
-                </span>
-
-                <p className="font-semibold text-emerald-600">
-                  {money(
-                    editingBottle.bottleSalesRevenue
+                    editingBottle.wasted
                   )}
                 </p>
               </div>
@@ -2929,370 +2635,7 @@ const Bottles = () => {
         </Modal>
       )}
 
-      {/* DELETE */}
-
-      {deleteTarget && (
-        <Modal
-          onClose={() =>
-            !deleting &&
-            setDeleteTarget(
-              null
-            )
-          }
-        >
-          <h3 className="pr-10 text-xl font-bold">
-            Delete Bottle?
-          </h3>
-
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-            Delete{' '}
-            <strong>
-              {bottleLabel(
-                deleteTarget
-              )}
-            </strong>
-            ? This action
-            cannot be undone.
-          </p>
-
-          <div className="mt-6 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() =>
-                setDeleteTarget(
-                  null
-                )
-              }
-              disabled={
-                deleting
-              }
-              className="rounded-xl border border-gray-300 px-4 py-2 dark:border-slate-600"
-            >
-              Cancel
-            </button>
-
-            <button
-              type="button"
-              onClick={
-                handleDeleteConfirm
-              }
-              disabled={
-                deleting
-              }
-              className="rounded-xl bg-red-600 px-4 py-2 font-semibold text-white disabled:opacity-50"
-            >
-              {deleting
-                ? 'Deleting...'
-                : 'Delete'}
-            </button>
-          </div>
-        </Modal>
-      )}
-
-      {/* STOCK OUT */}
-
-      {stockOutBottle && (
-        <Modal
-          onClose={() =>
-            !stockingOut &&
-            setStockOutBottle(
-              null
-            )
-          }
-        >
-          <h3 className="pr-10 text-xl font-bold">
-            Stock Out
-            Bottle
-          </h3>
-
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-            Mark{' '}
-            <strong>
-              {bottleLabel(
-                stockOutBottle
-              )}
-            </strong>{' '}
-            as stock out?
-          </p>
-
-          {number(
-            stockOutBottle.currentStock
-          ) >
-            0 && (
-            <div className="mt-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-700 dark:bg-amber-950/30 dark:text-amber-300">
-              Remaining{' '}
-              <strong>
-                {number(
-                  stockOutBottle.currentStock
-                )}{' '}
-                pcs
-              </strong>{' '}
-              will be
-              recorded as
-              wastage.
-            </div>
-          )}
-
-          <div className="mt-6 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() =>
-                setStockOutBottle(
-                  null
-                )
-              }
-              disabled={
-                stockingOut
-              }
-              className="rounded-xl border border-gray-300 px-4 py-2 dark:border-slate-600"
-            >
-              Cancel
-            </button>
-
-            <button
-              type="button"
-              onClick={
-                handleStockOutConfirm
-              }
-              disabled={
-                stockingOut
-              }
-              className="rounded-xl bg-red-600 px-4 py-2 font-semibold text-white disabled:opacity-50"
-            >
-              {stockingOut
-                ? 'Processing...'
-                : 'Confirm Stock Out'}
-            </button>
-          </div>
-        </Modal>
-      )}
-
-      {/* WASTAGE */}
-
-      {wasteBottleTarget && (
-        <Modal
-          onClose={() =>
-            !wasting &&
-            setWasteBottleTarget(
-              null
-            )
-          }
-        >
-          <h2 className="pr-10 text-xl font-bold">
-            Record Wastage
-          </h2>
-
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            {bottleLabel(
-              wasteBottleTarget
-            )}{' '}
-            · Available:{' '}
-            {number(
-              wasteBottleTarget.currentStock
-            )}
-          </p>
-
-          <form
-            onSubmit={
-              handleWasteSubmit
-            }
-            className="mt-5 space-y-4"
-          >
-            <label className="block text-sm font-medium">
-              Quantity
-
-              <input
-                type="number"
-                min="1"
-                max={number(
-                  wasteBottleTarget.currentStock
-                )}
-                step="1"
-                value={
-                  wasteData.quantity
-                }
-                onChange={(
-                  event
-                ) =>
-                  setWasteData(
-                    (
-                      previous
-                    ) => ({
-                      ...previous,
-
-                      quantity:
-                        event
-                          .target
-                          .value,
-                    })
-                  )
-                }
-                className={`${fieldClass} mt-1`}
-                required
-              />
-            </label>
-
-            <label className="block text-sm font-medium">
-              Notes
-
-              <input
-                value={
-                  wasteData.notes
-                }
-                onChange={(
-                  event
-                ) =>
-                  setWasteData(
-                    (
-                      previous
-                    ) => ({
-                      ...previous,
-
-                      notes:
-                        event
-                          .target
-                          .value,
-                    })
-                  )
-                }
-                placeholder="Broken, damaged during shipping..."
-                className={`${fieldClass} mt-1`}
-              />
-            </label>
-
-            {wasteError && (
-              <p className="text-sm text-red-600">
-                {
-                  wasteError
-                }
-              </p>
-            )}
-
-            <button
-              type="submit"
-              disabled={
-                wasting
-              }
-              className="w-full rounded-xl bg-orange-600 py-2.5 font-semibold text-white disabled:opacity-50"
-            >
-              {wasting
-                ? 'Recording...'
-                : 'Record Wastage'}
-            </button>
-          </form>
-        </Modal>
-      )}
-
-      {/* UPLOAD */}
-
-      {showUploadModal && (
-        <Modal
-          onClose={() => {
-            if (
-              uploading
-            ) {
-              return;
-            }
-
-            setShowUploadModal(
-              false
-            );
-
-            setUploadResult(
-              null
-            );
-
-            setFile(
-              null
-            );
-          }}
-        >
-          <h2 className="pr-10 text-xl font-bold">
-            Bulk Upload
-            Bottles
-          </h2>
-
-          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-            Required:
-            bottle size.
-            Optional: type,
-            stock and
-            per-unit cost.
-          </p>
-
-          <form
-            onSubmit={
-              handleUploadSubmit
-            }
-            className="mt-5 space-y-4"
-          >
-            <input
-              type="file"
-              accept=".csv,.xlsx,.xls"
-              onChange={
-                handleFileChange
-              }
-              disabled={
-                uploading
-              }
-              className={
-                fieldClass
-              }
-              required
-            />
-
-            {uploadResult && (
-              <div
-                className={`rounded-xl p-3 text-sm ${
-                  uploadResult.success
-                    ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300'
-                    : 'bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-300'
-                }`}
-              >
-                <div className="flex items-start gap-2">
-                  {uploadResult.success ? (
-                    <CheckCircle
-                      size={
-                        18
-                      }
-                    />
-                  ) : (
-                    <AlertCircle
-                      size={
-                        18
-                      }
-                    />
-                  )}
-
-                  <span>
-                    {uploadResult.success
-                      ? uploadResult
-                          .data
-                          ?.message ||
-                        'Upload completed successfully.'
-                      : uploadResult.message}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={
-                uploading ||
-                !file
-              }
-              className="w-full rounded-xl bg-emerald-600 py-2.5 font-semibold text-white disabled:opacity-50"
-            >
-              {uploading
-                ? 'Uploading...'
-                : 'Upload'}
-            </button>
-          </form>
-        </Modal>
-      )}
-
-      {/* PURCHASE */}
+      {/* PURCHASE MODAL */}
 
       {purchaseBottle && (
         <Modal
@@ -3351,8 +2694,7 @@ const Bottles = () => {
             </label>
 
             <label className="block text-sm font-medium">
-              Cost per unit
-              (৳)
+              Cost per unit (৳)
 
               <input
                 type="number"
@@ -3454,6 +2796,361 @@ const Bottles = () => {
               {purchasing
                 ? 'Recording...'
                 : 'Record Purchase'}
+            </button>
+          </form>
+        </Modal>
+      )}
+
+      {/* WASTE MODAL */}
+
+      {wasteBottleTarget && (
+        <Modal
+          onClose={() =>
+            !wasting &&
+            setWasteBottleTarget(
+              null
+            )
+          }
+        >
+          <h2 className="pr-10 text-xl font-bold">
+            Record Wastage
+          </h2>
+
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            {bottleLabel(
+              wasteBottleTarget
+            )}{' '}
+            · Available:{' '}
+            {number(
+              wasteBottleTarget.currentStock
+            )}
+          </p>
+
+          <form
+            onSubmit={
+              handleWasteSubmit
+            }
+            className="mt-5 space-y-4"
+          >
+            <label className="block text-sm font-medium">
+              Quantity
+
+              <input
+                type="number"
+                min="1"
+                max={number(
+                  wasteBottleTarget.currentStock
+                )}
+                step="1"
+                value={
+                  wasteData.quantity
+                }
+                onChange={(
+                  event
+                ) =>
+                  setWasteData(
+                    (
+                      previous
+                    ) => ({
+                      ...previous,
+
+                      quantity:
+                        event
+                          .target
+                          .value,
+                    })
+                  )
+                }
+                className={`${fieldClass} mt-1`}
+                required
+              />
+            </label>
+
+            <label className="block text-sm font-medium">
+              Notes
+
+              <input
+                value={
+                  wasteData.notes
+                }
+                onChange={(
+                  event
+                ) =>
+                  setWasteData(
+                    (
+                      previous
+                    ) => ({
+                      ...previous,
+
+                      notes:
+                        event
+                          .target
+                          .value,
+                    })
+                  )
+                }
+                placeholder="Broken, damaged..."
+                className={`${fieldClass} mt-1`}
+              />
+            </label>
+
+            {wasteError && (
+              <p className="text-sm text-red-600">
+                {
+                  wasteError
+                }
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={
+                wasting
+              }
+              className="w-full rounded-xl bg-orange-600 py-2.5 font-semibold text-white disabled:opacity-50"
+            >
+              {wasting
+                ? 'Recording...'
+                : 'Record Wastage'}
+            </button>
+          </form>
+        </Modal>
+      )}
+
+      {/* STOCK OUT MODAL */}
+
+      {stockOutBottle && (
+        <Modal
+          onClose={() =>
+            !stockingOut &&
+            setStockOutBottle(
+              null
+            )
+          }
+        >
+          <h3 className="pr-10 text-xl font-bold">
+            Stock Out Bottle
+          </h3>
+
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+            Mark{' '}
+            <strong>
+              {bottleLabel(
+                stockOutBottle
+              )}
+            </strong>{' '}
+            as stock out?
+          </p>
+
+          {number(
+            stockOutBottle.currentStock
+          ) >
+            0 && (
+            <div className="mt-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-700 dark:bg-amber-950/30 dark:text-amber-300">
+              Remaining{' '}
+              <strong>
+                {number(
+                  stockOutBottle.currentStock
+                )}{' '}
+                pcs
+              </strong>{' '}
+              will be recorded
+              as wastage.
+            </div>
+          )}
+
+          <div className="mt-6 flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() =>
+                setStockOutBottle(
+                  null
+                )
+              }
+              disabled={
+                stockingOut
+              }
+              className="rounded-xl border border-gray-300 px-4 py-2 dark:border-slate-600"
+            >
+              Cancel
+            </button>
+
+            <button
+              type="button"
+              onClick={
+                handleStockOutConfirm
+              }
+              disabled={
+                stockingOut
+              }
+              className="rounded-xl bg-red-600 px-4 py-2 font-semibold text-white disabled:opacity-50"
+            >
+              {stockingOut
+                ? 'Processing...'
+                : 'Confirm Stock Out'}
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      {/* DELETE MODAL */}
+
+      {deleteTarget && (
+        <Modal
+          onClose={() =>
+            !deleting &&
+            setDeleteTarget(
+              null
+            )
+          }
+        >
+          <h3 className="pr-10 text-xl font-bold">
+            Delete Bottle?
+          </h3>
+
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+            Delete{' '}
+            <strong>
+              {bottleLabel(
+                deleteTarget
+              )}
+            </strong>
+            ? This action
+            cannot be undone.
+          </p>
+
+          <div className="mt-6 flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() =>
+                setDeleteTarget(
+                  null
+                )
+              }
+              disabled={
+                deleting
+              }
+              className="rounded-xl border border-gray-300 px-4 py-2 dark:border-slate-600"
+            >
+              Cancel
+            </button>
+
+            <button
+              type="button"
+              onClick={
+                handleDeleteConfirm
+              }
+              disabled={
+                deleting
+              }
+              className="rounded-xl bg-red-600 px-4 py-2 font-semibold text-white disabled:opacity-50"
+            >
+              {deleting
+                ? 'Deleting...'
+                : 'Delete'}
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      {/* UPLOAD MODAL */}
+
+      {showUploadModal && (
+        <Modal
+          maxWidth="max-w-xl"
+          onClose={() => {
+            if (uploading) {
+              return;
+            }
+
+            setShowUploadModal(
+              false
+            );
+
+            setUploadResult(
+              null
+            );
+
+            setFile(null);
+          }}
+        >
+          <h2 className="pr-10 text-xl font-bold">
+            Bulk Import Bottles
+          </h2>
+
+          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+            Upload bottle size,
+            type, stock and
+            per-unit cost.
+          </p>
+
+          <form
+            onSubmit={
+              handleUploadSubmit
+            }
+            className="mt-5 space-y-4"
+          >
+            <input
+              type="file"
+              accept=".csv,.xlsx,.xls"
+              onChange={
+                handleFileChange
+              }
+              disabled={
+                uploading
+              }
+              className={
+                fieldClass
+              }
+              required
+            />
+
+            {uploadResult && (
+              <div
+                className={`rounded-xl p-3 text-sm ${
+                  uploadResult.success
+                    ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300'
+                    : 'bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-300'
+                }`}
+              >
+                <div className="flex items-start gap-2">
+                  {uploadResult.success ? (
+                    <CheckCircle
+                      size={
+                        18
+                      }
+                    />
+                  ) : (
+                    <AlertCircle
+                      size={
+                        18
+                      }
+                    />
+                  )}
+
+                  <span>
+                    {uploadResult.success
+                      ? uploadResult
+                          .data
+                          ?.message ||
+                        'Upload completed successfully.'
+                      : uploadResult.message}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={
+                uploading ||
+                !file
+              }
+              className="w-full rounded-xl bg-emerald-600 py-2.5 font-semibold text-white disabled:opacity-50"
+            >
+              {uploading
+                ? 'Uploading...'
+                : 'Upload'}
             </button>
           </form>
         </Modal>
