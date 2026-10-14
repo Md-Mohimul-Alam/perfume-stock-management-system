@@ -1,16 +1,30 @@
-const mongoose = require('mongoose');
+const mongoose =
+  require('mongoose');
 
-const Order = require('../models/Order');
-const Product = require('../models/Product');
-const Sale = require('../models/Sale');
+const Order =
+  require('../models/Order');
+
+const Product =
+  require('../models/Product');
+
+const Bottle =
+  require('../models/Bottle');
+
+const Sale =
+  require('../models/Sale');
 
 const {
   deductRawMaterial,
   deductBottle,
-} = require('../services/inventoryService');
+} = require(
+  '../services/inventoryService'
+);
 
-const BLEND_TOLERANCE = 0.01;
-const MAX_NUMBER_RETRIES = 3;
+const BLEND_TOLERANCE =
+  0.01;
+
+const MAX_NUMBER_RETRIES =
+  3;
 
 /* ========================================
    ERROR HELPERS
@@ -20,8 +34,13 @@ const createError = (
   message,
   statusCode = 400
 ) => {
-  const error = new Error(message);
-  error.statusCode = statusCode;
+  const error =
+    new Error(
+      message
+    );
+
+  error.statusCode =
+    statusCode;
 
   return error;
 };
@@ -36,7 +55,8 @@ const sendError = (
   );
 
   if (
-    error?.code === 11000
+    error?.code ===
+    11000
   ) {
     return res
       .status(409)
@@ -47,7 +67,8 @@ const sendError = (
   }
 
   if (
-    error?.name === 'CastError'
+    error?.name ===
+    'CastError'
   ) {
     return res
       .status(400)
@@ -67,14 +88,16 @@ const sendError = (
 
   if (
     !error?.statusCode &&
-    /not found/i.test(message)
+    /not found/i.test(
+      message
+    )
   ) {
     status = 404;
   }
 
   if (
     !error?.statusCode &&
-    /invalid|insufficient|required|must|not available|stock|blend/i.test(
+    /invalid|insufficient|required|must|not available|stock|blend|price/i.test(
       message
     )
   ) {
@@ -97,10 +120,14 @@ const toNumber = (
   label
 ) => {
   const parsed =
-    Number(value);
+    Number(
+      value
+    );
 
   if (
-    !Number.isFinite(parsed)
+    !Number.isFinite(
+      parsed
+    )
   ) {
     throw createError(
       `${label} must be a valid number`
@@ -120,7 +147,10 @@ const positiveNumber = (
       label
     );
 
-  if (parsed <= 0) {
+  if (
+    parsed <=
+    0
+  ) {
     throw createError(
       `${label} must be greater than 0`
     );
@@ -140,7 +170,9 @@ const positiveInteger = (
     );
 
   if (
-    !Number.isInteger(parsed)
+    !Number.isInteger(
+      parsed
+    )
   ) {
     throw createError(
       `${label} must be a whole number`
@@ -153,46 +185,48 @@ const positiveInteger = (
 const roundMoney = (
   value
 ) => {
-  return Math.round(
-    (Number(value) +
-      Number.EPSILON) *
-      100
-  ) / 100;
+  return (
+    Math.round(
+      (
+        Number(
+          value
+        ) +
+        Number.EPSILON
+      ) *
+        100
+    ) /
+    100
+  );
 };
 
 const getId = (
   value
 ) => {
-  return value?._id ||
+  return (
+    value?._id ||
     value ||
-    null;
+    null
+  );
+};
+
+/* ========================================
+   ITEM TYPE
+======================================== */
+
+const getItemType = (
+  item
+) => {
+  return (
+    item?.itemType ===
+    'bottle'
+      ? 'bottle'
+      : 'product'
+  );
 };
 
 /* ========================================
    SERVER PRICING CONFIG
 ======================================== */
-
-/*
-  IMPORTANT:
-
-  Never trust:
-  - unitPrice
-  - subtotal
-  - tax
-  - shipping
-  - totalAmount
-
-  sent by the public client.
-
-  Product prices come from MongoDB.
-
-  Optional server-controlled values:
-
-  ORDER_SHIPPING_FEE=0
-  ORDER_TAX_RATE=0
-
-  ORDER_TAX_RATE is percentage.
-*/
 
 const getSafeEnvNumber = (
   name,
@@ -200,12 +234,17 @@ const getSafeEnvNumber = (
 ) => {
   const value =
     Number(
-      process.env[name]
+      process.env[
+        name
+      ]
     );
 
   if (
-    !Number.isFinite(value) ||
-    value < 0
+    !Number.isFinite(
+      value
+    ) ||
+    value <
+      0
   ) {
     return fallback;
   }
@@ -238,10 +277,19 @@ const getSizeVariant = (
   product,
   sizeMl
 ) => {
-  return product.sizes?.find(
-    (size) =>
-      Number(size.sizeMl) ===
-      Number(sizeMl)
+  return (
+    product.sizes?.find(
+      (
+        size
+      ) =>
+        Number(
+          size.sizeMl
+        ) ===
+        Number(
+          sizeMl
+        )
+    ) ||
+    null
   );
 };
 
@@ -256,218 +304,254 @@ const getSizeBlend = (
     );
 
   if (
-    size?.blendComponents &&
-    size.blendComponents.length > 0
+    size
+      ?.blendComponents
+      ?.length >
+    0
   ) {
-    return size.blendComponents;
+    return (
+      size
+        .blendComponents
+    );
   }
 
   return (
-    product.blendComponents ||
+    product
+      .blendComponents ||
     []
   );
 };
 
-const getRollOnOilMlPerUnit = (
-  sizeVariant
-) => {
-  const configured =
-    Number(
-      sizeVariant?.oilMlUsed
+const getRollOnOilMlPerUnit =
+  (
+    sizeVariant
+  ) => {
+    const configured =
+      Number(
+        sizeVariant
+          ?.oilMlUsed
+      );
+
+    if (
+      Number.isFinite(
+        configured
+      ) &&
+      configured >
+        0
+    ) {
+      return configured;
+    }
+
+    return positiveNumber(
+      sizeVariant
+        ?.sizeMl,
+
+      'Roll-on size'
     );
-
-  if (
-    Number.isFinite(configured) &&
-    configured > 0
-  ) {
-    return configured;
-  }
-
-  return positiveNumber(
-    sizeVariant?.sizeMl,
-    'Roll-on size'
-  );
-};
+  };
 
 /* ========================================
    BLEND VALIDATION
 ======================================== */
 
-const assertProductHasBlend = (
-  product,
-  sizeMl
-) => {
-  if (
-    product.type ===
-    'roll-on'
-  ) {
+const assertProductHasBlend =
+  (
+    product,
+    sizeMl
+  ) => {
     if (
-      !getId(
-        product.baseOil
-      )
+      product.type ===
+      'roll-on'
+    ) {
+      if (
+        !getId(
+          product.baseOil
+        )
+      ) {
+        throw createError(
+          `Product "${product.name}" has no base oil configured`
+        );
+      }
+
+      return;
+    }
+
+    if (
+      product.type !==
+      'spray'
     ) {
       throw createError(
-        `Product "${product.name}" has no base oil configured`
+        `Unsupported product type "${product.type}"`
       );
     }
 
-    return;
-  }
+    const components =
+      getSizeBlend(
+        product,
+        sizeMl
+      );
 
-  if (
-    product.type !==
-    'spray'
-  ) {
-    throw createError(
-      `Unsupported product type "${product.type}"`
-    );
-  }
+    if (
+      !components.length
+    ) {
+      throw createError(
+        `Product "${product.name}" ${sizeMl}ml has no blend configured`
+      );
+    }
 
-  const components =
-    getSizeBlend(
-      product,
-      sizeMl
-    );
+    const totalPercentage =
+      components.reduce(
+        (
+          total,
+          component
+        ) =>
+          total +
+          Number(
+            component
+              .percentage ||
+              0
+          ),
 
-  if (!components.length) {
-    throw createError(
-      `Product "${product.name}" ${sizeMl}ml has no blend configured`
-    );
-  }
-
-  const totalPercentage =
-    components.reduce(
-      (total, component) =>
-        total +
-        Number(
-          component.percentage ||
-          0
-        ),
-      0
-    );
-
-  if (
-    Math.abs(
-      totalPercentage - 100
-    ) >
-    BLEND_TOLERANCE
-  ) {
-    throw createError(
-      `Product "${product.name}" ${sizeMl}ml blend totals ${totalPercentage}% instead of 100%`
-    );
-  }
-
-  for (
-    const component of
-    components
-  ) {
-    const percentage =
-      Number(
-        component.percentage ||
         0
       );
 
     if (
-      percentage <= 0
-    ) {
-      continue;
-    }
-
-    if (
-      !getId(
-        component.material
-      )
+      Math.abs(
+        totalPercentage -
+          100
+      ) >
+      BLEND_TOLERANCE
     ) {
       throw createError(
-        `Product "${product.name}" has a blend component without a material`
+        `Product "${product.name}" ${sizeMl}ml blend totals ${totalPercentage}% instead of 100%`
       );
     }
-  }
-};
+
+    for (
+      const component of
+      components
+    ) {
+      const percentage =
+        Number(
+          component
+            .percentage ||
+            0
+        );
+
+      if (
+        percentage <=
+        0
+      ) {
+        continue;
+      }
+
+      if (
+        !getId(
+          component
+            .material
+        )
+      ) {
+        throw createError(
+          `Product "${product.name}" has a blend component without a material`
+        );
+      }
+    }
+  };
 
 /* ========================================
    CUSTOMER VALIDATION
 ======================================== */
 
-const normalizeCustomer = (
-  customer
-) => {
-  if (!customer) {
-    throw createError(
-      'Customer information is required'
-    );
-  }
+const normalizeCustomer =
+  (
+    customer
+  ) => {
+    if (
+      !customer
+    ) {
+      throw createError(
+        'Customer information is required'
+      );
+    }
 
-  const name =
-    String(
-      customer.name || ''
-    ).trim();
+    const name =
+      String(
+        customer.name ||
+          ''
+      ).trim();
 
-  const mobile =
-    String(
-      customer.mobile || ''
-    ).trim();
+    const mobile =
+      String(
+        customer.mobile ||
+          ''
+      ).trim();
 
-  const address =
-    String(
-      customer.address || ''
-    ).trim();
+    const address =
+      String(
+        customer.address ||
+          ''
+      ).trim();
 
-  const city =
-    String(
-      customer.city || ''
-    ).trim();
+    const city =
+      String(
+        customer.city ||
+          ''
+      ).trim();
 
-  if (
-    !name ||
-    !mobile ||
-    !address ||
-    !city
-  ) {
-    throw createError(
-      'Customer name, mobile, address and city are required'
-    );
-  }
+    if (
+      !name ||
+      !mobile ||
+      !address ||
+      !city
+    ) {
+      throw createError(
+        'Customer name, mobile, address and city are required'
+      );
+    }
 
-  if (
-    name.length > 120
-  ) {
-    throw createError(
-      'Customer name is too long'
-    );
-  }
+    if (
+      name.length >
+      120
+    ) {
+      throw createError(
+        'Customer name is too long'
+      );
+    }
 
-  if (
-    mobile.length > 30
-  ) {
-    throw createError(
-      'Mobile number is too long'
-    );
-  }
+    if (
+      mobile.length >
+      30
+    ) {
+      throw createError(
+        'Mobile number is too long'
+      );
+    }
 
-  if (
-    address.length > 500
-  ) {
-    throw createError(
-      'Address is too long'
-    );
-  }
+    if (
+      address.length >
+      500
+    ) {
+      throw createError(
+        'Address is too long'
+      );
+    }
 
-  if (
-    city.length > 120
-  ) {
-    throw createError(
-      'City is too long'
-    );
-  }
+    if (
+      city.length >
+      120
+    ) {
+      throw createError(
+        'City is too long'
+      );
+    }
 
-  return {
-    name,
-    mobile,
-    address,
-    city,
+    return {
+      name,
+      mobile,
+      address,
+      city,
+    };
   };
-};
 
 /* ========================================
    ORDER NUMBER
@@ -486,11 +570,13 @@ const generateOrderNo =
         }
       )
         .sort({
-          createdAt: -1,
+          createdAt:
+            -1,
         })
         .lean();
 
-    let next = 1;
+    let next =
+      1;
 
     if (
       last?.orderNo
@@ -500,16 +586,23 @@ const generateOrderNo =
           /^ORD-(\d+)$/
         );
 
-      if (match) {
+      if (
+        match
+      ) {
         next =
-          Number(match[1]) +
+          Number(
+            match[1]
+          ) +
           1;
       }
     }
 
     return `ORD-${String(
       next
-    ).padStart(4, '0')}`;
+    ).padStart(
+      4,
+      '0'
+    )}`;
   };
 
 /* ========================================
@@ -517,7 +610,9 @@ const generateOrderNo =
 ======================================== */
 
 const generateSaleInvoiceNo =
-  async (session) => {
+  async (
+    session
+  ) => {
     const last =
       await Sale.findOne(
         {
@@ -529,47 +624,321 @@ const generateSaleInvoiceNo =
         }
       )
         .sort({
-          createdAt: -1,
+          createdAt:
+            -1,
         })
         .session(
           session
         )
         .lean();
 
-    let next = 1;
+    let next =
+      1;
 
     if (
-      last?.invoiceNo
+      last
+        ?.invoiceNo
     ) {
       const match =
-        last.invoiceNo.match(
-          /^INV-(\d+)$/
-        );
+        last.invoiceNo
+          .match(
+            /^INV-(\d+)$/
+          );
 
-      if (match) {
+      if (
+        match
+      ) {
         next =
-          Number(match[1]) +
+          Number(
+            match[1]
+          ) +
           1;
       }
     }
 
     return `INV-${String(
       next
-    ).padStart(4, '0')}`;
+    ).padStart(
+      4,
+      '0'
+    )}`;
+  };
+
+/* ========================================
+   PREPARE PRODUCT ORDER ITEM
+======================================== */
+
+const prepareProductOrderItem =
+  async (
+    item,
+    index
+  ) => {
+    if (
+      !item
+        ?.product ||
+      !mongoose
+        .isValidObjectId(
+          item.product
+        )
+    ) {
+      throw createError(
+        `Item ${index + 1} requires a valid product ID`
+      );
+    }
+
+    const sizeMl =
+      positiveNumber(
+        item.sizeMl,
+        `Item ${index + 1} size`
+      );
+
+    const quantity =
+      positiveInteger(
+        item.quantity,
+        `Item ${index + 1} quantity`
+      );
+
+    const product =
+      await Product.findById(
+        item.product
+      );
+
+    if (
+      !product
+    ) {
+      throw createError(
+        `Product ${item.product} not found`,
+        404
+      );
+    }
+
+    if (
+      product
+        .isActive ===
+      false
+    ) {
+      throw createError(
+        `"${product.name}" is currently unavailable`
+      );
+    }
+
+    if (
+      product
+        .showOnClient ===
+      false
+    ) {
+      throw createError(
+        `"${product.name}" is not available for online ordering`
+      );
+    }
+
+    if (
+      product
+        .isStockOut
+    ) {
+      throw createError(
+        `"${product.name}" is currently out of stock`
+      );
+    }
+
+    const sizeVariant =
+      getSizeVariant(
+        product,
+        sizeMl
+      );
+
+    if (
+      !sizeVariant
+    ) {
+      throw createError(
+        `${sizeMl}ml size is not available for "${product.name}"`
+      );
+    }
+
+    const unitPrice =
+      Number(
+        sizeVariant
+          .sellingPrice
+      );
+
+    if (
+      !Number.isFinite(
+        unitPrice
+      ) ||
+      unitPrice <=
+        0
+    ) {
+      throw createError(
+        `Selling price is not configured for "${product.name}" ${sizeMl}ml`
+      );
+    }
+
+    const totalPrice =
+      roundMoney(
+        unitPrice *
+          quantity
+      );
+
+    return {
+      itemType:
+        'product',
+
+      product:
+        product._id,
+
+      bottle:
+        null,
+
+      name:
+        product.name,
+
+      sizeMl,
+
+      quantity,
+
+      unitPrice,
+
+      totalPrice,
+    };
+  };
+
+/* ========================================
+   PREPARE EMPTY BOTTLE ORDER ITEM
+======================================== */
+
+const prepareBottleOrderItem =
+  async (
+    item,
+    index
+  ) => {
+    if (
+      !item?.bottle ||
+      !mongoose
+        .isValidObjectId(
+          item.bottle
+        )
+    ) {
+      throw createError(
+        `Item ${index + 1} requires a valid bottle ID`
+      );
+    }
+
+    const quantity =
+      positiveInteger(
+        item.quantity,
+        `Item ${index + 1} quantity`
+      );
+
+    const bottle =
+      await Bottle.findById(
+        item.bottle
+      );
+
+    if (
+      !bottle
+    ) {
+      throw createError(
+        `Bottle ${item.bottle} not found`,
+        404
+      );
+    }
+
+    const stock =
+      Number(
+        bottle
+          .currentStock ||
+          0
+      );
+
+    if (
+      bottle
+        .isStockOut ||
+      stock <=
+        0
+    ) {
+      throw createError(
+        `${bottle.sizeMl}ml ${bottle.type} bottle is out of stock`
+      );
+    }
+
+    if (
+      stock <
+      quantity
+    ) {
+      throw createError(
+        `Insufficient stock for ${bottle.sizeMl}ml ${bottle.type} bottle. Available: ${stock}`
+      );
+    }
+
+    const unitPrice =
+      Number(
+        bottle
+          .sellingPrice ||
+          0
+      );
+
+    if (
+      !Number.isFinite(
+        unitPrice
+      ) ||
+      unitPrice <=
+        0
+    ) {
+      throw createError(
+        `Selling price is not configured for ${bottle.sizeMl}ml ${bottle.type} bottle`
+      );
+    }
+
+    const totalPrice =
+      roundMoney(
+        unitPrice *
+          quantity
+      );
+
+    const typeLabel =
+      bottle.type ===
+      'roll-on'
+        ? 'Roll-on'
+        : 'Spray';
+
+    return {
+      itemType:
+        'bottle',
+
+      product:
+        null,
+
+      bottle:
+        bottle._id,
+
+      name:
+        `${bottle.sizeMl}ml ${typeLabel} Bottle`,
+
+      sizeMl:
+        bottle.sizeMl,
+
+      quantity,
+
+      unitPrice,
+
+      totalPrice,
+    };
   };
 
 /* ========================================
    CREATE PUBLIC ORDER ITEMS
-
-   SECURITY:
-   Prices are fetched from Product.sizes.
 ======================================== */
 
 const preparePublicOrderItems =
-  async (items) => {
+  async (
+    items
+  ) => {
     if (
-      !Array.isArray(items) ||
-      items.length === 0
+      !Array.isArray(
+        items
+      ) ||
+      items.length ===
+        0
     ) {
       throw createError(
         'At least one order item is required'
@@ -580,140 +949,45 @@ const preparePublicOrderItems =
       [];
 
     for (
-      let index = 0;
-      index < items.length;
-      index += 1
+      let index =
+        0;
+
+      index <
+      items.length;
+
+      index +=
+        1
     ) {
       const item =
-        items[index];
+        items[
+          index
+        ];
+
+      const itemType =
+        getItemType(
+          item
+        );
 
       if (
-        !item?.product ||
-        !mongoose.isValidObjectId(
-          item.product
+        itemType ===
+        'bottle'
+      ) {
+        processedItems.push(
+          await prepareBottleOrderItem(
+            item,
+            index
+          )
+        );
+
+        continue;
+      }
+
+      processedItems.push(
+        await prepareProductOrderItem(
+          item,
+          index
         )
-      ) {
-        throw createError(
-          `Item ${index + 1} requires a valid product ID`
-        );
-      }
-
-      const sizeMl =
-        positiveNumber(
-          item.sizeMl,
-          `Item ${index + 1} size`
-        );
-
-      const quantity =
-        positiveInteger(
-          item.quantity,
-          `Item ${index + 1} quantity`
-        );
-
-      /*
-        Load trusted product information
-        directly from database.
-      */
-
-      const product =
-        await Product.findById(
-          item.product
-        );
-
-      if (!product) {
-        throw createError(
-          `Product ${item.product} not found`,
-          404
-        );
-      }
-
-      if (
-        product.isActive ===
-        false
-      ) {
-        throw createError(
-          `"${product.name}" is currently unavailable`
-        );
-      }
-
-      /*
-        This endpoint belongs to the
-        client-facing store.
-      */
-
-      if (
-        product.showOnClient ===
-        false
-      ) {
-        throw createError(
-          `"${product.name}" is not available for online ordering`
-        );
-      }
-
-      if (
-        product.isStockOut
-      ) {
-        throw createError(
-          `"${product.name}" is currently out of stock`
-        );
-      }
-
-      const sizeVariant =
-        getSizeVariant(
-          product,
-          sizeMl
-        );
-
-      if (!sizeVariant) {
-        throw createError(
-          `${sizeMl}ml size is not available for "${product.name}"`
-        );
-      }
-
-      /*
-        DO NOT use item.unitPrice.
-
-        This price comes directly from
-        Product.sizes.sellingPrice.
-      */
-
-      const unitPrice =
-        Number(
-          sizeVariant.sellingPrice
-        );
-
-      if (
-        !Number.isFinite(
-          unitPrice
-        ) ||
-        unitPrice < 0
-      ) {
-        throw createError(
-          `Invalid selling price configured for "${product.name}" ${sizeMl}ml`
-        );
-      }
-
-      const totalPrice =
-        roundMoney(
-          unitPrice *
-          quantity
-        );
-
-      processedItems.push({
-        product:
-          product._id,
-
-        name:
-          product.name,
-
-        sizeMl,
-
-        quantity,
-
-        unitPrice,
-
-        totalPrice,
-      });
+      );
     }
 
     return processedItems;
@@ -724,37 +998,41 @@ const preparePublicOrderItems =
 ======================================== */
 
 exports.createOrder =
-  async (req, res) => {
+  async (
+    req,
+    res
+  ) => {
     try {
       const customer =
         normalizeCustomer(
-          req.body?.customer
+          req.body
+            ?.customer
         );
 
       const processedItems =
         await preparePublicOrderItems(
-          req.body?.items
+          req.body
+            ?.items
         );
-
-      /*
-        Server calculates subtotal.
-      */
 
       const subtotal =
         roundMoney(
-          processedItems.reduce(
-            (total, item) =>
-              total +
-              item.totalPrice,
-            0
-          )
+          processedItems
+            .reduce(
+              (
+                total,
+                item
+              ) =>
+                total +
+                Number(
+                  item
+                    .totalPrice ||
+                    0
+                ),
+
+              0
+            )
         );
-
-      /*
-        Server-controlled pricing config.
-
-        Client cannot decide tax/shipping.
-      */
 
       const {
         shippingFee,
@@ -765,7 +1043,10 @@ exports.createOrder =
       const tax =
         roundMoney(
           subtotal *
-          (taxRate / 100)
+            (
+              taxRate /
+              100
+            )
         );
 
       const shipping =
@@ -776,20 +1057,19 @@ exports.createOrder =
       const totalAmount =
         roundMoney(
           subtotal +
-          tax +
-          shipping
+            tax +
+            shipping
         );
 
-      /*
-        Retry if simultaneous requests
-        generate the same ORD number.
-      */
-
       for (
-        let attempt = 1;
+        let attempt =
+          1;
+
         attempt <=
         MAX_NUMBER_RETRIES;
-        attempt += 1
+
+        attempt +=
+          1
       ) {
         try {
           const orderNo =
@@ -842,9 +1122,12 @@ exports.createOrder =
 
               order,
             });
-        } catch (error) {
+        } catch (
+          error
+        ) {
           if (
-            error?.code ===
+            error
+              ?.code ===
               11000 &&
             attempt <
               MAX_NUMBER_RETRIES
@@ -860,7 +1143,9 @@ exports.createOrder =
         'Could not generate a unique order number',
         409
       );
-    } catch (error) {
+    } catch (
+      error
+    ) {
       return sendError(
         res,
         error
@@ -873,15 +1158,22 @@ exports.createOrder =
 ======================================== */
 
 exports.getOrders =
-  async (req, res) => {
+  async (
+    req,
+    res
+  ) => {
     try {
       const {
         status,
-      } = req.query;
+      } =
+        req.query;
 
-      const filter = {};
+      const filter =
+        {};
 
-      if (status) {
+      if (
+        status
+      ) {
         if (
           ![
             'pending',
@@ -909,17 +1201,24 @@ exports.getOrders =
             'name sku type isActive showOnClient isStockOut'
           )
           .populate(
+            'items.bottle',
+            'sizeMl type currentStock sellingPrice images isStockOut'
+          )
+          .populate(
             'saleId',
             'invoiceNo totalAmount paymentStatus'
           )
           .sort({
-            createdAt: -1,
+            createdAt:
+              -1,
           });
 
       return res.json(
         orders
       );
-    } catch (error) {
+    } catch (
+      error
+    ) {
       return sendError(
         res,
         error
@@ -932,12 +1231,16 @@ exports.getOrders =
 ======================================== */
 
 exports.getOrderById =
-  async (req, res) => {
+  async (
+    req,
+    res
+  ) => {
     try {
       if (
-        !mongoose.isValidObjectId(
-          req.params.id
-        )
+        !mongoose
+          .isValidObjectId(
+            req.params.id
+          )
       ) {
         throw createError(
           'Invalid order ID'
@@ -945,19 +1248,26 @@ exports.getOrderById =
       }
 
       const order =
-        await Order.findById(
-          req.params.id
-        )
+        await Order
+          .findById(
+            req.params.id
+          )
           .populate(
             'items.product',
-            'name sku type isActive'
+            'name sku type isActive showOnClient isStockOut'
+          )
+          .populate(
+            'items.bottle',
+            'sizeMl type currentStock sellingPrice images isStockOut'
           )
           .populate(
             'saleId',
             'invoiceNo totalAmount paymentStatus'
           );
 
-      if (!order) {
+      if (
+        !order
+      ) {
         throw createError(
           'Order not found',
           404
@@ -967,7 +1277,9 @@ exports.getOrderById =
       return res.json(
         order
       );
-    } catch (error) {
+    } catch (
+      error
+    ) {
       return sendError(
         res,
         error
@@ -980,12 +1292,16 @@ exports.getOrderById =
 ======================================== */
 
 exports.updateOrderStatus =
-  async (req, res) => {
+  async (
+    req,
+    res
+  ) => {
     try {
       if (
-        !mongoose.isValidObjectId(
-          req.params.id
-        )
+        !mongoose
+          .isValidObjectId(
+            req.params.id
+          )
       ) {
         throw createError(
           'Invalid order ID'
@@ -993,14 +1309,17 @@ exports.updateOrderStatus =
       }
 
       const status =
-        req.body?.status;
+        req.body
+          ?.status;
 
       if (
         ![
           'pending',
           'placed',
           'cancelled',
-        ].includes(status)
+        ].includes(
+          status
+        )
       ) {
         throw createError(
           'Invalid order status'
@@ -1012,20 +1331,14 @@ exports.updateOrderStatus =
           req.params.id
         );
 
-      if (!order) {
+      if (
+        !order
+      ) {
         throw createError(
           'Order not found',
           404
         );
       }
-
-      /*
-        If order already created a Sale,
-        keep the order marked placed.
-
-        Otherwise Sale and inventory
-        records would become inconsistent.
-      */
 
       if (
         order.saleId &&
@@ -1037,15 +1350,9 @@ exports.updateOrderStatus =
         );
       }
 
-      /*
-        Do not manually mark an order as
-        placed without creating the Sale.
-
-        Use POST /orders/:id/place instead.
-      */
-
       if (
-        status === 'placed' &&
+        status ===
+          'placed' &&
         !order.saleId
       ) {
         throw createError(
@@ -1064,7 +1371,9 @@ exports.updateOrderStatus =
 
         order,
       });
-    } catch (error) {
+    } catch (
+      error
+    ) {
       return sendError(
         res,
         error
@@ -1084,35 +1393,180 @@ const prepareOrderSaleItems =
     const preparedItems =
       [];
 
-    let totalAmount = 0;
+    let totalAmount =
+      0;
 
     for (
-      let index = 0;
+      let index =
+        0;
+
       index <
       order.items.length;
-      index += 1
+
+      index +=
+        1
     ) {
       const orderItem =
-        order.items[index];
+        order.items[
+          index
+        ];
+
+      const itemType =
+        getItemType(
+          orderItem
+        );
+
+      const sizeMl =
+        positiveNumber(
+          orderItem
+            .sizeMl,
+
+          `Item ${index + 1} size`
+        );
+
+      const quantity =
+        positiveInteger(
+          orderItem
+            .quantity,
+
+          `Item ${index + 1} quantity`
+        );
+
+      const unitPrice =
+        Number(
+          orderItem
+            .unitPrice
+        );
+
+      if (
+        !Number.isFinite(
+          unitPrice
+        ) ||
+        unitPrice <
+          0
+      ) {
+        throw createError(
+          `Invalid stored price for "${orderItem.name}"`
+        );
+      }
+
+      const totalPrice =
+        roundMoney(
+          unitPrice *
+            quantity
+        );
+
+      /* ==================================
+         DIRECT EMPTY BOTTLE
+      ================================== */
+
+      if (
+        itemType ===
+        'bottle'
+      ) {
+        const bottleId =
+          getId(
+            orderItem
+              .bottle
+          );
+
+        if (
+          !bottleId ||
+          !mongoose
+            .isValidObjectId(
+              bottleId
+            )
+        ) {
+          throw createError(
+            `Order item "${orderItem.name}" does not have a valid bottle reference`
+          );
+        }
+
+        const bottle =
+          await Bottle.findById(
+            bottleId
+          )
+            .session(
+              session
+            );
+
+        if (
+          !bottle
+        ) {
+          throw createError(
+            `Bottle "${orderItem.name}" not found`,
+            404
+          );
+        }
+
+        const stock =
+          Number(
+            bottle
+              .currentStock ||
+              0
+          );
+
+        if (
+          stock <
+          quantity
+        ) {
+          throw createError(
+            `Insufficient bottle stock for "${orderItem.name}". Available: ${stock}`
+          );
+        }
+
+        totalAmount +=
+          totalPrice;
+
+        preparedItems.push({
+          itemType:
+            'bottle',
+
+          bottle,
+
+          sizeMl,
+
+          quantity,
+
+          saleItem: {
+            itemType:
+              'bottle',
+
+            product:
+              null,
+
+            bottle:
+              bottle._id,
+
+            sizeMl,
+
+            quantity,
+
+            unitPrice,
+
+            totalPrice,
+          },
+        });
+
+        continue;
+      }
+
+      /* ==================================
+         PERFUME PRODUCT
+      ================================== */
 
       const productId =
         getId(
-          orderItem.product
+          orderItem
+            .product
         );
-
-      /*
-        Old orders may have been created
-        without a product reference.
-
-        We cannot safely deduct stock from
-        those orders automatically.
-      */
 
       if (
         !productId ||
-        !mongoose.isValidObjectId(
-          productId
-        )
+        !mongoose
+          .isValidObjectId(
+            productId
+          )
       ) {
         throw createError(
           `Order item "${orderItem.name}" does not have a valid product reference`
@@ -1120,9 +1574,10 @@ const prepareOrderSaleItems =
       }
 
       const product =
-        await Product.findById(
-          productId
-        )
+        await Product
+          .findById(
+            productId
+          )
           .populate(
             'sizes.bottle'
           )
@@ -1130,24 +1585,14 @@ const prepareOrderSaleItems =
             session
           );
 
-      if (!product) {
+      if (
+        !product
+      ) {
         throw createError(
           `Product "${orderItem.name}" not found`,
           404
         );
       }
-
-      const sizeMl =
-        positiveNumber(
-          orderItem.sizeMl,
-          `Item ${index + 1} size`
-        );
-
-      const quantity =
-        positiveInteger(
-          orderItem.quantity,
-          `Item ${index + 1} quantity`
-        );
 
       const sizeVariant =
         getSizeVariant(
@@ -1155,7 +1600,9 @@ const prepareOrderSaleItems =
           sizeMl
         );
 
-      if (!sizeVariant) {
+      if (
+        !sizeVariant
+      ) {
         throw createError(
           `${sizeMl}ml size is no longer available for "${product.name}"`
         );
@@ -1168,49 +1615,25 @@ const prepareOrderSaleItems =
 
       const bottleId =
         getId(
-          sizeVariant.bottle
+          sizeVariant
+            .bottle
         );
 
-      if (!bottleId) {
+      if (
+        !bottleId
+      ) {
         throw createError(
           `Bottle is not configured for "${product.name}" ${sizeMl}ml`
         );
       }
 
-      /*
-        Use the trusted price stored
-        on the order.
-
-        New orders store a price that
-        was already fetched from MongoDB.
-      */
-
-      const unitPrice =
-        Number(
-          orderItem.unitPrice
-        );
-
-      if (
-        !Number.isFinite(
-          unitPrice
-        ) ||
-        unitPrice < 0
-      ) {
-        throw createError(
-          `Invalid stored price for "${product.name}"`
-        );
-      }
-
-      const totalPrice =
-        roundMoney(
-          unitPrice *
-          quantity
-        );
-
       totalAmount +=
         totalPrice;
 
       preparedItems.push({
+        itemType:
+          'product',
+
         product,
 
         sizeVariant,
@@ -1220,8 +1643,14 @@ const prepareOrderSaleItems =
         quantity,
 
         saleItem: {
+          itemType:
+            'product',
+
           product:
             product._id,
+
+          bottle:
+            null,
 
           sizeMl,
 
@@ -1258,15 +1687,46 @@ const deductOrderInventory =
       const item of
       preparedItems
     ) {
+      /* ==================================
+         DIRECT EMPTY BOTTLE SALE
+
+         Only bottle stock decreases.
+
+         No oil / alcohol / raw material
+         is used.
+      ================================== */
+
+      if (
+        item.itemType ===
+        'bottle'
+      ) {
+        await deductBottle(
+          getId(
+            item.bottle
+          ),
+
+          item.quantity,
+
+          'sale',
+
+          sale,
+
+          session
+        );
+
+        continue;
+      }
+
       const {
         product,
         sizeVariant,
         sizeMl,
         quantity,
-      } = item;
+      } =
+        item;
 
       /* --------------------------------
-         ROLL-ON
+         ROLL-ON PERFUME
       -------------------------------- */
 
       if (
@@ -1280,7 +1740,8 @@ const deductOrderInventory =
 
         await deductRawMaterial(
           getId(
-            product.baseOil
+            product
+              .baseOil
           ),
 
           oilPerUnit *
@@ -1295,7 +1756,7 @@ const deductOrderInventory =
       }
 
       /* --------------------------------
-         SPRAY
+         SPRAY PERFUME
       -------------------------------- */
 
       if (
@@ -1314,29 +1775,35 @@ const deductOrderInventory =
         ) {
           const percentage =
             Number(
-              component.percentage ||
+              component
+                .percentage ||
                 0
             );
 
           if (
-            percentage <= 0
+            percentage <=
+            0
           ) {
             continue;
           }
 
           const materialId =
             getId(
-              component.material
+              component
+                .material
             );
 
           const mlUsed =
             sizeMl *
-            (percentage /
-              100) *
+            (
+              percentage /
+              100
+            ) *
             quantity;
 
           if (
-            mlUsed <= 0
+            mlUsed <=
+            0
           ) {
             continue;
           }
@@ -1356,12 +1823,16 @@ const deductOrderInventory =
       }
 
       /* --------------------------------
-         BOTTLE
+         PACKAGING BOTTLE
+
+         Normal perfume sale also consumes
+         its packaging bottle.
       -------------------------------- */
 
       await deductBottle(
         getId(
-          sizeVariant.bottle
+          sizeVariant
+            .bottle
         ),
 
         quantity,
@@ -1380,23 +1851,33 @@ const deductOrderInventory =
 ======================================== */
 
 exports.convertOrderToSale =
-  async (req, res) => {
+  async (
+    req,
+    res
+  ) => {
     for (
-      let attempt = 1;
+      let attempt =
+        1;
+
       attempt <=
       MAX_NUMBER_RETRIES;
-      attempt += 1
+
+      attempt +=
+        1
     ) {
       const session =
-        await mongoose.startSession();
+        await mongoose
+          .startSession();
 
       try {
-        session.startTransaction();
+        session
+          .startTransaction();
 
         if (
-          !mongoose.isValidObjectId(
-            req.params.id
-          )
+          !mongoose
+            .isValidObjectId(
+              req.params.id
+            )
         ) {
           throw createError(
             'Invalid order ID'
@@ -1404,13 +1885,17 @@ exports.convertOrderToSale =
         }
 
         const order =
-          await Order.findById(
-            req.params.id
-          ).session(
-            session
-          );
+          await Order
+            .findById(
+              req.params.id
+            )
+            .session(
+              session
+            );
 
-        if (!order) {
+        if (
+          !order
+        ) {
           throw createError(
             'Order not found',
             404
@@ -1448,15 +1933,9 @@ exports.convertOrderToSale =
             session
           );
 
-        /*
-          Create Sale first inside
-          transaction.
-
-          Online orders remain due until
-          payment is collected.
-        */
-
-        const [sale] =
+        const [
+          sale,
+        ] =
           await Sale.create(
             [
               {
@@ -1466,10 +1945,14 @@ exports.convertOrderToSale =
                   'Online Order',
 
                 items:
-                  preparedItems.map(
-                    (item) =>
-                      item.saleItem
-                  ),
+                  preparedItems
+                    .map(
+                      (
+                        item
+                      ) =>
+                        item
+                          .saleItem
+                    ),
 
                 totalAmount,
 
@@ -1483,35 +1966,25 @@ exports.convertOrderToSale =
                   `Order ${order.orderNo} – ${order.customer.name} (${order.customer.mobile})`,
               },
             ],
+
             {
               session,
             }
           );
 
         /*
-          Deduct stock.
+          Deduct inventory after Sale is
+          created inside transaction.
 
-          Exact inventory logs receive
-          sale._id immediately.
+          If any stock deduction fails,
+          the transaction is rolled back.
         */
 
-        await deductOrderInventory(
-          {
-            preparedItems,
-
-            sale,
-
-            session,
-          }
-        );
-
-        /*
-          No cash transaction is created
-          here because paymentStatus = due.
-
-          saleController.updatePayment()
-          creates cash_in when marked paid.
-        */
+        await deductOrderInventory({
+          preparedItems,
+          sale,
+          session,
+        });
 
         order.status =
           'placed';
@@ -1523,7 +1996,8 @@ exports.convertOrderToSale =
           session,
         });
 
-        await session.commitTransaction();
+        await session
+          .commitTransaction();
 
         return res.json({
           message:
@@ -1533,16 +2007,11 @@ exports.convertOrderToSale =
 
           order,
         });
-      } catch (error) {
-        await session.abortTransaction();
-
-        /*
-          Sequential invoice collision:
-          retry entire transaction.
-
-          All stock deductions from the
-          failed attempt are rolled back.
-        */
+      } catch (
+        error
+      ) {
+        await session
+          .abortTransaction();
 
         if (
           error?.code ===
@@ -1558,7 +2027,8 @@ exports.convertOrderToSale =
           error
         );
       } finally {
-        session.endSession();
+        await session
+          .endSession();
       }
     }
 
@@ -1575,12 +2045,16 @@ exports.convertOrderToSale =
 ======================================== */
 
 exports.deleteOrder =
-  async (req, res) => {
+  async (
+    req,
+    res
+  ) => {
     try {
       if (
-        !mongoose.isValidObjectId(
-          req.params.id
-        )
+        !mongoose
+          .isValidObjectId(
+            req.params.id
+          )
       ) {
         throw createError(
           'Invalid order ID'
@@ -1592,7 +2066,9 @@ exports.deleteOrder =
           req.params.id
         );
 
-      if (!order) {
+      if (
+        !order
+      ) {
         throw createError(
           'Order not found',
           404
@@ -1607,13 +2083,16 @@ exports.deleteOrder =
         );
       }
 
-      await order.deleteOne();
+      await order
+        .deleteOne();
 
       return res.json({
         message:
           'Order deleted successfully',
       });
-    } catch (error) {
+    } catch (
+      error
+    ) {
       return sendError(
         res,
         error
