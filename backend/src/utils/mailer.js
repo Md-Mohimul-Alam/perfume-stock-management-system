@@ -5,7 +5,7 @@ const host =
   "smtp.gmail.com";
 
 const port = Number(
-  process.env.SMTP_PORT || 587
+  process.env.SMTP_PORT || 465
 );
 
 const user =
@@ -20,15 +20,11 @@ const secure =
     : port === 465;
 
 if (!user) {
-  throw new Error(
-    "SMTP_USER is not configured"
-  );
+  throw new Error("SMTP_USER is not configured");
 }
 
 if (!pass) {
-  throw new Error(
-    "SMTP_PASS is not configured"
-  );
+  throw new Error("SMTP_PASS is not configured");
 }
 
 if (
@@ -36,29 +32,26 @@ if (
   port < 1 ||
   port > 65535
 ) {
-  throw new Error(
-    "SMTP_PORT is invalid"
-  );
+  throw new Error("SMTP_PORT is invalid");
 }
 
-const transporter =
-  nodemailer.createTransport({
-    host,
-    port,
-    secure,
+const transporter = nodemailer.createTransport({
+  host,
+  port,
+  secure,
 
-    auth: {
-      user,
-      pass,
-    },
+  auth: {
+    user,
+    pass,
+  },
 
-    connectionTimeout: 15000,
-    greetingTimeout: 10000,
-    socketTimeout: 20000,
+  connectionTimeout: 15000,
+  greetingTimeout: 10000,
+  socketTimeout: 20000,
 
-    tls: {
-      minVersion: "TLSv1.2",
-    },
-  });
+  tls: {
+    minVersion: "TLSv1.2",
+  },
+});
 
 module.exports = transporter;

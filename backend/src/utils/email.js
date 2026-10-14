@@ -5,8 +5,9 @@ const sender =
   `Luxe Perfume <${process.env.SMTP_USER}>`;
 
 // =============================================
-// OTP email
+// OTP EMAIL
 // =============================================
+
 exports.sendOtpEmail = async (to, otp) => {
   console.log(`📧 Sending OTP to ${to}`);
 
@@ -15,16 +16,22 @@ exports.sendOtpEmail = async (to, otp) => {
       from: sender,
       to,
       subject: "Your OTP for Luxe Perfume",
+
       html: `
-        <div style="font-family: sans-serif; max-width: 500px;">
-          <h2 style="color: #b8860b;">OTP Code</h2>
+        <div style="font-family: Arial, sans-serif; max-width: 500px;">
+          <h2 style="color: #b8860b;">
+            Luxe Perfume Login Code
+          </h2>
+
           <p>Your one-time password is:</p>
 
-          <h1 style="
-            color: #b8860b;
-            font-size: 36px;
-            letter-spacing: 4px;
-          ">
+          <h1
+            style="
+              color: #b8860b;
+              font-size: 36px;
+              letter-spacing: 5px;
+            "
+          >
             ${otp}
           </h1>
 
@@ -34,7 +41,7 @@ exports.sendOtpEmail = async (to, otp) => {
           </p>
 
           <p>
-            If you didn't request this,
+            If you did not request this login code,
             please ignore this email.
           </p>
         </div>
@@ -48,20 +55,22 @@ exports.sendOtpEmail = async (to, otp) => {
 
     return result;
   } catch (error) {
-    console.error(
-      "❌ OTP email error:",
-      error.message || error
-    );
+    console.error("❌ OTP email error:", {
+      message: error.message,
+      code: error.code,
+      command: error.command,
+      response: error.response,
+      responseCode: error.responseCode,
+    });
 
-    throw new Error(
-      "Failed to send OTP email"
-    );
+    throw error;
   }
 };
 
 // =============================================
-// Verification email
+// VERIFICATION EMAIL
 // =============================================
+
 exports.sendVerificationEmail = async (
   to,
   token
@@ -81,14 +90,14 @@ exports.sendVerificationEmail = async (
         "Verify Your Luxe Perfume Account",
 
       html: `
-        <div style="font-family: sans-serif; max-width: 500px;">
+        <div style="font-family: Arial, sans-serif; max-width: 500px;">
           <h2 style="color: #b8860b;">
             Welcome to Luxe Perfume
           </h2>
 
           <p>
-            Please click the button below
-            to verify your email:
+            Please verify your email address
+            by clicking the button below.
           </p>
 
           <a
@@ -96,7 +105,7 @@ exports.sendVerificationEmail = async (
             style="
               display: inline-block;
               background: #b8860b;
-              color: white;
+              color: #ffffff;
               padding: 12px 24px;
               text-decoration: none;
               border-radius: 6px;
@@ -107,7 +116,8 @@ exports.sendVerificationEmail = async (
           </a>
 
           <p>
-            This link expires in 1 hour.
+            This verification link expires
+            in 1 hour.
           </p>
         </div>
       `,
@@ -122,11 +132,90 @@ exports.sendVerificationEmail = async (
   } catch (error) {
     console.error(
       "❌ Verification email error:",
-      error.message || error
+      {
+        message: error.message,
+        code: error.code,
+        command: error.command,
+        response: error.response,
+        responseCode: error.responseCode,
+      }
     );
 
-    throw new Error(
-      "Failed to send verification email"
+    throw error;
+  }
+};
+
+// =============================================
+// PASSWORD RESET EMAIL
+// =============================================
+
+exports.sendPasswordResetEmail = async (
+  to,
+  resetUrl
+) => {
+  console.log(
+    `📧 Sending password reset email to ${to}`
+  );
+
+  try {
+    const result = await transporter.sendMail({
+      from: sender,
+      to,
+      subject:
+        "Reset Your Luxe Perfume Password",
+
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 500px;">
+          <h2 style="color: #b8860b;">
+            Reset Your Password
+          </h2>
+
+          <p>
+            We received a request to reset
+            your Luxe Perfume password.
+          </p>
+
+          <a
+            href="${resetUrl}"
+            style="
+              display: inline-block;
+              background: #b8860b;
+              color: #ffffff;
+              padding: 12px 24px;
+              text-decoration: none;
+              border-radius: 6px;
+              margin: 20px 0;
+            "
+          >
+            Reset Password
+          </a>
+
+          <p>
+            If you did not request this,
+            you can safely ignore this email.
+          </p>
+        </div>
+      `,
+    });
+
+    console.log(
+      "✅ Password reset email sent:",
+      result.messageId
     );
+
+    return result;
+  } catch (error) {
+    console.error(
+      "❌ Password reset email error:",
+      {
+        message: error.message,
+        code: error.code,
+        command: error.command,
+        response: error.response,
+        responseCode: error.responseCode,
+      }
+    );
+
+    throw error;
   }
 };
