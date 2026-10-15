@@ -1910,11 +1910,30 @@ exports.stockOutMaterial =
           });
       }
 
-      const remainingStock =
+      /*
+        Clean floating-point stock.
+
+        Example:
+        3.8799999999999955
+        becomes:
+        3.88
+      */
+
+      const rawRemainingStock =
         Number(
           material.currentStockMl ||
             0
         );
+
+      const remainingStock =
+        Math.round(
+          (
+            rawRemainingStock +
+            Number.EPSILON
+          ) *
+            100
+        ) /
+        100;
 
       const avgCost =
         Number(
@@ -1926,15 +1945,36 @@ exports.stockOutMaterial =
         remainingStock >
         0
       ) {
-        const wastageAmount =
+        const rawWastageAmount =
           remainingStock *
           avgCost;
 
+        const wastageAmount =
+          Math.round(
+            (
+              rawWastageAmount +
+              Number.EPSILON
+            ) *
+              100
+          ) /
+          100;
+
         const Expense =
-          require('../models/Expense');
+          require(
+            '../models/Expense'
+          );
 
         const Transaction =
-          require('../models/Transaction');
+          require(
+            '../models/Transaction'
+          );
+
+        const now =
+          new Date();
+
+        /* ==================================
+           WASTAGE EXPENSE
+        ================================== */
 
         const expense =
           await Expense.create({
@@ -1948,17 +1988,23 @@ exports.stockOutMaterial =
               wastageAmount,
 
             date:
-              new Date(),
+              now,
 
             description:
-              `Stock out: ${material.name} (${remainingStock} ml)`,
+              `Stock out: ${material.name} (${remainingStock.toFixed(
+                2
+              )} ml)`,
 
             reference:
               material.sku,
 
             notes:
-              `Stock out on ${new Date().toISOString()}`,
+              `Stock out on ${now.toISOString()}`,
           });
+
+        /* ==================================
+           CASH TRANSACTION
+        ================================== */
 
         await Transaction.create({
           type:
@@ -1976,9 +2022,16 @@ exports.stockOutMaterial =
           refModel:
             'Expense',
 
+          date:
+            now,
+
           description:
             `Wastage from stock-out: ${material.name}`,
         });
+
+        /* ==================================
+           INVENTORY HISTORY
+        ================================== */
 
         await InventoryLog.create({
           material:
@@ -1990,17 +2043,40 @@ exports.stockOutMaterial =
           reason:
             'wastage',
 
+          date:
+            now,
+
           notes:
-            `Stock out: remaining ${remainingStock} ml sent to wastage`,
+            `Stock out: remaining ${remainingStock.toFixed(
+              2
+            )} ml sent to wastage`,
         });
       }
 
-      material.currentCycleWastageMl =
+      /* ==================================
+         CURRENT CYCLE WASTAGE
+      ================================== */
+
+      const currentCycleWastage =
         Number(
           material.currentCycleWastageMl ||
             0
-        ) +
-        remainingStock;
+        );
+
+      material.currentCycleWastageMl =
+        Math.round(
+          (
+            currentCycleWastage +
+            remainingStock +
+            Number.EPSILON
+          ) *
+            100
+        ) /
+        100;
+
+      /* ==================================
+         STOCK OUT
+      ================================== */
 
       material.currentStockMl =
         0;
@@ -2013,6 +2089,9 @@ exports.stockOutMaterial =
       return res.json({
         message:
           `Material "${material.name}" marked as stock-out.`,
+
+        wastageQuantityMl:
+          remainingStock,
 
         material,
       });
@@ -2030,7 +2109,6 @@ exports.stockOutMaterial =
         });
     }
   };
-
 /* ========================================
    MATERIAL STOCK ADJUSTMENT
 ======================================== */
