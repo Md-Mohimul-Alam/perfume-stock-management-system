@@ -1,0 +1,1812 @@
+[
+  {
+    "_id": "6a8762368cc960ad822c1af2",
+    "invoiceNo": "PUR-260821-001",
+    "supplier": "Amanat Attar House",
+    "items": [
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242d2f2b2f71f964fcfd",
+        "quantity": 50,
+        "costPerUnit": 8,
+        "totalCost": 400,
+        "_id": "6adb8e3d16f582b0a35fd4dd"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242d2f2b2f71f964fd00",
+        "quantity": 50,
+        "costPerUnit": 8,
+        "totalCost": 400,
+        "_id": "6adb8e3d16f582b0a35fd4de"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242d2f2b2f71f964fd04",
+        "quantity": 50,
+        "costPerUnit": 12,
+        "totalCost": 600,
+        "_id": "6adb8e3d16f582b0a35fd4df"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242d2f2b2f71f964fd08",
+        "quantity": 50,
+        "costPerUnit": 14,
+        "totalCost": 700,
+        "_id": "6adb8e3d16f582b0a35fd4e0"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242d2f2b2f71f964fd0c",
+        "quantity": 50,
+        "costPerUnit": 8,
+        "totalCost": 400,
+        "_id": "6adb8e3d16f582b0a35fd4e1"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242d2f2b2f71f964fd0f",
+        "quantity": 50,
+        "costPerUnit": 8,
+        "totalCost": 400,
+        "_id": "6adb8e3d16f582b0a35fd4e2"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242d2f2b2f71f964fd13",
+        "quantity": 50,
+        "costPerUnit": 10,
+        "totalCost": 500,
+        "_id": "6adb8e3d16f582b0a35fd4e3"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242e2f2b2f71f964fd16",
+        "quantity": 50,
+        "costPerUnit": 8,
+        "totalCost": 400,
+        "_id": "6adb8e3d16f582b0a35fd4e4"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e24312f2b2f71f964fd63",
+        "quantity": 50,
+        "costPerUnit": 13,
+        "totalCost": 650,
+        "_id": "6adb8e3d16f582b0a35fd4e5"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242e2f2b2f71f964fd19",
+        "quantity": 50,
+        "costPerUnit": 13,
+        "totalCost": 650,
+        "_id": "6adb8e3d16f582b0a35fd4e6"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242e2f2b2f71f964fd1b",
+        "quantity": 50,
+        "costPerUnit": 14,
+        "totalCost": 700,
+        "_id": "6adb8e3d16f582b0a35fd4e7"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242e2f2b2f71f964fd1e",
+        "quantity": 50,
+        "costPerUnit": 8,
+        "totalCost": 400,
+        "_id": "6adb8e3d16f582b0a35fd4e8"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242e2f2b2f71f964fd21",
+        "quantity": 50,
+        "costPerUnit": 13,
+        "totalCost": 650,
+        "_id": "6adb8e3d16f582b0a35fd4e9"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e24302f2b2f71f964fd60",
+        "quantity": 50,
+        "costPerUnit": 12,
+        "totalCost": 600,
+        "_id": "6adb8e3d16f582b0a35fd4ea"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa869a6a41926cb0c6e7f",
+        "quantity": 6,
+        "costPerUnit": 25,
+        "totalCost": 150,
+        "_id": "6adb8e3d16f582b0a35fd4eb"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa86aa6a41926cb0c6e82",
+        "quantity": 6,
+        "costPerUnit": 35,
+        "totalCost": 210,
+        "_id": "6adb8e3d16f582b0a35fd4ec"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa869a6a41926cb0c6e7e",
+        "quantity": 12,
+        "costPerUnit": 15,
+        "totalCost": 180,
+        "_id": "6adb8e3d16f582b0a35fd4ed"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa869a6a41926cb0c6e80",
+        "quantity": 2,
+        "costPerUnit": 45,
+        "totalCost": 90,
+        "_id": "6adb8e3d16f582b0a35fd4ee"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242f2f2b2f71f964fd46",
+        "quantity": 250,
+        "costPerUnit": 2.08,
+        "totalCost": 520,
+        "_id": "6adb8e3d16f582b0a35fd4ef"
+      }
+    ],
+    "totalAmount": 8600,
+    "purchaseDate": "2025-08-19T00:00:00.000Z",
+    "notes": "1st",
+    "createdAt": "2026-08-20T20:23:18.707Z",
+    "updatedAt": "2026-10-23T16:41:33.576Z",
+    "__v": 2
+  },
+  {
+    "_id": "6a8764398cc960ad822c1c08",
+    "invoiceNo": "PUR-260821-002",
+    "supplier": "Amanat Attar House ",
+    "items": [
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242e2f2b2f71f964fd30",
+        "quantity": 50,
+        "costPerUnit": 10,
+        "totalCost": 500,
+        "_id": "6a8764398cc960ad822c1c09"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242e2f2b2f71f964fd29",
+        "quantity": 30,
+        "costPerUnit": 14,
+        "totalCost": 420,
+        "_id": "6a8764398cc960ad822c1c0a"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242e2f2b2f71f964fd2d",
+        "quantity": 30,
+        "costPerUnit": 10,
+        "totalCost": 300,
+        "_id": "6a8764398cc960ad822c1c0b"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa86aa6a41926cb0c6e82",
+        "quantity": 10,
+        "costPerUnit": 36,
+        "totalCost": 360,
+        "_id": "6a8764398cc960ad822c1c0c"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa869a6a41926cb0c6e7e",
+        "quantity": 24,
+        "costPerUnit": 15,
+        "totalCost": 360,
+        "_id": "6a8764398cc960ad822c1c0d"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa869a6a41926cb0c6e7f",
+        "quantity": 6,
+        "costPerUnit": 25,
+        "totalCost": 150,
+        "_id": "6a8764398cc960ad822c1c0e"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa86aa6a41926cb0c6e83",
+        "quantity": 2,
+        "costPerUnit": 45,
+        "totalCost": 90,
+        "_id": "6a8764398cc960ad822c1c0f"
+      }
+    ],
+    "totalAmount": 2180,
+    "purchaseDate": "2025-08-23T00:00:00.000Z",
+    "notes": "2nd",
+    "createdAt": "2026-08-20T20:31:53.431Z",
+    "updatedAt": "2026-08-20T20:32:23.379Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a9891ac623d11044b474c57",
+    "invoiceNo": "PUR-260903-2nd",
+    "supplier": "MirJ Perfume",
+    "items": [
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242e2f2b2f71f964fd25",
+        "quantity": 30,
+        "costPerUnit": 18,
+        "totalCost": 540,
+        "_id": "6a9891ac623d11044b474c58"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242e2f2b2f71f964fd27",
+        "quantity": 30,
+        "costPerUnit": 13,
+        "totalCost": 390,
+        "_id": "6a9891ac623d11044b474c59"
+      }
+    ],
+    "totalAmount": 930,
+    "purchaseDate": "2025-08-24T00:00:00.000Z",
+    "notes": "",
+    "createdAt": "2026-09-02T21:14:20.653Z",
+    "updatedAt": "2026-09-02T21:14:20.653Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a8779e9b9aea59c970ec037",
+    "invoiceNo": "PUR-260821-Extra1",
+    "supplier": "Amanat Attar House ",
+    "items": [
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa869a6a41926cb0c6e7e",
+        "quantity": 36,
+        "costPerUnit": 15,
+        "totalCost": 540,
+        "_id": "6a8779e9b9aea59c970ec038"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa86aa6a41926cb0c6e82",
+        "quantity": 12,
+        "costPerUnit": 36,
+        "totalCost": 432,
+        "_id": "6a8779e9b9aea59c970ec039"
+      }
+    ],
+    "totalAmount": 972,
+    "purchaseDate": "2025-08-27T00:00:00.000Z",
+    "notes": "",
+    "createdAt": "2026-08-20T22:04:25.081Z",
+    "updatedAt": "2026-08-20T22:04:25.081Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a876efdb9aea59c970eb47a",
+    "invoiceNo": "PUR-260821-003",
+    "supplier": "Amanat Attar House ",
+    "items": [
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242e2f2b2f71f964fd33",
+        "quantity": 50,
+        "costPerUnit": 8,
+        "totalCost": 400,
+        "_id": "6a876efdb9aea59c970eb47b"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242f2f2b2f71f964fd35",
+        "quantity": 50,
+        "costPerUnit": 8,
+        "totalCost": 400,
+        "_id": "6a876efdb9aea59c970eb47c"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242f2f2b2f71f964fd37",
+        "quantity": 30,
+        "costPerUnit": 14,
+        "totalCost": 420,
+        "_id": "6a876efdb9aea59c970eb47d"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e24302f2b2f71f964fd58",
+        "quantity": 30,
+        "costPerUnit": 14,
+        "totalCost": 420,
+        "_id": "6a876efdb9aea59c970eb47e"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242f2f2b2f71f964fd39",
+        "quantity": 30,
+        "costPerUnit": 14,
+        "totalCost": 420,
+        "_id": "6a876efdb9aea59c970eb47f"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e24302f2b2f71f964fd5c",
+        "quantity": 30,
+        "costPerUnit": 18,
+        "totalCost": 540,
+        "_id": "6a876efdb9aea59c970eb480"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242f2f2b2f71f964fd41",
+        "quantity": 25,
+        "costPerUnit": 10,
+        "totalCost": 240,
+        "_id": "6a876efdb9aea59c970eb481"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242f2f2b2f71f964fd3f",
+        "quantity": 30,
+        "costPerUnit": 14,
+        "totalCost": 420,
+        "_id": "6a876efdb9aea59c970eb482"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242f2f2b2f71f964fd3b",
+        "quantity": 30,
+        "costPerUnit": 12,
+        "totalCost": 360,
+        "_id": "6a876efdb9aea59c970eb483"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242f2f2b2f71f964fd3d",
+        "quantity": 50,
+        "costPerUnit": 4,
+        "totalCost": 200,
+        "_id": "6a876efdb9aea59c970eb484"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242d2f2b2f71f964fcfd",
+        "quantity": 50,
+        "costPerUnit": 8,
+        "totalCost": 400,
+        "_id": "6a876efdb9aea59c970eb485"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242d2f2b2f71f964fd00",
+        "quantity": 30,
+        "costPerUnit": 13.33,
+        "totalCost": 399.9,
+        "_id": "6a876efdb9aea59c970eb486"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242e2f2b2f71f964fd21",
+        "quantity": 30,
+        "costPerUnit": 14,
+        "totalCost": 420,
+        "_id": "6a876efdb9aea59c970eb487"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e24312f2b2f71f964fd63",
+        "quantity": 20,
+        "costPerUnit": 13,
+        "totalCost": 260,
+        "_id": "6a876efdb9aea59c970eb488"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242e2f2b2f71f964fd29",
+        "quantity": 20,
+        "costPerUnit": 13,
+        "totalCost": 260,
+        "_id": "6a876efdb9aea59c970eb489"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242d2f2b2f71f964fd08",
+        "quantity": 100,
+        "costPerUnit": 14,
+        "totalCost": 1400,
+        "_id": "6a876efdb9aea59c970eb48a"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa869a6a41926cb0c6e7e",
+        "quantity": 60,
+        "costPerUnit": 15,
+        "totalCost": 900,
+        "_id": "6a876efdb9aea59c970eb48b"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa86aa6a41926cb0c6e82",
+        "quantity": 12,
+        "costPerUnit": 36,
+        "totalCost": 432,
+        "_id": "6a876efdb9aea59c970eb48c"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa869a6a41926cb0c6e7f",
+        "quantity": 6,
+        "costPerUnit": 28,
+        "totalCost": 168,
+        "_id": "6a876efdb9aea59c970eb48d"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa86aa6a41926cb0c6e83",
+        "quantity": 6,
+        "costPerUnit": 45,
+        "totalCost": 270,
+        "_id": "6a876efdb9aea59c970eb48e"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242f2f2b2f71f964fd43",
+        "quantity": 30,
+        "costPerUnit": 15,
+        "totalCost": 450,
+        "_id": "6a876efdb9aea59c970eb48f"
+      }
+    ],
+    "totalAmount": 9179.9,
+    "purchaseDate": "2025-09-13T00:00:00.000Z",
+    "notes": "3rd",
+    "createdAt": "2026-08-20T21:17:49.504Z",
+    "updatedAt": "2026-08-20T21:17:49.504Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a87701eb9aea59c970eb598",
+    "invoiceNo": "PUR-260821-004",
+    "supplier": "Amanat Attar House ",
+    "items": [
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242d2f2b2f71f964fd13",
+        "quantity": 50,
+        "costPerUnit": 13,
+        "totalCost": 650,
+        "_id": "6a87701eb9aea59c970eb599"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242e2f2b2f71f964fd16",
+        "quantity": 50,
+        "costPerUnit": 8,
+        "totalCost": 400,
+        "_id": "6a87701eb9aea59c970eb59a"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242d2f2b2f71f964fd04",
+        "quantity": 50,
+        "costPerUnit": 12,
+        "totalCost": 600,
+        "_id": "6a87701eb9aea59c970eb59b"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242e2f2b2f71f964fd30",
+        "quantity": 50,
+        "costPerUnit": 8,
+        "totalCost": 400,
+        "_id": "6a87701eb9aea59c970eb59c"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa869a6a41926cb0c6e7e",
+        "quantity": 72,
+        "costPerUnit": 15,
+        "totalCost": 1080,
+        "_id": "6a87701eb9aea59c970eb59d"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa86aa6a41926cb0c6e82",
+        "quantity": 10,
+        "costPerUnit": 36,
+        "totalCost": 360,
+        "_id": "6a87701eb9aea59c970eb59e"
+      }
+    ],
+    "totalAmount": 3490,
+    "purchaseDate": "2025-09-17T00:00:00.000Z",
+    "notes": "",
+    "createdAt": "2026-08-20T21:22:38.851Z",
+    "updatedAt": "2026-08-20T21:22:38.851Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a87720ab9aea59c970eb77d",
+    "invoiceNo": "PUR-260821-005",
+    "supplier": "Amanat Attar House ",
+    "items": [
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242d2f2b2f71f964fd00",
+        "quantity": 50,
+        "costPerUnit": 8,
+        "totalCost": 400,
+        "_id": "6a87720ab9aea59c970eb77e"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242e2f2b2f71f964fd21",
+        "quantity": 50,
+        "costPerUnit": 13,
+        "totalCost": 650,
+        "_id": "6a87720ab9aea59c970eb77f"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242f2f2b2f71f964fd4a",
+        "quantity": 50,
+        "costPerUnit": 6.5,
+        "totalCost": 325,
+        "_id": "6a87720ab9aea59c970eb780"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242e2f2b2f71f964fd2d",
+        "quantity": 50,
+        "costPerUnit": 6.5,
+        "totalCost": 325,
+        "_id": "6a87720ab9aea59c970eb781"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242e2f2b2f71f964fd29",
+        "quantity": 50,
+        "costPerUnit": 13,
+        "totalCost": 650,
+        "_id": "6a87720ab9aea59c970eb782"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242d2f2b2f71f964fd0f",
+        "quantity": 50,
+        "costPerUnit": 9,
+        "totalCost": 450,
+        "_id": "6a87720ab9aea59c970eb783"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa86aa6a41926cb0c6e84",
+        "quantity": 2,
+        "costPerUnit": 90,
+        "totalCost": 180,
+        "_id": "6a87720ab9aea59c970eb784"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa86aa6a41926cb0c6e85",
+        "quantity": 1,
+        "costPerUnit": 110,
+        "totalCost": 110,
+        "_id": "6a87720ab9aea59c970eb785"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242f2f2b2f71f964fd46",
+        "quantity": 250,
+        "costPerUnit": 2.2,
+        "totalCost": 550,
+        "_id": "6a87720ab9aea59c970eb786"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242d2f2b2f71f964fd08",
+        "quantity": 70,
+        "costPerUnit": 13.5,
+        "totalCost": 945,
+        "_id": "6a87720ab9aea59c970eb787"
+      }
+    ],
+    "totalAmount": 4585,
+    "purchaseDate": "2025-09-29T00:00:00.000Z",
+    "notes": "",
+    "createdAt": "2026-08-20T21:30:50.005Z",
+    "updatedAt": "2026-08-20T21:30:50.005Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a8774c1b9aea59c970eb939",
+    "invoiceNo": "PUR-260821-006",
+    "supplier": "Amanat Attar House ",
+    "items": [
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242d2f2b2f71f964fd0f",
+        "quantity": 50,
+        "costPerUnit": 9,
+        "totalCost": 450,
+        "_id": "6ab86d0ff0f2d8e644fe61d8"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242e2f2b2f71f964fd1b",
+        "quantity": 30,
+        "costPerUnit": 13,
+        "totalCost": 390,
+        "_id": "6ab86d0ff0f2d8e644fe61d9"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e24312f2b2f71f964fd63",
+        "quantity": 37,
+        "costPerUnit": 10.55,
+        "totalCost": 390.35,
+        "_id": "6ab86d0ff0f2d8e644fe61da"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242f2f2b2f71f964fd43",
+        "quantity": 30,
+        "costPerUnit": 14,
+        "totalCost": 420,
+        "_id": "6ab86d0ff0f2d8e644fe61db"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e24302f2b2f71f964fd5c",
+        "quantity": 30,
+        "costPerUnit": 18,
+        "totalCost": 540,
+        "_id": "6ab86d0ff0f2d8e644fe61dc"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e24302f2b2f71f964fd58",
+        "quantity": 30,
+        "costPerUnit": 14,
+        "totalCost": 420,
+        "_id": "6ab86d0ff0f2d8e644fe61dd"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e24302f2b2f71f964fd4c",
+        "quantity": 50,
+        "costPerUnit": 14,
+        "totalCost": 700,
+        "_id": "6ab86d0ff0f2d8e644fe61de"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e24302f2b2f71f964fd4e",
+        "quantity": 50,
+        "costPerUnit": 12,
+        "totalCost": 600,
+        "_id": "6ab86d0ff0f2d8e644fe61df"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e24302f2b2f71f964fd52",
+        "quantity": 30,
+        "costPerUnit": 13,
+        "totalCost": 390,
+        "_id": "6ab86d0ff0f2d8e644fe61e0"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e24302f2b2f71f964fd54",
+        "quantity": 50,
+        "costPerUnit": 12,
+        "totalCost": 600,
+        "_id": "6ab86d0ff0f2d8e644fe61e1"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e24302f2b2f71f964fd56",
+        "quantity": 30,
+        "costPerUnit": 7,
+        "totalCost": 210,
+        "_id": "6ab86d0ff0f2d8e644fe61e2"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa869a6a41926cb0c6e7e",
+        "quantity": 36,
+        "costPerUnit": 15,
+        "totalCost": 540,
+        "_id": "6ab86d0ff0f2d8e644fe61e3"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa869a6a41926cb0c6e7f",
+        "quantity": 24,
+        "costPerUnit": 31,
+        "totalCost": 744,
+        "_id": "6ab86d0ff0f2d8e644fe61e4"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e24302f2b2f71f964fd50",
+        "quantity": 25,
+        "costPerUnit": 12,
+        "totalCost": 300,
+        "_id": "6ab86d0ff0f2d8e644fe61e5"
+      }
+    ],
+    "totalAmount": 6694.35,
+    "purchaseDate": "2025-10-18T00:00:00.000Z",
+    "notes": "",
+    "createdAt": "2026-08-20T21:42:25.700Z",
+    "updatedAt": "2026-09-27T01:10:39.364Z",
+    "__v": 5
+  },
+  {
+    "_id": "6a877688b9aea59c970ebab8",
+    "invoiceNo": "PUR-260821-007",
+    "supplier": "Amanat Attar House ",
+    "items": [
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242d2f2b2f71f964fd08",
+        "quantity": 50,
+        "costPerUnit": 14,
+        "totalCost": 700,
+        "_id": "6ab86bf0f0f2d8e644fe49cc"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242e2f2b2f71f964fd1e",
+        "quantity": 50,
+        "costPerUnit": 8,
+        "totalCost": 400,
+        "_id": "6ab86bf0f0f2d8e644fe49cd"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242e2f2b2f71f964fd21",
+        "quantity": 50,
+        "costPerUnit": 13,
+        "totalCost": 650,
+        "_id": "6ab86bf0f0f2d8e644fe49ce"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242d2f2b2f71f964fd0f",
+        "quantity": 50,
+        "costPerUnit": 9,
+        "totalCost": 450,
+        "_id": "6ab86bf0f0f2d8e644fe49cf"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e24302f2b2f71f964fd60",
+        "quantity": 50,
+        "costPerUnit": 12,
+        "totalCost": 600,
+        "_id": "6ab86bf0f0f2d8e644fe49d0"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242e2f2b2f71f964fd29",
+        "quantity": 50,
+        "costPerUnit": 13,
+        "totalCost": 650,
+        "_id": "6ab86bf0f0f2d8e644fe49d1"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa869a6a41926cb0c6e7f",
+        "quantity": 30,
+        "costPerUnit": 31,
+        "totalCost": 930,
+        "_id": "6ab86bf0f0f2d8e644fe49d2"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa869a6a41926cb0c6e7e",
+        "quantity": 60,
+        "costPerUnit": 15,
+        "totalCost": 900,
+        "_id": "6ab86bf0f0f2d8e644fe49d3"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242d2f2b2f71f964fd04",
+        "quantity": 50,
+        "costPerUnit": 12,
+        "totalCost": 600,
+        "_id": "6ab86bf0f0f2d8e644fe49d4"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e24312f2b2f71f964fd67",
+        "quantity": 30,
+        "costPerUnit": 33.33,
+        "totalCost": 999.9,
+        "_id": "6ab86bf0f0f2d8e644fe49d5"
+      }
+    ],
+    "totalAmount": 6879.9,
+    "purchaseDate": "2025-11-08T00:00:00.000Z",
+    "notes": "7th",
+    "createdAt": "2026-08-20T21:50:00.499Z",
+    "updatedAt": "2026-09-27T01:05:52.374Z",
+    "__v": 5
+  },
+  {
+    "_id": "6a87777eb9aea59c970ebcf0",
+    "invoiceNo": "PUR-260821-008",
+    "supplier": "Amanat Attar House ",
+    "items": [
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e24312f2b2f71f964fd73",
+        "quantity": 50,
+        "costPerUnit": 4,
+        "totalCost": 200,
+        "_id": "6a87777eb9aea59c970ebcf1"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e24312f2b2f71f964fd7a",
+        "quantity": 40,
+        "costPerUnit": 5,
+        "totalCost": 200,
+        "_id": "6a87777eb9aea59c970ebcf2"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e24312f2b2f71f964fd82",
+        "quantity": 30,
+        "costPerUnit": 12,
+        "totalCost": 360,
+        "_id": "6a87777eb9aea59c970ebcf3"
+      }
+    ],
+    "totalAmount": 760,
+    "purchaseDate": "2026-03-08T00:00:00.000Z",
+    "notes": "8th",
+    "createdAt": "2026-08-20T21:54:06.554Z",
+    "updatedAt": "2026-08-20T21:54:06.554Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a877b1eb9aea59c970ec2f2",
+    "invoiceNo": "PUR-260821-Extra3",
+    "supplier": "Amanat Attar House ",
+    "items": [
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242d2f2b2f71f964fd08",
+        "quantity": 30,
+        "costPerUnit": 14,
+        "totalCost": 420,
+        "_id": "6a877b1eb9aea59c970ec2f3"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa869a6a41926cb0c6e7f",
+        "quantity": 6,
+        "costPerUnit": 28,
+        "totalCost": 168,
+        "_id": "6a877b1eb9aea59c970ec2f4"
+      }
+    ],
+    "totalAmount": 588,
+    "purchaseDate": "2026-03-12T00:00:00.000Z",
+    "notes": "",
+    "createdAt": "2026-08-20T22:09:34.551Z",
+    "updatedAt": "2026-08-20T22:09:34.551Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a8a2795ce1203a1e7f3a6b1",
+    "invoiceNo": "PUR-260823-OnlineOrder",
+    "supplier": "Amanat Attar House ",
+    "items": [
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242d2f2b2f71f964fd08",
+        "quantity": 60,
+        "costPerUnit": 14,
+        "totalCost": 840,
+        "_id": "6a8a2795ce1203a1e7f3a6b2"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242e2f2b2f71f964fd21",
+        "quantity": 50,
+        "costPerUnit": 13,
+        "totalCost": 650,
+        "_id": "6a8a2795ce1203a1e7f3a6b3"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242e2f2b2f71f964fd21",
+        "quantity": 30,
+        "costPerUnit": 13,
+        "totalCost": 390,
+        "_id": "6a8a2795ce1203a1e7f3a6b4"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e24302f2b2f71f964fd50",
+        "quantity": 1,
+        "costPerUnit": 12,
+        "totalCost": 12,
+        "_id": "6a8a2795ce1203a1e7f3a6b5"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e24302f2b2f71f964fd58",
+        "quantity": 30,
+        "costPerUnit": 14,
+        "totalCost": 420,
+        "_id": "6a8a2795ce1203a1e7f3a6b6"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e24302f2b2f71f964fd5c",
+        "quantity": 30,
+        "costPerUnit": 18,
+        "totalCost": 540,
+        "_id": "6a8a2795ce1203a1e7f3a6b7"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e24312f2b2f71f964fd6d",
+        "quantity": 15,
+        "costPerUnit": 20,
+        "totalCost": 300,
+        "_id": "6a8a2795ce1203a1e7f3a6b8"
+      }
+    ],
+    "totalAmount": 3152,
+    "purchaseDate": "2026-03-24T00:00:00.000Z",
+    "notes": "Adjust",
+    "createdAt": "2026-08-22T22:49:57.771Z",
+    "updatedAt": "2026-08-22T22:49:57.771Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a88c05c534201783333839e",
+    "invoiceNo": "PUR-260822-ExBott",
+    "supplier": "Amanat Attar House ",
+    "items": [
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa86aa6a41926cb0c6e85",
+        "quantity": 1,
+        "costPerUnit": 140,
+        "totalCost": 140,
+        "_id": "6a8ad0130d82559ddab282de"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa86aa6a41926cb0c6e84",
+        "quantity": 8,
+        "costPerUnit": 120,
+        "totalCost": 960,
+        "_id": "6a8ad0130d82559ddab282df"
+      }
+    ],
+    "totalAmount": 1100,
+    "purchaseDate": "2026-04-09T00:00:00.000Z",
+    "notes": "",
+    "createdAt": "2026-08-21T21:17:16.109Z",
+    "updatedAt": "2026-08-23T10:48:51.758Z",
+    "__v": 1
+  },
+  {
+    "_id": "6a8778e6b9aea59c970ebe65",
+    "invoiceNo": "PUR-260821-009",
+    "supplier": "Amanat Attar House ",
+    "items": [
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e24312f2b2f71f964fd67",
+        "quantity": 16.25,
+        "costPerUnit": 34,
+        "totalCost": 552.5,
+        "_id": "6ab1b86306baaf83f3ff193c"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa86aa6a41926cb0c6e84",
+        "quantity": 2,
+        "costPerUnit": 107,
+        "totalCost": 214,
+        "_id": "6ab1b86306baaf83f3ff193d"
+      }
+    ],
+    "totalAmount": 766.5,
+    "purchaseDate": "2026-04-13T00:00:00.000Z",
+    "notes": "9th",
+    "createdAt": "2026-08-20T22:00:06.861Z",
+    "updatedAt": "2026-09-21T23:06:12.214Z",
+    "__v": 6
+  },
+  {
+    "_id": "6a877c0db9aea59c970ec5b1",
+    "invoiceNo": "PUR-260821-Extra_6",
+    "supplier": "Amanat Attar House ",
+    "items": [
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa869a6a41926cb0c6e7f",
+        "quantity": 15,
+        "costPerUnit": 32,
+        "totalCost": 480,
+        "_id": "6a877c0db9aea59c970ec5b2"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e24312f2b2f71f964fd89",
+        "quantity": 30,
+        "costPerUnit": 14,
+        "totalCost": 420,
+        "_id": "6a877c0db9aea59c970ec5b3"
+      }
+    ],
+    "totalAmount": 900,
+    "purchaseDate": "2026-06-16T00:00:00.000Z",
+    "notes": "",
+    "createdAt": "2026-08-20T22:13:33.595Z",
+    "updatedAt": "2026-08-20T22:13:33.595Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a77766421fc6555b5eab18e",
+    "invoiceNo": "PUR-260809-001",
+    "supplier": "Amanat Attar House ",
+    "items": [
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242e2f2b2f71f964fd1e",
+        "quantity": 60,
+        "costPerUnit": 8,
+        "totalCost": 480,
+        "_id": "6ac1141b2d1341784ad0d4a4"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e24302f2b2f71f964fd58",
+        "quantity": 20,
+        "costPerUnit": 14,
+        "totalCost": 280,
+        "_id": "6ac1141b2d1341784ad0d4a5"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242d2f2b2f71f964fd08",
+        "quantity": 50,
+        "costPerUnit": 13,
+        "totalCost": 650,
+        "_id": "6ac1141b2d1341784ad0d4a6"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242f2f2b2f71f964fd4a",
+        "quantity": 30,
+        "costPerUnit": 5,
+        "totalCost": 150,
+        "_id": "6ac1141b2d1341784ad0d4a7"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242e2f2b2f71f964fd2d",
+        "quantity": 30,
+        "costPerUnit": 6,
+        "totalCost": 180,
+        "_id": "6ac1141b2d1341784ad0d4a8"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a77727221fc6555b5eaad44",
+        "quantity": 30,
+        "costPerUnit": 14,
+        "totalCost": 420,
+        "_id": "6ac1141b2d1341784ad0d4a9"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242e2f2b2f71f964fd21",
+        "quantity": 30,
+        "costPerUnit": 12,
+        "totalCost": 360,
+        "_id": "6ac1141b2d1341784ad0d4aa"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242d2f2b2f71f964fd0f",
+        "quantity": 30,
+        "costPerUnit": 8,
+        "totalCost": 240,
+        "_id": "6ac1141b2d1341784ad0d4ab"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242e2f2b2f71f964fd16",
+        "quantity": 20,
+        "costPerUnit": 8,
+        "totalCost": 160,
+        "_id": "6ac1141b2d1341784ad0d4ac"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e24302f2b2f71f964fd4c",
+        "quantity": 30,
+        "costPerUnit": 14,
+        "totalCost": 420,
+        "_id": "6ac1141b2d1341784ad0d4ad"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a77731f21fc6555b5eab138",
+        "quantity": 30,
+        "costPerUnit": 16,
+        "totalCost": 480,
+        "_id": "6ac1141b2d1341784ad0d4ae"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a77734b21fc6555b5eab139",
+        "quantity": 30,
+        "costPerUnit": 8,
+        "totalCost": 240,
+        "_id": "6ac1141b2d1341784ad0d4af"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a7773a121fc6555b5eab13a",
+        "quantity": 30,
+        "costPerUnit": 16,
+        "totalCost": 480,
+        "_id": "6ac1141b2d1341784ad0d4b0"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a7773ce21fc6555b5eab13b",
+        "quantity": 30,
+        "costPerUnit": 11,
+        "totalCost": 330,
+        "_id": "6ac1141b2d1341784ad0d4b1"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e24302f2b2f71f964fd4e",
+        "quantity": 30,
+        "costPerUnit": 10,
+        "totalCost": 300,
+        "_id": "6ac1141b2d1341784ad0d4b2"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a77740b21fc6555b5eab13c",
+        "quantity": 34.7,
+        "costPerUnit": 11.26,
+        "totalCost": 390.72200000000004,
+        "_id": "6ac1141b2d1341784ad0d4b3"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a77744021fc6555b5eab13d",
+        "quantity": 30,
+        "costPerUnit": 16,
+        "totalCost": 480,
+        "_id": "6ac1141b2d1341784ad0d4b4"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a77747b21fc6555b5eab13e",
+        "quantity": 30,
+        "costPerUnit": 14,
+        "totalCost": 420,
+        "_id": "6ac1141b2d1341784ad0d4b5"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a7774b221fc6555b5eab13f",
+        "quantity": 30,
+        "costPerUnit": 16,
+        "totalCost": 480,
+        "_id": "6ac1141b2d1341784ad0d4b6"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242f2f2b2f71f964fd39",
+        "quantity": 20,
+        "costPerUnit": 14,
+        "totalCost": 280,
+        "_id": "6ac1141b2d1341784ad0d4b7"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e24312f2b2f71f964fd89",
+        "quantity": 30,
+        "costPerUnit": 12,
+        "totalCost": 360,
+        "_id": "6ac1141b2d1341784ad0d4b8"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa869a6a41926cb0c6e7e",
+        "quantity": 24,
+        "costPerUnit": 13.33,
+        "totalCost": 319.92,
+        "_id": "6ac1141b2d1341784ad0d4b9"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa869a6a41926cb0c6e7f",
+        "quantity": 13,
+        "costPerUnit": 31,
+        "totalCost": 403,
+        "_id": "6ac1141b2d1341784ad0d4ba"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa869a6a41926cb0c6e80",
+        "quantity": 6,
+        "costPerUnit": 35,
+        "totalCost": 210,
+        "_id": "6ac1141b2d1341784ad0d4bb"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa86aa6a41926cb0c6e84",
+        "quantity": 6,
+        "costPerUnit": 130,
+        "totalCost": 780,
+        "_id": "6ac1141b2d1341784ad0d4bc"
+      }
+    ],
+    "totalAmount": 9293.642,
+    "purchaseDate": "2026-08-06T00:00:00.000Z",
+    "notes": "New Item  ",
+    "createdAt": "2026-08-08T18:33:08.953Z",
+    "updatedAt": "2026-10-03T14:41:31.860Z",
+    "__v": 11
+  },
+  {
+    "_id": "6a877b94b9aea59c970ec450",
+    "invoiceNo": "PUR-260821-Extra4",
+    "supplier": "Amanat Attar House ",
+    "items": [
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242f2f2b2f71f964fd46",
+        "quantity": 250,
+        "costPerUnit": 2.08,
+        "totalCost": 520,
+        "_id": "6a877b94b9aea59c970ec451"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242e2f2b2f71f964fd21",
+        "quantity": 30,
+        "costPerUnit": 13,
+        "totalCost": 390,
+        "_id": "6a877b94b9aea59c970ec452"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242d2f2b2f71f964fd0c",
+        "quantity": 20,
+        "costPerUnit": 8,
+        "totalCost": 160,
+        "_id": "6a877b94b9aea59c970ec453"
+      }
+    ],
+    "totalAmount": 1070,
+    "purchaseDate": "2026-08-20T00:00:00.000Z",
+    "notes": "",
+    "createdAt": "2026-08-20T22:11:32.751Z",
+    "updatedAt": "2026-08-20T22:11:32.751Z",
+    "__v": 0
+  },
+  {
+    "_id": "6a8ab4d39f20594af2ef1ead",
+    "invoiceNo": "PUR-260823-extra bottle ",
+    "supplier": "Amanat Attar House ",
+    "items": [
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa86aa6a41926cb0c6e82",
+        "quantity": 16,
+        "costPerUnit": 34,
+        "totalCost": 544,
+        "_id": "6a8b23caccbc43e19a425827"
+      }
+    ],
+    "totalAmount": 544,
+    "purchaseDate": "2026-08-23T00:00:00.000Z",
+    "notes": "",
+    "createdAt": "2026-08-23T08:52:35.855Z",
+    "updatedAt": "2026-08-23T16:46:02.839Z",
+    "__v": 1
+  },
+  {
+    "_id": "6a8aca809f20594af2efd1ec",
+    "invoiceNo": "PUR-260823-bottle",
+    "supplier": "",
+    "items": [
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa86aa6a41926cb0c6e85",
+        "quantity": 1,
+        "costPerUnit": 140,
+        "totalCost": 140,
+        "_id": "6ad789f894a936701bdc0e91"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa86aa6a41926cb0c6e86",
+        "quantity": 1,
+        "costPerUnit": 180,
+        "totalCost": 180,
+        "_id": "6ad789f894a936701bdc0e92"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa869a6a41926cb0c6e80",
+        "quantity": 1,
+        "costPerUnit": 35,
+        "totalCost": 35,
+        "_id": "6ad789f894a936701bdc0e93"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa86aa6a41926cb0c6e83",
+        "quantity": 17,
+        "costPerUnit": 45,
+        "totalCost": 765,
+        "_id": "6ad789f894a936701bdc0e94"
+      }
+    ],
+    "totalAmount": 1120,
+    "purchaseDate": "2026-08-23T00:00:00.000Z",
+    "notes": "",
+    "createdAt": "2026-08-23T10:25:04.811Z",
+    "updatedAt": "2026-10-20T15:34:16.510Z",
+    "__v": 11
+  },
+  {
+    "_id": "6a96e39511d40c64b3d07067",
+    "invoiceNo": "PUR-260901-online Bottle ",
+    "supplier": "Alamin",
+    "items": [
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242f2f2b2f71f964fd46",
+        "quantity": 250,
+        "costPerUnit": 2,
+        "totalCost": 500,
+        "_id": "6ab86aaff0f2d8e644fe010b"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa869a6a41926cb0c6e7e",
+        "quantity": 36,
+        "costPerUnit": 13.33,
+        "totalCost": 479.88,
+        "_id": "6ab86aaff0f2d8e644fe010c"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa869a6a41926cb0c6e7f",
+        "quantity": 5,
+        "costPerUnit": 25,
+        "totalCost": 125,
+        "_id": "6ab86aaff0f2d8e644fe010d"
+      }
+    ],
+    "totalAmount": 1104.88,
+    "purchaseDate": "2026-09-01T00:00:00.000Z",
+    "notes": "Only bottle + ethanol",
+    "createdAt": "2026-09-01T14:39:17.973Z",
+    "updatedAt": "2026-09-27T01:00:31.719Z",
+    "__v": 2
+  },
+  {
+    "_id": "6a9fad45c5226a84a68fdbbe",
+    "invoiceNo": "PUR-260908-1",
+    "supplier": "Amanat Attar house",
+    "items": [
+      {
+        "itemType": "RawMaterial",
+        "item": "6a77727221fc6555b5eaad44",
+        "quantity": 30,
+        "costPerUnit": 15,
+        "totalCost": 450,
+        "_id": "6ab86af6f0f2d8e644fe093a"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e24312f2b2f71f964fd89",
+        "quantity": 30,
+        "costPerUnit": 12,
+        "totalCost": 360,
+        "_id": "6ab86af6f0f2d8e644fe093b"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a77740b21fc6555b5eab13c",
+        "quantity": 20,
+        "costPerUnit": 13,
+        "totalCost": 260,
+        "_id": "6ab86af6f0f2d8e644fe093c"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a9fac70c5226a84a68fdb96",
+        "quantity": 20,
+        "costPerUnit": 14,
+        "totalCost": 280,
+        "_id": "6ab86af6f0f2d8e644fe093d"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa869a6a41926cb0c6e7e",
+        "quantity": 48,
+        "costPerUnit": 13.33,
+        "totalCost": 639.84,
+        "_id": "6ab86af6f0f2d8e644fe093e"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa86aa6a41926cb0c6e82",
+        "quantity": 8,
+        "costPerUnit": 35,
+        "totalCost": 280,
+        "_id": "6ab86af6f0f2d8e644fe093f"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa86aa6a41926cb0c6e84",
+        "quantity": 5,
+        "costPerUnit": 102,
+        "totalCost": 510,
+        "_id": "6ab86af6f0f2d8e644fe0940"
+      }
+    ],
+    "totalAmount": 2779.84,
+    "purchaseDate": "2026-09-08T00:00:00.000Z",
+    "notes": "",
+    "createdAt": "2026-09-08T06:37:57.285Z",
+    "updatedAt": "2026-09-27T01:01:42.653Z",
+    "__v": 1
+  },
+  {
+    "_id": "6a877a8cb9aea59c970ec196",
+    "invoiceNo": "PUR-260821-Extra_2",
+    "supplier": "Amanat Attar House ",
+    "items": [
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa869a6a41926cb0c6e7e",
+        "quantity": 58,
+        "costPerUnit": 15,
+        "totalCost": 870,
+        "_id": "6ab1a86d7b8ec8faea2aead3"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa86aa6a41926cb0c6e82",
+        "quantity": 12,
+        "costPerUnit": 36,
+        "totalCost": 432,
+        "_id": "6ab1a86d7b8ec8faea2aead4"
+      }
+    ],
+    "totalAmount": 1302,
+    "purchaseDate": "2026-09-30T00:00:00.000Z",
+    "notes": "",
+    "createdAt": "2026-08-20T22:07:08.727Z",
+    "updatedAt": "2026-09-21T21:58:06.013Z",
+    "__v": 4
+  },
+  {
+    "_id": "6abd147d2b0579c2616e904a",
+    "invoiceNo": "PUR-260908-010",
+    "supplier": "Amanat Attar House",
+    "items": [
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa86aa6a41926cb0c6e83",
+        "quantity": 4,
+        "costPerUnit": 40,
+        "totalCost": 160,
+        "_id": "6ace4e756705e970751ebe0c"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa86aa6a41926cb0c6e82",
+        "quantity": 14,
+        "costPerUnit": 28,
+        "totalCost": 392,
+        "_id": "6ace4e756705e970751ebe0d"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6abd146a2b0579c2616e9038",
+        "quantity": 30,
+        "costPerUnit": 13,
+        "totalCost": 390,
+        "_id": "6ace4e756705e970751ebe0e"
+      }
+    ],
+    "totalAmount": 942,
+    "purchaseDate": "2026-09-30T00:00:00.000Z",
+    "notes": "",
+    "createdAt": "2026-09-30T13:54:05.274Z",
+    "updatedAt": "2026-10-13T15:29:57.448Z",
+    "__v": 1
+  },
+  {
+    "_id": "6ac4de1b384e2cd6fed6dea7",
+    "invoiceNo": "PUR-260908-012",
+    "supplier": "Amanat attar house",
+    "items": [
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242d2f2b2f71f964fd0f",
+        "quantity": 50,
+        "costPerUnit": 8,
+        "totalCost": 400,
+        "_id": "6ad925838f67f57ef4e14e24"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a7773a121fc6555b5eab13a",
+        "quantity": 30,
+        "costPerUnit": 17,
+        "totalCost": 510,
+        "_id": "6ad925838f67f57ef4e14e25"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242e2f2b2f71f964fd29",
+        "quantity": 30,
+        "costPerUnit": 12,
+        "totalCost": 360,
+        "_id": "6ad925838f67f57ef4e14e26"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e24312f2b2f71f964fd63",
+        "quantity": 30,
+        "costPerUnit": 14,
+        "totalCost": 420,
+        "_id": "6ad925838f67f57ef4e14e27"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a77747b21fc6555b5eab13e",
+        "quantity": 30,
+        "costPerUnit": 14,
+        "totalCost": 420,
+        "_id": "6ad925838f67f57ef4e14e28"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a77740b21fc6555b5eab13c",
+        "quantity": 30,
+        "costPerUnit": 14,
+        "totalCost": 420,
+        "_id": "6ad925838f67f57ef4e14e29"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a77734b21fc6555b5eab139",
+        "quantity": 30,
+        "costPerUnit": 8,
+        "totalCost": 240,
+        "_id": "6ad925838f67f57ef4e14e2a"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242f2f2b2f71f964fd39",
+        "quantity": 30,
+        "costPerUnit": 14,
+        "totalCost": 420,
+        "_id": "6ad925838f67f57ef4e14e2b"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242e2f2b2f71f964fd1e",
+        "quantity": 25,
+        "costPerUnit": 8,
+        "totalCost": 200,
+        "_id": "6ad925838f67f57ef4e14e2c"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa86aa6a41926cb0c6e84",
+        "quantity": 2,
+        "costPerUnit": 100,
+        "totalCost": 200,
+        "_id": "6ad925838f67f57ef4e14e2d"
+      }
+    ],
+    "totalAmount": 3590,
+    "purchaseDate": "2026-10-06T00:00:00.000Z",
+    "notes": "",
+    "createdAt": "2026-10-06T11:40:11.333Z",
+    "updatedAt": "2026-10-21T20:50:11.127Z",
+    "__v": 2
+  },
+  {
+    "_id": "6ad0bd24d034bfad6ca8be59",
+    "invoiceNo": "PUR-260908-013",
+    "supplier": "Amanat Ator house",
+    "items": [
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242e2f2b2f71f964fd30",
+        "quantity": 30,
+        "costPerUnit": 8,
+        "totalCost": 240,
+        "_id": "6ad0bd24d034bfad6ca8be5a"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e24302f2b2f71f964fd4e",
+        "quantity": 30,
+        "costPerUnit": 12,
+        "totalCost": 360,
+        "_id": "6ad0bd24d034bfad6ca8be5b"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e24302f2b2f71f964fd4c",
+        "quantity": 30,
+        "costPerUnit": 14,
+        "totalCost": 420,
+        "_id": "6ad0bd24d034bfad6ca8be5c"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e24312f2b2f71f964fd89",
+        "quantity": 30,
+        "costPerUnit": 13,
+        "totalCost": 390,
+        "_id": "6ad0bd24d034bfad6ca8be5d"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa86aa6a41926cb0c6e82",
+        "quantity": 10,
+        "costPerUnit": 33,
+        "totalCost": 330,
+        "_id": "6ad0bd24d034bfad6ca8be5e"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa869a6a41926cb0c6e7e",
+        "quantity": 36,
+        "costPerUnit": 12.5,
+        "totalCost": 450,
+        "_id": "6ad0bd24d034bfad6ca8be5f"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa86aa6a41926cb0c6e84",
+        "quantity": 3,
+        "costPerUnit": 110,
+        "totalCost": 330,
+        "_id": "6ad0bd24d034bfad6ca8be60"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242f2f2b2f71f964fd46",
+        "quantity": 250,
+        "costPerUnit": 2,
+        "totalCost": 500,
+        "_id": "6ad0bd24d034bfad6ca8be61"
+      }
+    ],
+    "totalAmount": 3020,
+    "purchaseDate": "2026-10-15T00:00:00.000Z",
+    "notes": "",
+    "createdAt": "2026-10-15T11:46:44.904Z",
+    "updatedAt": "2026-10-15T11:46:44.904Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad731585de56cd2808bf4e0",
+    "invoiceNo": "PUR-260908-014",
+    "supplier": "Amanat Atar house",
+    "items": [
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa869a6a41926cb0c6e7f",
+        "quantity": 12,
+        "costPerUnit": 26,
+        "totalCost": 312,
+        "_id": "6ad731585de56cd2808bf4e1"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa86aa6a41926cb0c6e82",
+        "quantity": 12,
+        "costPerUnit": 33,
+        "totalCost": 396,
+        "_id": "6ad731585de56cd2808bf4e2"
+      },
+      {
+        "itemType": "Bottle",
+        "item": "6a3fa869a6a41926cb0c6e7e",
+        "quantity": 72,
+        "costPerUnit": 12.5,
+        "totalCost": 900,
+        "_id": "6ad731585de56cd2808bf4e3"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242e2f2b2f71f964fd21",
+        "quantity": 20,
+        "costPerUnit": 13,
+        "totalCost": 260,
+        "_id": "6ad731585de56cd2808bf4e4"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242d2f2b2f71f964fd0f",
+        "quantity": 50,
+        "costPerUnit": 8,
+        "totalCost": 400,
+        "_id": "6ad731585de56cd2808bf4e5"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242e2f2b2f71f964fd29",
+        "quantity": 20,
+        "costPerUnit": 13,
+        "totalCost": 260,
+        "_id": "6ad731585de56cd2808bf4e6"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e24302f2b2f71f964fd4c",
+        "quantity": 30,
+        "costPerUnit": 14,
+        "totalCost": 420,
+        "_id": "6ad731585de56cd2808bf4e7"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a7773a121fc6555b5eab13a",
+        "quantity": 30,
+        "costPerUnit": 17,
+        "totalCost": 510,
+        "_id": "6ad731585de56cd2808bf4e8"
+      },
+      {
+        "itemType": "RawMaterial",
+        "item": "6a3e242d2f2b2f71f964fd08",
+        "quantity": 40,
+        "costPerUnit": 10,
+        "totalCost": 400,
+        "_id": "6ad731585de56cd2808bf4e9"
+      }
+    ],
+    "totalAmount": 3858,
+    "purchaseDate": "2026-10-20T00:00:00.000Z",
+    "notes": "",
+    "createdAt": "2026-10-20T09:16:08.349Z",
+    "updatedAt": "2026-10-20T09:16:08.349Z",
+    "__v": 0
+  }
+]

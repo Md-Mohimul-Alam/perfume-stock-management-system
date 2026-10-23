@@ -295,24 +295,24 @@ async function applyExactBlends() {
 
   const sprayRules = {
     6: {
-      oil: 55.2,
-      ethanol: 44.8,
-      iso: 0,
-      glx: 0,
-      ambx: 0,
+      oil: 58,
+      ethanol: 39,
+      iso: 1,
+      glx: 1,
+      ambx: 1,
     },
 
     15: {
-      oil: 50,
-      ethanol: 47,
+      oil: 55,
+      ethanol: 42,
       iso: 1,
       glx: 1,
       ambx: 1,
     },
 
     30: {
-      oil: 52,
-      ethanol: 45,
+      oil: 55,
+      ethanol: 42,
       iso: 1,
       glx: 1,
       ambx: 1,
@@ -327,8 +327,8 @@ async function applyExactBlends() {
     },
 
     100: {
-      oil: 60,
-      ethanol: 37,
+      oil: 55,
+      ethanol: 42,
       iso: 1,
       glx: 1,
       ambx: 1,
