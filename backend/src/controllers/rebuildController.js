@@ -34,9 +34,9 @@ const roundMl = (value) => Math.round(value * 10000) / 10000;
 ======================================== */
 
 const sprayRules = {
-  6: { oil: 58, ethanol: 39, iso: 1, glx: 1, ambx: 1 },
+  6: { oil: 60, ethanol: 38, iso: 1, glx: .6, ambx: .4 },
   15: { oil: 55, ethanol: 42, iso: 1, glx: 1, ambx: 1 },
-  30: { oil: 58, ethanol: 39, iso: 1, glx: 1, ambx: 1 },
+  30: { oil: 60, ethanol: 37, iso: 1, glx: 1, ambx: 1 },
   50: { oil: 55, ethanol: 42, iso: 1, glx: 1, ambx: 1 },
   100: { oil: 55, ethanol: 42, iso: 1, glx: 1, ambx: 1 },
 };
