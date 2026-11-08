@@ -63,6 +63,7 @@ const allowedOrigins = [
   "https://perfume-stock-management-system-545.vercel.app",
   "https://perfume-stock-management-system-ewa.vercel.app",
   "https://luxeperfume.netlify.app",
+  "https://pricelistluxe.netlify.app",
 ];
 
 /*
