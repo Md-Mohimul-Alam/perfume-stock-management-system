@@ -1,8 +1,7 @@
-const express =
-  require('express');
 
-const router =
-  express.Router();
+const express = require('express');
+
+const router = express.Router();
 
 const {
   getInvestors,
@@ -13,45 +12,29 @@ const {
   getShares,
   deleteInvestor,
   getSettlements,
-} =
-  require('../controllers/investorController');
+} = require('../controllers/investorController');
 
 const {
   protect,
-} =
-  require('../middlewares/authMiddleware');
+  admin,
+} = require('../middlewares/authMiddleware');
 
 /* ========================================
-   BASE
+   VIEW INVESTORS
 ======================================== */
 
 router
   .route('/')
-  .get(
-    protect,
-    getInvestors
-  )
-  .post(
-    protect,
-    createInvestor
-  );
+  .get(protect, getInvestors)
+  .post(protect, admin, createInvestor);
 
 /* ========================================
    STATIC ROUTES
-   Keep these before /:id
 ======================================== */
 
-router.get(
-  '/shares',
-  protect,
-  getShares
-);
+router.get('/shares', protect, getShares);
 
-router.get(
-  '/settlements',
-  protect,
-  getSettlements
-);
+router.get('/settlements', protect, getSettlements);
 
 /* ========================================
    CONTRIBUTIONS
@@ -60,30 +43,33 @@ router.get(
 router.post(
   '/:id/contribute',
   protect,
+  admin,
   addContribution
 );
 
 router.put(
   '/:id/contributions/:contributionId',
   protect,
+  admin,
   updateContribution
 );
 
 router.delete(
   '/:id/contributions/:contributionId',
   protect,
+  admin,
   deleteContribution
 );
 
 /* ========================================
-   INVESTOR
+   CLOSE INVESTOR
 ======================================== */
 
 router.delete(
   '/:id',
   protect,
+  admin,
   deleteInvestor
 );
 
-module.exports =
-  router;
+module.exports = router;

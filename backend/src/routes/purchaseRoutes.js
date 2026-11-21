@@ -9,6 +9,7 @@ const {
   bulkCreatePurchases,
   updatePurchase,
   deletePurchase,
+  addPurchasePayment,
 } = require('../controllers/purchaseController');
 
 const {
@@ -16,10 +17,10 @@ const {
   admin,
 } = require('../middlewares/authMiddleware');
 
-/*
-  All authenticated users can view purchases.
-  Only admins can create, import, edit, or delete.
-*/
+/**
+ * All authenticated users can view purchases.
+ * Only admins can create, import, edit, delete, or record supplier payments.
+ */
 
 router.route('/')
   .get(protect, getPurchases)
@@ -30,6 +31,14 @@ router.post(
   protect,
   admin,
   bulkCreatePurchases
+);
+
+// Record a supplier payment against a purchase
+router.post(
+  '/:id/payments',
+  protect,
+  admin,
+  addPurchasePayment
 );
 
 router.route('/:id')

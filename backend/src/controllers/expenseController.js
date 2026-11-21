@@ -1,20 +1,58 @@
+
 const mongoose = require('mongoose');
 const Expense = require('../models/Expense');
 const Transaction = require('../models/Transaction');
 const InventoryLog = require('../models/InventoryLog');
-const RawMaterial = require('../models/RawMaterial');
 
 /* ========================================
    HELPERS
 ======================================== */
 
 const toNumber = (value, fallback = 0) => {
+  if (value === undefined || value === null || value === '') {
+    return fallback;
+  }
+
   const num = Number(value);
-  return Number.isFinite(num) ? num : fallback;
+
+  if (!Number.isFinite(num)) {
+    const error = new Error(
+      'Expense amount and cost fields must contain valid numbers.'
+    );
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return num;
 };
 
-const roundMl = (value) =>
-  Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+const parseExpenseDate = (value, fallback = new Date()) => {
+  if (value === undefined || value === null || value === '') {
+    return fallback;
+  }
+
+  const parsed = new Date(value);
+
+  if (Number.isNaN(parsed.getTime())) {
+    const error = new Error('Invalid expense date.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return parsed;
+};
+
+const validateNonNegativeCosts = (values) => {
+  for (const value of values) {
+    if (value < 0) {
+      const error = new Error(
+        'Expense amounts and costs cannot be negative.'
+      );
+      error.statusCode = 400;
+      throw error;
+    }
+  }
+};
 
 const syncExpenseTransaction = async (expense, session = null) => {
   const filter = {
@@ -23,10 +61,12 @@ const syncExpenseTransaction = async (expense, session = null) => {
     category: 'Expense',
   };
 
-  // Update one existing transaction where possible, instead of deleting and
-  // recreating it on every edit. Remove any accidental duplicates afterwards.
   let query = Transaction.findOne(filter);
-  if (session) query = query.session(session);
+
+  if (session) {
+    query = query.session(session);
+  }
+
   const existing = await query;
 
   const transactionData = {
@@ -43,16 +83,20 @@ const syncExpenseTransaction = async (expense, session = null) => {
 
   if (existing) {
     Object.assign(existing, transactionData);
+
     await existing.save(session ? { session } : {});
+
     await Transaction.deleteMany(
-      { ...filter, _id: { $ne: existing._id } },
+      {
+        ...filter,
+        _id: { $ne: existing._id },
+      },
       session ? { session } : {}
     );
+  } else if (session) {
+    await Transaction.create([transactionData], { session });
   } else {
-    await Transaction.create(
-      [transactionData],
-      session ? { session } : undefined
-    );
+    await Transaction.create(transactionData);
   }
 };
 
@@ -78,8 +122,6 @@ const validateWastageFields = async ({
     quantityMl !== null &&
     quantityMl !== '';
 
-  // Linked wastage must be recorded through
-  // the inventory stock-out/adjustment workflow.
   if (hasMaterial || hasQuantity) {
     const error = new Error(
       'For material wastage, use the inventory stock-out or stock-adjustment feature. Do not create it through the general expense form.'
@@ -89,8 +131,6 @@ const validateWastageFields = async ({
     throw error;
   }
 
-  // Allow ordinary historical/manual wastage expenses
-  // that are not connected to inventory.
   return {
     material: null,
     quantityMl: null,
@@ -106,13 +146,48 @@ exports.getExpenses = async (req, res) => {
     const { category, startDate, endDate, type } = req.query;
     const filter = {};
 
-    if (category) filter.category = category;
-    if (type) filter.type = type;
+    if (category) {
+      filter.category = category;
+    }
+
+    if (type) {
+      if (!['regular', 'event'].includes(type)) {
+        return res.status(400).json({
+          message: 'Invalid expense type.',
+        });
+      }
+
+      filter.type = type;
+    }
 
     if (startDate || endDate) {
       filter.date = {};
-      if (startDate) filter.date.$gte = new Date(startDate);
-      if (endDate) filter.date.$lte = new Date(endDate);
+
+      if (startDate) {
+        filter.date.$gte = parseExpenseDate(startDate);
+      }
+
+      if (endDate) {
+        const parsedEndDate = parseExpenseDate(endDate);
+
+        // Include the entire selected end date
+        // when the frontend sends YYYY-MM-DD.
+        if (/^\d{4}-\d{2}-\d{2}$/.test(endDate)) {
+          parsedEndDate.setUTCHours(23, 59, 59, 999);
+        }
+
+        filter.date.$lte = parsedEndDate;
+      }
+
+      if (
+        filter.date.$gte &&
+        filter.date.$lte &&
+        filter.date.$gte > filter.date.$lte
+      ) {
+        return res.status(400).json({
+          message: 'Start date cannot be later than end date.',
+        });
+      }
     }
 
     const expenses = await Expense.find(filter)
@@ -121,7 +196,9 @@ exports.getExpenses = async (req, res) => {
 
     return res.json(expenses);
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    return res.status(error.statusCode || 500).json({
+      message: error.message,
+    });
   }
 };
 
@@ -156,17 +233,18 @@ exports.createExpense = async (req, res) => {
       let finalAmount = toNumber(amount);
       const finalStallRent = toNumber(stallRent);
       const finalOtherCosts = toNumber(otherCosts);
+
+      validateNonNegativeCosts([
+        finalAmount,
+        finalStallRent,
+        finalOtherCosts,
+      ]);
+
       let finalEventTotal = 0;
 
       if (cleanType === 'event') {
         finalEventTotal = finalStallRent + finalOtherCosts;
         finalAmount = finalEventTotal;
-      }
-
-      if (finalAmount < 0) {
-        const error = new Error('Expense amount cannot be negative.');
-        error.statusCode = 400;
-        throw error;
       }
 
       const finalCategory =
@@ -182,33 +260,36 @@ exports.createExpense = async (req, res) => {
         category: finalCategory,
         material,
         quantityMl,
-        session,
       });
 
       const [expense] = await Expense.create(
-        [{
-          type: cleanType,
-          category: finalCategory,
-          amount: finalAmount,
-          date: date ? new Date(date) : new Date(),
-          description: description || '',
-          reference: reference || '',
-          term: term || '',
-          stallRent: cleanType === 'event' ? finalStallRent : 0,
-          otherCosts: cleanType === 'event' ? finalOtherCosts : 0,
-          eventTotal: cleanType === 'event' ? finalEventTotal : 0,
-          notes: notes || '',
-          material: wastageFields.material,
-          quantityMl: wastageFields.quantityMl,
-        }],
+        [
+          {
+            type: cleanType,
+            category: finalCategory,
+            amount: finalAmount,
+            date: parseExpenseDate(date),
+            description: description || '',
+            reference: reference || '',
+            term: term || '',
+            stallRent: cleanType === 'event' ? finalStallRent : 0,
+            otherCosts: cleanType === 'event' ? finalOtherCosts : 0,
+            eventTotal: cleanType === 'event' ? finalEventTotal : 0,
+            notes: notes || '',
+            material: wastageFields.material,
+            quantityMl: wastageFields.quantityMl,
+          },
+        ],
         { session }
       );
 
       await syncExpenseTransaction(expense, session);
+
       createdExpense = expense;
     });
 
     await createdExpense.populate('material', 'name sku type');
+
     return res.status(201).json(createdExpense);
   } catch (error) {
     return res.status(error.statusCode || 500).json({
@@ -266,15 +347,29 @@ exports.updateExpense = async (req, res) => {
         throw error;
       }
 
-      const finalCategory = category !== undefined ? category : expense.category;
+      const finalCategory =
+        category !== undefined ? category : expense.category;
+
       const finalAmountInput =
-        amount !== undefined ? toNumber(amount, expense.amount) : expense.amount;
+        amount !== undefined
+          ? toNumber(amount, expense.amount)
+          : expense.amount;
 
       const finalStallRent =
-        stallRent !== undefined ? toNumber(stallRent) : toNumber(expense.stallRent);
+        stallRent !== undefined
+          ? toNumber(stallRent)
+          : toNumber(expense.stallRent);
 
       const finalOtherCosts =
-        otherCosts !== undefined ? toNumber(otherCosts) : toNumber(expense.otherCosts);
+        otherCosts !== undefined
+          ? toNumber(otherCosts)
+          : toNumber(expense.otherCosts);
+
+      validateNonNegativeCosts([
+        finalAmountInput,
+        finalStallRent,
+        finalOtherCosts,
+      ]);
 
       let finalAmount = finalAmountInput;
       let finalEventTotal = 0;
@@ -284,25 +379,29 @@ exports.updateExpense = async (req, res) => {
         finalAmount = finalEventTotal;
       }
 
-      if (finalAmount < 0) {
-        const error = new Error('Expense amount cannot be negative.');
+      if (!finalCategory) {
+        const error = new Error('Expense category is required.');
         error.statusCode = 400;
         throw error;
       }
 
-      // A linked stock event is immutable through the generic expense editor.
-      // Changing its amount/material/quantity/category would desynchronize stock.
+      // Prevent generic edits from changing stock-linked expenses.
       if (linkedLogs.length > 0) {
         const stockSensitiveChange =
-          (category !== undefined && category !== expense.category) ||
-          (amount !== undefined && Number(amount) !== Number(expense.amount)) ||
-          (material !== undefined && String(material) !== String(expense.material || '')) ||
-          (quantityMl !== undefined && Number(quantityMl) !== Number(expense.quantityMl));
+          (category !== undefined &&
+            category !== expense.category) ||
+          (amount !== undefined &&
+            Number(amount) !== Number(expense.amount)) ||
+          (material !== undefined &&
+            String(material) !== String(expense.material || '')) ||
+          (quantityMl !== undefined &&
+            Number(quantityMl) !== Number(expense.quantityMl));
 
         if (stockSensitiveChange) {
           const error = new Error(
             'This expense is linked to an inventory log. Its category, amount, material, and quantity cannot be changed here. Use a separate correction workflow.'
           );
+
           error.statusCode = 409;
           throw error;
         }
@@ -310,33 +409,58 @@ exports.updateExpense = async (req, res) => {
 
       const wastageFields = await validateWastageFields({
         category: finalCategory,
-        material: material !== undefined ? material : expense.material,
-        quantityMl: quantityMl !== undefined ? quantityMl : expense.quantityMl,
-        session,
+        material:
+          material !== undefined ? material : expense.material,
+        quantityMl:
+          quantityMl !== undefined ? quantityMl : expense.quantityMl,
       });
 
       expense.type = finalType;
       expense.category = finalCategory;
       expense.amount = finalAmount;
-      expense.date = date !== undefined ? new Date(date) : expense.date;
+
+      expense.date =
+        date !== undefined
+          ? parseExpenseDate(date, expense.date)
+          : expense.date;
+
       expense.description =
-        description !== undefined ? description : expense.description;
+        description !== undefined
+          ? description
+          : expense.description;
+
       expense.reference =
-        reference !== undefined ? reference : expense.reference;
-      expense.term = term !== undefined ? term : expense.term;
-      expense.stallRent = finalType === 'event' ? finalStallRent : 0;
-      expense.otherCosts = finalType === 'event' ? finalOtherCosts : 0;
-      expense.eventTotal = finalType === 'event' ? finalEventTotal : 0;
-      expense.notes = notes !== undefined ? notes : expense.notes;
+        reference !== undefined
+          ? reference
+          : expense.reference;
+
+      expense.term =
+        term !== undefined ? term : expense.term;
+
+      expense.stallRent =
+        finalType === 'event' ? finalStallRent : 0;
+
+      expense.otherCosts =
+        finalType === 'event' ? finalOtherCosts : 0;
+
+      expense.eventTotal =
+        finalType === 'event' ? finalEventTotal : 0;
+
+      expense.notes =
+        notes !== undefined ? notes : expense.notes;
+
       expense.material = wastageFields.material;
       expense.quantityMl = wastageFields.quantityMl;
 
       await expense.save({ session });
+
       await syncExpenseTransaction(expense, session);
+
       updatedExpense = expense;
     });
 
     await updatedExpense.populate('material', 'name sku type');
+
     return res.json(updatedExpense);
   } catch (error) {
     return res.status(error.statusCode || 500).json({
@@ -375,6 +499,7 @@ exports.deleteExpense = async (req, res) => {
         const error = new Error(
           'This expense is linked to inventory history and cannot be deleted. Create a compensating stock adjustment or use a dedicated wastage reversal workflow.'
         );
+
         error.statusCode = 409;
         throw error;
       }
@@ -390,7 +515,9 @@ exports.deleteExpense = async (req, res) => {
 
       await expense.deleteOne({ session });
 
-      response = { message: 'Expense deleted successfully.' };
+      response = {
+        message: 'Expense deleted successfully.',
+      };
     });
 
     return res.json(response);
@@ -411,7 +538,9 @@ exports.bulkCreateExpenses = async (req, res) => {
   const { expenses } = req.body;
 
   if (!Array.isArray(expenses) || expenses.length === 0) {
-    return res.status(400).json({ message: 'No expenses provided.' });
+    return res.status(400).json({
+      message: 'No expenses provided.',
+    });
   }
 
   const created = [];
@@ -421,16 +550,18 @@ exports.bulkCreateExpenses = async (req, res) => {
     const input = expenses[index];
 
     try {
+      if (!input || typeof input !== 'object' || Array.isArray(input)) {
+        throw new Error('Invalid expense row.');
+      }
+
       const cleanType = input.type === 'event' ? 'event' : 'regular';
 
       if (!input.category && cleanType !== 'event') {
-        errors.push(`Row ${index + 1}: Missing category`);
-        continue;
+        throw new Error('Missing category.');
       }
 
       if (cleanType === 'event' && !input.term) {
-        errors.push(`Row ${index + 1}: Missing term for event`);
-        continue;
+        throw new Error('Missing term for event.');
       }
 
       const finalStallRent = toNumber(input.stallRent);
@@ -438,56 +569,80 @@ exports.bulkCreateExpenses = async (req, res) => {
       let finalAmount = toNumber(input.amount);
       let finalEventTotal = 0;
 
+      validateNonNegativeCosts([
+        finalAmount,
+        finalStallRent,
+        finalOtherCosts,
+      ]);
+
       if (cleanType === 'event') {
         const calculated = finalStallRent + finalOtherCosts;
+
         finalEventTotal = calculated > 0 ? calculated : finalAmount;
         finalAmount = finalEventTotal;
       }
 
-      if (finalAmount < 0) {
-        errors.push(`Row ${index + 1}: Amount cannot be negative`);
-        continue;
-      }
-
       const finalCategory =
-        input.category || (cleanType === 'event' ? 'Stall Rent + Others' : '');
+        input.category ||
+        (cleanType === 'event' ? 'Stall Rent + Others' : '');
 
       if (!finalCategory) {
-        errors.push(`Row ${index + 1}: Missing category`);
-        continue;
+        throw new Error('Missing category.');
       }
 
-      // Bulk imports can import historical expense data, but they must not
-      // create stock-linked wastage implicitly. Use the dedicated stock-out
-      // or stock-adjustment endpoint for linked inventory events.
-      if (finalCategory === 'Wastage' && (input.material || input.quantityMl)) {
-        errors.push(
-          `Row ${index + 1}: Linked wastage must be recorded through the inventory stock-out/adjustment endpoint.`
+      if (
+        finalCategory === 'Wastage' &&
+        (input.material ||
+          (input.quantityMl !== undefined &&
+            input.quantityMl !== null &&
+            input.quantityMl !== ''))
+      ) {
+        throw new Error(
+          'Linked wastage must be recorded through the inventory stock-out/adjustment endpoint.'
         );
-        continue;
       }
 
-      const expense = await Expense.create({
-        type: cleanType,
-        category: finalCategory,
-        amount: finalAmount,
-        date: input.date ? new Date(input.date) : new Date(),
-        description: input.description || '',
-        reference: input.reference || '',
-        term: input.term || '',
-        stallRent: cleanType === 'event' ? finalStallRent : 0,
-        otherCosts: cleanType === 'event' ? finalOtherCosts : 0,
-        eventTotal: cleanType === 'event' ? finalEventTotal : 0,
-        notes: input.notes || '',
-      });
+      const expenseDate = parseExpenseDate(input.date);
+
+      // Each row has its own transaction.
+      // Expense and cash transaction either both commit or both roll back.
+      const session = await mongoose.startSession();
+
+      let createdExpense;
 
       try {
-        await syncExpenseTransaction(expense);
-        created.push(expense);
-      } catch (transactionError) {
-        await Expense.findByIdAndDelete(expense._id);
-        throw transactionError;
+        await session.withTransaction(async () => {
+          const [expense] = await Expense.create(
+            [
+              {
+                type: cleanType,
+                category: finalCategory,
+                amount: finalAmount,
+                date: expenseDate,
+                description: input.description || '',
+                reference: input.reference || '',
+                term: input.term || '',
+                stallRent:
+                  cleanType === 'event' ? finalStallRent : 0,
+                otherCosts:
+                  cleanType === 'event' ? finalOtherCosts : 0,
+                eventTotal:
+                  cleanType === 'event' ? finalEventTotal : 0,
+                notes: input.notes || '',
+              },
+            ],
+            { session }
+          );
+
+          await syncExpenseTransaction(expense, session);
+
+          createdExpense = expense;
+        });
+      } finally {
+        await session.endSession();
       }
+
+      created.push(createdExpense);
     } catch (error) {
       errors.push(`Row ${index + 1}: ${error.message}`);
     }
