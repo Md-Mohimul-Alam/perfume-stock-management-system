@@ -2076,100 +2076,84 @@ exports.bulkCreateSales =
     }
   };
 
+
 /* ========================================
    RESTORE MATERIAL
 ======================================== */
 
-const restoreMaterial =
-  async ({
-    materialId,
-    quantity,
-    session,
-  }) => {
-    const result =
-      await RawMaterial.updateOne(
-        {
-          _id:
-            materialId,
-        },
-
-        {
-          $inc: {
-            currentStockMl:
-              quantity,
-          },
-        },
-
-        {
-          session,
-        }
-      );
-
-    if (
-      result.matchedCount ===
-      0
-    ) {
-      const error =
-        new Error(
-          `Material ${materialId} not found while reversing sale`
-        );
-
-      error.statusCode =
-        404;
-
-      throw error;
+const restoreMaterial = async ({
+  materialId,
+  quantity,
+  session,
+}) => {
+  const result = await RawMaterial.updateOne(
+    {
+      _id: materialId,
+    },
+    {
+      $inc: {
+        currentStockMl: Number(quantity),
+      },
+      $set: {
+        isStockOut: false,
+      },
+    },
+    {
+      session,
     }
-  };
+  );
+
+  if (result.matchedCount === 0) {
+    const error = new Error(
+      `Material ${materialId} not found while reversing sale`
+    );
+
+    error.statusCode = 404;
+    throw error;
+  }
+};
 
 /* ========================================
    RESTORE BOTTLE
 ======================================== */
 
-const restoreBottle =
-  async ({
-    bottleId,
-    quantity,
-    session,
-  }) => {
-    const result =
-      await Bottle.updateOne(
-        {
-          _id:
-            bottleId,
-        },
-
-        {
-          $inc: {
-            currentStock:
-              quantity,
+const restoreBottle = async ({
+  bottleId,
+  quantity,
+  session,
+}) => {
+  const result = await Bottle.updateOne(
+    {
+      _id: bottleId,
+    },
+    [
+      {
+        $set: {
+          currentStock: {
+            $add: [
+              { $ifNull: ['$currentStock', 0] },
+              Number(quantity),
+            ],
           },
-
-          $set: {
-            isStockOut:
-              false,
-          },
+          isStockOut: false,
         },
-
-        {
-          session,
-        }
-      );
-
-    if (
-      result.matchedCount ===
-      0
-    ) {
-      const error =
-        new Error(
-          `Bottle ${bottleId} not found while reversing sale`
-        );
-
-      error.statusCode =
-        404;
-
-      throw error;
+      },
+    ],
+    {
+      session,
     }
-  };
+  );
+
+  if (result.matchedCount === 0) {
+    const error = new Error(
+      `Bottle ${bottleId} not found while reversing sale`
+    );
+
+    error.statusCode = 404;
+    throw error;
+  }
+};
+
 
 /* ========================================
    REVERSAL LOG

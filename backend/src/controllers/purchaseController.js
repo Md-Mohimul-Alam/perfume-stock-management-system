@@ -1177,10 +1177,8 @@ const updateInventoryLine =
         });
       }
 
-      if (delta > 0) {
-        material.isStockOut =
-          false;
-      }
+      material.isStockOut =
+        Number(material.currentStockMl || 0) <= 0;
 
       recalculateMaterialCost(
         material
@@ -1292,10 +1290,8 @@ const updateInventoryLine =
       });
     }
 
-    if (delta > 0) {
-      bottle.isStockOut =
-        false;
-    }
+    bottle.isStockOut =
+     Number(bottle.currentStock || 0) <= 0;
 
     recalculateBottleCost(
       bottle
@@ -1384,6 +1380,8 @@ const removeInventoryLine =
 
       material.currentStockMl -=
         quantity;
+      material.isStockOut =
+        Number(material.currentStockMl || 0) <= 0;
 
       material.purchases =
         material.purchases.filter(
@@ -1448,7 +1446,8 @@ const removeInventoryLine =
 
     bottle.currentStock -=
       quantity;
-
+    bottle.isStockOut =
+     Number(bottle.currentStock || 0) <= 0;
     bottle.purchases =
       bottle.purchases.filter(
         (entry) =>

@@ -60,52 +60,40 @@ const validateWastageFields = async ({
   category,
   material,
   quantityMl,
-  session,
 }) => {
   if (category !== 'Wastage') {
-    return { material: null, quantityMl: null };
+    return {
+      material: null,
+      quantityMl: null,
+    };
   }
 
-  // Legacy/manual wastage expenses may remain unlinked. New API-created
-  // wastage entries should provide both fields together.
-  if (!material && (quantityMl === undefined || quantityMl === null || quantityMl === '')) {
-    return { material: null, quantityMl: null };
-  }
+  const hasMaterial =
+    material !== undefined &&
+    material !== null &&
+    material !== '';
 
-  if (!material || quantityMl === undefined || quantityMl === null || quantityMl === '') {
+  const hasQuantity =
+    quantityMl !== undefined &&
+    quantityMl !== null &&
+    quantityMl !== '';
+
+  // Linked wastage must be recorded through
+  // the inventory stock-out/adjustment workflow.
+  if (hasMaterial || hasQuantity) {
     const error = new Error(
-      'For a linked wastage expense, both material and quantityMl are required.'
+      'For material wastage, use the inventory stock-out or stock-adjustment feature. Do not create it through the general expense form.'
     );
+
     error.statusCode = 400;
     throw error;
   }
 
-  if (!mongoose.Types.ObjectId.isValid(material)) {
-    const error = new Error('Invalid raw material ID.');
-    error.statusCode = 400;
-    throw error;
-  }
-
-  const quantity = Number(quantityMl);
-  if (!Number.isFinite(quantity) || quantity <= 0) {
-    const error = new Error('quantityMl must be greater than zero.');
-    error.statusCode = 400;
-    throw error;
-  }
-
-  let query = RawMaterial.findById(material);
-  if (session) query = query.session(session);
-  const foundMaterial = await query;
-
-  if (!foundMaterial) {
-    const error = new Error('Raw material not found.');
-    error.statusCode = 404;
-    throw error;
-  }
-
+  // Allow ordinary historical/manual wastage expenses
+  // that are not connected to inventory.
   return {
-    material: foundMaterial._id,
-    quantityMl: roundMl(quantity),
+    material: null,
+    quantityMl: null,
   };
 };
 
