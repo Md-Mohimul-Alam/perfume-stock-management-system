@@ -3,7 +3,6 @@ const mongoose = require('mongoose');
 
 const Investor = require('../models/Investor');
 const Transaction = require('../models/Transaction');
-const Sale = require('../models/Sale');
 const Expense = require('../models/Expense');
 
 /* ========================================
@@ -60,33 +59,56 @@ const parseContributionDate = (value, fallback = new Date()) => {
   return date;
 };
 
-const getNetContribution = (investor) => {
-  return (investor.contributions || []).reduce(
-    (total, contribution) => {
-      const amount = toNumber(contribution.amount);
+/*
+  IMPORTANT ACCOUNTING RULE:
 
-      return total + (
-        contribution.type === 'investment'
-          ? amount
-          : -amount
-      );
-    },
-    0
+  Investment = investor's ownership basis.
+
+  Withdrawal = profit distribution.
+
+  Withdrawals must NEVER reduce investor ownership.
+
+  Example:
+
+  Investment: ৳1,500
+  Withdrawals: ৳12,160
+
+  Ownership basis remains ৳1,500.
+*/
+
+const getTotalInvestment = (investor) => {
+  return roundMoney(
+    (investor.contributions || []).reduce(
+      (total, contribution) => {
+        if (contribution.type === 'investment') {
+          return total + toNumber(contribution.amount);
+        }
+
+        return total;
+      },
+      0
+    )
   );
 };
 
-const assertNonNegativeNetContribution = (investor) => {
-  const netContribution = roundMoney(
-    getNetContribution(investor)
+/*
+  Calculate all investors' ownership basis.
+
+  Profit withdrawals are excluded.
+*/
+
+const getOwnershipTotals = (investors) => {
+  const totalInvested = roundMoney(
+    investors.reduce(
+      (total, investor) =>
+        total + getTotalInvestment(investor),
+      0
+    )
   );
 
-  if (netContribution < -0.001) {
-    throw createError(
-      `This operation would make ${investor.name}'s net contribution negative. Withdrawals cannot exceed the remaining contribution.`
-    );
-  }
-
-  return netContribution;
+  return {
+    totalInvested,
+  };
 };
 
 const getContributionTransactionDetails = (contribution) => {
@@ -97,6 +119,10 @@ const getContributionTransactionDetails = (contribution) => {
     category: isInvestment ? 'Investment' : 'Withdrawal',
   };
 };
+
+/* ========================================
+   CREATE CONTRIBUTION TRANSACTION
+======================================== */
 
 const createContributionTransaction = async ({
   investor,
@@ -110,7 +136,7 @@ const createContributionTransaction = async ({
     [
       {
         type,
-        amount: contribution.amount,
+        amount: roundMoney(contribution.amount),
         category,
         reference: investor._id,
         contributionId: contribution._id,
@@ -124,6 +150,10 @@ const createContributionTransaction = async ({
     { session }
   );
 };
+
+/* ========================================
+   DELETE CONTRIBUTION TRANSACTION
+======================================== */
 
 const deleteContributionTransaction = async ({
   investor,
@@ -146,7 +176,9 @@ const deleteContributionTransaction = async ({
     return;
   }
 
-  // Compatibility with older transactions that do not have contributionId.
+  // Compatibility with older transactions
+  // that do not have contributionId.
+
   const startDate = new Date(contribution.date);
   startDate.setHours(0, 0, 0, 0);
 
@@ -168,10 +200,14 @@ const deleteContributionTransaction = async ({
   );
 };
 
+/* ========================================
+   CASH POSITION
+======================================== */
+
 /*
   Cash position is calculated from the actual transaction ledger.
 
-  This includes:
+  Includes:
   - Paid sales
   - Actual supplier payments
   - Regular expenses
@@ -180,8 +216,9 @@ const deleteContributionTransaction = async ({
   - Previous investor settlements
 
   Wastage is excluded from cash out because writing off inventory
-  does not mean that cash was paid at the time of wastage.
+  does not mean cash was paid at the time of wastage.
 */
+
 const getCashPosition = async (session = null) => {
   let wastageQuery = Expense.find({
     category: 'Wastage',
@@ -192,6 +229,7 @@ const getCashPosition = async (session = null) => {
   }
 
   const wastageExpenses = await wastageQuery;
+
   const wastageExpenseIds = wastageExpenses.map(
     (expense) => expense._id
   );
@@ -208,6 +246,7 @@ const getCashPosition = async (session = null) => {
     {
       $group: {
         _id: null,
+
         totalCashIn: {
           $sum: {
             $cond: [
@@ -217,6 +256,7 @@ const getCashPosition = async (session = null) => {
             ],
           },
         },
+
         totalCashOut: {
           $sum: {
             $cond: [
@@ -249,9 +289,15 @@ const getCashPosition = async (session = null) => {
   return {
     totalCashIn,
     totalCashOut,
-    availableCash: roundMoney(totalCashIn - totalCashOut),
+    availableCash: roundMoney(
+      totalCashIn - totalCashOut
+    ),
   };
 };
+
+/* ========================================
+   ERROR HANDLER
+======================================== */
 
 const sendError = (res, error) => {
   console.error('Investor controller error:', error);
@@ -385,7 +431,10 @@ exports.addContribution = async (req, res) => {
 
       const cleanAmount = Number(amount);
 
-      if (!Number.isFinite(cleanAmount) || cleanAmount <= 0) {
+      if (
+        !Number.isFinite(cleanAmount) ||
+        cleanAmount <= 0
+      ) {
         throw createError('Amount must be greater than 0');
       }
 
@@ -399,7 +448,8 @@ exports.addContribution = async (req, res) => {
         notes: String(notes || '').trim(),
       });
 
-      assertNonNegativeNetContribution(investor);
+      // No negative-contribution validation.
+      // Withdrawals are profit distributions.
 
       await investor.save({ session });
 
@@ -437,6 +487,7 @@ exports.updateContribution = async (req, res) => {
 
     await session.withTransaction(async () => {
       validateObjectId(req.params.id, 'investor ID');
+
       validateObjectId(
         req.params.contributionId,
         'contribution ID'
@@ -458,6 +509,8 @@ exports.updateContribution = async (req, res) => {
         throw createError('Contribution not found', 404);
       }
 
+      // Remove the old linked cash transaction first.
+
       await deleteContributionTransaction({
         investor,
         contribution,
@@ -469,8 +522,13 @@ exports.updateContribution = async (req, res) => {
       if (amount !== undefined) {
         const cleanAmount = Number(amount);
 
-        if (!Number.isFinite(cleanAmount) || cleanAmount <= 0) {
-          throw createError('Amount must be greater than 0');
+        if (
+          !Number.isFinite(cleanAmount) ||
+          cleanAmount <= 0
+        ) {
+          throw createError(
+            'Amount must be greater than 0'
+          );
         }
 
         contribution.amount = roundMoney(cleanAmount);
@@ -488,9 +546,11 @@ exports.updateContribution = async (req, res) => {
         contribution.notes = String(notes || '').trim();
       }
 
-      assertNonNegativeNetContribution(investor);
+      // Withdrawals do not affect ownership.
 
       await investor.save({ session });
+
+      // Re-create the updated cash transaction.
 
       await createContributionTransaction({
         investor,
@@ -521,6 +581,7 @@ exports.deleteContribution = async (req, res) => {
 
     await session.withTransaction(async () => {
       validateObjectId(req.params.id, 'investor ID');
+
       validateObjectId(
         req.params.contributionId,
         'contribution ID'
@@ -550,7 +611,8 @@ exports.deleteContribution = async (req, res) => {
 
       contribution.deleteOne();
 
-      assertNonNegativeNetContribution(investor);
+      // No negative-contribution validation.
+      // Ownership will be recalculated from remaining investments.
 
       await investor.save({ session });
 
@@ -569,28 +631,39 @@ exports.deleteContribution = async (req, res) => {
    GET SHARES
 ======================================== */
 
+/*
+  Ownership is calculated from investments only.
+
+  Profit withdrawals never reduce ownership.
+
+  Returns an array to maintain compatibility with a frontend
+  that expects the API response to support .map().
+*/
+
 exports.getShares = async (req, res) => {
   try {
-    const investors = await Investor.find();
+    const investors = await Investor.find().sort({
+      createdAt: 1,
+    });
 
-    const totalNet = investors.reduce(
-      (sum, investor) =>
-        sum + getNetContribution(investor),
-      0
-    );
+    const { totalInvested } = getOwnershipTotals(investors);
 
     const shares = investors.map((investor) => {
-      const netContribution = roundMoney(
-        getNetContribution(investor)
-      );
+      const totalInvestment = getTotalInvestment(investor);
 
       return {
         _id: investor._id,
         name: investor.name,
-        netContribution,
+        totalInvestment,
+
+        // Keep the old field for frontend compatibility.
+        netContribution: totalInvestment,
+
         sharePercentage:
-          totalNet > 0
-            ? roundMoney((netContribution / totalNet) * 100)
+          totalInvested > 0
+            ? roundMoney(
+                (totalInvestment / totalInvested) * 100
+              )
             : 0,
       };
     });
@@ -604,6 +677,18 @@ exports.getShares = async (req, res) => {
 /* ========================================
    DELETE / CLOSE INVESTOR
 ======================================== */
+
+/*
+  Current settlement policy:
+
+  Settlement = ownership share × available cash.
+
+  Investments determine ownership.
+  Withdrawals do not reduce ownership.
+
+  This function retains the existing cash-based settlement
+  behavior. Inventory-based capital valuation is separate.
+*/
 
 exports.deleteInvestor = async (req, res) => {
   const session = await mongoose.startSession();
@@ -622,43 +707,34 @@ exports.deleteInvestor = async (req, res) => {
         throw createError('Investor not found', 404);
       }
 
-      const investorNetContribution = roundMoney(
-        getNetContribution(investor)
-      );
-
-      if (investorNetContribution < -0.001) {
-        throw createError(
-          'This investor has a negative net contribution. Review the contribution history before closing the account.'
-        );
-      }
+      const investorTotalInvestment =
+        getTotalInvestment(investor);
 
       const allInvestors = await Investor.find({})
         .session(session);
 
-      const totalNetContributions = allInvestors.reduce(
-        (total, item) =>
-          total + getNetContribution(item),
-        0
-      );
+      const { totalInvested } =
+        getOwnershipTotals(allInvestors);
 
-      if (totalNetContributions <= 0) {
+      if (totalInvested <= 0) {
         throw createError(
-          'Cannot calculate ownership because total net investor contributions are zero or negative.'
+          'Cannot calculate ownership because total investor investments are zero.'
         );
       }
 
       const sharePercentage =
-        investorNetContribution / totalNetContributions;
+        investorTotalInvestment / totalInvested;
 
       const cashPosition = await getCashPosition(session);
 
       /*
-        Settlement is the investor's ownership share of the
-        actual available cash balance.
+        Settlement is the investor's ownership share of
+        the actual available cash balance.
 
-        Investor contributions are already included in the cash
-        ledger. Do not add the original capital a second time.
+        Investor contributions are already included in
+        the cash ledger. Do not add original capital again.
       */
+
       const settlementAmount = roundMoney(
         sharePercentage * cashPosition.availableCash
       );
@@ -695,12 +771,12 @@ exports.deleteInvestor = async (req, res) => {
       }
 
       /*
-        IMPORTANT:
         Keep Investment and Withdrawal transactions.
 
-        They are part of the permanent cash ledger and must not
-        be deleted when the investor document is closed.
+        They are part of the permanent cash ledger and must
+        not be deleted when the investor document is closed.
       */
+
       await Investor.deleteOne(
         { _id: investor._id },
         { session }
@@ -709,8 +785,14 @@ exports.deleteInvestor = async (req, res) => {
       settlementResult = {
         investorId: investor._id,
         investorName: investor.name,
-        sharePercentage: roundMoney(sharePercentage * 100),
-        availableCashBeforeSettlement: cashPosition.availableCash,
+
+        sharePercentage: roundMoney(
+          sharePercentage * 100
+        ),
+
+        availableCashBeforeSettlement:
+          cashPosition.availableCash,
+
         amount: finalSettlement,
       };
     });
