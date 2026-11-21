@@ -8,20 +8,46 @@ const expenseSchema = mongoose.Schema(
       default: 'regular',
       required: true,
     },
-    category: { type: String, required: true },
-    amount: { type: Number, required: true, min: 0 },
-    date: { type: Date, default: Date.now },
+    category: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    amount: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    date: {
+      type: Date,
+      default: Date.now,
+    },
     description: String,
-    reference: String, // invoice or event name
+    reference: String,
+
+    // Used by material wastage expenses. Null for ordinary expenses.
+    material: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'RawMaterial',
+      default: null,
+    },
+    quantityMl: {
+      type: Number,
+      min: 0,
+      default: null,
+    },
 
     // Event-specific fields
-    term: { type: String }, // e.g., Fair1, Fair2, etc.
-    stallRent: { type: Number, default: 0 },
-    otherCosts: { type: Number, default: 0 },
-    eventTotal: { type: Number, default: 0 },
+    term: String,
+    stallRent: { type: Number, default: 0, min: 0 },
+    otherCosts: { type: Number, default: 0, min: 0 },
+    eventTotal: { type: Number, default: 0, min: 0 },
     notes: String,
   },
   { timestamps: true }
 );
+
+expenseSchema.index({ category: 1, date: -1 });
+expenseSchema.index({ material: 1, date: -1 });
 
 module.exports = mongoose.model('Expense', expenseSchema);

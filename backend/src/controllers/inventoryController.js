@@ -1893,241 +1893,133 @@ exports.addBottlePurchase =
    RAW MATERIAL STOCK OUT
 ======================================== */
 
-exports.stockOutMaterial =
-  async (req, res) => {
-    try {
-      const material =
-        await RawMaterial.findById(
-          req.params.id
-        );
+/*
+Paste these two complete functions over the existing
+exports.stockOutMaterial and exports.adjustMaterialStock functions
+in your current inventoryController.js.
+
+Keep the rest of your inventoryController.js unchanged.
+*/
+
+exports.stockOutMaterial = async (req, res) => {
+  const mongoose = require('mongoose');
+  const Expense = require('../models/Expense');
+  const Transaction = require('../models/Transaction');
+  const session = await mongoose.startSession();
+
+  try {
+    let response;
+
+    await session.withTransaction(async () => {
+      const material = await RawMaterial.findById(req.params.id).session(session);
 
       if (!material) {
-        return res
-          .status(404)
-          .json({
-            message:
-              'Material not found',
-          });
+        const error = new Error('Material not found');
+        error.statusCode = 404;
+        throw error;
       }
 
-      /*
-        Clean floating-point stock.
+      const remainingStock = Math.round(
+        (Number(material.currentStockMl || 0) + Number.EPSILON) * 100
+      ) / 100;
 
-        Example:
-        3.8799999999999955
-        becomes:
-        3.88
-      */
+      if (remainingStock <= 0) {
+        material.currentStockMl = 0;
+        material.isStockOut = true;
+        await material.save({ session });
 
-      const rawRemainingStock =
-        Number(
-          material.currentStockMl ||
-            0
-        );
-
-      const remainingStock =
-        Math.round(
-          (
-            rawRemainingStock +
-            Number.EPSILON
-          ) *
-            100
-        ) /
-        100;
-
-      const avgCost =
-        Number(
-          material.avgCostPerMl ||
-            0
-        );
-
-      if (
-        remainingStock >
-        0
-      ) {
-        const rawWastageAmount =
-          remainingStock *
-          avgCost;
-
-        const wastageAmount =
-          Math.round(
-            (
-              rawWastageAmount +
-              Number.EPSILON
-            ) *
-              100
-          ) /
-          100;
-
-        const Expense =
-          require(
-            '../models/Expense'
-          );
-
-        const Transaction =
-          require(
-            '../models/Transaction'
-          );
-
-        const now =
-          new Date();
-
-        /* ==================================
-           WASTAGE EXPENSE
-        ================================== */
-
-        const expense =
-          await Expense.create({
-            type:
-              'regular',
-
-            category:
-              'Wastage',
-
-            amount:
-              wastageAmount,
-
-            date:
-              now,
-
-            description:
-              `Stock out: ${material.name} (${remainingStock.toFixed(
-                2
-              )} ml)`,
-
-            reference:
-              material.sku,
-
-            notes:
-              `Stock out on ${now.toISOString()}`,
-          });
-
-        /* ==================================
-           CASH TRANSACTION
-        ================================== */
-
-        await Transaction.create({
-          type:
-            'cash_out',
-
-          amount:
-            wastageAmount,
-
-          category:
-            'Expense',
-
-          reference:
-            expense._id,
-
-          refModel:
-            'Expense',
-
-          date:
-            now,
-
-          description:
-            `Wastage from stock-out: ${material.name}`,
-        });
-
-        /* ==================================
-           INVENTORY HISTORY
-        ================================== */
-
-        await InventoryLog.create({
-          material:
-            material._id,
-
-          changeQuantity:
-            -remainingStock,
-
-          reason:
-            'wastage',
-
-          date:
-            now,
-
-          notes:
-            `Stock out: remaining ${remainingStock.toFixed(
-              2
-            )} ml sent to wastage`,
-        });
+        response = {
+          message: 'Material is already out of stock.',
+          wastageQuantityMl: 0,
+          material,
+        };
+        return;
       }
 
-      /* ==================================
-         CURRENT CYCLE WASTAGE
-      ================================== */
+      const wastageAmount = Math.round(
+        remainingStock * Number(material.avgCostPerMl || 0) * 100
+      ) / 100;
+      const now = new Date();
 
-      const currentCycleWastage =
-        Number(
-          material.currentCycleWastageMl ||
-            0
-        );
+      const [expense] = await Expense.create([{
+        type: 'regular',
+        category: 'Wastage',
+        amount: wastageAmount,
+        date: now,
+        description: `Stock out: ${material.name} (${remainingStock.toFixed(2)} ml)`,
+        reference: material.sku,
+        material: material._id,
+        quantityMl: remainingStock,
+        notes: `Stock-out recorded on ${now.toISOString()}`,
+      }], { session });
 
-      material.currentCycleWastageMl =
-        Math.round(
-          (
-            currentCycleWastage +
-            remainingStock +
-            Number.EPSILON
-          ) *
-            100
-        ) /
-        100;
+      await Transaction.create([{
+        type: 'cash_out',
+        amount: wastageAmount,
+        category: 'Expense',
+        reference: expense._id,
+        refModel: 'Expense',
+        date: now,
+        description: `Wastage from stock-out: ${material.name}`,
+      }], { session });
 
-      /* ==================================
-         STOCK OUT
-      ================================== */
+      await InventoryLog.create([{
+        material: material._id,
+        changeQuantity: -remainingStock,
+        reason: 'wastage',
+        reference: expense._id,
+        refModel: 'Expense',
+        date: now,
+        notes: `Stock out: remaining ${remainingStock.toFixed(2)} ml sent to wastage`,
+      }], { session });
 
-      material.currentStockMl =
-        0;
+      material.currentCycleWastageMl = Math.round(
+        (
+          Number(material.currentCycleWastageMl || 0) +
+          remainingStock +
+          Number.EPSILON
+        ) * 100
+      ) / 100;
 
-      material.isStockOut =
-        true;
+      material.currentStockMl = 0;
+      material.isStockOut = true;
+      await material.save({ session });
 
-      await material.save();
-
-      return res.json({
-        message:
-          `Material "${material.name}" marked as stock-out.`,
-
-        wastageQuantityMl:
-          remainingStock,
-
+      response = {
+        message: `Material "${material.name}" marked as stock-out.`,
+        wastageQuantityMl: remainingStock,
+        expenseId: expense._id,
         material,
-      });
-    } catch (error) {
-      console.error(
-        'Stock-out error:',
-        error
-      );
+      };
+    });
 
-      return res
-        .status(500)
-        .json({
-          message:
-            error.message,
-        });
-    }
-  };
-/* ========================================
-   MATERIAL STOCK ADJUSTMENT
-======================================== */
+    return res.json(response);
+  } catch (error) {
+    console.error('Stock-out error:', error);
+    return res.status(error.statusCode || 500).json({
+      message: error.message,
+    });
+  } finally {
+    await session.endSession();
+  }
+};
 
-exports.adjustMaterialStock =
-  async (req, res) => {
-    try {
-      const material =
-        await RawMaterial.findById(
-          req.params.id
-        );
+exports.adjustMaterialStock = async (req, res) => {
+  const mongoose = require('mongoose');
+  const Expense = require('../models/Expense');
+  const Transaction = require('../models/Transaction');
+  const session = await mongoose.startSession();
+
+  try {
+    let response;
+
+    await session.withTransaction(async () => {
+      const material = await RawMaterial.findById(req.params.id).session(session);
 
       if (!material) {
-        return res
-          .status(404)
-          .json({
-            message:
-              'Material not found',
-          });
+        const error = new Error('Material not found');
+        error.statusCode = 404;
+        throw error;
       }
 
       const {
@@ -2137,182 +2029,111 @@ exports.adjustMaterialStock =
         notes,
       } = req.body;
 
-      const target =
-        Number(
-          newStockMl
-        );
+      const target = Number(newStockMl);
 
-      if (
-        !Number.isFinite(
-          target
-        ) ||
-        target < 0
-      ) {
-        return res
-          .status(400)
-          .json({
-            message:
-              'newStockMl must be a non-negative number',
-          });
+      if (!Number.isFinite(target) || target < 0) {
+        const error = new Error(
+          'newStockMl must be a non-negative number'
+        );
+        error.statusCode = 400;
+        throw error;
       }
 
-      const oldStock =
-        Number(
-          material.currentStockMl ||
-            0
-        );
+      const oldStock = Number(material.currentStockMl || 0);
+      const delta = Math.round((target - oldStock) * 100) / 100;
 
-      const delta =
-        target -
-        oldStock;
-
-      if (
-        Math.abs(
-          delta
-        ) <
-        0.001
-      ) {
-        return res.json({
-          message:
-            'No change needed',
-
+      if (Math.abs(delta) < 0.001) {
+        response = {
+          message: 'No change needed',
           material,
-        });
+        };
+        return;
       }
 
-      await InventoryLog.create({
-        material:
-          material._id,
-
-        changeQuantity:
-          delta,
-
-        reason:
-          'adjustment',
-
-        notes:
-          notes ||
-          `Manual stock adjustment: ${oldStock} → ${target} ml (${reason || 'recount'})`,
-      });
-
+      const now = new Date();
+      let expenseId = null;
       let wastageAmount = 0;
 
-      if (
-        delta < 0 &&
-        recordAsWastage
-      ) {
-        const lossMl =
-          Math.abs(
-            delta
-          );
+      if (delta < 0 && recordAsWastage === true) {
+        const lossMl = Math.abs(delta);
 
-        wastageAmount =
-          lossMl *
-          Number(
-            material.avgCostPerMl ||
-              0
-          );
+        wastageAmount = Math.round(
+          lossMl * Number(material.avgCostPerMl || 0) * 100
+        ) / 100;
 
-        if (
-          wastageAmount >
-          0.01
-        ) {
-          const Expense =
-            require('../models/Expense');
+        const [expense] = await Expense.create([{
+          type: 'regular',
+          category: 'Wastage',
+          amount: wastageAmount,
+          date: now,
+          description: `Stock adjustment: ${material.name} (${lossMl.toFixed(2)} ml)`,
+          reference: material.sku,
+          material: material._id,
+          quantityMl: lossMl,
+          notes: notes || `Adjustment from ${oldStock} ml to ${target} ml`,
+        }], { session });
 
-          const Transaction =
-            require('../models/Transaction');
+        expenseId = expense._id;
 
-          const expense =
-            await Expense.create({
-              type:
-                'regular',
+        await Transaction.create([{
+          type: 'cash_out',
+          amount: wastageAmount,
+          category: 'Expense',
+          reference: expense._id,
+          refModel: 'Expense',
+          date: now,
+          description: `Wastage from stock adjustment: ${material.name}`,
+        }], { session });
 
-              category:
-                'Wastage',
+        await InventoryLog.create([{
+          material: material._id,
+          changeQuantity: -lossMl,
+          reason: 'wastage',
+          reference: expense._id,
+          refModel: 'Expense',
+          date: now,
+          notes: notes || `Wastage adjustment: ${oldStock} ml → ${target} ml`,
+        }], { session });
 
-              amount:
-                wastageAmount,
+        material.currentCycleWastageMl = Math.round(
+          (
+            Number(material.currentCycleWastageMl || 0) +
+            lossMl +
+            Number.EPSILON
+          ) * 100
+        ) / 100;
+      } else {
+        await InventoryLog.create([{
+          material: material._id,
+          changeQuantity: delta,
+          reason: 'adjustment',
+          date: now,
+          notes: notes || `Manual stock adjustment: ${oldStock} → ${target} ml (${reason || 'recount'})`,
+        }], { session });
 
-              date:
-                new Date(),
-
-              description:
-                `Stock adjustment: ${material.name} (${lossMl.toFixed(2)} ml)`,
-
-              reference:
-                material.sku,
-
-              notes:
-                notes ||
-                `Adjustment from ${oldStock} → ${target} ml`,
-            });
-
-          await Transaction.create({
-            type:
-              'cash_out',
-
-            amount:
-              wastageAmount,
-
-            category:
-              'Expense',
-
-            reference:
-              expense._id,
-
-            refModel:
-              'Expense',
-
-            description:
-              `Wastage from stock adjustment: ${material.name}`,
-          });
-        }
-
-        material.currentCycleWastageMl =
-          Number(
-            material.currentCycleWastageMl ||
-              0
-          ) +
-          lossMl;
-      } else if (
-        delta > 0
-      ) {
-        material.currentCycleWastageMl =
-          0;
-
-        material.lastRestockAt =
-          new Date();
+        // A positive recount is not necessarily a purchase. Do not reset
+        // the current-cycle wastage counter here.
       }
 
-      material.currentStockMl =
-        target;
+      material.currentStockMl = target;
+      material.isStockOut = target === 0;
+      await material.save({ session });
 
-      material.isStockOut =
-        target === 0;
-
-      await material.save();
-
-      return res.json({
-        message:
-          `Stock adjusted from ${oldStock} → ${target} ml`,
-
-        wastageRecorded:
-          wastageAmount,
-
+      response = {
+        message: `Stock adjusted from ${oldStock} → ${target} ml`,
+        wastageRecorded: wastageAmount,
+        expenseId,
         material,
-      });
-    } catch (error) {
-      console.error(
-        'Adjust stock error:',
-        error
-      );
+      };
+    });
 
-      return res
-        .status(500)
-        .json({
-          message:
-            error.message,
-        });
-    }
-  };
+    return res.json(response);
+  } catch (error) {
+    console.error('Adjust stock error:', error);
+    return res.status(error.statusCode || 500).json({
+      message: error.message,
+    });
+  } finally {
+    await session.endSession();
+  }
+};

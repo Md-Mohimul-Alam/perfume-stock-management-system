@@ -11,45 +11,86 @@ const purchaseEntrySchema = mongoose.Schema({
 
 const rawMaterialSchema = mongoose.Schema(
   {
-    name: { type: String, required: true },
-    sku: { type: String, required: true, unique: true },
-    type: { type: String, enum: ['oil', 'ethanol', 'fixative'], required: true },
+    name: { type: String, required: true, trim: true },
+    sku: { type: String, required: true, unique: true, trim: true },
+    type: {
+      type: String,
+      enum: ['oil', 'ethanol', 'fixative'],
+      required: true,
+    },
     currentStockMl: { type: Number, default: 0, min: 0 },
     avgCostPerMl: { type: Number, default: 0, min: 0 },
     purchases: [purchaseEntrySchema],
     isStockOut: { type: Boolean, default: false },
-
-    // ✅ NEW: wastage counter that resets to 0 on every purchase/restock
     currentCycleWastageMl: { type: Number, default: 0, min: 0 },
-
-    // ✅ NEW: timestamp of the last restock (for UI "NEW CYCLE" badge)
     lastRestockAt: { type: Date, default: null },
   },
   { timestamps: true }
 );
 
-// Recalculate avg cost after adding a purchase + RESET the wastage counter
-rawMaterialSchema.methods.addPurchase = function (quantityMl, costPerMl, totalCost, supplier, invoiceNo) {
-  this.purchases.push({ quantityMl, costPerMl, totalCost, supplier, invoiceNo });
-  const totalQty = this.purchases.reduce((sum, p) => sum + p.quantityMl, 0);
-  const totalCostSum = this.purchases.reduce((sum, p) => sum + p.totalCost, 0);
-  this.avgCostPerMl = totalCostSum / totalQty;
-  this.currentStockMl += quantityMl;
+rawMaterialSchema.methods.addPurchase = function (
+  quantityMl,
+  costPerMl,
+  totalCost,
+  supplier,
+  invoiceNo
+) {
+  if (
+    !Number.isFinite(Number(quantityMl)) ||
+    Number(quantityMl) <= 0 ||
+    !Number.isFinite(Number(costPerMl)) ||
+    Number(costPerMl) < 0 ||
+    !Number.isFinite(Number(totalCost)) ||
+    Number(totalCost) < 0
+  ) {
+    throw new Error('Invalid purchase quantity or cost.');
+  }
+
+  this.purchases.push({
+    quantityMl: Number(quantityMl),
+    costPerMl: Number(costPerMl),
+    totalCost: Number(totalCost),
+    supplier,
+    invoiceNo,
+  });
+
+  const totalQty = this.purchases.reduce(
+    (sum, purchase) => sum + Number(purchase.quantityMl || 0),
+    0
+  );
+
+  const totalCostSum = this.purchases.reduce(
+    (sum, purchase) => sum + Number(purchase.totalCost || 0),
+    0
+  );
+
+  this.avgCostPerMl = totalQty > 0 ? totalCostSum / totalQty : 0;
+  this.currentStockMl = Number(this.currentStockMl || 0) + Number(quantityMl);
   this.isStockOut = false;
 
-  // ✅ RESET: start a fresh cycle
+  // Existing project behavior: a purchase starts a new wastage cycle.
   this.currentCycleWastageMl = 0;
   this.lastRestockAt = new Date();
 
   return this;
 };
 
-// Deduct stock (used by sales/production)
 rawMaterialSchema.methods.deductStock = function (quantityMl) {
-  if (this.currentStockMl < quantityMl) {
-    throw new Error(`Insufficient stock for ${this.name}. Available: ${this.currentStockMl}ml`);
+  const quantity = Number(quantityMl);
+
+  if (!Number.isFinite(quantity) || quantity <= 0) {
+    throw new Error('Deduction quantity must be greater than zero.');
   }
-  this.currentStockMl -= quantityMl;
+
+  if (Number(this.currentStockMl || 0) < quantity) {
+    throw new Error(
+      `Insufficient stock for ${this.name}. Available: ${this.currentStockMl}ml`
+    );
+  }
+
+  this.currentStockMl = Number(this.currentStockMl || 0) - quantity;
+  this.isStockOut = this.currentStockMl <= 0;
+
   return this;
 };
 
