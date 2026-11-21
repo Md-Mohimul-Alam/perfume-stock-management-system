@@ -4,23 +4,56 @@ const mongoose = require('mongoose');
 const Bottle = require('../models/Bottle');
 const Sale = require('../models/Sale');
 const InventoryLog = require('../models/InventoryLog');
-const Transaction = require('../models/Transaction');
 const Expense = require('../models/Expense');
+
+/* ========================================
+   HELPERS
+======================================== */
+
+const createError = (message, statusCode = 400) => {
+  const error = new Error(message);
+  error.statusCode = statusCode;
+  return error;
+};
+
+const roundMoney = (value) =>
+  Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+
+const validateObjectId = (value, label = 'ID') => {
+  if (!mongoose.isValidObjectId(value)) {
+    throw createError(`Invalid ${label}`);
+  }
+
+  return value;
+};
+
+const sendError = (res, error, operation) => {
+  console.error(`${operation}:`, error);
+
+  return res.status(error.statusCode || 500).json({
+    message: error.message || 'Bottle operation failed',
+  });
+};
 
 /* ========================================
    GET BOTTLES WITH USAGE / SALES
 ======================================== */
 
-// @desc    Get all bottles with perfume usage,
-//          direct bottle sales, wastage and production
-// @route   GET /api/inventory/bottles/with-sales
+// @desc Get all bottles with perfume usage,
+//       direct bottle sales, wastage and production
+// @route GET /api/inventory/bottles/with-sales
 exports.getBottlesWithSales = async (req, res) => {
   try {
-    const bottles = await Bottle.find();
+    const bottles = await Bottle.find().sort({
+      sizeMl: 1,
+      type: 1,
+    });
 
     // 1. BOTTLES USED FOR PERFUME SALES
     const perfumeUsageAgg = await Sale.aggregate([
-      { $unwind: '$items' },
+      {
+        $unwind: '$items',
+      },
       {
         $match: {
           $or: [
@@ -38,8 +71,12 @@ exports.getBottlesWithSales = async (req, res) => {
           as: 'product',
         },
       },
-      { $unwind: '$product' },
-      { $unwind: '$product.sizes' },
+      {
+        $unwind: '$product',
+      },
+      {
+        $unwind: '$product.sizes',
+      },
       {
         $match: {
           $expr: {
@@ -71,7 +108,9 @@ exports.getBottlesWithSales = async (req, res) => {
 
     // 2. DIRECT EMPTY BOTTLE SALES
     const directBottleSalesAgg = await Sale.aggregate([
-      { $unwind: '$items' },
+      {
+        $unwind: '$items',
+      },
       {
         $match: {
           'items.itemType': 'bottle',
@@ -160,7 +199,7 @@ exports.getBottlesWithSales = async (req, res) => {
         Number(item.produced || 0);
     });
 
-    // 5. COMBINE
+    // 5. COMBINE RESULTS
     const result = bottles.map((bottle) => {
       const id = bottle._id.toString();
 
@@ -173,12 +212,14 @@ exports.getBottlesWithSales = async (req, res) => {
       const bottleSalesRevenue =
         directSaleMap[id]?.revenue || 0;
 
-      const wasted = wastedMap[id] || 0;
-      const produced = producedMap[id] || 0;
+      const wasted =
+        wastedMap[id] || 0;
 
-      // Backward compatibility:
-      // sold = perfume usage + direct bottle sales
-      const sold = usedForPerfume + bottleSales;
+      const produced =
+        producedMap[id] || 0;
+
+      const sold =
+        usedForPerfume + bottleSales;
 
       return {
         ...bottle.toObject(),
@@ -193,11 +234,11 @@ exports.getBottlesWithSales = async (req, res) => {
 
     return res.json(result);
   } catch (error) {
-    console.error('Get bottles with sales error:', error);
-
-    return res.status(500).json({
-      message: error.message,
-    });
+    return sendError(
+      res,
+      error,
+      'Get bottles with sales error'
+    );
   }
 };
 
@@ -205,9 +246,9 @@ exports.getBottlesWithSales = async (req, res) => {
    STOCK OUT BOTTLE
 ======================================== */
 
-// @desc    Mark a bottle as Stock Out
-//          Remaining stock becomes wastage
-// @route   POST /api/inventory/bottles/:id/stock-out
+// @desc Mark a bottle as Stock Out.
+//      Remaining stock becomes wastage.
+// @route POST /api/inventory/bottles/:id/stock-out
 exports.stockOutBottle = async (req, res) => {
   const session = await mongoose.startSession();
 
@@ -215,14 +256,14 @@ exports.stockOutBottle = async (req, res) => {
     let response;
 
     await session.withTransaction(async () => {
+      validateObjectId(req.params.id, 'bottle ID');
+
       const bottle = await Bottle.findById(
         req.params.id
       ).session(session);
 
       if (!bottle) {
-        const error = new Error('Bottle not found');
-        error.statusCode = 404;
-        throw error;
+        throw createError('Bottle not found', 404);
       }
 
       const remainingStock = Number(
@@ -233,20 +274,24 @@ exports.stockOutBottle = async (req, res) => {
         !Number.isInteger(remainingStock) ||
         remainingStock < 0
       ) {
-        const error = new Error(
+        throw createError(
           'Invalid bottle stock value'
         );
-        error.statusCode = 400;
-        throw error;
       }
 
       const avgCost = Number(
         bottle.avgCostPerUnit || 0
       );
 
-      const wastageAmount = Math.round(
-        remainingStock * avgCost * 100
-      ) / 100;
+      if (!Number.isFinite(avgCost) || avgCost < 0) {
+        throw createError(
+          'Invalid average bottle cost'
+        );
+      }
+
+      const wastageAmount = roundMoney(
+        remainingStock * avgCost
+      );
 
       const now = new Date();
 
@@ -270,19 +315,25 @@ exports.stockOutBottle = async (req, res) => {
         );
 
       if (!updatedBottle) {
-        const error = new Error(
-          'Bottle stock changed during this operation. Please refresh and try again.'
+        throw createError(
+          'Bottle stock changed during this operation. Please refresh and try again.',
+          409
         );
-        error.statusCode = 409;
-        throw error;
       }
 
       let expense = null;
 
       if (remainingStock > 0) {
-        if (wastageAmount > 0.01) {
-          [expense] = await Expense.create(
-            [{
+        /*
+          Wastage is recorded as an expense because inventory
+          value has been lost.
+
+          Do NOT create a cash_out Transaction here.
+          No cash is paid when existing stock is written off.
+        */
+        [expense] = await Expense.create(
+          [
+            {
               type: 'regular',
               category: 'Wastage',
               amount: wastageAmount,
@@ -291,36 +342,24 @@ exports.stockOutBottle = async (req, res) => {
                 `Stock out: Bottle ${bottle.sizeMl}ml (${bottle.type}) - ${remainingStock} pcs`,
               reference: `BOTTLE-${bottle._id}`,
               notes: `Stock out on ${now.toISOString()}`,
-            }],
-            { session }
-          );
+            },
+          ],
+          { session }
+        );
 
-          await Transaction.create(
-            [{
-              type: 'cash_out',
-              amount: wastageAmount,
-              category: 'Expense',
+        await InventoryLog.create(
+          [
+            {
+              bottle: bottle._id,
+              changeQuantity: -remainingStock,
+              reason: 'wastage',
               reference: expense._id,
               refModel: 'Expense',
               date: now,
-              description:
-                `Wastage from bottle stock-out: ${bottle.sizeMl}ml (${bottle.type})`,
-            }],
-            { session }
-          );
-        }
-
-        await InventoryLog.create(
-          [{
-            bottle: bottle._id,
-            changeQuantity: -remainingStock,
-            reason: 'wastage',
-            reference: expense?._id || null,
-            refModel: expense ? 'Expense' : null,
-            date: now,
-            notes:
-              `Stock out: remaining ${remainingStock} pcs sent to wastage`,
-          }],
+              notes:
+                `Stock out: remaining ${remainingStock} pcs sent to wastage`,
+            },
+          ],
           { session }
         );
       }
@@ -330,17 +369,18 @@ exports.stockOutBottle = async (req, res) => {
           `Bottle ${bottle.sizeMl}ml (${bottle.type}) marked as stock-out. ${remainingStock} pcs recorded as wastage.`,
         bottle: updatedBottle,
         wastageQuantity: remainingStock,
+        wastageValue: wastageAmount,
         expenseId: expense?._id || null,
       };
     });
 
     return res.json(response);
   } catch (error) {
-    console.error('Bottle stock-out error:', error);
-
-    return res.status(error.statusCode || 500).json({
-      message: error.message,
-    });
+    return sendError(
+      res,
+      error,
+      'Bottle stock-out error'
+    );
   } finally {
     await session.endSession();
   }
@@ -350,8 +390,8 @@ exports.stockOutBottle = async (req, res) => {
    PARTIAL BOTTLE WASTAGE
 ======================================== */
 
-// @desc    Record bottle wastage
-// @route   POST /api/inventory/bottles/:id/waste
+// @desc Record partial bottle wastage
+// @route POST /api/inventory/bottles/:id/waste
 exports.wasteBottle = async (req, res) => {
   const session = await mongoose.startSession();
 
@@ -359,14 +399,14 @@ exports.wasteBottle = async (req, res) => {
     let response;
 
     await session.withTransaction(async () => {
+      validateObjectId(req.params.id, 'bottle ID');
+
       const bottle = await Bottle.findById(
         req.params.id
       ).session(session);
 
       if (!bottle) {
-        const error = new Error('Bottle not found');
-        error.statusCode = 404;
-        throw error;
+        throw createError('Bottle not found', 404);
       }
 
       const qty = Number(req.body.quantity);
@@ -377,28 +417,43 @@ exports.wasteBottle = async (req, res) => {
           : '';
 
       if (!Number.isInteger(qty) || qty <= 0) {
-        const error = new Error(
+        throw createError(
           'Bottle quantity must be a positive whole number'
         );
-        error.statusCode = 400;
-        throw error;
       }
 
       const currentStock = Number(
         bottle.currentStock || 0
       );
 
-      if (currentStock < qty) {
-        const error = new Error(
-          `Only ${currentStock} bottle(s) in stock. Cannot waste ${qty}.`
+      if (
+        !Number.isInteger(currentStock) ||
+        currentStock < 0
+      ) {
+        throw createError(
+          'Invalid current bottle stock'
         );
-        error.statusCode = 400;
-        throw error;
       }
 
-      const wastageAmount = Math.round(
-        qty * Number(bottle.avgCostPerUnit || 0) * 100
-      ) / 100;
+      if (currentStock < qty) {
+        throw createError(
+          `Only ${currentStock} bottle(s) in stock. Cannot waste ${qty}.`
+        );
+      }
+
+      const avgCost = Number(
+        bottle.avgCostPerUnit || 0
+      );
+
+      if (!Number.isFinite(avgCost) || avgCost < 0) {
+        throw createError(
+          'Invalid average bottle cost'
+        );
+      }
+
+      const wastageAmount = roundMoney(
+        qty * avgCost
+      );
 
       const now = new Date();
 
@@ -424,11 +479,10 @@ exports.wasteBottle = async (req, res) => {
         );
 
       if (!updatedBottle) {
-        const error = new Error(
-          'Bottle stock changed during this operation. Please refresh and try again.'
+        throw createError(
+          'Bottle stock changed during this operation. Please refresh and try again.',
+          409
         );
-        error.statusCode = 409;
-        throw error;
       }
 
       updatedBottle.isStockOut =
@@ -436,11 +490,17 @@ exports.wasteBottle = async (req, res) => {
 
       await updatedBottle.save({ session });
 
-      let expense = null;
+      /*
+        Always create the wastage expense, including when the
+        average cost is zero. This keeps inventory history linked
+        to an expense record.
 
-      if (wastageAmount > 0.01) {
-        [expense] = await Expense.create(
-          [{
+        No cash_out Transaction is created because this is
+        a non-cash inventory write-off.
+      */
+      const [expense] = await Expense.create(
+        [
+          {
             type: 'regular',
             category: 'Wastage',
             amount: wastageAmount,
@@ -449,37 +509,25 @@ exports.wasteBottle = async (req, res) => {
               `Bottle wastage: ${bottle.sizeMl}ml (${bottle.type}) - ${qty} pcs`,
             reference: `BOTTLE-${bottle._id}`,
             notes,
-          }],
-          { session }
-        );
+          },
+        ],
+        { session }
+      );
 
-        await Transaction.create(
-          [{
-            type: 'cash_out',
-            amount: wastageAmount,
-            category: 'Expense',
+      await InventoryLog.create(
+        [
+          {
+            bottle: bottle._id,
+            changeQuantity: -qty,
+            reason: 'wastage',
             reference: expense._id,
             refModel: 'Expense',
             date: now,
-            description:
-              `Wastage: ${bottle.sizeMl}ml (${bottle.type})`,
-          }],
-          { session }
-        );
-      }
-
-      await InventoryLog.create(
-        [{
-          bottle: bottle._id,
-          changeQuantity: -qty,
-          reason: 'wastage',
-          reference: expense?._id || null,
-          refModel: expense ? 'Expense' : null,
-          date: now,
-          notes:
-            notes ||
-            `Wasted ${qty} bottle(s) - ${bottle.sizeMl}ml (${bottle.type})`,
-        }],
+            notes:
+              notes ||
+              `Wasted ${qty} bottle(s) - ${bottle.sizeMl}ml (${bottle.type})`,
+          },
+        ],
         { session }
       );
 
@@ -488,17 +536,18 @@ exports.wasteBottle = async (req, res) => {
           `Wasted ${qty} bottle(s). Remaining: ${updatedBottle.currentStock}.`,
         bottle: updatedBottle,
         wastageQuantity: qty,
-        expenseId: expense?._id || null,
+        wastageValue: wastageAmount,
+        expenseId: expense._id,
       };
     });
 
     return res.json(response);
   } catch (error) {
-    console.error('Bottle waste error:', error);
-
-    return res.status(error.statusCode || 500).json({
-      message: error.message,
-    });
+    return sendError(
+      res,
+      error,
+      'Bottle waste error'
+    );
   } finally {
     await session.endSession();
   }

@@ -5,7 +5,6 @@ const Investor = require('../models/Investor');
 const Transaction = require('../models/Transaction');
 const Sale = require('../models/Sale');
 const Expense = require('../models/Expense');
-const Purchase = require('../models/Purchase');
 
 /* ========================================
    HELPERS
@@ -17,10 +16,17 @@ const createError = (message, statusCode = 400) => {
   return error;
 };
 
-const toNumber = (value) => {
+const toNumber = (value, fallback = 0) => {
+  if (value === undefined || value === null || value === '') {
+    return fallback;
+  }
+
   const number = Number(value);
-  return Number.isFinite(number) ? number : 0;
+  return Number.isFinite(number) ? number : fallback;
 };
+
+const roundMoney = (value) =>
+  Math.round((Number(value) + Number.EPSILON) * 100) / 100;
 
 const validateObjectId = (value, label = 'ID') => {
   if (!mongoose.isValidObjectId(value)) {
@@ -54,7 +60,6 @@ const parseContributionDate = (value, fallback = new Date()) => {
   return date;
 };
 
-// Calculate net contribution directly from contribution records.
 const getNetContribution = (investor) => {
   return (investor.contributions || []).reduce(
     (total, contribution) => {
@@ -70,6 +75,20 @@ const getNetContribution = (investor) => {
   );
 };
 
+const assertNonNegativeNetContribution = (investor) => {
+  const netContribution = roundMoney(
+    getNetContribution(investor)
+  );
+
+  if (netContribution < -0.001) {
+    throw createError(
+      `This operation would make ${investor.name}'s net contribution negative. Withdrawals cannot exceed the remaining contribution.`
+    );
+  }
+
+  return netContribution;
+};
+
 const getContributionTransactionDetails = (contribution) => {
   const isInvestment = contribution.type === 'investment';
 
@@ -79,7 +98,6 @@ const getContributionTransactionDetails = (contribution) => {
   };
 };
 
-// Create a transaction linked to its exact contribution.
 const createContributionTransaction = async ({
   investor,
   contribution,
@@ -100,15 +118,13 @@ const createContributionTransaction = async ({
         date: contribution.date,
         description: `${contribution.type} - ${investor.name} - ${
           contribution.notes || ''
-        }`,
+        }`.trim(),
       },
     ],
     { session }
   );
 };
 
-// Delete the transaction for one contribution.
-// Supports older transactions that do not have contributionId.
 const deleteContributionTransaction = async ({
   investor,
   contribution,
@@ -117,7 +133,6 @@ const deleteContributionTransaction = async ({
   const { category } =
     getContributionTransactionDetails(contribution);
 
-  // New transactions: exact contribution ID.
   const linkedTransaction = await Transaction.findOneAndDelete(
     {
       reference: investor._id,
@@ -131,7 +146,7 @@ const deleteContributionTransaction = async ({
     return;
   }
 
-  // Legacy transaction fallback: delete only one matching record.
+  // Compatibility with older transactions that do not have contributionId.
   const startDate = new Date(contribution.date);
   startDate.setHours(0, 0, 0, 0);
 
@@ -151,6 +166,91 @@ const deleteContributionTransaction = async ({
     },
     { session }
   );
+};
+
+/*
+  Cash position is calculated from the actual transaction ledger.
+
+  This includes:
+  - Paid sales
+  - Actual supplier payments
+  - Regular expenses
+  - Investor investments
+  - Investor withdrawals
+  - Previous investor settlements
+
+  Wastage is excluded from cash out because writing off inventory
+  does not mean that cash was paid at the time of wastage.
+*/
+const getCashPosition = async (session = null) => {
+  let wastageQuery = Expense.find({
+    category: 'Wastage',
+  }).select('_id');
+
+  if (session) {
+    wastageQuery = wastageQuery.session(session);
+  }
+
+  const wastageExpenses = await wastageQuery;
+  const wastageExpenseIds = wastageExpenses.map(
+    (expense) => expense._id
+  );
+
+  const pipeline = [
+    {
+      $match: {
+        $or: [
+          { refModel: { $ne: 'Expense' } },
+          { reference: { $nin: wastageExpenseIds } },
+        ],
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        totalCashIn: {
+          $sum: {
+            $cond: [
+              { $eq: ['$type', 'cash_in'] },
+              '$amount',
+              0,
+            ],
+          },
+        },
+        totalCashOut: {
+          $sum: {
+            $cond: [
+              { $eq: ['$type', 'cash_out'] },
+              '$amount',
+              0,
+            ],
+          },
+        },
+      },
+    },
+  ];
+
+  let aggregate = Transaction.aggregate(pipeline);
+
+  if (session) {
+    aggregate = aggregate.session(session);
+  }
+
+  const [result] = await aggregate;
+
+  const totalCashIn = roundMoney(
+    toNumber(result?.totalCashIn)
+  );
+
+  const totalCashOut = roundMoney(
+    toNumber(result?.totalCashOut)
+  );
+
+  return {
+    totalCashIn,
+    totalCashOut,
+    availableCash: roundMoney(totalCashIn - totalCashOut),
+  };
 };
 
 const sendError = (res, error) => {
@@ -191,71 +291,69 @@ exports.createInvestor = async (req, res) => {
   const session = await mongoose.startSession();
 
   try {
-    session.startTransaction();
+    let createdInvestor;
 
-    const { name, initialInvestment } = req.body;
+    await session.withTransaction(async () => {
+      const { name, initialInvestment } = req.body;
 
-    const cleanName = String(name || '').trim();
+      const cleanName = String(name || '').trim();
 
-    if (!cleanName) {
-      throw createError('Investor name is required');
-    }
+      if (!cleanName) {
+        throw createError('Investor name is required');
+      }
 
-    const initialAmount =
-      initialInvestment === undefined ||
-      initialInvestment === null ||
-      initialInvestment === ''
-        ? 0
-        : Number(initialInvestment);
+      const initialAmount =
+        initialInvestment === undefined ||
+        initialInvestment === null ||
+        initialInvestment === ''
+          ? 0
+          : Number(initialInvestment);
 
-    if (
-      !Number.isFinite(initialAmount) ||
-      initialAmount < 0
-    ) {
-      throw createError(
-        'Initial investment must be a valid non-negative amount'
+      if (
+        !Number.isFinite(initialAmount) ||
+        initialAmount < 0
+      ) {
+        throw createError(
+          'Initial investment must be a valid non-negative amount'
+        );
+      }
+
+      const [investor] = await Investor.create(
+        [
+          {
+            name: cleanName,
+          },
+        ],
+        { session }
       );
-    }
 
-    const [investor] = await Investor.create(
-      [
-        {
-          name: cleanName,
-        },
-      ],
-      { session }
-    );
+      if (initialAmount > 0) {
+        investor.contributions.push({
+          amount: roundMoney(initialAmount),
+          type: 'investment',
+          date: new Date(),
+          notes: 'Initial investment',
+        });
 
-    if (initialAmount > 0) {
-      investor.contributions.push({
-        amount: initialAmount,
-        type: 'investment',
-        date: new Date(),
-        notes: 'Initial investment',
-      });
+        await investor.save({ session });
 
-      await investor.save({ session });
+        const contribution =
+          investor.contributions[
+            investor.contributions.length - 1
+          ];
 
-      const contribution =
-        investor.contributions[
-          investor.contributions.length - 1
-        ];
+        await createContributionTransaction({
+          investor,
+          contribution,
+          session,
+        });
+      }
 
-      await createContributionTransaction({
-        investor,
-        contribution,
-        session,
-      });
-    }
+      createdInvestor = investor;
+    });
 
-    await session.commitTransaction();
-
-    return res.status(201).json(investor);
+    return res.status(201).json(createdInvestor);
   } catch (error) {
-    if (session.inTransaction()) {
-      await session.abortTransaction();
-    }
-
     return sendError(res, error);
   } finally {
     await session.endSession();
@@ -270,57 +368,57 @@ exports.addContribution = async (req, res) => {
   const session = await mongoose.startSession();
 
   try {
-    session.startTransaction();
+    let updatedInvestor;
 
-    validateObjectId(req.params.id, 'investor ID');
+    await session.withTransaction(async () => {
+      validateObjectId(req.params.id, 'investor ID');
 
-    const investor = await Investor.findById(
-      req.params.id
-    ).session(session);
+      const investor = await Investor.findById(
+        req.params.id
+      ).session(session);
 
-    if (!investor) {
-      throw createError('Investor not found', 404);
-    }
+      if (!investor) {
+        throw createError('Investor not found', 404);
+      }
 
-    const { amount, type, date, notes } = req.body;
+      const { amount, type, date, notes } = req.body;
 
-    const cleanAmount = Number(amount);
+      const cleanAmount = Number(amount);
 
-    if (!Number.isFinite(cleanAmount) || cleanAmount <= 0) {
-      throw createError('Amount must be greater than 0');
-    }
+      if (!Number.isFinite(cleanAmount) || cleanAmount <= 0) {
+        throw createError('Amount must be greater than 0');
+      }
 
-    const cleanType = validateContributionType(type);
-    const cleanDate = parseContributionDate(date);
+      const cleanType = validateContributionType(type);
+      const cleanDate = parseContributionDate(date);
 
-    investor.contributions.push({
-      amount: cleanAmount,
-      type: cleanType,
-      date: cleanDate,
-      notes: String(notes || '').trim(),
+      investor.contributions.push({
+        amount: roundMoney(cleanAmount),
+        type: cleanType,
+        date: cleanDate,
+        notes: String(notes || '').trim(),
+      });
+
+      assertNonNegativeNetContribution(investor);
+
+      await investor.save({ session });
+
+      const contribution =
+        investor.contributions[
+          investor.contributions.length - 1
+        ];
+
+      await createContributionTransaction({
+        investor,
+        contribution,
+        session,
+      });
+
+      updatedInvestor = investor;
     });
 
-    await investor.save({ session });
-
-    const contribution =
-      investor.contributions[
-        investor.contributions.length - 1
-      ];
-
-    await createContributionTransaction({
-      investor,
-      contribution,
-      session,
-    });
-
-    await session.commitTransaction();
-
-    return res.json(investor);
+    return res.json(updatedInvestor);
   } catch (error) {
-    if (session.inTransaction()) {
-      await session.abortTransaction();
-    }
-
     return sendError(res, error);
   } finally {
     await session.endSession();
@@ -335,78 +433,76 @@ exports.updateContribution = async (req, res) => {
   const session = await mongoose.startSession();
 
   try {
-    session.startTransaction();
+    let updatedInvestor;
 
-    validateObjectId(req.params.id, 'investor ID');
-    validateObjectId(
-      req.params.contributionId,
-      'contribution ID'
-    );
+    await session.withTransaction(async () => {
+      validateObjectId(req.params.id, 'investor ID');
+      validateObjectId(
+        req.params.contributionId,
+        'contribution ID'
+      );
 
-    const investor = await Investor.findById(
-      req.params.id
-    ).session(session);
+      const investor = await Investor.findById(
+        req.params.id
+      ).session(session);
 
-    if (!investor) {
-      throw createError('Investor not found', 404);
-    }
-
-    const contribution = investor.contributions.id(
-      req.params.contributionId
-    );
-
-    if (!contribution) {
-      throw createError('Contribution not found', 404);
-    }
-
-    // Remove the old transaction before modifying the contribution.
-    await deleteContributionTransaction({
-      investor,
-      contribution,
-      session,
-    });
-
-    const { amount, type, date, notes } = req.body;
-
-    if (amount !== undefined) {
-      const cleanAmount = Number(amount);
-
-      if (!Number.isFinite(cleanAmount) || cleanAmount <= 0) {
-        throw createError('Amount must be greater than 0');
+      if (!investor) {
+        throw createError('Investor not found', 404);
       }
 
-      contribution.amount = cleanAmount;
-    }
+      const contribution = investor.contributions.id(
+        req.params.contributionId
+      );
 
-    if (type !== undefined) {
-      contribution.type = validateContributionType(type);
-    }
+      if (!contribution) {
+        throw createError('Contribution not found', 404);
+      }
 
-    if (date !== undefined) {
-      contribution.date = parseContributionDate(date);
-    }
+      await deleteContributionTransaction({
+        investor,
+        contribution,
+        session,
+      });
 
-    if (notes !== undefined) {
-      contribution.notes = String(notes || '').trim();
-    }
+      const { amount, type, date, notes } = req.body;
 
-    await investor.save({ session });
+      if (amount !== undefined) {
+        const cleanAmount = Number(amount);
 
-    // Create the updated transaction with the same contribution ID.
-    await createContributionTransaction({
-      investor,
-      contribution,
-      session,
+        if (!Number.isFinite(cleanAmount) || cleanAmount <= 0) {
+          throw createError('Amount must be greater than 0');
+        }
+
+        contribution.amount = roundMoney(cleanAmount);
+      }
+
+      if (type !== undefined) {
+        contribution.type = validateContributionType(type);
+      }
+
+      if (date !== undefined) {
+        contribution.date = parseContributionDate(date);
+      }
+
+      if (notes !== undefined) {
+        contribution.notes = String(notes || '').trim();
+      }
+
+      assertNonNegativeNetContribution(investor);
+
+      await investor.save({ session });
+
+      await createContributionTransaction({
+        investor,
+        contribution,
+        session,
+      });
+
+      updatedInvestor = investor;
     });
 
-    await session.commitTransaction();
-
-    return res.json(investor);
+    return res.json(updatedInvestor);
   } catch (error) {
-    if (session.inTransaction()) {
-      await session.abortTransaction();
-    }
-
     return sendError(res, error);
   } finally {
     await session.endSession();
@@ -421,48 +517,48 @@ exports.deleteContribution = async (req, res) => {
   const session = await mongoose.startSession();
 
   try {
-    session.startTransaction();
+    let updatedInvestor;
 
-    validateObjectId(req.params.id, 'investor ID');
-    validateObjectId(
-      req.params.contributionId,
-      'contribution ID'
-    );
+    await session.withTransaction(async () => {
+      validateObjectId(req.params.id, 'investor ID');
+      validateObjectId(
+        req.params.contributionId,
+        'contribution ID'
+      );
 
-    const investor = await Investor.findById(
-      req.params.id
-    ).session(session);
+      const investor = await Investor.findById(
+        req.params.id
+      ).session(session);
 
-    if (!investor) {
-      throw createError('Investor not found', 404);
-    }
+      if (!investor) {
+        throw createError('Investor not found', 404);
+      }
 
-    const contribution = investor.contributions.id(
-      req.params.contributionId
-    );
+      const contribution = investor.contributions.id(
+        req.params.contributionId
+      );
 
-    if (!contribution) {
-      throw createError('Contribution not found', 404);
-    }
+      if (!contribution) {
+        throw createError('Contribution not found', 404);
+      }
 
-    await deleteContributionTransaction({
-      investor,
-      contribution,
-      session,
+      await deleteContributionTransaction({
+        investor,
+        contribution,
+        session,
+      });
+
+      contribution.deleteOne();
+
+      assertNonNegativeNetContribution(investor);
+
+      await investor.save({ session });
+
+      updatedInvestor = investor;
     });
 
-    contribution.deleteOne();
-
-    await investor.save({ session });
-
-    await session.commitTransaction();
-
-    return res.json(investor);
+    return res.json(updatedInvestor);
   } catch (error) {
-    if (session.inTransaction()) {
-      await session.abortTransaction();
-    }
-
     return sendError(res, error);
   } finally {
     await session.endSession();
@@ -484,8 +580,9 @@ exports.getShares = async (req, res) => {
     );
 
     const shares = investors.map((investor) => {
-      const netContribution =
-        getNetContribution(investor);
+      const netContribution = roundMoney(
+        getNetContribution(investor)
+      );
 
       return {
         _id: investor._id,
@@ -493,7 +590,7 @@ exports.getShares = async (req, res) => {
         netContribution,
         sharePercentage:
           totalNet > 0
-            ? (netContribution / totalNet) * 100
+            ? roundMoney((netContribution / totalNet) * 100)
             : 0,
       };
     });
@@ -512,186 +609,117 @@ exports.deleteInvestor = async (req, res) => {
   const session = await mongoose.startSession();
 
   try {
-    session.startTransaction();
+    let settlementResult;
 
-    validateObjectId(req.params.id, 'investor ID');
+    await session.withTransaction(async () => {
+      validateObjectId(req.params.id, 'investor ID');
 
-    const investor = await Investor.findById(
-      req.params.id
-    ).session(session);
+      const investor = await Investor.findById(
+        req.params.id
+      ).session(session);
 
-    if (!investor) {
-      throw createError('Investor not found', 404);
-    }
+      if (!investor) {
+        throw createError('Investor not found', 404);
+      }
 
-    // Calculate this investor's net contribution.
-    const investorNetContribution =
-      getNetContribution(investor);
-
-    // Get all investors.
-    const allInvestors = await Investor.find({}).session(session);
-
-    // Calculate total net contributions.
-    const totalNetContributions = allInvestors.reduce(
-      (total, item) =>
-        total + getNetContribution(item),
-      0
-    );
-
-    // Calculate ownership percentage.
-    const share =
-      totalNetContributions > 0
-        ? (
-            investorNetContribution /
-            totalNetContributions
-          ) * 100
-        : 0;
-
-    const [
-      allSales,
-      allExpenses,
-      allPurchases,
-      allSettlements,
-    ] = await Promise.all([
-      Sale.find({}).session(session),
-      Expense.find({}).session(session),
-      Purchase.find({}).session(session),
-      Transaction.find({
-        type: 'cash_out',
-        category: 'Investor Settlement',
-      }).session(session),
-    ]);
-
-    // Calculate recorded sales revenue.
-    const totalRevenue = allSales.reduce(
-      (total, sale) =>
-        total + toNumber(sale.totalAmount),
-      0
-    );
-
-    // Existing sale logic: exclude sales marked as due.
-    const dueAmount = allSales.reduce(
-      (total, sale) =>
-        sale.paymentStatus === 'due'
-          ? total + toNumber(sale.totalAmount)
-          : total,
-      0
-    );
-
-    const paidRevenue = totalRevenue - dueAmount;
-
-    // Calculate expenses.
-    const totalExpenses = allExpenses.reduce(
-      (total, expense) =>
-        total + toNumber(expense.amount),
-      0
-    );
-
-    /*
-      IMPORTANT:
-      The current Purchase model does not contain payment tracking.
-      Therefore, this calculation deducts the full purchase amount.
-      This must be updated when supplier-credit tracking is implemented.
-    */
-    const totalPurchases = allPurchases.reduce(
-      (total, purchase) =>
-        total + toNumber(purchase.totalAmount),
-      0
-    );
-
-    // Calculate other investors' net contributions.
-    const investorNetOther = allInvestors.reduce(
-      (total, item) => {
-        if (
-          item._id.toString() === investor._id.toString()
-        ) {
-          return total;
-        }
-
-        return total + getNetContribution(item);
-      },
-      0
-    );
-
-    // Calculate previous investor settlements.
-    const totalSettlements = allSettlements.reduce(
-      (total, settlement) =>
-        total + toNumber(settlement.amount),
-      0
-    );
-
-    // Calculate available cash.
-    const availableCash =
-      paidRevenue -
-      totalExpenses -
-      totalPurchases +
-      investorNetOther -
-      totalSettlements;
-
-    // Calculate profit share.
-    const profitShare =
-      (share / 100) * availableCash;
-
-    // Calculate final settlement.
-    const settlementAmount =
-      investorNetContribution + profitShare;
-
-    if (
-      !Number.isFinite(settlementAmount) ||
-      settlementAmount < 0
-    ) {
-      throw createError(
-        'Settlement amount cannot be negative. Please review the accounts before closing this investor.'
+      const investorNetContribution = roundMoney(
+        getNetContribution(investor)
       );
-    }
 
-    // Record settlement only when the amount is positive.
-    if (settlementAmount > 0) {
-      await Transaction.create(
-        [
-          {
-            type: 'cash_out',
-            amount: settlementAmount,
-            category: 'Investor Settlement',
-            reference: investor._id,
-            refModel: 'Investor',
-            date: new Date(),
-            description: `Settlement for ${investor.name}`,
-          },
-        ],
+      if (investorNetContribution < -0.001) {
+        throw createError(
+          'This investor has a negative net contribution. Review the contribution history before closing the account.'
+        );
+      }
+
+      const allInvestors = await Investor.find({})
+        .session(session);
+
+      const totalNetContributions = allInvestors.reduce(
+        (total, item) =>
+          total + getNetContribution(item),
+        0
+      );
+
+      if (totalNetContributions <= 0) {
+        throw createError(
+          'Cannot calculate ownership because total net investor contributions are zero or negative.'
+        );
+      }
+
+      const sharePercentage =
+        investorNetContribution / totalNetContributions;
+
+      const cashPosition = await getCashPosition(session);
+
+      /*
+        Settlement is the investor's ownership share of the
+        actual available cash balance.
+
+        Investor contributions are already included in the cash
+        ledger. Do not add the original capital a second time.
+      */
+      const settlementAmount = roundMoney(
+        sharePercentage * cashPosition.availableCash
+      );
+
+      if (
+        !Number.isFinite(settlementAmount) ||
+        settlementAmount < -0.001
+      ) {
+        throw createError(
+          'Available cash is negative. Review sales, supplier payments, expenses, and investor transactions before closing this investor.'
+        );
+      }
+
+      const finalSettlement = Math.max(
+        0,
+        settlementAmount
+      );
+
+      if (finalSettlement > 0) {
+        await Transaction.create(
+          [
+            {
+              type: 'cash_out',
+              amount: finalSettlement,
+              category: 'Investor Settlement',
+              reference: investor._id,
+              refModel: 'Investor',
+              date: new Date(),
+              description: `Settlement for ${investor.name}`,
+            },
+          ],
+          { session }
+        );
+      }
+
+      /*
+        IMPORTANT:
+        Keep Investment and Withdrawal transactions.
+
+        They are part of the permanent cash ledger and must not
+        be deleted when the investor document is closed.
+      */
+      await Investor.deleteOne(
+        { _id: investor._id },
         { session }
       );
-    }
 
-    // Remove ordinary contribution transactions.
-    await Transaction.deleteMany(
-      {
-        reference: investor._id,
-        refModel: 'Investor',
-        category: {
-          $in: ['Investment', 'Withdrawal'],
-        },
-      },
-      { session }
-    );
-
-    // Delete investor in the same database transaction.
-    await Investor.deleteOne(
-      { _id: investor._id },
-      { session }
-    );
-
-    await session.commitTransaction();
+      settlementResult = {
+        investorId: investor._id,
+        investorName: investor.name,
+        sharePercentage: roundMoney(sharePercentage * 100),
+        availableCashBeforeSettlement: cashPosition.availableCash,
+        amount: finalSettlement,
+      };
+    });
 
     return res.json({
-      message: 'Investor settled and removed',
-      amount: settlementAmount,
+      message: 'Investor settled and removed successfully',
+      ...settlementResult,
     });
   } catch (error) {
-    if (session.inTransaction()) {
-      await session.abortTransaction();
-    }
-
     return sendError(res, error);
   } finally {
     await session.endSession();
@@ -707,16 +735,22 @@ exports.getSettlements = async (req, res) => {
     const transactions = await Transaction.find({
       type: 'cash_out',
       category: 'Investor Settlement',
+    }).sort({
+      date: -1,
+      createdAt: -1,
     });
 
-    const total = transactions.reduce(
-      (sum, transaction) =>
-        sum + toNumber(transaction.amount),
-      0
+    const total = roundMoney(
+      transactions.reduce(
+        (sum, transaction) =>
+          sum + toNumber(transaction.amount),
+        0
+      )
     );
 
     return res.json({
       total,
+      transactions,
     });
   } catch (error) {
     return sendError(res, error);
