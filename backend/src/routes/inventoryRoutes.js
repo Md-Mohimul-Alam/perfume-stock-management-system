@@ -1,8 +1,6 @@
-const express =
-  require('express');
 
-const router =
-  express.Router();
+const express = require('express');
+const router = express.Router();
 
 const {
   getMaterials,
@@ -38,12 +36,13 @@ const {
 
 const {
   protect,
+  admin,
 } = require('../middlewares/authMiddleware');
 
 /* ========================================
    PUBLIC BOTTLES
 
-   Must stay BEFORE /bottles/:id.
+   Keep this before /bottles/:id.
 ======================================== */
 
 router.get(
@@ -55,45 +54,53 @@ router.get(
    RAW MATERIALS
 ======================================== */
 
-router
-  .route(
-    '/materials'
-  )
-  .get(
-    protect,
-    getMaterials
-  )
-  .post(
-    protect,
-    createMaterial
-  );
+// Read
+router.get(
+  '/materials',
+  protect,
+  getMaterials
+);
 
-router
-  .route(
-    '/materials/:id'
-  )
-  .get(
-    protect,
-    getMaterialById
-  )
-  .put(
-    protect,
-    updateMaterial
-  )
-  .delete(
-    protect,
-    deleteMaterial
-  );
+router.get(
+  '/materials/:id',
+  protect,
+  getMaterialById
+);
 
+// Create, update and delete
+router.post(
+  '/materials',
+  protect,
+  admin,
+  createMaterial
+);
+
+router.put(
+  '/materials/:id',
+  protect,
+  admin,
+  updateMaterial
+);
+
+router.delete(
+  '/materials/:id',
+  protect,
+  admin,
+  deleteMaterial
+);
+
+// Stock operations
 router.post(
   '/materials/:id/stock-out',
   protect,
+  admin,
   stockOutMaterial
 );
 
 router.post(
   '/materials/:id/adjust',
   protect,
+  admin,
   adjustMaterialStock
 );
 
@@ -111,47 +118,58 @@ router.get(
    BOTTLES
 ======================================== */
 
-router
-  .route(
-    '/bottles'
-  )
-  .get(
-    protect,
-    getBottles
-  )
-  .post(
-    protect,
-    createBottle
-  );
+// Read
+router.get(
+  '/bottles',
+  protect,
+  getBottles
+);
 
-router
-  .route(
-    '/bottles/:id'
-  )
-  .put(
-    protect,
-    updateBottle
-  )
-  .delete(
-    protect,
-    deleteBottle
-  );
+// Create
+router.post(
+  '/bottles',
+  protect,
+  admin,
+  createBottle
+);
 
+// Update
+router.put(
+  '/bottles/:id',
+  protect,
+  admin,
+  updateBottle
+);
+
+// Delete
+router.delete(
+  '/bottles/:id',
+  protect,
+  admin,
+  deleteBottle
+);
+
+// Bottle purchase
 router.post(
   '/bottles/:id/purchase',
   protect,
+  admin,
   addBottlePurchase
 );
 
+// Bottle stock-out
 router.post(
   '/bottles/:id/stock-out',
   protect,
+  admin,
   stockOutBottle
 );
 
+// Bottle wastage
 router.post(
   '/bottles/:id/waste',
   protect,
+  admin,
   wasteBottle
 );
 
@@ -162,29 +180,33 @@ router.post(
 router.post(
   '/materials/bulk',
   protect,
+  admin,
   bulkCreateMaterials
 );
 
 router.post(
   '/bottles/bulk',
   protect,
+  admin,
   bulkCreateBottles
 );
 
 router.post(
   '/materials/import',
   protect,
+  admin,
   importMaterialsWithPurchases
 );
 
 router.post(
   '/bottles/bulk-add-stock',
   protect,
+  admin,
   bulkAddStockToBottles
 );
 
 /* ========================================
-   LOGS
+   INVENTORY LOGS
 ======================================== */
 
 router.get(
@@ -193,5 +215,4 @@ router.get(
   getLogs
 );
 
-module.exports =
-  router;
+module.exports = router;

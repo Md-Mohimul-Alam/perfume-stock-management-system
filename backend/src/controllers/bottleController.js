@@ -1,3 +1,6 @@
+
+const mongoose = require('mongoose');
+
 const Bottle = require('../models/Bottle');
 const Sale = require('../models/Sale');
 const InventoryLog = require('../models/InventoryLog');
@@ -13,371 +16,188 @@ const Expense = require('../models/Expense');
 // @route   GET /api/inventory/bottles/with-sales
 exports.getBottlesWithSales = async (req, res) => {
   try {
-    const bottles =
-      await Bottle.find();
+    const bottles = await Bottle.find();
 
-    /* ======================================
-       1. BOTTLES USED FOR PERFUME SALES
-    ====================================== */
-
-    const perfumeUsageAgg =
-      await Sale.aggregate([
-        {
-          $unwind: '$items',
+    // 1. BOTTLES USED FOR PERFUME SALES
+    const perfumeUsageAgg = await Sale.aggregate([
+      { $unwind: '$items' },
+      {
+        $match: {
+          $or: [
+            { 'items.itemType': 'product' },
+            { 'items.itemType': { $exists: false } },
+            { 'items.itemType': null },
+          ],
         },
-
-        /*
-          Existing old sales may not have
-          itemType.
-
-          They are normal product sales.
-        */
-        {
-          $match: {
-            $or: [
-              {
-                'items.itemType':
-                  'product',
-              },
-
-              {
-                'items.itemType': {
-                  $exists: false,
-                },
-              },
-
-              {
-                'items.itemType':
-                  null,
-              },
+      },
+      {
+        $lookup: {
+          from: 'products',
+          localField: 'items.product',
+          foreignField: '_id',
+          as: 'product',
+        },
+      },
+      { $unwind: '$product' },
+      { $unwind: '$product.sizes' },
+      {
+        $match: {
+          $expr: {
+            $eq: [
+              '$product.sizes.sizeMl',
+              '$items.sizeMl',
             ],
           },
         },
-
-        {
-          $lookup: {
-            from:
-              'products',
-
-            localField:
-              'items.product',
-
-            foreignField:
-              '_id',
-
-            as:
-              'product',
+      },
+      {
+        $group: {
+          _id: '$product.sizes.bottle',
+          usedForPerfume: {
+            $sum: '$items.quantity',
           },
         },
+      },
+    ]);
 
-        {
-          $unwind:
-            '$product',
+    const perfumeUsageMap = {};
+
+    perfumeUsageAgg.forEach((item) => {
+      if (!item._id) return;
+
+      perfumeUsageMap[item._id.toString()] =
+        Number(item.usedForPerfume || 0);
+    });
+
+    // 2. DIRECT EMPTY BOTTLE SALES
+    const directBottleSalesAgg = await Sale.aggregate([
+      { $unwind: '$items' },
+      {
+        $match: {
+          'items.itemType': 'bottle',
+          'items.bottle': { $ne: null },
         },
-
-        {
-          $unwind:
-            '$product.sizes',
-        },
-
-        {
-          $match: {
-            $expr: {
-              $eq: [
-                '$product.sizes.sizeMl',
-                '$items.sizeMl',
-              ],
-            },
+      },
+      {
+        $group: {
+          _id: '$items.bottle',
+          bottleSales: {
+            $sum: '$items.quantity',
+          },
+          bottleSalesRevenue: {
+            $sum: '$items.totalPrice',
           },
         },
+      },
+    ]);
 
-        {
-          $group: {
-            _id:
-              '$product.sizes.bottle',
+    const directSaleMap = {};
 
-            usedForPerfume: {
-              $sum:
-                '$items.quantity',
-            },
-          },
+    directBottleSalesAgg.forEach((item) => {
+      if (!item._id) return;
+
+      directSaleMap[item._id.toString()] = {
+        quantity: Number(item.bottleSales || 0),
+        revenue: Number(item.bottleSalesRevenue || 0),
+      };
+    });
+
+    // 3. WASTAGE
+    const wasteAgg = await InventoryLog.aggregate([
+      {
+        $match: {
+          reason: 'wastage',
+          bottle: { $ne: null },
+          changeQuantity: { $lt: 0 },
         },
-      ]);
-
-    const perfumeUsageMap =
-      {};
-
-    perfumeUsageAgg.forEach(
-      (item) => {
-        if (!item._id) {
-          return;
-        }
-
-        perfumeUsageMap[
-          item._id.toString()
-        ] =
-          Number(
-            item.usedForPerfume ||
-              0
-          );
-      }
-    );
-
-    /* ======================================
-       2. DIRECT EMPTY BOTTLE SALES
-    ====================================== */
-
-    const directBottleSalesAgg =
-      await Sale.aggregate([
-        {
-          $unwind:
-            '$items',
-        },
-
-        {
-          $match: {
-            'items.itemType':
-              'bottle',
-
-            'items.bottle': {
-              $ne: null,
+      },
+      {
+        $group: {
+          _id: '$bottle',
+          wasted: {
+            $sum: {
+              $abs: '$changeQuantity',
             },
           },
         },
+      },
+    ]);
 
-        {
-          $group: {
-            _id:
-              '$items.bottle',
+    const wastedMap = {};
 
-            bottleSales: {
-              $sum:
-                '$items.quantity',
-            },
+    wasteAgg.forEach((item) => {
+      if (!item._id) return;
 
-            bottleSalesRevenue: {
-              $sum:
-                '$items.totalPrice',
-            },
+      wastedMap[item._id.toString()] =
+        Number(item.wasted || 0);
+    });
+
+    // 4. PRODUCTION / STOCK ADDITIONS
+    const productionAgg = await InventoryLog.aggregate([
+      {
+        $match: {
+          reason: 'production',
+          bottle: { $ne: null },
+          changeQuantity: { $gt: 0 },
+        },
+      },
+      {
+        $group: {
+          _id: '$bottle',
+          produced: {
+            $sum: '$changeQuantity',
           },
         },
-      ]);
+      },
+    ]);
 
-    const directSaleMap =
-      {};
+    const producedMap = {};
 
-    directBottleSalesAgg.forEach(
-      (item) => {
-        if (!item._id) {
-          return;
-        }
+    productionAgg.forEach((item) => {
+      if (!item._id) return;
 
-        directSaleMap[
-          item._id.toString()
-        ] = {
-          quantity:
-            Number(
-              item.bottleSales ||
-                0
-            ),
+      producedMap[item._id.toString()] =
+        Number(item.produced || 0);
+    });
 
-          revenue:
-            Number(
-              item.bottleSalesRevenue ||
-                0
-            ),
-        };
-      }
-    );
+    // 5. COMBINE
+    const result = bottles.map((bottle) => {
+      const id = bottle._id.toString();
 
-    /* ======================================
-       3. WASTAGE
-    ====================================== */
+      const usedForPerfume =
+        perfumeUsageMap[id] || 0;
 
-    const wasteAgg =
-      await InventoryLog.aggregate([
-        {
-          $match: {
-            reason:
-              'wastage',
+      const bottleSales =
+        directSaleMap[id]?.quantity || 0;
 
-            bottle: {
-              $ne: null,
-            },
+      const bottleSalesRevenue =
+        directSaleMap[id]?.revenue || 0;
 
-            changeQuantity: {
-              $lt: 0,
-            },
-          },
-        },
+      const wasted = wastedMap[id] || 0;
+      const produced = producedMap[id] || 0;
 
-        {
-          $group: {
-            _id:
-              '$bottle',
+      // Backward compatibility:
+      // sold = perfume usage + direct bottle sales
+      const sold = usedForPerfume + bottleSales;
 
-            wasted: {
-              $sum: {
-                $abs:
-                  '$changeQuantity',
-              },
-            },
-          },
-        },
-      ]);
+      return {
+        ...bottle.toObject(),
+        usedForPerfume,
+        bottleSales,
+        bottleSalesRevenue,
+        sold,
+        wasted,
+        produced,
+      };
+    });
 
-    const wastedMap =
-      {};
-
-    wasteAgg.forEach(
-      (item) => {
-        if (!item._id) {
-          return;
-        }
-
-        wastedMap[
-          item._id.toString()
-        ] =
-          Number(
-            item.wasted ||
-              0
-          );
-      }
-    );
-
-    /* ======================================
-       4. PRODUCTION / STOCK ADDITIONS
-    ====================================== */
-
-    const productionAgg =
-      await InventoryLog.aggregate([
-        {
-          $match: {
-            reason:
-              'production',
-
-            bottle: {
-              $ne: null,
-            },
-
-            changeQuantity: {
-              $gt: 0,
-            },
-          },
-        },
-
-        {
-          $group: {
-            _id:
-              '$bottle',
-
-            produced: {
-              $sum:
-                '$changeQuantity',
-            },
-          },
-        },
-      ]);
-
-    const producedMap =
-      {};
-
-    productionAgg.forEach(
-      (item) => {
-        if (!item._id) {
-          return;
-        }
-
-        producedMap[
-          item._id.toString()
-        ] =
-          Number(
-            item.produced ||
-              0
-          );
-      }
-    );
-
-    /* ======================================
-       5. COMBINE
-    ====================================== */
-
-    const result =
-      bottles.map(
-        (bottle) => {
-          const id =
-            bottle._id.toString();
-
-          const usedForPerfume =
-            perfumeUsageMap[id] ||
-            0;
-
-          const bottleSales =
-            directSaleMap[id]
-              ?.quantity ||
-            0;
-
-          const bottleSalesRevenue =
-            directSaleMap[id]
-              ?.revenue ||
-            0;
-
-          const wasted =
-            wastedMap[id] ||
-            0;
-
-          const produced =
-            producedMap[id] ||
-            0;
-
-          /*
-            Keep "sold" for frontend
-            backward compatibility.
-
-            sold means total bottle units
-            that left inventory because
-            of sales activity.
-
-            usedForPerfume + bottleSales
-          */
-
-          const sold =
-            usedForPerfume +
-            bottleSales;
-
-          return {
-            ...bottle.toObject(),
-
-            usedForPerfume,
-
-            bottleSales,
-
-            bottleSalesRevenue,
-
-            sold,
-
-            wasted,
-
-            produced,
-          };
-        }
-      );
-
-    return res.json(
-      result
-    );
+    return res.json(result);
   } catch (error) {
-    console.error(
-      'Get bottles with sales error:',
-      error
-    );
+    console.error('Get bottles with sales error:', error);
 
-    return res
-      .status(500)
-      .json({
-        message:
-          error.message,
-      });
+    return res.status(500).json({
+      message: error.message,
+    });
   }
 };
 
@@ -386,148 +206,145 @@ exports.getBottlesWithSales = async (req, res) => {
 ======================================== */
 
 // @desc    Mark a bottle as Stock Out
-//          remaining stock becomes wastage
+//          Remaining stock becomes wastage
 // @route   POST /api/inventory/bottles/:id/stock-out
-exports.stockOutBottle =
-  async (
-    req,
-    res
-  ) => {
-    try {
-      const bottle =
-        await Bottle.findById(
-          req.params.id
-        );
+exports.stockOutBottle = async (req, res) => {
+  const session = await mongoose.startSession();
+
+  try {
+    let response;
+
+    await session.withTransaction(async () => {
+      const bottle = await Bottle.findById(
+        req.params.id
+      ).session(session);
 
       if (!bottle) {
-        return res
-          .status(404)
-          .json({
-            message:
-              'Bottle not found',
-          });
+        const error = new Error('Bottle not found');
+        error.statusCode = 404;
+        throw error;
       }
 
-      const remainingStock =
-        Number(
-          bottle.currentStock ||
-            0
-        );
-
-      const avgCost =
-        Number(
-          bottle.avgCostPerUnit ||
-            0
-        );
-
-      if (
-        remainingStock >
-        0
-      ) {
-        const wastageAmount =
-          remainingStock *
-          avgCost;
-
-        const now =
-          new Date();
-
-        const expense =
-          await Expense.create({
-            type:
-              'regular',
-
-            category:
-              'Wastage',
-
-            amount:
-              wastageAmount,
-
-            date:
-              now,
-
-            description:
-              `Stock out: Bottle ${bottle.sizeMl}ml (${bottle.type}) - ${remainingStock} pcs`,
-
-            reference:
-              `BOTTLE-${bottle._id}`,
-
-            notes:
-              `Stock out on ${now.toISOString()}`,
-          });
-
-        await Transaction.create(
-          {
-            type:
-              'cash_out',
-
-            amount:
-              wastageAmount,
-
-            category:
-              'Expense',
-
-            reference:
-              expense._id,
-
-            refModel:
-              'Expense',
-
-            date:
-              now,
-
-            description:
-              `Wastage from bottle stock-out: ${bottle.sizeMl}ml (${bottle.type})`,
-          }
-        );
-
-        await InventoryLog.create(
-          {
-            bottle:
-              bottle._id,
-
-            changeQuantity:
-              -remainingStock,
-
-            reason:
-              'wastage',
-
-            date:
-              now,
-
-            notes:
-              `Stock out: remaining ${remainingStock} pcs sent to wastage`,
-          }
-        );
-      }
-
-      bottle.currentStock =
-        0;
-
-      bottle.isStockOut =
-        true;
-
-      await bottle.save();
-
-      return res.json({
-        message:
-          `Bottle ${bottle.sizeMl}ml (${bottle.type}) marked as stock-out. ${remainingStock} pcs recorded as wastage.`,
-
-        bottle,
-      });
-    } catch (error) {
-      console.error(
-        'Bottle stock-out error:',
-        error
+      const remainingStock = Number(
+        bottle.currentStock || 0
       );
 
-      return res
-        .status(500)
-        .json({
-          message:
-            error.message,
-        });
-    }
-  };
+      if (
+        !Number.isInteger(remainingStock) ||
+        remainingStock < 0
+      ) {
+        const error = new Error(
+          'Invalid bottle stock value'
+        );
+        error.statusCode = 400;
+        throw error;
+      }
+
+      const avgCost = Number(
+        bottle.avgCostPerUnit || 0
+      );
+
+      const wastageAmount = Math.round(
+        remainingStock * avgCost * 100
+      ) / 100;
+
+      const now = new Date();
+
+      const updatedBottle =
+        await Bottle.findOneAndUpdate(
+          {
+            _id: bottle._id,
+            currentStock: remainingStock,
+          },
+          {
+            $set: {
+              currentStock: 0,
+              isStockOut: true,
+            },
+          },
+          {
+            new: true,
+            runValidators: true,
+            session,
+          }
+        );
+
+      if (!updatedBottle) {
+        const error = new Error(
+          'Bottle stock changed during this operation. Please refresh and try again.'
+        );
+        error.statusCode = 409;
+        throw error;
+      }
+
+      let expense = null;
+
+      if (remainingStock > 0) {
+        if (wastageAmount > 0.01) {
+          [expense] = await Expense.create(
+            [{
+              type: 'regular',
+              category: 'Wastage',
+              amount: wastageAmount,
+              date: now,
+              description:
+                `Stock out: Bottle ${bottle.sizeMl}ml (${bottle.type}) - ${remainingStock} pcs`,
+              reference: `BOTTLE-${bottle._id}`,
+              notes: `Stock out on ${now.toISOString()}`,
+            }],
+            { session }
+          );
+
+          await Transaction.create(
+            [{
+              type: 'cash_out',
+              amount: wastageAmount,
+              category: 'Expense',
+              reference: expense._id,
+              refModel: 'Expense',
+              date: now,
+              description:
+                `Wastage from bottle stock-out: ${bottle.sizeMl}ml (${bottle.type})`,
+            }],
+            { session }
+          );
+        }
+
+        await InventoryLog.create(
+          [{
+            bottle: bottle._id,
+            changeQuantity: -remainingStock,
+            reason: 'wastage',
+            reference: expense?._id || null,
+            refModel: expense ? 'Expense' : null,
+            date: now,
+            notes:
+              `Stock out: remaining ${remainingStock} pcs sent to wastage`,
+          }],
+          { session }
+        );
+      }
+
+      response = {
+        message:
+          `Bottle ${bottle.sizeMl}ml (${bottle.type}) marked as stock-out. ${remainingStock} pcs recorded as wastage.`,
+        bottle: updatedBottle,
+        wastageQuantity: remainingStock,
+        expenseId: expense?._id || null,
+      };
+    });
+
+    return res.json(response);
+  } catch (error) {
+    console.error('Bottle stock-out error:', error);
+
+    return res.status(error.statusCode || 500).json({
+      message: error.message,
+    });
+  } finally {
+    await session.endSession();
+  }
+};
 
 /* ========================================
    PARTIAL BOTTLE WASTAGE
@@ -535,172 +352,154 @@ exports.stockOutBottle =
 
 // @desc    Record bottle wastage
 // @route   POST /api/inventory/bottles/:id/waste
-exports.wasteBottle =
-  async (
-    req,
-    res
-  ) => {
-    try {
-      const bottle =
-        await Bottle.findById(
-          req.params.id
-        );
+exports.wasteBottle = async (req, res) => {
+  const session = await mongoose.startSession();
+
+  try {
+    let response;
+
+    await session.withTransaction(async () => {
+      const bottle = await Bottle.findById(
+        req.params.id
+      ).session(session);
 
       if (!bottle) {
-        return res
-          .status(404)
-          .json({
-            message:
-              'Bottle not found',
-          });
+        const error = new Error('Bottle not found');
+        error.statusCode = 404;
+        throw error;
       }
 
-      const {
-        quantity,
-        notes,
-      } = req.body;
+      const qty = Number(req.body.quantity);
 
-      const qty =
-        Number(
-          quantity
+      const notes =
+        typeof req.body.notes === 'string'
+          ? req.body.notes.trim()
+          : '';
+
+      if (!Number.isInteger(qty) || qty <= 0) {
+        const error = new Error(
+          'Bottle quantity must be a positive whole number'
+        );
+        error.statusCode = 400;
+        throw error;
+      }
+
+      const currentStock = Number(
+        bottle.currentStock || 0
+      );
+
+      if (currentStock < qty) {
+        const error = new Error(
+          `Only ${currentStock} bottle(s) in stock. Cannot waste ${qty}.`
+        );
+        error.statusCode = 400;
+        throw error;
+      }
+
+      const wastageAmount = Math.round(
+        qty * Number(bottle.avgCostPerUnit || 0) * 100
+      ) / 100;
+
+      const now = new Date();
+
+      const updatedBottle =
+        await Bottle.findOneAndUpdate(
+          {
+            _id: bottle._id,
+            currentStock: {
+              $gte: qty,
+              $eq: currentStock,
+            },
+          },
+          {
+            $inc: {
+              currentStock: -qty,
+            },
+          },
+          {
+            new: true,
+            runValidators: true,
+            session,
+          }
         );
 
-      if (
-        !Number.isInteger(
-          qty
-        ) ||
-        qty <= 0
-      ) {
-        return res
-          .status(400)
-          .json({
-            message:
-              'Bottle quantity must be a positive whole number',
-          });
+      if (!updatedBottle) {
+        const error = new Error(
+          'Bottle stock changed during this operation. Please refresh and try again.'
+        );
+        error.statusCode = 409;
+        throw error;
       }
 
-      if (
-        bottle.currentStock <
-        qty
-      ) {
-        return res
-          .status(400)
-          .json({
-            message:
-              `Only ${bottle.currentStock} bottle(s) in stock. Cannot waste ${qty}.`,
-          });
-      }
+      updatedBottle.isStockOut =
+        updatedBottle.currentStock <= 0;
 
-      const wastageAmount =
-        qty *
-        Number(
-          bottle.avgCostPerUnit ||
-            0
+      await updatedBottle.save({ session });
+
+      let expense = null;
+
+      if (wastageAmount > 0.01) {
+        [expense] = await Expense.create(
+          [{
+            type: 'regular',
+            category: 'Wastage',
+            amount: wastageAmount,
+            date: now,
+            description:
+              `Bottle wastage: ${bottle.sizeMl}ml (${bottle.type}) - ${qty} pcs`,
+            reference: `BOTTLE-${bottle._id}`,
+            notes,
+          }],
+          { session }
         );
 
-      const now =
-        new Date();
-
-      bottle.currentStock -=
-        qty;
-
-      bottle.isStockOut =
-        bottle.currentStock <=
-        0;
-
-      await bottle.save();
+        await Transaction.create(
+          [{
+            type: 'cash_out',
+            amount: wastageAmount,
+            category: 'Expense',
+            reference: expense._id,
+            refModel: 'Expense',
+            date: now,
+            description:
+              `Wastage: ${bottle.sizeMl}ml (${bottle.type})`,
+          }],
+          { session }
+        );
+      }
 
       await InventoryLog.create(
-        {
-          bottle:
-            bottle._id,
-
-          changeQuantity:
-            -qty,
-
-          reason:
-            'wastage',
-
-          date:
-            now,
-
+        [{
+          bottle: bottle._id,
+          changeQuantity: -qty,
+          reason: 'wastage',
+          reference: expense?._id || null,
+          refModel: expense ? 'Expense' : null,
+          date: now,
           notes:
             notes ||
             `Wasted ${qty} bottle(s) - ${bottle.sizeMl}ml (${bottle.type})`,
-        }
+        }],
+        { session }
       );
 
-      if (
-        wastageAmount >
-        0.01
-      ) {
-        const expense =
-          await Expense.create({
-            type:
-              'regular',
-
-            category:
-              'Wastage',
-
-            amount:
-              wastageAmount,
-
-            date:
-              now,
-
-            description:
-              `Bottle wastage: ${bottle.sizeMl}ml (${bottle.type}) - ${qty} pcs`,
-
-            reference:
-              `BOTTLE-${bottle._id}`,
-
-            notes:
-              notes || '',
-          });
-
-        await Transaction.create(
-          {
-            type:
-              'cash_out',
-
-            amount:
-              wastageAmount,
-
-            category:
-              'Expense',
-
-            reference:
-              expense._id,
-
-            refModel:
-              'Expense',
-
-            date:
-              now,
-
-            description:
-              `Wastage: ${bottle.sizeMl}ml (${bottle.type})`,
-          }
-        );
-      }
-
-      return res.json({
+      response = {
         message:
-          `Wasted ${qty} bottle(s). Remaining: ${bottle.currentStock}.`,
+          `Wasted ${qty} bottle(s). Remaining: ${updatedBottle.currentStock}.`,
+        bottle: updatedBottle,
+        wastageQuantity: qty,
+        expenseId: expense?._id || null,
+      };
+    });
 
-        bottle,
-      });
-    } catch (error) {
-      console.error(
-        'Bottle waste error:',
-        error
-      );
+    return res.json(response);
+  } catch (error) {
+    console.error('Bottle waste error:', error);
 
-      return res
-        .status(500)
-        .json({
-          message:
-            error.message,
-        });
-    }
-  };
+    return res.status(error.statusCode || 500).json({
+      message: error.message,
+    });
+  } finally {
+    await session.endSession();
+  }
+};
