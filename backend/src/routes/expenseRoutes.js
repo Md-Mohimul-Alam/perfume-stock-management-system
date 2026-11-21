@@ -1,5 +1,7 @@
+
 const express = require('express');
 const router = express.Router();
+
 const {
   getExpenses,
   createExpense,
@@ -8,15 +10,22 @@ const {
   bulkCreateExpenses,
 } = require('../controllers/expenseController');
 
-router.route('/')
-  .get(getExpenses)
-  .post(createExpense);
+const {
+  protect,
+  admin,
+} = require('../middlewares/authMiddleware');
 
-router.route('/bulk')
-  .post(bulkCreateExpenses);
+// All expense endpoints require authentication.
+router.use(protect);
 
-router.route('/:id')
-  .put(updateExpense)
-  .delete(deleteExpense);
+// Read expense records.
+router.get('/', getExpenses);
+
+// Only administrators can modify financial records.
+router.post('/', admin, createExpense);
+router.post('/bulk', admin, bulkCreateExpenses);
+
+router.put('/:id', admin, updateExpense);
+router.delete('/:id', admin, deleteExpense);
 
 module.exports = router;

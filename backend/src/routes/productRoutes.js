@@ -1,5 +1,7 @@
+
 const express = require('express');
 const router = express.Router();
+
 const {
   getProducts,
   getProductById,
@@ -12,22 +14,56 @@ const {
   fixProductTypesAndBottles,
   triggerBestsellerUpdate,
 } = require('../controllers/productController');
-const { protect, admin } = require('../middlewares/authMiddleware');
 
-router.route('/')
-  .get(getProducts)
-  .post(protect, createProduct);
+const {
+  protect,
+  admin,
+} = require('../middlewares/authMiddleware');
 
-router.route('/:id')
-  .get(getProductById)
-  .put(protect, updateProduct)
-  .patch(protect, updateProduct)   // ✅ allows toggling showOnClient via PATCH
-  .delete(protect, deleteProduct);
+// Public product listing.
+router.get('/', getProducts);
+router.get('/:id', getProductById);
 
-router.post('/:id/calculate-cost', calculateCost);
-router.post('/bulk', protect, bulkCreateProducts);
-router.post('/correct-types', correctProductTypes);
-router.post('/fix-product-types', protect, fixProductTypesAndBottles);
-router.post('/update-bestsellers', protect, admin, triggerBestsellerUpdate);
+// Authenticated product management.
+router.post('/', protect, createProduct);
+router.put('/:id', protect, updateProduct);
+router.patch('/:id', protect, updateProduct);
+router.delete('/:id', protect, admin, deleteProduct);
+
+// Administrative maintenance operations.
+router.post(
+  '/:id/calculate-cost',
+  protect,
+  admin,
+  calculateCost
+);
+
+router.post(
+  '/bulk',
+  protect,
+  admin,
+  bulkCreateProducts
+);
+
+router.post(
+  '/correct-types',
+  protect,
+  admin,
+  correctProductTypes
+);
+
+router.post(
+  '/fix-product-types',
+  protect,
+  admin,
+  fixProductTypesAndBottles
+);
+
+router.post(
+  '/update-bestsellers',
+  protect,
+  admin,
+  triggerBestsellerUpdate
+);
 
 module.exports = router;
