@@ -1,5 +1,7 @@
+
 const express = require('express');
 const router = express.Router();
+
 const {
   createSale,
   getSales,
@@ -8,16 +10,54 @@ const {
   bulkCreateSales,
   deleteSale,
 } = require('../controllers/saleController');
-const { protect } = require('../middlewares/authMiddleware');
 
+const {
+  protect,
+  admin,
+} = require('../middlewares/authMiddleware');
+
+// View sales and create individual sales
 router.route('/')
   .get(protect, getSales)
   .post(protect, createSale);
 
-router.post('/bulk', protect, bulkCreateSales);
-router.get('/:id', protect, getSaleById);
-router.put('/:id/payment', protect, updatePayment);   // optional, keep for backward compatibility
-router.patch('/:id', protect, updatePayment);         // 👈 new – handles frontend PATCH
-router.delete('/:id', protect, deleteSale);
+// Bulk sales import - Admin only
+router.post(
+  '/bulk',
+  protect,
+  admin,
+  bulkCreateSales
+);
+
+// View individual sale
+router.get(
+  '/:id',
+  protect,
+  getSaleById
+);
+
+// Update payment status - Admin only
+router.put(
+  '/:id/payment',
+  protect,
+  admin,
+  updatePayment
+);
+
+// Backward compatibility with frontend PATCH
+router.patch(
+  '/:id',
+  protect,
+  admin,
+  updatePayment
+);
+
+// Delete sale - Admin only
+router.delete(
+  '/:id',
+  protect,
+  admin,
+  deleteSale
+);
 
 module.exports = router;

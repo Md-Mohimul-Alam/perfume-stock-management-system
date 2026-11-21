@@ -25,9 +25,9 @@ router.get('/', getProducts);
 router.get('/:id', getProductById);
 
 // Authenticated product management.
-router.post('/', protect, createProduct);
-router.put('/:id', protect, updateProduct);
-router.patch('/:id', protect, updateProduct);
+router.post('/', protect, admin, createProduct);
+router.put('/:id', protect, admin, updateProduct);
+router.patch('/:id', protect, admin, updateProduct);
 router.delete('/:id', protect, admin, deleteProduct);
 
 // Administrative maintenance operations.

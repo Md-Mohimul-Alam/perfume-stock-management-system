@@ -1448,6 +1448,7 @@ const removeInventoryLine =
       quantity;
     bottle.isStockOut =
      Number(bottle.currentStock || 0) <= 0;
+
     bottle.purchases =
       bottle.purchases.filter(
         (entry) =>
@@ -1842,6 +1843,8 @@ const reversePurchaseItem =
 
       material.currentStockMl -=
         quantity;
+      material.isStockOut =
+        Number(material.currentStockMl || 0) <= 0;
 
       material.purchases =
         material.purchases.filter(
@@ -1871,7 +1874,10 @@ const reversePurchaseItem =
               'adjustment',
 
             reference:
-              null,
+              purchase._id,
+
+            refModel:
+              'Purchase',
 
             notes:
               `Reversal of deleted purchase ${purchase.invoiceNo}`,
@@ -1914,6 +1920,8 @@ const reversePurchaseItem =
 
     bottle.currentStock -=
       quantity;
+    bottle.isStockOut =
+      Number(bottle.currentStock || 0) <= 0;
 
     bottle.purchases =
       bottle.purchases.filter(
@@ -1943,7 +1951,10 @@ const reversePurchaseItem =
             'adjustment',
 
           reference:
-            null,
+            purchase._id,
+
+          refModel:
+            'Purchase',
 
           notes:
             `Reversal of deleted purchase ${purchase.invoiceNo}`,
