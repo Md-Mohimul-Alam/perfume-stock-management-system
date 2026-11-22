@@ -1,10 +1,6 @@
-import {
-  useEffect,
-  useState,
-} from 'react';
 
+import { useEffect, useState, useCallback } from 'react';
 import API from '../../api/axios';
-
 import {
   UserPlus,
   Wallet,
@@ -12,779 +8,438 @@ import {
   Pencil,
   X,
 } from 'lucide-react';
-
 import toast from 'react-hot-toast';
 
+const getLocalDate = () => {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+};
+
+const toDateInputValue = (date) => {
+  if (!date) return '';
+
+  const parsed = new Date(date);
+
+  if (Number.isNaN(parsed.getTime())) return '';
+
+  return `${parsed.getFullYear()}-${String(
+    parsed.getMonth() + 1
+  ).padStart(2, '0')}-${String(parsed.getDate()).padStart(2, '0')}`;
+};
+
+const getContributionTotals = (investor) => {
+  const contributions = Array.isArray(investor.contributions)
+    ? investor.contributions
+    : [];
+
+  return contributions.reduce(
+    (totals, item) => {
+      const amount = Number(item.amount) || 0;
+
+      if (item.type === 'investment') {
+        totals.invested += amount;
+      }
+
+      if (item.type === 'withdrawal') {
+        totals.withdrawn += amount;
+      }
+
+      return totals;
+    },
+    {
+      invested: 0,
+      withdrawn: 0,
+    }
+  );
+};
+
 const Investors = () => {
-  const [
-    investors,
-    setInvestors,
-  ] = useState([]);
+  const [investors, setInvestors] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const [
-    loading,
-    setLoading,
-  ] = useState(true);
+  const [availableCash, setAvailableCash] = useState(0);
+  const [settlementsTotal, setSettlementsTotal] = useState(0);
 
-  const [
-    availableCash,
-    setAvailableCash,
-  ] = useState(0);
-
-  const [
-    settlementsTotal,
-    setSettlementsTotal,
-  ] = useState(0);
-
-  /* ========================================
-     ADD INVESTOR
-  ======================================== */
-
-  const [
-    showAddModal,
-    setShowAddModal,
-  ] = useState(false);
-
-  const [
-    newInvestor,
-    setNewInvestor,
-  ] = useState({
+  // ADD INVESTOR
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newInvestor, setNewInvestor] = useState({
     name: '',
     initialInvestment: '',
   });
 
-  /* ========================================
-     ADD CONTRIBUTION
-  ======================================== */
+  // ADD CONTRIBUTION
+  const [showContributionModal, setShowContributionModal] =
+    useState(false);
 
-  const [
-    showContributionModal,
-    setShowContributionModal,
-  ] = useState(false);
+  const [selectedInvestor, setSelectedInvestor] = useState(null);
 
-  const [
-    selectedInvestor,
-    setSelectedInvestor,
-  ] = useState(null);
-
-  const [
-    contribution,
-    setContribution,
-  ] = useState({
+  const [contribution, setContribution] = useState({
     amount: '',
     type: 'investment',
-    date:
-      new Date()
-        .toISOString()
-        .split('T')[0],
+    date: getLocalDate(),
     notes: '',
   });
 
-  /* ========================================
-     EDIT CONTRIBUTION
-  ======================================== */
+  // EDIT CONTRIBUTION
+  const [showEditContributionModal, setShowEditContributionModal] =
+    useState(false);
 
-  const [
-    showEditContributionModal,
-    setShowEditContributionModal,
-  ] = useState(false);
+  const [editingContribution, setEditingContribution] = useState(null);
 
-  const [
-    editingContribution,
-    setEditingContribution,
-  ] = useState(null);
-
-  const [
-    editContribution,
-    setEditContribution,
-  ] = useState({
+  const [editContribution, setEditContribution] = useState({
     amount: '',
     type: 'investment',
     date: '',
     notes: '',
   });
 
-  /* ========================================
-     DELETE INVESTOR
-  ======================================== */
+  // DELETE INVESTOR
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [investorToDelete, setInvestorToDelete] = useState(null);
 
-  const [
-    showDeleteModal,
-    setShowDeleteModal,
-  ] = useState(false);
-
-  const [
-    investorToDelete,
-    setInvestorToDelete,
-  ] = useState(null);
-
-  /* ========================================
-     SUMMARY
-  ======================================== */
-
-  const [
-    summary,
-    setSummary,
-  ] = useState({
+  // SUMMARY
+  const [summary, setSummary] = useState({
     totalInvestors: 0,
-    totalNet: 0,
     totalInvested: 0,
     totalWithdrawn: 0,
   });
 
-  /* ========================================
-     LOAD
-  ======================================== */
+  // LOAD DATA
+  const fetchInvestors = useCallback(async () => {
+    setLoading(true);
+
+    try {
+      const [investorsRes, cashRes, settlementsRes] =
+        await Promise.all([
+          API.get('/investors'),
+          API.get('/reports/available-cash'),
+          API.get('/investors/settlements'),
+        ]);
+
+      const data = Array.isArray(investorsRes.data)
+        ? investorsRes.data
+        : [];
+
+      setInvestors(data);
+
+      setAvailableCash(
+        Number(cashRes.data?.availableCash) || 0
+      );
+
+      setSettlementsTotal(
+        Number(settlementsRes.data?.total) || 0
+      );
+
+      const totals = data.reduce(
+        (result, investor) => {
+          const investorTotals = getContributionTotals(investor);
+
+          result.totalInvested += investorTotals.invested;
+          result.totalWithdrawn += investorTotals.withdrawn;
+
+          return result;
+        },
+        {
+          totalInvested: 0,
+          totalWithdrawn: 0,
+        }
+      );
+
+      setSummary({
+        totalInvestors: data.length,
+        ...totals,
+      });
+    } catch (error) {
+      console.error('Failed to load investors:', error);
+
+      toast.error(
+        error.response?.data?.message ||
+          'Failed to load investors'
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     fetchInvestors();
-  }, []);
+  }, [fetchInvestors]);
 
-  const fetchInvestors =
-    async () => {
-      setLoading(true);
+  // FORMATTERS
+  const formatCurrency = (amount) => {
+    const value = Number(amount) || 0;
 
-      try {
-        const [
-          investorsRes,
-          cashRes,
-          settlementsRes,
-        ] =
-          await Promise.all([
-            API.get(
-              '/investors'
-            ),
+    return `৳${value.toLocaleString('en-BD', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+  };
 
-            API.get(
-              '/reports/available-cash'
-            ),
+  const formatDate = (date) => {
+    if (!date) return '-';
 
-            API.get(
-              '/investors/settlements'
-            ),
-          ]);
+    const parsed = new Date(date);
 
-        const data =
-          Array.isArray(
-            investorsRes.data
-          )
-            ? investorsRes.data
-            : [];
+    if (Number.isNaN(parsed.getTime())) return '-';
 
-        setInvestors(
-          data
-        );
+    return parsed.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+  };
 
-        setAvailableCash(
-          Number(
-            cashRes.data
-              ?.availableCash ||
-              0
-          )
-        );
+  // INVESTOR SHARE
+  // Ownership is calculated from investment contributions only.
+  // Withdrawals/distributions do not reduce ownership.
+  const calculateShare = (investor) => {
+    const investorTotals = getContributionTotals(investor);
 
-        setSettlementsTotal(
-          Number(
-            settlementsRes
-              .data?.total ||
-              0
-          )
-        );
+    if (summary.totalInvested <= 0) return 0;
 
-        let totalInvested =
-          0;
+    return (
+      (investorTotals.invested / summary.totalInvested) * 100
+    );
+  };
 
-        let totalWithdrawn =
-          0;
+  // ADD INVESTOR
+  const handleAddInvestor = async (event) => {
+    event.preventDefault();
 
-        let totalNet = 0;
+    const name = newInvestor.name.trim();
+    const initialInvestment = Number(
+      newInvestor.initialInvestment || 0
+    );
 
-        data.forEach(
-          (investor) => {
-            (
-              investor.contributions ||
-              []
-            ).forEach(
-              (
-                item
-              ) => {
-                const amount =
-                  Number(
-                    item.amount ||
-                      0
-                  );
+    if (!name) {
+      toast.error('Please enter a name');
+      return;
+    }
 
-                if (
-                  item.type ===
-                  'investment'
-                ) {
-                  totalInvested +=
-                    amount;
-                }
+    if (
+      !Number.isFinite(initialInvestment) ||
+      initialInvestment < 0
+    ) {
+      toast.error('Please enter a valid initial investment');
+      return;
+    }
 
-                if (
-                  item.type ===
-                  'withdrawal'
-                ) {
-                  totalWithdrawn +=
-                    amount;
-                }
-              }
-            );
-
-            totalNet +=
-              Number(
-                investor.netContribution ||
-                  0
-              );
-          }
-        );
-
-        setSummary({
-          totalInvestors:
-            data.length,
-
-          totalNet,
-
-          totalInvested,
-
-          totalWithdrawn,
-        });
-      } catch (error) {
-        console.error(
-          error
-        );
-
-        toast.error(
-          error.response
-            ?.data?.message ||
-            'Failed to load investors'
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-  /* ========================================
-     ADD INVESTOR
-  ======================================== */
-
-  const handleAddInvestor =
-    async (event) => {
-      event.preventDefault();
-
-      const name =
-        newInvestor.name.trim();
-
-      if (!name) {
-        toast.error(
-          'Please enter a name'
-        );
-
-        return;
-      }
-
-      const initialInvestment =
-        Number(
-          newInvestor.initialInvestment ||
-            0
-        );
-
-      if (
-        initialInvestment <
-        0
-      ) {
-        toast.error(
-          'Investment cannot be negative'
-        );
-
-        return;
-      }
-
-      try {
-        await API.post(
-          '/investors',
-          {
-            name,
-
-            initialInvestment,
-          }
-        );
-
-        toast.success(
-          'Investor added successfully'
-        );
-
-        setShowAddModal(
-          false
-        );
-
-        setNewInvestor({
-          name: '',
-          initialInvestment:
-            '',
-        });
-
-        await fetchInvestors();
-      } catch (error) {
-        toast.error(
-          error.response
-            ?.data?.message ||
-            'Failed to add investor'
-        );
-      }
-    };
-
-  /* ========================================
-     ADD CONTRIBUTION
-  ======================================== */
-
-  const handleAddContribution =
-    async (event) => {
-      event.preventDefault();
-
-      if (
-        !selectedInvestor
-      ) {
-        return;
-      }
-
-      const amount =
-        Number(
-          contribution.amount
-        );
-
-      if (
-        !amount ||
-        amount <= 0
-      ) {
-        toast.error(
-          'Please enter a valid amount'
-        );
-
-        return;
-      }
-
-      try {
-        await API.post(
-          `/investors/${selectedInvestor._id}/contribute`,
-          {
-            amount,
-
-            type:
-              contribution.type,
-
-            date:
-              contribution.date,
-
-            notes:
-              contribution.notes.trim(),
-          }
-        );
-
-        toast.success(
-          contribution.type ===
-            'investment'
-            ? 'Investment added'
-            : 'Withdrawal added'
-        );
-
-        closeContributionModal();
-
-        await fetchInvestors();
-      } catch (error) {
-        toast.error(
-          error.response
-            ?.data?.message ||
-            'Failed to add contribution'
-        );
-      }
-    };
-
-  const openContributionModal =
-    (
-      investor
-    ) => {
-      setSelectedInvestor(
-        investor
-      );
-
-      setContribution({
-        amount: '',
-        type:
-          'investment',
-        date:
-          new Date()
-            .toISOString()
-            .split(
-              'T'
-            )[0],
-        notes: '',
+    try {
+      await API.post('/investors', {
+        name,
+        initialInvestment,
       });
 
-      setShowContributionModal(
-        true
-      );
-    };
+      toast.success('Investor added successfully');
 
-  const closeContributionModal =
-    () => {
-      setShowContributionModal(
-        false
-      );
+      setShowAddModal(false);
 
-      setSelectedInvestor(
-        null
-      );
-
-      setContribution({
-        amount: '',
-        type:
-          'investment',
-        date:
-          new Date()
-            .toISOString()
-            .split(
-              'T'
-            )[0],
-        notes: '',
-      });
-    };
-
-  /* ========================================
-     EDIT CONTRIBUTION
-  ======================================== */
-
-  const openEditContributionModal =
-    (
-      investor,
-      item
-    ) => {
-      setSelectedInvestor(
-        investor
-      );
-
-      setEditingContribution(
-        item
-      );
-
-      setEditContribution({
-        amount:
-          String(
-            item.amount ||
-              ''
-          ),
-
-        type:
-          item.type,
-
-        date:
-          item.date
-            ? new Date(
-                item.date
-              )
-                .toISOString()
-                .split(
-                  'T'
-                )[0]
-            : '',
-
-        notes:
-          item.notes ||
-          '',
+      setNewInvestor({
+        name: '',
+        initialInvestment: '',
       });
 
-      setShowEditContributionModal(
-        true
+      await fetchInvestors();
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message ||
+          'Failed to add investor'
       );
-    };
+    }
+  };
 
-  const closeEditContributionModal =
-    () => {
-      setShowEditContributionModal(
-        false
-      );
+  // ADD CONTRIBUTION
+  const handleAddContribution = async (event) => {
+    event.preventDefault();
 
-      setSelectedInvestor(
-        null
-      );
+    if (!selectedInvestor) return;
 
-      setEditingContribution(
-        null
-      );
+    const amount = Number(contribution.amount);
 
-      setEditContribution({
-        amount: '',
-        type:
-          'investment',
-        date: '',
-        notes: '',
-      });
-    };
+    if (!Number.isFinite(amount) || amount <= 0) {
+      toast.error('Please enter a valid amount');
+      return;
+    }
 
-  const handleEditContribution =
-    async (event) => {
-      event.preventDefault();
-
-      if (
-        !selectedInvestor ||
-        !editingContribution
-      ) {
-        return;
-      }
-
-      const amount =
-        Number(
-          editContribution.amount
-        );
-
-      if (
-        !amount ||
-        amount <= 0
-      ) {
-        toast.error(
-          'Please enter a valid amount'
-        );
-
-        return;
-      }
-
-      try {
-        await API.put(
-          `/investors/${selectedInvestor._id}/contributions/${editingContribution._id}`,
-          {
-            amount,
-
-            type:
-              editContribution.type,
-
-            date:
-              editContribution.date,
-
-            notes:
-              editContribution.notes.trim(),
-          }
-        );
-
-        toast.success(
-          'Contribution updated'
-        );
-
-        closeEditContributionModal();
-
-        await fetchInvestors();
-      } catch (error) {
-        toast.error(
-          error.response
-            ?.data?.message ||
-            'Failed to update contribution'
-        );
-      }
-    };
-
-  /* ========================================
-     DELETE CONTRIBUTION
-  ======================================== */
-
-  const handleDeleteContribution =
-    async (
-      investor,
-      item
-    ) => {
-      const label =
-        item.type ===
-        'investment'
-          ? 'investment'
-          : 'withdrawal';
-
-      const confirmed =
-        window.confirm(
-          `Delete this ${label} of ৳${Number(
-            item.amount ||
-              0
-          ).toFixed(
-            2
-          )}?`
-        );
-
-      if (!confirmed) {
-        return;
-      }
-
-      try {
-        await API.delete(
-          `/investors/${investor._id}/contributions/${item._id}`
-        );
-
-        toast.success(
-          'Contribution deleted'
-        );
-
-        await fetchInvestors();
-      } catch (error) {
-        toast.error(
-          error.response
-            ?.data?.message ||
-            'Failed to delete contribution'
-        );
-      }
-    };
-
-  /* ========================================
-     DELETE INVESTOR
-  ======================================== */
-
-  const openDeleteModal =
-    (
-      investor
-    ) => {
-      setInvestorToDelete(
-        investor
-      );
-
-      setShowDeleteModal(
-        true
-      );
-    };
-
-  const handleDeleteInvestor =
-    async () => {
-      if (
-        !investorToDelete
-      ) {
-        return;
-      }
-
-      try {
-        await API.delete(
-          `/investors/${investorToDelete._id}`
-        );
-
-        toast.success(
-          'Investor closed successfully'
-        );
-
-        setShowDeleteModal(
-          false
-        );
-
-        setInvestorToDelete(
-          null
-        );
-
-        await fetchInvestors();
-      } catch (error) {
-        toast.error(
-          error.response
-            ?.data?.message ||
-            'Failed to close investor'
-        );
-      }
-    };
-
-  /* ========================================
-     CALCULATIONS
-  ======================================== */
-
-  const calculateShare =
-    (
-      investor
-    ) => {
-      const totalInvested =
-        (
-          investor.contributions ||
-          []
-        )
-          .filter(
-            (
-              item
-            ) =>
-              item.type ===
-              'investment'
-          )
-          .reduce(
-            (
-              sum,
-              item
-            ) =>
-              sum +
-              Number(
-                item.amount ||
-                  0
-              ),
-            0
-          );
-
-      if (
-        summary.totalInvested ===
-        0
-      ) {
-        return 0;
-      }
-
-      return (
-        totalInvested /
-        summary.totalInvested
-      ) *
-        100;
-    };
-
-  const calculateProfitShare =
-    (
-      percentage
-    ) => {
-      return (
-        percentage /
-        100
-      ) *
-        availableCash;
-    };
-
-  /* ========================================
-     FORMATTERS
-  ======================================== */
-
-  const formatCurrency =
-    (
-      amount
-    ) => {
-      return `৳${Number(
-        amount || 0
-      ).toFixed(
-        2
-      )}`;
-    };
-
-  const formatDate =
-    (
-      date
-    ) => {
-      if (!date) {
-        return '-';
-      }
-
-      return new Date(
-        date
-      ).toLocaleDateString(
-        'en-US',
+    try {
+      await API.post(
+        `/investors/${selectedInvestor._id}/contribute`,
         {
-          day: '2-digit',
-          month:
-            'short',
-          year:
-            'numeric',
+          amount,
+          type: contribution.type,
+          date: contribution.date,
+          notes: contribution.notes.trim(),
         }
       );
-    };
 
-  /* ========================================
-     UI
-  ======================================== */
+      toast.success(
+        contribution.type === 'investment'
+          ? 'Investment added'
+          : 'Profit distribution recorded'
+      );
+
+      closeContributionModal();
+
+      await fetchInvestors();
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message ||
+          'Failed to add contribution'
+      );
+    }
+  };
+
+  const openContributionModal = (investor) => {
+    setSelectedInvestor(investor);
+
+    setContribution({
+      amount: '',
+      type: 'investment',
+      date: getLocalDate(),
+      notes: '',
+    });
+
+    setShowContributionModal(true);
+  };
+
+  const closeContributionModal = () => {
+    setShowContributionModal(false);
+    setSelectedInvestor(null);
+
+    setContribution({
+      amount: '',
+      type: 'investment',
+      date: getLocalDate(),
+      notes: '',
+    });
+  };
+
+  // EDIT CONTRIBUTION
+  const openEditContributionModal = (investor, item) => {
+    setSelectedInvestor(investor);
+    setEditingContribution(item);
+
+    setEditContribution({
+      amount: String(item.amount ?? ''),
+      type: item.type,
+      date: toDateInputValue(item.date),
+      notes: item.notes || '',
+    });
+
+    setShowEditContributionModal(true);
+  };
+
+  const closeEditContributionModal = () => {
+    setShowEditContributionModal(false);
+    setSelectedInvestor(null);
+    setEditingContribution(null);
+
+    setEditContribution({
+      amount: '',
+      type: 'investment',
+      date: '',
+      notes: '',
+    });
+  };
+
+  const handleEditContribution = async (event) => {
+    event.preventDefault();
+
+    if (!selectedInvestor || !editingContribution) return;
+
+    const amount = Number(editContribution.amount);
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      toast.error('Please enter a valid amount');
+      return;
+    }
+
+    try {
+      await API.put(
+        `/investors/${selectedInvestor._id}/contributions/${editingContribution._id}`,
+        {
+          amount,
+          type: editContribution.type,
+          date: editContribution.date,
+          notes: editContribution.notes.trim(),
+        }
+      );
+
+      toast.success('Contribution updated');
+
+      closeEditContributionModal();
+
+      await fetchInvestors();
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message ||
+          'Failed to update contribution'
+      );
+    }
+  };
+
+  // DELETE CONTRIBUTION
+  const handleDeleteContribution = async (investor, item) => {
+    const label =
+      item.type === 'investment'
+        ? 'investment'
+        : 'profit distribution';
+
+    const confirmed = window.confirm(
+      `Delete this ${label} of ${formatCurrency(item.amount)}?`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await API.delete(
+        `/investors/${investor._id}/contributions/${item._id}`
+      );
+
+      toast.success('Contribution deleted');
+
+      await fetchInvestors();
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message ||
+          'Failed to delete contribution'
+      );
+    }
+  };
+
+  // DELETE / CLOSE INVESTOR
+  const openDeleteModal = (investor) => {
+    setInvestorToDelete(investor);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteInvestor = async () => {
+    if (!investorToDelete) return;
+
+    try {
+      await API.delete(`/investors/${investorToDelete._id}`);
+
+      toast.success('Investor closed successfully');
+
+      setShowDeleteModal(false);
+      setInvestorToDelete(null);
+
+      await fetchInvestors();
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message ||
+          'Failed to close investor'
+      );
+    }
+  };
 
   return (
     <div className="p-4 sm:p-6 max-w-7xl mx-auto">
       {/* HEADER */}
-
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
@@ -792,33 +447,21 @@ const Investors = () => {
           </h1>
 
           <p className="text-gray-500 text-sm">
-            Manage partners,
-            investments and
-            withdrawals
+            Manage partners, investments and distributions
           </p>
         </div>
 
         <button
           type="button"
-          onClick={() =>
-            setShowAddModal(
-              true
-            )
-          }
+          onClick={() => setShowAddModal(true)}
           className="flex items-center gap-2 bg-amber-600 text-white px-4 py-2.5 rounded-lg hover:bg-amber-700 transition shadow-md text-sm"
         >
-          <UserPlus
-            size={
-              18
-            }
-          />
-
+          <UserPlus size={18} />
           Add Investor
         </button>
       </div>
 
       {/* SUMMARY */}
-
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mb-6">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-3 sm:p-4">
           <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider">
@@ -826,9 +469,7 @@ const Investors = () => {
           </p>
 
           <p className="text-xl sm:text-2xl font-bold text-amber-600">
-            {
-              summary.totalInvestors
-            }
+            {summary.totalInvestors}
           </p>
         </div>
 
@@ -838,21 +479,17 @@ const Investors = () => {
           </p>
 
           <p className="text-xl sm:text-2xl font-bold text-emerald-600">
-            {formatCurrency(
-              summary.totalInvested
-            )}
+            {formatCurrency(summary.totalInvested)}
           </p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-3 sm:p-4">
           <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider">
-            Total Withdrawn
+            Profit Distributions
           </p>
 
           <p className="text-xl sm:text-2xl font-bold text-rose-600">
-            {formatCurrency(
-              summary.totalWithdrawn
-            )}
+            {formatCurrency(summary.totalWithdrawn)}
           </p>
         </div>
 
@@ -862,9 +499,7 @@ const Investors = () => {
           </p>
 
           <p className="text-xl sm:text-2xl font-bold text-indigo-600">
-            {formatCurrency(
-              availableCash
-            )}
+            {formatCurrency(availableCash)}
           </p>
         </div>
 
@@ -874,23 +509,19 @@ const Investors = () => {
           </p>
 
           <p className="text-xl sm:text-2xl font-bold text-rose-600">
-            {formatCurrency(
-              settlementsTotal
-            )}
+            {formatCurrency(settlementsTotal)}
           </p>
         </div>
       </div>
 
       {/* TABLE */}
-
       {loading ? (
         <div className="flex justify-center items-center h-64">
           <div className="animate-pulse flex flex-col items-center">
             <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
 
             <p className="text-gray-500 mt-4">
-              Loading
-              investors...
+              Loading investors...
             </p>
           </div>
         </div>
@@ -908,15 +539,11 @@ const Investors = () => {
                 </th>
 
                 <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                  Withdrawn
+                  Distributed
                 </th>
 
                 <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                   Share %
-                </th>
-
-                <th className="px-3 sm:px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                  Profit Share
                 </th>
 
                 <th className="px-3 sm:px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
@@ -930,266 +557,144 @@ const Investors = () => {
             </thead>
 
             <tbody className="divide-y divide-gray-200">
-              {investors.length ===
-              0 ? (
+              {investors.length === 0 ? (
                 <tr>
                   <td
-                    colSpan="7"
+                    colSpan="6"
                     className="text-center py-8 text-gray-400"
                   >
-                    No
-                    investors
-                    yet
+                    No investors yet
                   </td>
                 </tr>
               ) : (
-                investors.map(
-                  (
-                    investor
-                  ) => {
-                    const totalInvested =
-                      (
-                        investor.contributions ||
-                        []
-                      )
-                        .filter(
-                          (
-                            item
-                          ) =>
-                            item.type ===
-                            'investment'
-                        )
-                        .reduce(
-                          (
-                            sum,
-                            item
-                          ) =>
-                            sum +
-                            Number(
-                              item.amount ||
-                                0
-                            ),
-                          0
-                        );
+                investors.map((investor) => {
+                  const totals = getContributionTotals(investor);
+                  const share = calculateShare(investor);
 
-                    const totalWithdrawn =
-                      (
-                        investor.contributions ||
-                        []
-                      )
-                        .filter(
-                          (
-                            item
-                          ) =>
-                            item.type ===
-                            'withdrawal'
-                        )
-                        .reduce(
-                          (
-                            sum,
-                            item
-                          ) =>
-                            sum +
-                            Number(
-                              item.amount ||
-                                0
-                            ),
-                          0
-                        );
+                  return (
+                    <tr
+                      key={investor._id}
+                      className="hover:bg-gray-50 transition"
+                    >
+                      <td className="px-3 sm:px-4 py-3 font-medium text-gray-800 text-sm">
+                        {investor.name}
+                      </td>
 
-                    const share =
-                      calculateShare(
-                        investor
-                      );
+                      <td className="px-3 sm:px-4 py-3 text-right text-emerald-600 font-semibold text-sm">
+                        {formatCurrency(totals.invested)}
+                      </td>
 
-                    const profitShare =
-                      calculateProfitShare(
-                        share
-                      );
+                      <td className="px-3 sm:px-4 py-3 text-right text-rose-600 font-semibold text-sm">
+                        {formatCurrency(totals.withdrawn)}
+                      </td>
 
-                    return (
-                      <tr
-                        key={
-                          investor._id
-                        }
-                        className="hover:bg-gray-50 transition"
-                      >
-                        <td className="px-3 sm:px-4 py-3 font-medium text-gray-800 text-sm">
-                          {
-                            investor.name
-                          }
-                        </td>
+                      <td className="px-3 sm:px-4 py-3 text-right">
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                          {share.toFixed(2)}%
+                        </span>
+                      </td>
 
-                        <td className="px-3 sm:px-4 py-3 text-right text-emerald-600 font-semibold text-sm">
-                          {formatCurrency(
-                            totalInvested
-                          )}
-                        </td>
-
-                        <td className="px-3 sm:px-4 py-3 text-right text-rose-600 font-semibold text-sm">
-                          {formatCurrency(
-                            totalWithdrawn
-                          )}
-                        </td>
-
-                        <td className="px-3 sm:px-4 py-3 text-right">
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
-                            {share.toFixed(
-                              2
-                            )}
-                            %
+                      <td className="px-3 sm:px-4 py-3 min-w-[320px]">
+                        {!investor.contributions?.length ? (
+                          <span className="text-gray-400 text-xs">
+                            No contributions
                           </span>
-                        </td>
+                        ) : (
+                          <div className="space-y-2 max-h-52 overflow-y-auto">
+                            {investor.contributions.map((item) => (
+                              <div
+                                key={item._id}
+                                className="flex items-center gap-2 border-b border-gray-100 pb-2 last:border-0"
+                              >
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex flex-wrap items-center gap-2 text-xs">
+                                    <span className="text-gray-500">
+                                      {formatDate(item.date)}
+                                    </span>
 
-                        <td className="px-3 sm:px-4 py-3 text-right text-purple-600 font-semibold text-sm">
-                          {formatCurrency(
-                            profitShare
-                          )}
-                        </td>
-
-                        <td className="px-3 sm:px-4 py-3 min-w-[320px]">
-                          {(investor
-                            .contributions ||
-                            [])
-                            .length ===
-                          0 ? (
-                            <span className="text-gray-400 text-xs">
-                              No
-                              contributions
-                            </span>
-                          ) : (
-                            <div className="space-y-2 max-h-52 overflow-y-auto">
-                              {investor.contributions.map(
-                                (
-                                  item
-                                ) => (
-                                  <div
-                                    key={
-                                      item._id
-                                    }
-                                    className="flex items-center gap-2 border-b border-gray-100 pb-2 last:border-0"
-                                  >
-                                    <div className="flex-1 min-w-0">
-                                      <div className="flex flex-wrap items-center gap-2 text-xs">
-                                        <span className="text-gray-500">
-                                          {formatDate(
-                                            item.date
-                                          )}
-                                        </span>
-
-                                        <span
-                                          className={
-                                            item.type ===
-                                            'investment'
-                                              ? 'font-semibold text-emerald-600'
-                                              : 'font-semibold text-rose-600'
-                                          }
-                                        >
-                                          {item.type ===
-                                          'investment'
-                                            ? '＋'
-                                            : '－'}
-                                        </span>
-
-                                        <span className="font-mono font-medium">
-                                          {formatCurrency(
-                                            item.amount
-                                          )}
-                                        </span>
-                                      </div>
-
-                                      {item.notes && (
-                                        <p className="text-[11px] text-gray-400 truncate mt-1">
-                                          {
-                                            item.notes
-                                          }
-                                        </p>
-                                      )}
-                                    </div>
-
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        openEditContributionModal(
-                                          investor,
-                                          item
-                                        )
+                                    <span
+                                      className={
+                                        item.type === 'investment'
+                                          ? 'font-semibold text-emerald-600'
+                                          : 'font-semibold text-rose-600'
                                       }
-                                      className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50"
-                                      title="Edit contribution"
                                     >
-                                      <Pencil
-                                        size={
-                                          15
-                                        }
-                                      />
-                                    </button>
+                                      {item.type === 'investment'
+                                        ? '＋ Investment'
+                                        : '－ Distribution'}
+                                    </span>
 
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        handleDeleteContribution(
-                                          investor,
-                                          item
-                                        )
-                                      }
-                                      className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50"
-                                      title="Delete contribution"
-                                    >
-                                      <Trash2
-                                        size={
-                                          15
-                                        }
-                                      />
-                                    </button>
+                                    <span className="font-mono font-medium">
+                                      {formatCurrency(item.amount)}
+                                    </span>
                                   </div>
-                                )
-                              )}
-                            </div>
-                          )}
-                        </td>
 
-                        <td className="px-3 sm:px-4 py-3 text-center">
-                          <div className="flex justify-center items-center gap-2">
-                            <button
-                              type="button"
-                              onClick={() =>
-                                openContributionModal(
-                                  investor
-                                )
-                              }
-                              className="text-blue-600 hover:text-blue-800 p-1"
-                              title="Add contribution"
-                            >
-                              <Wallet
-                                size={
-                                  18
-                                }
-                              />
-                            </button>
+                                  {item.notes && (
+                                    <p className="text-[11px] text-gray-400 truncate mt-1">
+                                      {item.notes}
+                                    </p>
+                                  )}
+                                </div>
 
-                            <button
-                              type="button"
-                              onClick={() =>
-                                openDeleteModal(
-                                  investor
-                                )
-                              }
-                              className="text-rose-600 hover:text-rose-800 p-1"
-                              title="Close investor"
-                            >
-                              <Trash2
-                                size={
-                                  18
-                                }
-                              />
-                            </button>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    openEditContributionModal(
+                                      investor,
+                                      item
+                                    )
+                                  }
+                                  className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50"
+                                  title="Edit contribution"
+                                >
+                                  <Pencil size={15} />
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleDeleteContribution(
+                                      investor,
+                                      item
+                                    )
+                                  }
+                                  className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50"
+                                  title="Delete contribution"
+                                >
+                                  <Trash2 size={15} />
+                                </button>
+                              </div>
+                            ))}
                           </div>
-                        </td>
-                      </tr>
-                    );
-                  }
-                )
+                        )}
+                      </td>
+
+                      <td className="px-3 sm:px-4 py-3 text-center">
+                        <div className="flex justify-center items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              openContributionModal(investor)
+                            }
+                            className="text-blue-600 hover:text-blue-800 p-1"
+                            title="Add contribution"
+                          >
+                            <Wallet size={18} />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => openDeleteModal(investor)}
+                            className="text-rose-600 hover:text-rose-800 p-1"
+                            title="Close investor"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -1197,24 +702,15 @@ const Investors = () => {
       )}
 
       {/* ADD INVESTOR MODAL */}
-
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
             <button
               type="button"
-              onClick={() =>
-                setShowAddModal(
-                  false
-                )
-              }
+              onClick={() => setShowAddModal(false)}
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
             >
-              <X
-                size={
-                  24
-                }
-              />
+              <X size={24} />
             </button>
 
             <h2 className="text-xl font-bold mb-4">
@@ -1222,34 +718,22 @@ const Investors = () => {
             </h2>
 
             <form
-              onSubmit={
-                handleAddInvestor
-              }
+              onSubmit={handleAddInvestor}
               className="space-y-4"
             >
               <div>
                 <label className="block text-sm font-medium mb-1">
-                  Full
-                  Name *
+                  Full Name *
                 </label>
 
                 <input
                   type="text"
-                  value={
-                    newInvestor.name
-                  }
-                  onChange={(
-                    event
-                  ) =>
-                    setNewInvestor(
-                      {
-                        ...newInvestor,
-                        name:
-                          event
-                            .target
-                            .value,
-                      }
-                    )
+                  value={newInvestor.name}
+                  onChange={(event) =>
+                    setNewInvestor({
+                      ...newInvestor,
+                      name: event.target.value,
+                    })
                   }
                   className="w-full px-4 py-2 border rounded-lg"
                   required
@@ -1258,29 +742,19 @@ const Investors = () => {
 
               <div>
                 <label className="block text-sm font-medium mb-1">
-                  Initial
-                  Investment
+                  Initial Investment
                 </label>
 
                 <input
                   type="number"
                   min="0"
                   step="0.01"
-                  value={
-                    newInvestor.initialInvestment
-                  }
-                  onChange={(
-                    event
-                  ) =>
-                    setNewInvestor(
-                      {
-                        ...newInvestor,
-                        initialInvestment:
-                          event
-                            .target
-                            .value,
-                      }
-                    )
+                  value={newInvestor.initialInvestment}
+                  onChange={(event) =>
+                    setNewInvestor({
+                      ...newInvestor,
+                      initialInvestment: event.target.value,
+                    })
                   }
                   className="w-full px-4 py-2 border rounded-lg"
                 />
@@ -1298,63 +772,46 @@ const Investors = () => {
       )}
 
       {/* ADD CONTRIBUTION MODAL */}
+      {showContributionModal && selectedInvestor && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
+            <button
+              type="button"
+              onClick={closeContributionModal}
+              className="absolute top-4 right-4 text-gray-400"
+            >
+              <X size={24} />
+            </button>
 
-      {showContributionModal &&
-        selectedInvestor && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
+            <h2 className="text-xl font-bold mb-1">
+              Add Contribution
+            </h2>
+
+            <p className="text-sm text-gray-500 mb-4">
+              {selectedInvestor.name}
+            </p>
+
+            <form
+              onSubmit={handleAddContribution}
+              className="space-y-4"
+            >
+              <ContributionFields
+                value={contribution}
+                setValue={setContribution}
+              />
+
               <button
-                type="button"
-                onClick={
-                  closeContributionModal
-                }
-                className="absolute top-4 right-4 text-gray-400"
+                type="submit"
+                className="w-full bg-amber-600 text-white py-2.5 rounded-lg"
               >
-                <X
-                  size={
-                    24
-                  }
-                />
-              </button>
-
-              <h2 className="text-xl font-bold mb-1">
                 Add Contribution
-              </h2>
-
-              <p className="text-sm text-gray-500 mb-4">
-                {
-                  selectedInvestor.name
-                }
-              </p>
-
-              <form
-                onSubmit={
-                  handleAddContribution
-                }
-                className="space-y-4"
-              >
-                <ContributionFields
-                  value={
-                    contribution
-                  }
-                  setValue={
-                    setContribution
-                  }
-                />
-
-                <button
-                  type="submit"
-                  className="w-full bg-amber-600 text-white py-2.5 rounded-lg"
-                >
-                  Add Contribution
-                </button>
-              </form>
-            </div>
+              </button>
+            </form>
           </div>
-        )}
+        </div>
+      )}
 
       {/* EDIT CONTRIBUTION MODAL */}
-
       {showEditContributionModal &&
         selectedInvestor &&
         editingContribution && (
@@ -1362,16 +819,10 @@ const Investors = () => {
             <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
               <button
                 type="button"
-                onClick={
-                  closeEditContributionModal
-                }
+                onClick={closeEditContributionModal}
                 className="absolute top-4 right-4 text-gray-400"
               >
-                <X
-                  size={
-                    24
-                  }
-                />
+                <X size={24} />
               </button>
 
               <h2 className="text-xl font-bold mb-1">
@@ -1379,24 +830,16 @@ const Investors = () => {
               </h2>
 
               <p className="text-sm text-gray-500 mb-4">
-                {
-                  selectedInvestor.name
-                }
+                {selectedInvestor.name}
               </p>
 
               <form
-                onSubmit={
-                  handleEditContribution
-                }
+                onSubmit={handleEditContribution}
                 className="space-y-4"
               >
                 <ContributionFields
-                  value={
-                    editContribution
-                  }
-                  setValue={
-                    setEditContribution
-                  }
+                  value={editContribution}
+                  setValue={setEditContribution}
                 />
 
                 <button
@@ -1411,67 +854,46 @@ const Investors = () => {
         )}
 
       {/* CLOSE INVESTOR MODAL */}
+      {showDeleteModal && investorToDelete && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <h2 className="text-xl font-bold mb-2">
+              Close Investor
+            </h2>
 
-      {showDeleteModal &&
-        investorToDelete && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-              <h2 className="text-xl font-bold mb-2">
-                Close Investor
-              </h2>
+            <p className="text-gray-600 mb-5">
+              Close <strong>{investorToDelete.name}</strong>?
+            </p>
 
-              <p className="text-gray-600 mb-5">
-                Close{' '}
-                <strong>
-                  {
-                    investorToDelete.name
-                  }
-                </strong>
-                ?
-              </p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={handleDeleteInvestor}
+                className="flex-1 bg-rose-600 text-white py-2 rounded-lg"
+              >
+                Yes, Close
+              </button>
 
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={
-                    handleDeleteInvestor
-                  }
-                  className="flex-1 bg-rose-600 text-white py-2 rounded-lg"
-                >
-                  Yes, Close
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowDeleteModal(
-                      false
-                    );
-
-                    setInvestorToDelete(
-                      null
-                    );
-                  }}
-                  className="flex-1 border py-2 rounded-lg"
-                >
-                  Cancel
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setInvestorToDelete(null);
+                }}
+                className="flex-1 border py-2 rounded-lg"
+              >
+                Cancel
+              </button>
             </div>
           </div>
-        )}
+        </div>
+      )}
     </div>
   );
 };
 
-/* ========================================
-   CONTRIBUTION FORM FIELDS
-======================================== */
-
-const ContributionFields = ({
-  value,
-  setValue,
-}) => {
+// REUSABLE CONTRIBUTION FIELDS
+const ContributionFields = ({ value, setValue }) => {
   return (
     <>
       <div>
@@ -1480,19 +902,11 @@ const ContributionFields = ({
         </label>
 
         <select
-          value={
-            value.type
-          }
-          onChange={(
-            event
-          ) =>
+          value={value.type}
+          onChange={(event) =>
             setValue({
               ...value,
-
-              type:
-                event
-                  .target
-                  .value,
+              type: event.target.value,
             })
           }
           className="w-full px-4 py-2 border rounded-lg bg-white"
@@ -1502,7 +916,7 @@ const ContributionFields = ({
           </option>
 
           <option value="withdrawal">
-            Withdrawal
+            Profit Distribution
           </option>
         </select>
       </div>
@@ -1516,19 +930,11 @@ const ContributionFields = ({
           type="number"
           min="0.01"
           step="0.01"
-          value={
-            value.amount
-          }
-          onChange={(
-            event
-          ) =>
+          value={value.amount}
+          onChange={(event) =>
             setValue({
               ...value,
-
-              amount:
-                event
-                  .target
-                  .value,
+              amount: event.target.value,
             })
           }
           className="w-full px-4 py-2 border rounded-lg"
@@ -1543,19 +949,11 @@ const ContributionFields = ({
 
         <input
           type="date"
-          value={
-            value.date
-          }
-          onChange={(
-            event
-          ) =>
+          value={value.date}
+          onChange={(event) =>
             setValue({
               ...value,
-
-              date:
-                event
-                  .target
-                  .value,
+              date: event.target.value,
             })
           }
           className="w-full px-4 py-2 border rounded-lg"
@@ -1569,19 +967,11 @@ const ContributionFields = ({
 
         <input
           type="text"
-          value={
-            value.notes
-          }
-          onChange={(
-            event
-          ) =>
+          value={value.notes}
+          onChange={(event) =>
             setValue({
               ...value,
-
-              notes:
-                event
-                  .target
-                  .value,
+              notes: event.target.value,
             })
           }
           className="w-full px-4 py-2 border rounded-lg"
